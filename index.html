@@ -4528,7 +4528,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260922-1218";
+const APP_VERSION = "20260923-1135";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -7495,6 +7495,7 @@ function showTab(name,el){
     try { applyMdKeysState(); renderMdKeysGrid(); } catch(_){}
   }
   if(name==="proposal"){renderProposals();renderProposalMetrics();renderProposalBars();drawProposalPie();syncProposalClient();ordFillRouteForm();ordRenderRouteSummary();ordRenderLog();}
+  if(name==="report"){ try{ rptSelectsToCheckboxes(); }catch(_){} }
   if(name==="simulation"){
     buildSimInputsSummary();
     // Refresh the proposal-source banner so it shows the right state
@@ -11840,6 +11841,24 @@ function pfDelete(){
 function savePfProxy(v){
   try{ localStorage.setItem("wa_cors_proxy", String(v||"").trim()); }catch(_){}
   const s=$("pfRefreshStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Proxy saved — live prices will route through it." : "Proxy cleared — using public fallback (unreliable).";
+}
+
+// Render the report "Sections to Include" Yes/No selects as a checkbox checklist.
+// The hidden <select>s remain the source of truth, so the PDF generator's
+// val("rptInc...") reads are unchanged — the checkbox just drives them.
+function rptSelectsToCheckboxes(){
+  const host=$("rptSectionsBody"); if(!host) return;
+  host.querySelectorAll('select[id^="rptInc"]').forEach(sel=>{
+    if(sel.dataset.cbified) return; sel.dataset.cbified="1";
+    const frow=sel.closest('.frow'); const lab=frow&&frow.querySelector('label'); if(!lab) return;
+    const cb=document.createElement('input');
+    cb.type='checkbox'; cb.checked=(sel.value!=="no");
+    cb.style.cssText='width:16px;height:16px;accent-color:var(--gold);cursor:pointer;margin-right:9px;flex:0 0 auto;vertical-align:middle';
+    cb.onchange=()=>{ sel.value=cb.checked?"yes":"no"; };
+    sel.hidden=true;
+    lab.style.cursor='pointer';
+    lab.insertBefore(cb, lab.firstChild);
+  });
 }
 
 // ── Position-overlap screening (matched by ticker → ISIN → name) ──────
@@ -22576,7 +22595,7 @@ function drawFanChart(){
       cf:             () => val("rptIncCF") !== "no",
       pension:        () => val("rptIncPension") !== "no" && ((((val("penSrc")||"none")!=="none") && num("penAnnual",0)>0)
                             || ($("c2card") && $("c2card").style.display!=="none" && ((val("penSrc2")||"none")!=="none") && num("penAnnual2",0)>0)
-                            || ((val("c1co")||"")==="CH" && assets.some(a=>["bvg_lpp","vested_benefits","pillar_3a_bank","pillar_3a_fund","pillar_3a_insurance","savings_3a_bank"].includes(a.type) && (+a.value||0)>0))),
+                            || ((val("c1co")||"")==="CH" && (assets.some(a=>["bvg_lpp","vested_benefits","pillar_3a_bank","pillar_3a_fund","pillar_3a_insurance","savings_3a_bank"].includes(a.type) && (+a.value||0)>0) || num("chP2",0)>0 || num("chP3a",0)>0 || num("anCap",0)>0))),
       whatif:         () => val("rptIncWhatIf") !== "no" && (typeof whatIfScenarios!=="undefined") && whatIfScenarios.length>0,
       method:         () => val("rptIncMethod") !== "no",
       educharts:       () => getSelectedEduCharts().length > 0,
@@ -24361,9 +24380,17 @@ function drawFanChart(){
         const src2=hasC2?(val("penSrc2")||"none"):"none";
         const base2=src2==="none"?0:num("penAnnual2",0), fra2=num("penStartAge2",67);
         const P2=new Set(["bvg_lpp","vested_benefits"]), P3=new Set(["pillar_3a_bank","pillar_3a_fund","pillar_3a_insurance","savings_3a_bank"]);
-        const p2Bal=assets.filter(a=>P2.has(a.type)).reduce((s,a)=>s+(+a.value||0),0);
-        const p3Bal=assets.filter(a=>P3.has(a.type)).reduce((s,a)=>s+(+a.value||0),0);
-        const isCH=cc==="CH", pillarTot=p2Bal+p3Bal;
+        let p2Bal=assets.filter(a=>P2.has(a.type)).reduce((s,a)=>s+(+a.value||0),0);
+        let p3Bal=assets.filter(a=>P3.has(a.type)).reduce((s,a)=>s+(+a.value||0),0);
+        const isCH=cc==="CH";
+        // Fall back to the Swiss calculator panels (chP2 / chP3a / anCap) when the pillar
+        // balances were entered only there and not on the Assets tab — otherwise the whole
+        // Swiss pension section silently skips even though the advisor filled it in.
+        if(isCH){
+          if(p2Bal<=0) p2Bal = num("chP2",0) || num("anCap",0);
+          if(p3Bal<=0) p3Bal = num("chP3a",0);
+        }
+        const pillarTot=p2Bal+p3Bal;
         if(!(base1>0 || base2>0 || (isCH&&pillarTot>0))) return;
         newPage();
         sectionH2("Retirement Pensions");
@@ -24387,7 +24414,7 @@ function drawFanChart(){
               return [String(r.a)+(r.a===fra1?" (your plan)":"")+(r.a===best.a?" (best)":""), fmt(r.annual), fmt(r.total), d===0?"—":(d>0?"+":"-")+fmt(Math.abs(d))]; }));
         }
         if(isCH && pillarTot>0 && typeof chLumpTax==="function"){
-          const canton=(val("taxState")||val("c1st")||"ZH");
+          const canton=(val("chCanton")||val("taxState")||val("c1st")||"ZH");
           const cName=(typeof CH_CANTON_NAMES!=="undefined"&&CH_CANTON_NAMES[canton])||canton;
           const t1=chLumpTax(canton,pillarTot)||0, r1=(typeof chLumpRate==="function"?chLumpRate(canton,pillarTot):0)||0;
           const s2=2*chLumpTax(canton,pillarTot/2), s3=3*chLumpTax(canton,pillarTot/3);
