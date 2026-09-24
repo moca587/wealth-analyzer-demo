@@ -3398,19 +3398,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div id="pfCrossOverlap"><div class="cmp-empty">Add a second portfolio to screen for positions held in more than one.</div></div>
 </div>
 
-<!-- Live prices — free, via a user-deployed Cloudflare Worker proxy (no API key) -->
-<div class="panel">
-  <div class="ptitle">Live Prices <span style="font-size:11px;color:var(--text3);font-weight:500">— free, no API key</span></div>
-  <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.6">Pulls live quotes from Yahoo Finance with no API key, through a free proxy you deploy once (Yahoo can't be called directly from a browser). Paste your Cloudflare Worker URL below. Prices are cached, so the last-known value still shows if a fetch fails.</div>
-  <div class="frow"><label class="flbl">Data proxy URL</label>
-    <input id="pfProxyUrl" placeholder="https://your-worker.workers.dev" onchange="savePfProxy(this.value)" style="min-width:280px;flex:1">
-  </div>
-  <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
-    <button class="btn-primary" onclick="refreshAllPrices()">↻ Refresh live prices</button>
-    <span id="pfRefreshStatus" style="font-size:12px;color:var(--text3)"></span>
-  </div>
-  <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6">No key means keyless free sources (Yahoo, Stooq); brokerage-account linking (Fidelity/Vanguard/Schwab holdings) needs a licensed aggregator and belongs in the server-side product.</div>
-</div>
+<!-- Live Prices / data-proxy config moved to the Admin console → Market Data tab -->
+
 
 <!-- Market data API keys moved to Settings (gear, top-right) → "Data & integrations". -->
 
@@ -3450,34 +3439,32 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body" id="pfFeeBody">
-  <div class="two-col">
-    <div>
-      <div class="frow"><label class="flbl">Fee type</label>
-        <select id="pfFeeType" class="w180" onchange="updatePortfolioFeeDisplay()">
-          <option value="none">None</option>
-          <option value="aum">AUM % (annual, on portfolio)</option>
-          <option value="flat">Flat $ per year</option>
-        </select>
-      </div>
-      <div class="frow"><label class="flbl">Advisory fee</label>
-        <input type="number" id="pfAdvisoryFee" value="0" step="0.05" min="0" class="w120" oninput="updatePortfolioFeeDisplay()">
-        <span id="pfFeeUnit" style="font-size:12px;color:var(--text3);margin-left:4px">%/yr</span>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">Deducted from gross portfolio return in all simulations and projections.</div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px 28px;align-items:flex-end">
+    <div class="frow" style="margin:0"><label class="flbl">Fee type</label>
+      <select id="pfFeeType" class="w180" onchange="updatePortfolioFeeDisplay()">
+        <option value="none">None</option>
+        <option value="aum">AUM % (annual, on portfolio)</option>
+        <option value="flat">Flat $ per year</option>
+      </select>
     </div>
-    <div>
-      <div style="padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Gross expected return<span class="info-ic">i<span class="info-pop">the portfolio's value-weighted expected annual return, derived from each holding's asset-class capital-market assumption (cash excluded).</span></span></div>
-        <div style="font-size:17px;font-weight:500;color:var(--text)" id="pf-ret-gross">—</div>
-      </div>
-      <div style="padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border);margin-bottom:8px">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Advisory fee drag<span class="info-ic">i<span class="info-pop">The annual cost of your advisory fee (AUM % or flat $), converted to an effective % drag on returns — subtracted from gross return every year in all simulations.</span></span></div>
-        <div style="font-size:17px;font-weight:500;color:#a83232" id="pf-ret-fee">—</div>
-      </div>
-      <div style="padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Net expected return (after fee)<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee drag, floored at zero — this is the return actually used to project your portfolio in the market simulation.</span></span></div>
-        <div style="font-size:17px;font-weight:500;color:#1b6841" id="pf-ret-net">—</div>
-      </div>
+    <div class="frow" style="margin:0"><label class="flbl">Advisory fee</label>
+      <input type="number" id="pfAdvisoryFee" value="0" step="0.05" min="0" class="w120" oninput="updatePortfolioFeeDisplay()">
+      <span id="pfFeeUnit" style="font-size:12px;color:var(--text3);margin-left:4px">%/yr</span>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text3);margin:8px 0 12px">Deducted from gross portfolio return in all simulations and projections.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Gross expected return<span class="info-ic">i<span class="info-pop">the portfolio's value-weighted expected annual return, derived from each holding's asset-class capital-market assumption (cash excluded).</span></span></div>
+      <div style="font-size:17px;font-weight:500;color:var(--text)" id="pf-ret-gross">—</div>
+    </div>
+    <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Advisory fee drag<span class="info-ic">i<span class="info-pop">The annual cost of your advisory fee (AUM % or flat $), converted to an effective % drag on returns — subtracted from gross return every year in all simulations.</span></span></div>
+      <div style="font-size:17px;font-weight:500;color:#a83232" id="pf-ret-fee">—</div>
+    </div>
+    <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Net expected return (after fee)<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee drag, floored at zero — this is the return actually used to project your portfolio in the market simulation.</span></span></div>
+      <div style="font-size:17px;font-weight:500;color:#1b6841" id="pf-ret-net">—</div>
     </div>
   </div>
   </div>
@@ -3524,7 +3511,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <!-- AI Data Agent panel (hidden by default) — reads any file, fills the whole app after review -->
   <div id="aiAgentPanel" class="panel" style="display:none;background:var(--bg3);border:1px solid rgba(124,58,237,.28);margin-bottom:14px">
     <div class="ptitle" style="margin:0 0 6px">✦ AI Data Agent</div>
-    <div class="da-note">Upload any client documents — brokerage &amp; bank statements, tax forms, questionnaires, <strong>photos &amp; screenshots</strong>, scanned PDFs, Word/PowerPoint/OpenDocument files, CSV/XLSX/ODS, or notes. The agent reads them (vision for images &amp; scans), extracts every data point it can across the whole profile, and shows you a review screen before anything is written to the app.</div>
+    <div class="da-note">Upload a <strong>brokerage or bank statement</strong>, a fund / portfolio listing, or any document that lists <strong>investment positions</strong> (PDF, image / scan, screenshot, CSV / XLSX, Word / PowerPoint). The agent reads it (vision for images &amp; scans) and extracts the <strong>holdings</strong> — name, ticker / ISIN, asset class, market value, expense ratio &amp; yield — into this portfolio. You review every row before anything is written. For household, income, goals and the rest, use <em>Upload Document</em> at the top.</div>
     <div class="frow" style="margin-top:8px">
       <label class="flbl">Files <span style="color:var(--text3)">(any number, mixed types)</span></label>
       <input type="file" id="aiAgentFiles" multiple onchange="onAgentFilesChange()" accept=".pdf,.doc,.docx,.rtf,.odt,.pptx,.xls,.xlsx,.ods,.csv,.tsv,.txt,.json,.md,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif,.tiff,.tif,.bmp,image/*" style="font-size:12px;color:var(--text2)">
@@ -4544,7 +4531,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260924-1509";
+const APP_VERSION = "20260924-1858";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -10058,6 +10045,17 @@ const DOC_TYPE_HINTS = {
   pension:"The advisor says this is a PENSION / RETIREMENT statement — prioritise pension / pillar balances, the annual benefit and start age, and retirement accounts.",
   insurance:"The advisor says this is an INSURANCE POLICY — prioritise protection & insurance (type, sum insured, premium, term)."
 };
+// The Portfolio "AI Data Agent" is holdings-only: it reads a statement / position
+// listing and extracts ONLY the investment vehicles, to add to this portfolio.
+function _daHoldingsInstruction(){
+  return "This is a brokerage or bank statement, a fund/portfolio listing, or a screenshot of investment positions. "
+    +"Extract ONLY the investment positions / holdings it shows — for each: name, ticker symbol, ISIN (if shown), asset class, market value, and expense ratio / yield if present. "
+    +"Report ONLY values you can actually see — never guess or invent. Use the submit_profile tool and populate ONLY the holdings array; leave household, income, expenses, assets, liabilities, goals and insurance EMPTY. "
+    +"Money: plain numbers, no symbols/commas (1.2M -> 1200000, 500k -> 500000). Expense ratios and yields as WHOLE PERCENT numbers (1.8% -> 1.8). "
+    +"For every classification use ONLY the allowed enum values; map each item to the closest one. "
+    +"Holdings classes ("+Object.keys(INV_CLASS_LABELS).join(", ")+"); holding types ("+Object.keys(INV_TYPE_LABELS).join(", ")+"); regions ("+Object.keys(INV_REGION_LABELS).join(", ")+"). "
+    +"Give a 0-1 confidence and a short sourceQuote for each value.";
+}
 function _daInstruction(docType){
   const hint = (docType && DOC_TYPE_HINTS[docType]) ? (" "+DOC_TYPE_HINTS[docType]+" Still capture any other data you can see, but focus there first.") : "";
   return "Extract a household financial profile from the attached documents (brokerage/bank statements, tax forms, screenshots, photos, spreadsheets, handwritten notes). "
@@ -10153,7 +10151,7 @@ async function runDataAgent(){
     const content=[];
     for(const f of files){ try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); }
       catch(e){ content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
-    content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
+    content.push({type:"text",text:_daHoldingsInstruction()});
     if(st) st.textContent="Analyzing with AI…";
     const raw=await callAIExtract(content);
     _daExtraction=normalizeExtraction(raw);
