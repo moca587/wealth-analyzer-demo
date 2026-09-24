@@ -1877,6 +1877,22 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         written to the app until you review and approve each row.
       </p>
 
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+                      color:var(--text3);margin-bottom:8px">Document type</label>
+        <select id="uploadDocType" style="width:100%;font-size:12.5px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3);color:var(--text)">
+          <option value="auto">Auto-detect — read everything (mixed profile)</option>
+          <option value="questionnaire">Client questionnaire / fact-find → household, goals, income, expenses</option>
+          <option value="statement">Brokerage / bank statement → holdings, accounts, cash</option>
+          <option value="portfolio">Portfolio / fund list → holdings</option>
+          <option value="tax">Tax form / return → income &amp; tax</option>
+          <option value="payslip">Pay slip / salary → income</option>
+          <option value="pension">Pension / retirement statement → pensions, retirement accounts</option>
+          <option value="insurance">Insurance policy → protection &amp; insurance</option>
+        </select>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.5">Tells the reader which fields to prioritise and routes the extracted values there. It still captures anything else it finds — nothing is written until you review each row.</div>
+      </div>
+
       <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px">
         <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
                       color:var(--text3);margin-bottom:8px">Files</label>
@@ -4528,7 +4544,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260924-1454";
+const APP_VERSION = "20260924-1500";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9679,7 +9695,7 @@ async function runUploadDocExtract(){
       try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); }
       catch(e){ content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); }
     }
-    content.push({type:"text",text:_daInstruction()});
+    content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
     if(st) st.textContent="Analyzing with AI…";
     const raw=await callAIExtract(content);
     _daExtraction=normalizeExtraction(raw);
@@ -10030,7 +10046,20 @@ function buildExtractionSchema(){
     }, required:[] }
   };
 }
-function _daInstruction(){
+// Per-document-type focus hints appended to the extraction prompt, so the reader
+// prioritises the fields that document actually carries.
+const DOC_TYPE_HINTS = {
+  auto:"",
+  questionnaire:"The advisor says this is a CLIENT QUESTIONNAIRE / fact-find — prioritise household details (names, ages, dependants), financial goals, income, expenses, risk profile and retirement wishes.",
+  statement:"The advisor says this is a BROKERAGE or BANK STATEMENT — prioritise holdings (ticker/ISIN, quantity, market value, asset class) and account balances (assets/cash).",
+  portfolio:"The advisor says this is a PORTFOLIO / FUND LIST — prioritise holdings (ticker/ISIN, name, value, asset class, expense ratio, yield).",
+  tax:"The advisor says this is a TAX FORM / RETURN — prioritise income (salary, dividends, interest, capital gains), the tax jurisdiction and effective tax rate.",
+  payslip:"The advisor says this is a PAY SLIP / SALARY document — prioritise employment income (gross and net annual salary) and pension contributions.",
+  pension:"The advisor says this is a PENSION / RETIREMENT statement — prioritise pension / pillar balances, the annual benefit and start age, and retirement accounts.",
+  insurance:"The advisor says this is an INSURANCE POLICY — prioritise protection & insurance (type, sum insured, premium, term)."
+};
+function _daInstruction(docType){
+  const hint = (docType && DOC_TYPE_HINTS[docType]) ? (" "+DOC_TYPE_HINTS[docType]+" Still capture any other data you can see, but focus there first.") : "";
   return "Extract a household financial profile from the attached documents (brokerage/bank statements, tax forms, screenshots, photos, spreadsheets, handwritten notes). "
     +"Report ONLY values you can actually see — never guess or invent. Use the submit_profile tool. "
     +"Money: plain numbers, no symbols/commas (1.2M -> 1200000, 500k -> 500000; parentheses mean negative). "
@@ -10038,7 +10067,7 @@ function _daInstruction(){
     +"Dates as YYYY-MM-DD. Omit or null anything not present. For every classification use ONLY the allowed enum values; map each item to the closest one. "
     +"Holdings classes ("+Object.keys(INV_CLASS_LABELS).join(", ")+"); holding types ("+Object.keys(INV_TYPE_LABELS).join(", ")+"); regions ("+Object.keys(INV_REGION_LABELS).join(", ")+"). "
     +"Retirement: capture desired annual spending in retirement, each client's planned retirement age, and each client's pension / social-security ANNUAL benefit and start age. If a pension figure is written per month, multiply by 12 to report an annual amount. "
-    +"Give a 0-1 confidence and a short sourceQuote for each value.";
+    +"Give a 0-1 confidence and a short sourceQuote for each value."+hint;
 }
 
 // ── AI call (forced tool_use → guaranteed structured object) ─────────────
@@ -10124,7 +10153,7 @@ async function runDataAgent(){
     const content=[];
     for(const f of files){ try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); }
       catch(e){ content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
-    content.push({type:"text",text:_daInstruction()});
+    content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
     if(st) st.textContent="Analyzing with AI…";
     const raw=await callAIExtract(content);
     _daExtraction=normalizeExtraction(raw);
