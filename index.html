@@ -1451,6 +1451,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 .ss-sub{font-size:11px;color:var(--text3);margin-top:3px}
 @media (max-width:760px){ .sim-summary{grid-template-columns:1fr 1fr} }
 /* Expand / collapse all */
+.sim-subnav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;margin:6px 2px 18px}
+.sim-subnav .sim-subnav-pills{flex:1 1 auto}
+.sim-subnav .sim-toolbar{flex:0 0 auto}
+.sim-section{animation:wowFadeUp .3s ease both}
 .sim-toolbar{display:flex;justify-content:flex-end;gap:8px;margin:0 2px 6px}
 .sim-toolbar button{font-family:var(--fb);font-size:11px;font-weight:600;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:50px;padding:5px 13px;cursor:pointer;transition:all .15s}
 .sim-toolbar button:hover{border-color:var(--gold);color:var(--gold)}
@@ -4531,7 +4535,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260924-1858";
+const APP_VERSION = "20260924-1930";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -7501,6 +7505,7 @@ function showTab(name,el){
   if(name==="report"){ try{ rptSelectsToCheckboxes(); }catch(_){} try{ combineReportPageControls(); }catch(_){} }
   if(name==="simulation"){
     try{ relocateSwissPensionPanels(); }catch(_){}
+    try{ buildSimSubnav(); }catch(_){}
     buildSimInputsSummary();
     // Refresh the proposal-source banner so it shows the right state
     // when the user navigates back to the Simulation tab.
@@ -11883,6 +11888,96 @@ function relocateSwissPensionPanels(){
   cashDiv.parentNode.insertBefore(cp, cashDiv);
   cashDiv.parentNode.insertBefore(ap, cashDiv);
   cp.dataset.relocated="1";
+}
+
+// ── Simulation tab: pill sub-nav ────────────────────────────────────────
+// The Simulation tab was one long single-column accordion — six .sim-group
+// sections (Outlook / Goals / Retirement / Cash flow / Risk / Estate) stacking
+// ~15 collapsible panels, a long scroll with no way to jump. This turns each
+// group into a pill in a segmented sub-nav (reusing .band-btn) and shows one
+// group at a time. The Run button + results-at-a-glance KPI strip (#simSummary)
+// stay pinned above the pills. Runs at showTab('simulation') time, AFTER
+// relocateSwissPensionPanels() so the Swiss panels are already in their final
+// group before wrapping. Idempotent (guarded by tab.dataset.subnavBuilt).
+let _simActiveSec = 0;
+function _simSecLabel(txt){
+  const s=(txt||"").toLowerCase();
+  if(s.includes("outlook")) return "Outlook";
+  if(s.includes("goal")) return "Goals";
+  if(s.includes("retirement")) return "Retirement";
+  if(s.includes("cash")) return "Cash flow";
+  if(s.includes("efficien")||s.includes("risk")) return "Risk";
+  if(s.includes("estate")||s.includes("method")) return "Estate";
+  return (txt||"Section").trim();
+}
+function buildSimSubnav(){
+  const tab=document.getElementById("tab-simulation");
+  if(!tab || tab.dataset.subnavBuilt) return;
+  const dividers=[...tab.querySelectorAll(":scope > .sim-group")];
+  if(dividers.length<2) return;   // nothing to segment
+
+  // Wrap each divider + the sibling nodes up to (not including) the next
+  // divider into a .sim-section. Collect first, then move (moving mutates the
+  // sibling chain). The divider itself is hidden — the active pill names it.
+  const sections=[];
+  dividers.forEach((div,i)=>{
+    const sec=document.createElement("div");
+    sec.className="sim-section"; sec.dataset.simsec=String(i);
+    div.parentNode.insertBefore(sec,div);
+    const move=[]; let n=div;
+    while(n){
+      move.push(n);
+      const nxt=n.nextSibling;
+      if(nxt && nxt.nodeType===1 && nxt.classList && nxt.classList.contains("sim-group")) break;
+      n=nxt;
+    }
+    move.forEach(node=>sec.appendChild(node));
+    const gd=sec.querySelector(".sim-group"); if(gd) gd.style.display="none";
+    sections.push(sec);
+  });
+  if(!sections.length) return;
+
+  // Pill sub-nav (reuses .band-btns / .band-btn) + the expand/collapse-all toolbar.
+  const navWrap=document.createElement("div");
+  navWrap.className="sim-subnav";
+  const pills=document.createElement("div");
+  pills.className="band-btns sim-subnav-pills";
+  pills.setAttribute("role","tablist");
+  sections.forEach((sec,i)=>{
+    const gd=sec.querySelector(".sim-group");
+    const b=document.createElement("button");
+    b.type="button"; b.className="band-btn"+(i===0?" active":"");
+    b.setAttribute("role","tab");
+    b.setAttribute("aria-selected", i===0?"true":"false");
+    b.textContent=_simSecLabel(gd?gd.textContent:"");
+    b.onclick=()=>activateSimSec(i);
+    pills.appendChild(b);
+  });
+  navWrap.appendChild(pills);
+  const toolbar=tab.querySelector(".sim-toolbar");
+  if(toolbar){ toolbar.style.margin="0"; navWrap.appendChild(toolbar); }
+
+  sections[0].parentNode.insertBefore(navWrap, sections[0]);
+  tab.dataset.subnavBuilt="1";
+  activateSimSec(_simActiveSec||0);
+}
+function activateSimSec(i){
+  const tab=document.getElementById("tab-simulation"); if(!tab) return;
+  const secs=[...tab.querySelectorAll(".sim-section")];
+  const pills=[...tab.querySelectorAll(".sim-subnav-pills .band-btn")];
+  if(!secs.length) return;
+  if(i<0) i=0; if(i>=secs.length) i=secs.length-1;
+  _simActiveSec=i;
+  secs.forEach((s,k)=>{ s.style.display=(k===i?"block":"none"); });
+  pills.forEach((p,k)=>{ const on=(k===i); p.classList.toggle("active",on); p.setAttribute("aria-selected", on?"true":"false"); });
+  // Refit any Chart.js canvases in the now-visible section — one drawn while its
+  // section was display:none can otherwise stay mis-sized (mirrors toggleDropdown).
+  try{
+    secs[i].querySelectorAll("canvas").forEach(cv=>{
+      const ch=(typeof Chart!=="undefined" && Chart.getChart)?Chart.getChart(cv):null;
+      if(ch) setTimeout(()=>{ try{ ch.resize(); }catch(_){} },40);
+    });
+  }catch(_){}
 }
 
 // Combine "Sections to Include" (page checkboxes) and "Page Order" (reorder list)
