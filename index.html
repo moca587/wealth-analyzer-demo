@@ -4528,7 +4528,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260924-1135";
+const APP_VERSION = "20260924-1257";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -24457,7 +24457,10 @@ function drawFanChart(){
               return [String(r.a)+(r.a===fra1?" (your plan)":"")+(r.a===best.a?" (best)":""), fmt(r.annual), fmt(r.total), d===0?"—":(d>0?"+":"-")+fmt(Math.abs(d))]; }));
         }
         if(isCH && pillarTot>0 && typeof chLumpTax==="function"){
-          const canton=(val("chCanton")||val("taxState")||val("c1st")||"ZH");
+          let canton=(val("chCanton")||val("taxState")||val("c1st")||"ZH");
+          // Guard: a non-Swiss state code (e.g. a US "AL" default) would make the
+          // lump-sum tax lookup return 0 — fall back to Zurich if it's not a real canton.
+          if(typeof CH_CANTON_NAMES!=="undefined" && !CH_CANTON_NAMES[canton]) canton="ZH";
           const cName=(typeof CH_CANTON_NAMES!=="undefined"&&CH_CANTON_NAMES[canton])||canton;
           const t1=chLumpTax(canton,pillarTot)||0, r1=(typeof chLumpRate==="function"?chLumpRate(canton,pillarTot):0)||0;
           const s2=2*chLumpTax(canton,pillarTot/2), s3=3*chLumpTax(canton,pillarTot/3);
