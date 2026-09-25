@@ -2424,7 +2424,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <option value="none">None — no income tax</option>
         </select>
       </div>
-      <div class="frow"><label class="flbl">Flat income-tax rate %</label><input type="number" id="taxFlat" value="25" step="0.5" class="w120" oninput="updateTaxPanel()"></div>
+      <div class="frow"><label class="flbl">Flat income-tax rate %</label><input type="number" id="taxFlat" value="25" step="0.5" class="w120" oninput="delete this.dataset.statedTotal;updateTaxPanel()"></div>
       <div class="frow"><label class="flbl">Capital gains rate %</label><input type="number" id="cgtRate" value="15" step="0.5" class="w120" oninput="_taxUserEdited=true;updateTaxPanel()"></div>
       <div class="frow"><label class="flbl">Portfolio turnover %</label><input type="number" id="cgtTurnover" value="10" step="1" class="w120" oninput="updateTaxPanel()"></div>
       <div style="font-size:11px;color:var(--text3);margin-top:2px;margin-bottom:10px">Share of portfolio that realizes taxable gains each year. Applied as a return drag: <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:10px">effective return ≈ gross × (1 − CGT × turnover)</code></div>
@@ -4580,7 +4580,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1753";
+const APP_VERSION = "20260925-1810";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9363,7 +9363,16 @@ function computeIncomeTax(income){
 
 function onTaxModeChange(){updateTaxPanel();}
 
+// An imported TOTAL income-tax rate (Upload Document) stays the total when the
+// canton / state or tax residence changes afterwards: the manual flat rate is the
+// national part only, so it is re-derived as total − canton rate. Typing in the
+// flat-rate field, leaving flat mode or loading a profile ends this.
+function _taxReconcileStated(){ const tf=$("taxFlat"); if(!tf || tf.dataset.statedTotal==null) return;
+  if(($("taxMode")||{}).value!=="flat"){ delete tf.dataset.statedTotal; return; }
+  const tot=+tf.dataset.statedTotal; if(!isFinite(tot)) return; let sr=0; try{ sr=+getStateTaxRate()||0; }catch(_){}
+  const v=Math.max(0,+(tot-sr).toFixed(2)); if(+tf.value!==v) tf.value=v; }
 function updateTaxPanel(){
+  try{ _taxReconcileStated(); }catch(_){}
   const inc=getGrossIncome();
   const fed=getApplyTax()?computeFederalTax(inc):0;
   const stateAmt=getApplyTax()?computeStateTax(inc):0;
@@ -10381,7 +10390,9 @@ function _daFastWanted(){ if(_daFastOff) return false;
 function _daFastRemember(){ _daFastOff=true; try{ localStorage.setItem("wa_ai_fast","off:"+Date.now()); }catch(_){} }
 // A refusal that is plainly about the upload or the account, not the speed —
 // re-sending it at standard speed would only fail the same way.
-const _DA_NOT_FAST=/credit balance|x-api-key|api key|pdf|image|document|too (large|long|many)|prompt is too long|exceed|max_tokens/i;
+// Only ever applied to a 400: a 403 / 404 may well be the fast-mode refusal itself
+// ("Your API key does not have permission…"), and must still fall back.
+const _DA_NOT_FAST=/credit balance|\bpdf\b|\bimage\b|\bdocument\b|too (large|long|many)|prompt is too long|exceeds?\b|max_tokens/i;
 // Read a streamed (SSE) Messages reply into the same shape a non-streamed call
 // returns. onJson is called with the tool call's JSON-so-far as it arrives.
 async function _daReadStream(r, onJson){
@@ -10423,6 +10434,9 @@ async function callAIExtract(content, signal){
     messages:[{role:"user",content}] };
   let fast=_daFastWanted(), busyRetried=false, eager=true, fastFail=null;
   for(let attempt=0; attempt<4; attempt++){
+    // A Cancel that landed between attempts (e.g. while an error reply was being
+    // read) must stop here, not send another paid request.
+    if(signal && signal.aborted) throw _daCancelledErr();
     const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
     const body=Object.assign({},base,{tools:[eager?Object.assign({},tool,{eager_input_streaming:true}):tool]});
     if(fast){ body.speed="fast"; headers["anthropic-beta"]=AI_FAST_BETA; }
@@ -10457,6 +10471,7 @@ async function callAIExtract(content, signal){
       done();
       const t=await r.text(); let apiMsg=""; try{ const j=JSON.parse(t); apiMsg=(j&&j.error&&j.error.message)||""; }catch(_){ apiMsg=t.slice(0,200); }
       _daReportHttp({attempt:attempt+1,status:r.status,ms:ttfb,mode,msg:String(apiMsg||"").slice(0,200)});
+      if(signal && signal.aborted) throw _daCancelledErr();
       // A field this API version doesn't know: drop it and re-send.
       if(eager && r.status===400 && /eager_input_streaming/i.test(apiMsg)){ eager=false; continue; }
       // Fast mode refused (not enabled for this key / account, or its separate
@@ -10466,7 +10481,7 @@ async function callAIExtract(content, signal){
       // standard speed then succeeds where fast failed (see below); a 429 is
       // fast mode's own limit, not a missing feature, and is never remembered.
       const specific=r.status!==429 && /\bspeed\b|fast[ -]?mode|fast-mode|research preview|\bbeta\b/i.test(apiMsg);
-      if(fast && (r.status===400||r.status===403||r.status===404||r.status===429) && (specific || r.status===429 || !_DA_NOT_FAST.test(apiMsg))){
+      if(fast && (r.status===400||r.status===403||r.status===404||r.status===429) && (specific || r.status!==400 || !_DA_NOT_FAST.test(apiMsg))){
         fast=false; fastFail={status:r.status, specific:specific}; if(specific) _daFastRemember();
         _daStep("send","active",AI_MODEL+" · standard speed"+(specific?" (fast mode not available on this key)":"")); continue; }
       _daStep("send","ok",_daModelLabel()+" · "+Math.max(1,Math.round(payload.length/1024))+" KB request");
@@ -10649,7 +10664,7 @@ function normalizeExtraction(raw){
   // An account row without a country: the country Claude's account code belongs
   // to (when only one has it), else the primary client's — not the app's current
   // country, which discarded a valid Swiss code in an app still set to the US.
-  const hhC=((out.household.find(h=>h.role==="client1")||out.household.find(h=>h.country)||{}).country)||"";
+  const hhC=((out.household.find(h=>h.role==="client1"&&h.country)||out.household.find(h=>h.country)||{}).country)||"";
   out.assets.forEach(a=>{ if(!a.country) a.country=_daCountryForCode(a.accountType, hhC) || hhC || ""; });
   // Drop records that carry nothing — they'd count as "extracted" (blocking the
   // re-ask / diagnostic) and show as empty review rows.
@@ -10901,29 +10916,34 @@ function _daAccountByCode(country, code){
 // named products) run before the "exact code in the wording" pass and before the
 // generic bank words (third element = 1), so "Health savings account" is an HSA
 // and "Pension depot" a pension, not savings / a depot. Each code list is tried
-// against the row country's own codes, so one table serves every country. (The
+// against the row country's own codes, so one table serves every country. A rule
+// is a RegExp over the lower-cased wording, or a function (lower, original) for
+// the few that need case ("IRA" the account vs "Ira" the account holder). (The
 // original matcher only did whole-hint substring matching: "Pillar 2 / BVG" found
 // nothing and fell through to a *savings* account — a locked pension counted as cash.)
 const _DA_ACCT_SYN=[
-  [/fr[eé]iz[uü]gig|vested benefit|libre passage/, ["vested_benefits"]],
-  [/pensionskasse|caisse de pension|pension fund|vorsorgeeinrichtung|\bpk\b|2nd pillar|second pillar|pillar\s*(2|ii)\b|2\.\s*s[äa]ule|s[äa]ule\s*2\b|zweite s[äa]ule|2e pilier|\bbvg\b|\blpp\b|occupational/, ["bvg_lpp","workplace_pension","occupational_pension","dcpp","pension_db","db_pension"]],
+  [/fr[eé]iz[uü]gig|vested benefit|libre passage|libero passaggio/, ["vested_benefits"]],
+  [/pensionskasse|caisse de pension|pension fund|vorsorgeeinrichtung|\bpk\b|2nd pillar|second pillar|pillar\s*(2|ii)\b|2\.\s*s[äa]ule|s[äa]ule\s*2\b|zweite s[äa]ule|2e pilier|secondo pilastro|\bbvg\b|\blpp\b|occupational|kaderversicherung|\b1e\b/, ["bvg_lpp","workplace_pension","occupational_pension","dcpp","pension_db","db_pension"]],
   [/workplace pension|company pension|employer pension|betriebsrente|betriebliche altersvorsorge|\bbav\b/, ["workplace_pension","bav","bvg_lpp","dcpp","occupational_pension"]],
   [/state pension|gesetzliche rente|age pension/, ["state_pension","gesetzliche_rente","age_pension","ahv_avs","social_security","cpp"]],
   [/riester/, ["riester"]], [/r[üu]e?rup|basisrente/, ["ruerup"]],
   [/superannuation|super fund/, ["super_accum","smsf"]],
-  [/\b3a\b|pillar\s*3a|s[äa]ule\s*3a|third pillar|pilier 3a/, ["__3a"]],
-  [/\b3b\b|pillar\s*3b|s[äa]ule\s*3b|pilier 3b/, ["pillar_3b"]],
-  [/\bahv\b|\bavs\b|1st pillar|first pillar|pillar\s*(1|i)\b/, ["ahv_avs"]],
+  [/\b3a\b|pillar\s*(3a|iii)\b|s[äa]ule\s*3a|third pillar|pilier 3a|terzo pilastro|gebundene vorsorge|pr[ée]voyance li[ée]e/, ["__3a"]],
+  [/life insurance|life assurance|lebensversicherung|whole[- ]of[- ]life|kapitalversicherung|assurance[- ]vie|polizza vita/, ["life_insurance","life_assurance"]],   // before 3b: a 3b life policy is locked
+  [/\b3b\b|pillar\s*3b|s[äa]ule\s*3b|pilier 3b|freie vorsorge|pr[ée]voyance libre/, ["pillar_3b"]],
+  [/\bahv\b|\bavs\b|1st pillar|first pillar|pillar\s*(1|i)\b|s[äa]ule\s*1\b|1\.\s*s[äa]ule|erste s[äa]ule|1er pilier|premier pilier/, ["ahv_avs"]],
   [/social security/, ["social_security"]],
-  [/roth\s*401/, ["roth_401k"]], [/roth ira/, ["roth_ira"]], [/solo\s*401/, ["solo_401k"]], [/\b401\s*\(?k\)?/, ["401k"]],
-  [/\b403\s*\(?b\)?/, ["403b"]], [/\b457\s*\(?b\)?|\b457 plan|deferred comp/, ["457b"]],   // anchored: "457" inside an account number is not a 457(b)
-  [/sep[- ]ira/, ["sep_ira"]], [/simple ira/, ["simple_ira"]], [/\bira\b/, ["ira"]],
+  [/roth\s*401/, ["roth_401k"]], [/roth ira/, ["roth_ira"]], [/solo\s*401/, ["solo_401k"]], [/\b401\s*\(?k\)?(?![a-z])/, ["401k"]],
+  [/\b403\s*\(b\)|\b403b\b|\b403 plan/, ["403b"]], [/\b457\s*\(b\)|\b457b\b|\b457 plan|deferred comp/, ["457b"]],   // only the real forms: "457" or "457 B" in an account number is not a 457(b)
+  [/sep[- ]ira/, ["sep_ira"]], [/simple ira/, ["simple_ira"]],
+  [(l,o)=>/\bIRA\b/.test(o) || /\b(traditional|rollover|inherited|spousal) ira\b|\bira (account|rollover)\b/.test(l), ["ira"]],   // case: "Ira Goldberg" is a person
   [/\b529\b|college savings/, ["529"]], [/coverdell|\besa\b/, ["esa"]], [/\bhsa\b|health savings/, ["hsa"]],
+  [/cash balance (plan|pension)/, ["cash_balance"]],
   [/\bsipp\b/, ["sipp"]], [/lifetime isa|\blisa\b/, ["lifetime_isa"]], [/junior isa|\bjisa\b/, ["junior_isa"]], [/innovative finance isa|\bifisa\b/, ["innovative_finance_isa"]],
   [/cash isa/, ["cash_isa"]], [/stocks? (and|&) shares isa|s&s isa|\bisa\b/, ["stocks_isa"]],
-  [/\brrsp\b/, ["rrsp"]], [/\btfsa\b/, ["tfsa"]], [/\bresp\b/, ["resp"]], [/\brrif\b/, ["rrif"]], [/\blira\b/, ["lira"]],
-  [/life insurance|life assurance|lebensversicherung|whole[- ]of[- ]life/, ["life_insurance","life_assurance"]],
-  [/annuity|\brente\b/, ["annuity_fixed","annuity_var"]],
+  [/\brrsp\b/, ["rrsp"]], [/\btfsa\b/, ["tfsa"]], [/\bresp\b/, ["resp"]], [/\brrif\b/, ["rrif"]],
+  [(l,o)=>/\bLIRA\b/.test(o) || /locked[- ]in retirement/.test(l), ["lira"]],   // case: "Lira" is a currency
+  [/annuity|\brente\b|leibrente|rentenversicherung/, ["annuity_fixed","annuity_var"]],
   [/crypto|bitcoin|\bbtc\b|ethereum|\beth\b/, ["crypto"]],
   [/\bgold\b|\bsilver\b|precious|edelmetall/, ["physical_gold","precious_metals"]],   // \b: "Goldman Sachs" is a broker
   [/private equity|venture/, ["private_equity"]],
@@ -10938,11 +10958,16 @@ const _DA_ACCT_SYN=[
   [/privatkonto|\bcurrent\b|checking|chequing|compte priv[ée]|girokonto|\bgiro\b|salary account|lohnkonto|cheque|transaction account/, ["private_account","checking","chequing","current","current_account","girokonto","transaction"], 1],   // \b: not "currency"
   [/bank account|cash account|\bcash\b|\bkonto\b|\bcompte\b|\bbank\b/, ["private_account","checking","chequing","current","girokonto","transaction","savings_account","savings"], 1]   // e.g. the camt feed's "Bank account"
 ];
-// Wording that names a pension or another locked, tax-advantaged wrapper.
-const _DA_LOCKED_WORD=/pension|pillar|pilier|s[äa]ule|\b3a\b|\bbvg\b|\blpp\b|\bahv\b|\bavs\b|\b401\s*\(?k|\b403\s*\(?b|\bira\b|\bsipp\b|retire|vorsorge|pr[ée]voyance|fr[eé]iz[uü]gig|vested|libre passage|superannuation|\brrsp\b|\brrif\b|\blira\b|\bcpf\b|\bmpf\b|\bnps\b|\bepf\b|\bhsa\b|health savings|\b529\b|coverdell|\besa\b|thrift savings|riester|r[üu]e?rup/;
+// Wording that names a pension or another locked, tax-advantaged wrapper — in
+// the languages Swiss / EU / UK advisors meet. "Non-retirement" is the opposite
+// and is removed first; "vested" alone is not here ("invested", "vested RSUs").
+const _DA_LOCKED_WORD=/pension|pensioen|pillar|pilier|pilastro|s[äa]ule|\b3a\b|\bbvg\b|\blpp\b|\bahv\b|\bavs\b|\b401\s*\(?k(?![a-z])|\b403\s*\(b\)|\b403b\b|\bsipp\b|retire|retraite|previdenza|vorsorge|pr[ée]voyance|provident|fr[eé]iz[uü]gig|vested benefit|libre passage|libero passaggio|superannuation|\brrsp\b|\brrif\b|\bcpf\b|\bmpf\b|\bnps\b|\bepf\b|\bhsa\b|health savings|\b529\b|coverdell|\besa\b|thrift savings|riester|r[üu]e?rup|rentenversicherung|lebensversicherung|kapitalversicherung|leibrente|kaderversicherung|\bperco?\b|\bperp\b|年金/;
+function _daLockedText(lower, orig){ const l=lower.replace(/\bnon[- ]?retire\w*/g," "); return _DA_LOCKED_WORD.test(l) || /\bIRA\b|\bLIRA\b/.test(orig); }
 // Fallback order when all that is known is "a pension" / "tax-advantaged".
 const _DA_LOCKED_PREF=["bvg_lpp","workplace_pension","401k","db_pension","pension_db","super_accum","dcpp","bav","ira","rrsp","sipp"];
 const _DA_TAXFREE_PREF=["pillar_3a_bank","roth_ira","tfsa","lifetime_isa","roth_401k"];
+// Codes too generic to be recognised just by appearing inside the wording.
+const _DA_NO_SUBSTRING=new Set(["cash_balance","immobilie","other_asset","other"]);
 function _daMatchAccount(country,hint,taxType,label){
   const c=COUNTRY_ACCOUNTS[country]||COUNTRY_ACCOUNTS.US; if(!c) return {type:"other",group:"Other assets",liquid:true};
   const all=[]; c.groups.forEach(g=>g.accounts.forEach(a=>all.push({type:a.value,group:g.group,liquid:a.liquid,hay:(a.value+" "+a.label).toLowerCase()})));
@@ -10950,18 +10975,25 @@ function _daMatchAccount(country,hint,taxType,label){
   const norm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
   // The hint (the kind as written) and the label (the account's name) are read
   // together by the rules, but matched against the app's labels one at a time.
-  const parts=[norm(hint),norm(label)].filter((p,i,arr)=>p && arr.indexOf(p)===i), h=parts.join(" ");
-  const locked=_DA_LOCKED_WORD.test(h);
-  const rule=generic=>{ for(const [re,codes,g] of _DA_ACCT_SYN){ if(!!g!==generic || !re.test(h)) continue;
+  const hN=norm(hint), lN=norm(label), parts=[hN,lN].filter((p,i,arr)=>p && arr.indexOf(p)===i), h=parts.join(" ");
+  const orig=[hint,label].filter(Boolean).join(" ");
+  const test=(re,l,o)=>typeof re==="function" ? re(l,o) : re.test(l);
+  const genericHit=l=>_DA_ACCT_SYN.some(([re,,g])=>g && test(re,l,l));
+  // Locked when the kind says so — or the name does and the kind doesn't plainly
+  // say otherwise ("Checking" named "Pension deposits" is still a checking account).
+  const locked=_daLockedText(hN,String(hint||"")) || (_daLockedText(lN,String(label||"")) && !(hN && genericHit(hN)));
+  const rule=generic=>{ for(const [re,codes,g] of _DA_ACCT_SYN){ if(!!g!==generic || !test(re,h,orig)) continue;
       for(const code of codes){
-        if(code==="__3a"){ const want=/fund|fonds|securit|wertschrift|viac|finpension|frankly|invest|etf|titres/.test(h)?"pillar_3a_fund":/insur|versicher|assur/.test(h)?"pillar_3a_insurance":"pillar_3a_bank";
+        if(code==="__3a"){ const want=/fund|fonds|securit|wertschrift|viac|finpension|frankly|invest|etf|titres|depot/.test(h)?"pillar_3a_fund":/insur|versicher|assur/.test(h)?"pillar_3a_insurance":"pillar_3a_bank";
           const m=pick(want)||pick("pillar_3a_bank")||pick("savings_3a_bank"); if(m) return m; continue; }
         const m=pick(code); if(m) return m; } }
     return null; };
   if(h){
     let m=rule(false); if(m) return m;                                    // 1. specific rules
     for(const a of all){ if(locked && a.liquid) continue;                  // 2. an exact code in the wording ("bvg_lpp", "premium bonds")
-      const code=a.type.toLowerCase(); if(code.length>3 && (h.indexOf(code)>=0 || h.indexOf(code.replace(/_/g," "))>=0)) return pick(a.type); }
+      const code=a.type.toLowerCase(); if(code.length<=3 || _DA_NO_SUBSTRING.has(code)) continue;
+      const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      if(new RegExp("\\b("+esc(code)+"|"+esc(code.replace(/_/g," "))+")\\b").test(h)) return pick(a.type); }
     if(!locked){ m=rule(true); if(m) return m; }                           // 3. generic bank / investment words
     for(const p of parts) for(const a of all){ if(locked && a.liquid) continue; if(a.hay.indexOf(p)>=0) return pick(a.type); }   // 4. the wording inside an app label
   }
@@ -10973,7 +11005,9 @@ function _daMatchAccount(country,hint,taxType,label){
     if(pref) return pref;
     const lk=all.find(a=>!a.liquid && /pension|retire|pillar|vorsorge/i.test(a.group+" "+a.hay)) || all.find(a=>!a.liquid);
     if(lk) return {type:lk.type,group:lk.group,liquid:lk.liquid}; }
-  const liquid=all.find(a=>a.liquid && /private|checking|chequing|current|giro|transaction/.test(a.hay)) || all.find(a=>a.liquid && /savings|spar/.test(a.hay))
+  const liquid=all.find(a=>a.liquid && /private|checking|chequing|current|giro|transaction/.test(a.hay))
+    || all.find(a=>a.liquid && /bank|cash|deposit|current/i.test(a.group))
+    || all.find(a=>a.liquid && /savings|spar/.test(a.hay))
     || all.find(a=>a.liquid && /depot|broker|securities|investment/.test(a.hay)) || all.find(a=>a.liquid);
   if(liquid) return {type:liquid.type,group:liquid.group,liquid:liquid.liquid};
   const a0=all[0]; return a0?{type:a0.type,group:a0.group,liquid:a0.liquid}:{type:"other",group:"Other assets",liquid:true};
@@ -11014,7 +11048,7 @@ function _daImportSource(){ return _daSourceLabel||"AI Data Agent"; }
 function applyDataAgent(){
   if(!_daExtraction) return;
   const x=_daExtraction; let n=0; let needC2=false;
-  const added={}, skipped=[], errors=[];
+  const added={}, skipped=[], errors=[], notes=[];   // notes: what the reviewer should know about how a value was applied
   const bump=k=>{ added[k]=(added[k]||0)+1; n++; };
   // Apply one ticked review row in isolation: a row that throws is reported and
   // skipped, never silently stops the rows after it (it used to abort the whole
@@ -11115,7 +11149,12 @@ function applyDataAgent(){
   each("tax",x.tax,r=>{ let touched=false; const it=_daRate(r.incomeTaxPct), cg=_daRate(r.capitalGainsPct);
     const inc=(r.includeTaxes===true||r.includeTaxes==="yes")?"yes":(r.includeTaxes===false||r.includeTaxes==="no")?"no":"";
     if(it!=null && it>=0 && it<=70){ let sr=0; try{ sr=+getStateTaxRate()||0; }catch(_){}
-      _daSetSel("taxMode","flat"); _daSet("taxFlat",Math.max(0,+(it-sr).toFixed(2))); touched=true; }
+      const flat=Math.max(0,+(it-sr).toFixed(2)), where=val("taxState")||"canton / state";
+      _daSetSel("taxMode","flat"); _daSet("taxFlat",flat);
+      const tf=$("taxFlat"); if(tf) tf.dataset.statedTotal=String(it);   // kept the total if the canton changes later (_taxReconcileStated)
+      notes.push(sr>it ? "the stated "+it+"% income tax is below the "+where+" rate of "+sr+"%, so the "+where+" rate applies"
+                       : it+"% income tax = "+flat+"% national + "+sr+"% "+where);
+      touched=true; }
     if(cg!=null && cg>=0 && cg<=70){ _daSet("cgtRate",cg); try{ _taxUserEdited=true; }catch(_){} touched=true; }
     if(inc && _daSetSel("taxApply",inc)) touched=true;
     if(touched) bump("tax settings"); else skipped.push("a tax row with no values"); });
@@ -11138,11 +11177,12 @@ function applyDataAgent(){
   const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"retirement plan":["retirement plan","retirement plans"],"tax settings":["tax setting","tax settings"]};
   const summary=Object.keys(added).map(k=>{ const w=NOUN[k]||[k,k]; return added[k]+" "+(added[k]===1?w[0]:w[1]); }).join(", ");
   const tail=(errors.length?" · "+errors.length+" row"+(errors.length!==1?"s":"")+" couldn't be added":"")+(skipped.length?" · skipped "+skipped.length+" empty row"+(skipped.length!==1?"s":""):"");
-  if(stt){ stt.textContent="✓ Added to the app: "+summary+tail+"."; stt.style.color="var(--green)"; }
-  _daApplyRecord(true, "added "+summary+tail, errors, skipped);
-  if(ast){ ast.textContent="✓ Added "+summary+"."; ast.style.color="var(--green)"; }
+  if(stt){ stt.textContent="✓ Added to the app: "+summary+tail+"."+(notes.length?" Note: "+notes.join("; ")+".":""); stt.style.color="var(--green)"; }
+  const noteTxt=notes.length?" Note: "+notes.join("; ")+".":"";
+  _daApplyRecord(true, "added "+summary+tail+(noteTxt?"."+noteTxt:""), errors, skipped);
+  if(ast){ ast.textContent="✓ Added "+summary+"."+noteTxt; ast.style.color="var(--green)"; }
   _daApplied=true;
-  try{ if(typeof _topStatus==="function") _topStatus("✓ Added from "+_daImportSource()+": "+summary); }catch(_){}
+  try{ if(typeof _topStatus==="function") _topStatus("✓ Added from "+_daImportSource()+": "+summary+"."+noteTxt); }catch(_){}
   // Close after a beat and show the tab where the result is visible straight away:
   // Household for people / income / expenses / retirement (net worth is in its
   // overview), else the tab holding what was added.
@@ -11151,7 +11191,7 @@ function applyDataAgent(){
     : added.goals ? "goals" : added.holdings ? "portfolio" : added["tax settings"] ? "expenses" : "";
   setTimeout(()=>{ try{ closeReviewModal(); }catch(_){}
     try{ const cur=(document.querySelector(".tab.active")||{}).id;
-      if(dest && cur!=="tab-"+dest && typeof showTab==="function"){ showTab(dest,document.querySelector('.nav-item[data-tab="'+dest+'"]')); window.scrollTo(0,0); } }catch(_){} }, 1400);
+      if(dest && cur!=="tab-"+dest && typeof showTab==="function"){ showTab(dest,document.querySelector('.nav-item[data-tab="'+dest+'"]')); window.scrollTo(0,0); } }catch(_){} }, notes.length?4000:1400);   // time to read a note
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -26743,6 +26783,7 @@ function loadProfile(){
 
 function restoreProfile(p){
   const f=p.fields||{};
+  try{ const tf=$("taxFlat"); if(tf) delete tf.dataset.statedTotal; }catch(_){}   // a previous import's stated total must not re-derive this client's flat rate
   // Missing keys (older profiles) reset to app defaults so the previous client's
   // values never leak into a newly loaded profile.
   PROFILE_FIELDS.forEach(id=>{ if(!$(id)) return;
