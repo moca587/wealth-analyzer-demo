@@ -1524,12 +1524,20 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
    overview header ran an infinite 17s "aurora" transform. Now content appears
    at once with a short opacity-only fade, and nothing animates forever. */
 @keyframes waQuickIn{from{opacity:0}to{opacity:1}}
-.tab.active .panel{animation:waQuickIn .12s ease-out both!important;animation-delay:0s!important}
-.wealth-hero,.onboard-card,.sim-summary,.sim-section{animation:waQuickIn .12s ease-out both!important}
+/* "backwards", not "both": a forwards fill keeps the opacity animation in effect
+   after it ends, and with it a stacking context that traps any fixed-position
+   popup inside the panel under the top bar. With no delay, backwards looks the same. */
+.tab.active .panel{animation:waQuickIn .12s ease-out backwards!important;animation-delay:0s!important}
+.wealth-hero,.onboard-card,.sim-summary,.sim-section{animation:waQuickIn .12s ease-out backwards!important}
 .dropdown-body.open{animation:waQuickIn .1s ease-out!important}
 .wealth-hero::before{animation:none!important}
 #introScreen{transition:opacity .2s ease!important}
 .intro-inner{animation-duration:.35s!important}
+/* The !important overrides above would otherwise beat the reduced-motion rules. */
+@media (prefers-reduced-motion:reduce){
+  .tab.active .panel,.wealth-hero,.onboard-card,.sim-summary,.sim-section,.dropdown-body.open,.intro-inner{animation:none!important}
+  #introScreen{transition:none!important}
+}
 </style>
 <div id="introScreen" role="dialog" aria-label="Welcome to Wealth Analyzer">
   <div class="intro-inner">
@@ -4572,7 +4580,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1517";
+const APP_VERSION = "20260925-1535";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9761,12 +9769,19 @@ function _daStepsRender(){
 function _daReportHttp(entry){ if(_daReport) _daReport.http.push(entry); }
 // Apply's outcome, recorded only for the extraction this report belongs to (the
 // deterministic statement importer reuses Apply with its own data).
+// Written to the report bound to the open review (_daReviewReport) — a later read
+// that failed must not collect this review's outcome.
+let _daReviewReport=null;
 function _daApplyRecord(ok, summary, errors, skipped){
-  if(!_daReport || _daReviewToken!==_daExtraction) return;
-  _daReport.apply={summary:summary, errors:(errors||[]).slice(0,5), skipped:(skipped||[]).slice(0,8)};
-  _daStep("apply", ok?"ok":"fail", summary); }
-function _daReportText(){
-  const r=_daReport; if(!r) return "No AI document read has run in this session yet.";
+  const r=_daReviewReport; if(!r || _daReviewToken!==_daExtraction) return;
+  r.apply={summary:summary, errors:(errors||[]).slice(0,5), skipped:(skipped||[]).slice(0,8)};
+  r.steps.apply={state:ok?"ok":"fail", detail:summary}; if(r===_daReport) _daStepsRender(); }
+// A run that ended must not leave a step spinning as "active".
+function _daSettleActive(state, detail){ if(!_daReport) return; let n=0;
+  Object.keys(_daReport.steps).forEach(id=>{ const s=_daReport.steps[id]; if(s && s.state==="active"){ _daReport.steps[id]={state:state,detail:detail||s.detail||""}; n++; } });
+  if(n) _daStepsRender(); }
+function _daReportText(which){
+  const r=(which==="review" && _daReviewReport) ? _daReviewReport : _daReport; if(!r) return "No AI document read has run in this session yet.";
   const ICON={pending:"○",active:"…",ok:"✓",fail:"✗",skip:"–"};
   const L=[];
   L.push("Wealth Analyzer — AI document intake report");
@@ -9784,8 +9799,8 @@ function _daReportText(){
   L.push("Error: "+(r.error||"none"));
   return L.join("\n");
 }
-async function daCopyReport(btn){
-  const txt=_daReportText(); let ok=false;
+async function daCopyReport(btn, which){
+  const txt=_daReportText(which); let ok=false;
   try{ await navigator.clipboard.writeText(txt); ok=true; }catch(_){}
   if(!ok){ try{ const ta=document.createElement("textarea"); ta.value=txt; ta.style.cssText="position:fixed;left:-9999px;top:0"; document.body.appendChild(ta); ta.select(); ok=document.execCommand("copy"); ta.remove(); }catch(_){} }
   if(!ok){ try{ window.prompt("Copy this report (Ctrl+C), then paste it to support:", txt); ok=true; }catch(_){} }
@@ -9797,7 +9812,8 @@ window.daCopyReport=daCopyReport;
 // (the status line and the steps say why).
 async function _daRunIntake(o){   // o: {owner:"upload"|"agent", files, docType, instruction, st}
   const st=o.st, say=(t,c)=>{ if(st){ st.textContent=t; st.style.color=c||"var(--text3)"; } };
-  if(_daBusy){ say("⏳ A document is already being read — wait for it to finish, or "+(o.owner==="upload"?"close this window":"press Cancel")+" to stop it.","var(--amber)"); return null; }
+  // Tell the user how to stop the read that is actually running — it may belong to the other window.
+  if(_daBusy){ say("⏳ A document is already being read — wait for it to finish, or "+(_daRunOwner==="agent"?"press Cancel in the AI Data Agent panel (Portfolio tab)":"close the Upload Document window")+" to stop it.","var(--amber)"); return null; }
   _daBusy=true; _daRunOwner=o.owner; const run=_daRunCtl=new AbortController();
   _fdActiveLabel=""; _daSourceLabel=(o.owner==="upload"?"Upload Document (AI)":"AI Data Agent");   // provenance: never a previous import's name
   _daReportNew(o.owner, o.files, o.docType);
@@ -9815,19 +9831,23 @@ async function _daRunIntake(o){   // o: {owner:"upload"|"agent", files, docType,
     // 2-4 · Send → reply → recognize (callAIExtract records steps 2-3; one automatic re-ask)
     _daStep("send","active",AI_MODEL);
     const {raw,total,ext}=await _daExtractWithRetry(content, st, run.signal);
-    if(run.signal.aborted) return null;
+    if(run.signal.aborted){ _daSettleActive("skip","cancelled by you"); _daReport.error="cancelled"; say("Cancelled — nothing was read."); return null; }
     if(!total){ _daStep("parse","fail","nothing recognizable in the reply — "+_daDescribeRaw(raw,_daLastAI)); _daReport.error="no usable data in Claude's reply";
       say(_daNothingMsg(raw),"var(--amber)"); return null; }
     _daReport.counts=Object.fromEntries(Object.keys(ext).map(k=>[k,ext[k].length]));
     _daStep("parse","ok", total+" item"+(total!==1?"s":"")+" — "+Object.keys(ext).filter(k=>ext[k].length).map(k=>k+" "+ext[k].length).join(", "));
-    _daExtraction=ext; _daReviewToken=ext; _daRunCtl=null;
+    _daExtraction=ext; _daReviewToken=ext; _daReviewReport=_daReport; _daRunCtl=null;   // the review, its data and its report travel together
     say("✓ Extracted "+total+" item"+(total!==1?"s":"")+" — review below.","var(--green)");
     return ext;
   }catch(e){
-    if(e && e.cancelled){ _daStep("reply","skip","cancelled by you"); _daReport.error="cancelled"; say("Cancelled — nothing was read."); return null; }
+    if(e && e.cancelled){ _daSettleActive("skip","cancelled by you"); _daReport.error="cancelled"; say("Cancelled — nothing was read."); return null; }
     _daReport.error=String((e&&e.message)||e);
-    const ss=_daReport.steps.send, rs=_daReport.steps.reply;   // mark the step that actually failed, once
-    if(!(ss && ss.state==="fail") && !(rs && rs.state==="fail")) _daStep("reply","fail",_daReport.error);
+    // Mark the step that actually failed, once: the first one that isn't done.
+    const S=_daReport.steps;
+    if(!_DA_STEPS.some(([id])=>S[id] && S[id].state==="fail")){
+      const first=_DA_STEPS.find(([id])=>!(S[id] && (S[id].state==="ok"||S[id].state==="skip")));
+      _daStep(first?first[0]:"reply","fail",_daReport.error); }
+    _daSettleActive("fail");
     say("✗ "+_daReport.error,"var(--red)"); try{ console.error("[AI intake]",e); }catch(_){} return null;
   }finally{ if(_daRunCtl===run) _daRunCtl=null; _daBusy=false; _daRunOwner=""; }
 }
@@ -9844,8 +9864,21 @@ async function runUploadDocExtract(){
   const xb=$("uploadDocExtractBtn"); const wasBusy=_daBusy; if(xb && !wasBusy) xb.disabled=true;
   try{
     const ext=await _daRunIntake({owner:"upload", files, docType:val("uploadDocType"), instruction:_daInstruction(val("uploadDocType")), st});
-    if(ext){ closeUploadDoc(); renderReviewModal(); _daStep("review","ok","tick the rows you want, then “Add to the app”"); }
+    // Close this window only once the review is actually on screen — closing first
+    // is how a review that failed to show read as "it closed and nothing happened".
+    if(ext && _daOpenReview(st)) closeUploadDoc();
   }finally{ if(xb && !wasBusy) xb.disabled=false; }
+}
+// Open the review window and confirm it really appeared; otherwise keep the calling
+// window open and say so there (steps + Copy report) instead of vanishing.
+function _daOpenReview(st){
+  let shown=false, err="";
+  try{ shown=renderReviewModal(); }catch(e){ err=(e&&e.message)||String(e); try{ console.error("[AI intake] review window",e); }catch(_){} }
+  if(shown){ _daStep("review","ok","tick the rows you want, then “Add to the app”"); return true; }
+  const why="the review window couldn't be shown"+(err?" ("+err+")":"");
+  _daStep("review","fail",why); if(_daReport) _daReport.error=why;
+  if(st){ st.textContent="✗ The document was read, but "+why+". Click “Copy report” and send it to support."; st.style.color="var(--red)"; }
+  return false;
 }
 // Back-compat: keep the panel-based AI Data Agent flow working (Portfolio tab).
 function onAgentFilesChange(){
@@ -10476,7 +10509,7 @@ async function runDataAgent(){
   const inp=$("aiAgentFiles"), files=inp&&inp.files?Array.from(inp.files):[];
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
   const ext=await _daRunIntake({owner:"agent", files, docType:"statement / holdings", instruction:_daHoldingsInstruction(), st});
-  if(ext){ renderReviewModal(); _daStep("review","ok","tick the rows you want, then “Add to the app”"); }
+  if(ext) _daOpenReview(st);
 }
 // Panel Cancel: stop a read this panel started, then hide the panel.
 function daCancelAgent(){ if(_daBusy && _daRunOwner==="agent") _daCancelRun(); show("aiAgentPanel",false); }
@@ -10492,8 +10525,18 @@ function _daRow(dom,i,ok,src,cells,checked){
     + cells.map(c=>`<span class="da-cell" style="${c.w||""}">${c.lbl?`<label class="da-fl">${c.lbl}</label>`:""}${c.html}</span>`).join("")
     + `<span class="da-cell" style="flex:0 0 auto">${_daPill(ok)}${src?` <span class="da-src" title="${_daEsc(src)}">ⓘ</span>`:""}</span></div>`;
 }
+// Page-wide popups must not live inside a tab. A hidden tab is display:none, which
+// hides its position:fixed children too — the review window sat in the Portfolio
+// tab, so an Upload Document read from any other tab rendered it at 0×0: the
+// upload window closed and "nothing happened". Hoisted to <body> at startup and
+// again on every open.
+function _toBody(el){ if(el && el.parentNode!==document.body) document.body.appendChild(el); return el; }
+function _hoistModals(){ ["aiReviewModal","siMapModal","fdSpecModal","ordModalBg","ordModal"].forEach(id=>_toBody(document.getElementById(id))); }
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",_hoistModals); else _hoistModals();
+function _daReviewVisible(){ const b=document.querySelector("#aiReviewModal .da-modal"); if(!b) return false; const r=b.getBoundingClientRect(); return r.width>0 && r.height>0; }
+// Returns true only when the review window is actually on screen.
 function renderReviewModal(){
-  const m=$("aiReviewModal"); if(!m||!_daExtraction) return;
+  const m=_toBody($("aiReviewModal")); if(!m||!_daExtraction) return false;
   const x=_daExtraction;
   const REGS=_daOpts(INV_REGION_LABELS), TYPES=_daOpts(INV_TYPE_LABELS), CLSS=_daOpts(INV_CLASS_LABELS), LOANS=_daOpts(LOAN_LABELS);
   const CTRY=Object.keys(COUNTRY_ACCOUNTS).map(k=>({v:k,l:(COUNTRY_ACCOUNTS[k].name||k)}));
@@ -10613,7 +10656,7 @@ function renderReviewModal(){
       <div class="da-modal-body">${html||'<div class="pf-empty">Nothing to review.</div>'}</div>
       <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3);flex:1;min-width:0"></span>
         <span id="daTickCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
-        ${(_daReport && _daReviewToken===_daExtraction)?`<button class="btn-secondary" onclick="daCopyReport(this)" title="Copy a report of this read (no key included)">Copy report</button>`:""}
+        ${(_daReviewReport && _daReviewToken===_daExtraction)?`<button class="btn-secondary" onclick="daCopyReport(this,'review')" title="Copy a report of this read (no key included)">Copy report</button>`:""}
         <button class="btn-secondary" onclick="daRequestClose()">Cancel</button>
         <button class="btn-primary da-apply-btn" onclick="applyDataAgent()">✓ Add to the app</button></div>
     </div>`;
@@ -10621,6 +10664,7 @@ function renderReviewModal(){
   m.querySelectorAll(".da-chk").forEach(c=>c.addEventListener("change",_daUpdateTickCount));
   _daUpdateTickCount();
   m.style.display="block";
+  return _daReviewVisible();
 }
 function closeReviewModal(){ const m=$("aiReviewModal"); if(m) m.style.display="none"; }
 let _daApplied=false;   // has the current extraction been added to the app?
@@ -10806,11 +10850,15 @@ function applyDataAgent(){
   if(ast){ ast.textContent="✓ Added "+summary+"."; ast.style.color="var(--green)"; }
   _daApplied=true;
   try{ if(typeof _topStatus==="function") _topStatus("✓ Added from "+_daImportSource()+": "+summary); }catch(_){}
-  // Close after a beat and show the Household tab, where the result is visible
-  // straight away (clients, address, net worth in the overview).
+  // Close after a beat and show the tab where the result is visible straight away:
+  // Household for people / income / expenses / retirement (net worth is in its
+  // overview), else the tab holding what was added.
+  const dest = (added.people||added.incomes||added.expenses||added["retirement plan"]) ? "household"
+    : (added.accounts||added.property||added["other assets"]) ? "assets" : added.loans ? "liabilities"
+    : added.goals ? "goals" : added.holdings ? "portfolio" : "";
   setTimeout(()=>{ try{ closeReviewModal(); }catch(_){}
-    try{ if(added.people||added.incomes||added.expenses||added["retirement plan"]){
-      const nav=[...document.querySelectorAll(".nav-item")].find(el=>/^\s*Household\s*$/i.test(el.textContent)); if(typeof showTab==="function") showTab("household",nav); window.scrollTo(0,0); } }catch(_){} }, 1400);
+    try{ const cur=(document.querySelector(".tab.active")||{}).id;
+      if(dest && cur!=="tab-"+dest && typeof showTab==="function"){ showTab(dest,document.querySelector('.nav-item[data-tab="'+dest+'"]')); window.scrollTo(0,0); } }catch(_){} }, 1400);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
