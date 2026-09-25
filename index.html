@@ -4580,7 +4580,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1715";
+const APP_VERSION = "20260925-1753";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9640,7 +9640,7 @@ function cancelEditAltInvestment(){
 function getAIKey(){return localStorage.getItem("wa_ai_key")||"";}
 function saveAIKey(){
   const v=$("aiKeyInput")?.value||"";
-  if(v) localStorage.setItem("wa_ai_key",v);
+  if(v){ localStorage.setItem("wa_ai_key",v); try{ localStorage.removeItem("wa_ai_fast"); _daFastOff=false; }catch(_){} }
 }
 // Dedicated Settings → Data & integrations AI-key field. Saves on every
 // edit (allows clearing), and keeps the detected-state notes in sync across
@@ -9649,6 +9649,7 @@ function onAiKeyInput(){
   const el=document.getElementById("aiKeyInput"); if(!el) return;
   const v=(el.value||"").trim();
   try{ if(v) localStorage.setItem("wa_ai_key", v); else localStorage.removeItem("wa_ai_key"); }catch(_){}
+  try{ localStorage.removeItem("wa_ai_fast"); _daFastOff=false; }catch(_){}   // a new key may have fast mode — try it again
   syncAiKeyNote();
   try{ if(typeof uploadDocKeyNote==="function") uploadDocKeyNote(); }catch(_){}
   try{ if(typeof daKeyNote==="function") daKeyNote(); }catch(_){}
@@ -9792,7 +9793,7 @@ function _daReportText(which){
   L.push("Files: "+(r.files.map(f=>f.name+" ("+f.size+" bytes, "+f.type+")").join("; ")||"none"));
   L.push("Steps:");
   _DA_STEPS.forEach(([id,label])=>{ const s=r.steps[id]; L.push("  "+(s?ICON[s.state]:"○")+" "+label+(s&&s.detail?" — "+s.detail:"")); });
-  if(r.http.length) L.push("Requests: "+r.http.map((h,i)=>"#"+(i+1)+" → "+(h.status||"no response")+(h.ms!=null?" in "+(h.ms/1000).toFixed(1)+" s":"")+(h.msg?" ("+h.msg+")":"")).join(" · "));
+  if(r.http.length) L.push("Requests: "+r.http.map((h,i)=>"#"+(i+1)+" "+(h.mode||"")+" → "+(h.status||"no response")+(h.ms!=null?" in "+(h.ms/1000).toFixed(1)+" s":"")+(h.ttfb!=null?" (first byte "+(h.ttfb/1000).toFixed(1)+" s)":"")+(h.msg?" ("+h.msg+")":"")).join(" · "));
   if(r.reply) L.push("Reply: stop "+(r.reply.stop_reason||"?")+" · tokens in "+(r.reply.input_tokens??"?")+" / out "+(r.reply.output_tokens??"?")+" · blocks "+(r.reply.blocks||"?")+(r.reply.shape?" · shape "+r.reply.shape:""));
   if(r.counts) L.push("Recognized: "+Object.keys(r.counts).filter(k=>r.counts[k]).map(k=>k+" "+r.counts[k]).join(", "));
   if(r.apply) L.push("Apply: "+r.apply.summary+(r.apply.errors&&r.apply.errors.length?" · errors: "+r.apply.errors.join("; "):"")+(r.apply.skipped&&r.apply.skipped.length?" · skipped: "+r.apply.skipped.join("; "):""));
@@ -10178,37 +10179,52 @@ async function fileToBlocks(file){
 }
 
 // ── Extraction schema (enums generated LIVE from the app constants) ──────────
+// Every account-type code the app knows, per country ("CH: private_account,
+// savings_account, …; US: …"). Claude picks the exact code, so a Swiss 2nd-pillar
+// pension lands as BVG/LPP (locked) instead of being fuzzy-matched to a liquid
+// savings account — which let the simulation spend a client's pension.
+function _daAccountCodeList(){
+  return Object.keys(COUNTRY_ACCOUNTS).map(cc=>cc+": "+COUNTRY_ACCOUNTS[cc].groups.map(g=>g.accounts.map(a=>a.value).join(",")).join(",")).join("; ");
+}
+// Speed: no nullable types and no required blanks — every "null" the model writes
+// is output it has to generate, and output tokens are what a read waits on.
 function buildExtractionSchema(){
-  const E=a=>({type:["string","null"],enum:[...a,null]});
-  const num={type:["number","null"]}, str={type:["string","null"]};
-  const conf={type:["number","null"],description:"0-1 confidence this value is correct"};
-  const src={type:["string","null"],description:"short verbatim snippet from the source supporting this value"};
+  const E=a=>({type:"string",enum:[...a]});
+  const num={type:"number"}, str={type:"string"};
+  const conf={type:"number",description:"0-1 confidence"};
+  const src={type:"string",description:"at most 6 words copied from the document"};
   const invType=Object.keys(INV_TYPE_LABELS), invClass=Object.keys(INV_CLASS_LABELS),
         invRegion=Object.keys(INV_REGION_LABELS), loanType=Object.keys(LOAN_LABELS),
         countries=Object.keys(COUNTRY_ACCOUNTS);
   return {
     name:"submit_profile",
-    description:"Return every piece of household financial-planning data found in the documents.",
+    description:"Submit every piece of household financial-planning data found in the documents. Omit any field or section the documents don't show.",
     input_schema:{ type:"object", properties:{
       household:{type:"array",items:{type:"object",properties:{
         role:{type:"string",enum:["client1","client2","child"]},
-        first:str,last:str,dob:str,street:str,apt:str,city:str,state:str,postal:str,country:E(countries),
-        relationship:str,
+        first:str,last:str,dob:{type:"string",description:"YYYY-MM-DD"},street:str,apt:str,city:str,state:{type:"string",description:"state / province / canton"},postal:str,country:E(countries),
+        relationship:{type:"string",description:"client2: relation to client 1 (spouse, domestic partner…); child: son / daughter / dependant"},
         riskTolerance:E(["very_conservative","conservative","moderately_conservative","moderate","moderately_aggressive","aggressive","very_aggressive"]),
         timeHorizon:E(["1_5","5_10","10_15","15_plus"]),
         confidence:conf,sourceQuote:src},required:["role"]}},
       income:{type:"array",items:{type:"object",properties:{
-        who:{type:"string",enum:["client1","client2"]},primary:num,secondary:num,raisePct:num,confidence:conf,sourceQuote:src}}},
-      expenses:{type:"object",properties:{living:num,insurance:num,other:num,annualSavings:num,inflationPct:num,confidence:conf,sourceQuote:src}},
-      assets:{type:"array",items:{type:"object",properties:{
-        label:str,accountTypeHint:str,value:num,country:E(countries),ccy:str,propertyValue:num,otherValue:num,confidence:conf,sourceQuote:src}}},
+        who:{type:"string",enum:["client1","client2"]},primary:{type:"number",description:"salary / main income per year"},secondary:{type:"number",description:"bonus / other income per year"},raisePct:num,confidence:conf,sourceQuote:src}}},
+      expenses:{type:"object",description:"household spending per year",properties:{living:num,insurance:num,other:num,annualSavings:{type:"number",description:"yearly savings target"},inflationPct:num,confidence:conf,sourceQuote:src}},
+      assets:{type:"array",description:"one row per account, policy or property",items:{type:"object",properties:{
+        label:str,
+        accountType:{type:"string",description:"exact code for the row's country from: "+_daAccountCodeList()},
+        accountTypeHint:{type:"string",description:"the account kind as written in the document"},
+        taxType:{type:"string",enum:["taxable","tax_deferred","tax_free"]},
+        value:{type:"number",description:"current value of an account"},country:E(countries),ccy:str,
+        propertyValue:{type:"number",description:"market value of a home / real estate (use instead of value)"},
+        otherValue:{type:"number",description:"cars, art, collectibles (use instead of value)"},confidence:conf,sourceQuote:src}}},
       liabilities:{type:"array",items:{type:"object",properties:{
-        type:E(loanType),label:str,balance:num,ratePct:num,years:num,confidence:conf,sourceQuote:src}}},
+        type:E(loanType),label:str,balance:num,ratePct:num,years:{type:"number",description:"years left"},confidence:conf,sourceQuote:src}}},
       goals:{type:"array",items:{type:"object",properties:{
-        name:str,amount:num,homePrice:num,startYear:num,endYear:num,
+        name:str,amount:{type:"number",description:"per year, today's money"},homePrice:num,startYear:num,endYear:num,
         category:E(["retirement","home","education","travel","emergency","business","wedding","car","health","legacy","other"]),
         tier:E(["essential","important","aspirational","legacy"]),confidence:conf,sourceQuote:src}}},
-      holdings:{type:"array",items:{type:"object",properties:{
+      holdings:{type:"array",description:"only positions with a stated market value",items:{type:"object",properties:{
         name:str,tkr:str,val:num,type:E(invType),cls:E(invClass),region:E(invRegion),
         er:num,yld:num,note:str,confidence:conf,sourceQuote:src}}},
       retirement:{type:"object",description:"Retirement plan: desired spending, planned retirement ages, and each client's pension / social-security benefit.",properties:{
@@ -10216,10 +10232,32 @@ function buildExtractionSchema(){
         client1RetirementAge:num, client2RetirementAge:num,
         client1PensionAnnual:num, client1PensionStartAge:num,
         client2PensionAnnual:num, client2PensionStartAge:num,
-        confidence:conf, sourceQuote:src}}
-    }, required:[] }
+        confidence:conf, sourceQuote:src}},
+      tax:{type:"object",description:"Tax as the document states it",properties:{
+        incomeTaxPct:{type:"number",description:"the client's current income-tax rate % as stated (total, all levels)"},capitalGainsPct:{type:"number",description:"capital-gains rate % (0 if stated as exempt)"},
+        includeTaxes:{type:"boolean",description:"include taxes in projections"},confidence:conf,sourceQuote:src}}
+    } }
   };
 }
+// Reading rules, sent as the system prompt (the same on every read, so it is
+// cached with the tool definition). Written for the documents advisors actually
+// upload: fact-find questionnaires with tick boxes, bank / pension statements.
+const AI_SYSTEM_PROMPT=[
+  "You extract household financial-planning data from client documents for a wealth-management app. Call submit_profile exactly once with everything you find.",
+  "Report only values the documents show — never estimate or invent. Leave out any field you cannot see; don't write empty strings or placeholders.",
+  "Forms: a mark (X, ✓, filled box) beside an option means it is selected. '—', 'n/a' or a blank means no value. Columns labelled C1 / C2 are client 1 / client 2.",
+  "Money: plain numbers, no symbols or separators (CHF 1'250'000 → 1250000; 1.2M → 1200000; (1,200) → -1200). Amounts are per year; if the document says per month, multiply by 12.",
+  "Percentages as whole numbers (1.9% → 1.9, 0.2% → 0.2). Dates as YYYY-MM-DD (12.04.1978 → 1978-04-12).",
+  "People: client1 is the primary client, client2 the partner / spouse, every child or dependant a separate row with role child. If only a marital status of Married is marked, client2's relationship is spouse.",
+  "Income: primary = salary / main income, secondary = bonus / other income, one row per client.",
+  "Assets: one row per account, policy or pension with its current value; accountType = the exact code for that country; taxType from a T/D/F column or the account's nature (pension / 2nd pillar = tax_deferred, pillar 3a / Roth = tax_free). A home or real estate: one row with propertyValue, not value. The home is an asset; its mortgage is a liability.",
+  "Loans: current balance, interest rate, years left — never the monthly payment as the balance.",
+  "Goals: amount per year in today's money; startYear = first year; endYear = startYear + duration − 1 (a one-off goal ends the year it starts). tier from the marked priority.",
+  "Risk tolerance and time horizon per client from their marked boxes; for a horizon range pick the option containing its midpoint.",
+  "Holdings: only positions with a stated market value; skip instruments that are only mentioned in notes.",
+  "Retirement: desired yearly spending, each client's retirement age, and each client's pension / social security per year with its start age.",
+  "confidence: 0-1 per row. sourceQuote: at most 6 words copied from the document."
+].join("\n");
 // Per-document-type focus hints appended to the extraction prompt, so the reader
 // prioritises the fields that document actually carries.
 const DOC_TYPE_HINTS = {
@@ -10243,16 +10281,11 @@ function _daHoldingsInstruction(){
     +"Holdings classes ("+Object.keys(INV_CLASS_LABELS).join(", ")+"); holding types ("+Object.keys(INV_TYPE_LABELS).join(", ")+"); regions ("+Object.keys(INV_REGION_LABELS).join(", ")+"). "
     +"Give a 0-1 confidence and a short sourceQuote for each value.";
 }
+// The reading rules live in AI_SYSTEM_PROMPT; this is the per-read request.
 function _daInstruction(docType){
   const hint = (docType && DOC_TYPE_HINTS[docType]) ? (" "+DOC_TYPE_HINTS[docType]+" Still capture any other data you can see, but focus there first.") : "";
-  return "Extract a household financial profile from the attached documents (brokerage/bank statements, tax forms, screenshots, photos, spreadsheets, handwritten notes). "
-    +"Report ONLY values you can actually see — never guess or invent. Use the submit_profile tool. "
-    +"Money: plain numbers, no symbols/commas (1.2M -> 1200000, 500k -> 500000; parentheses mean negative). "
-    +"Expense ratios and yields as WHOLE PERCENT numbers (1.8% -> 1.8, 0.03% -> 0.03 — NOT 0.018). Loan and inflation rates as whole percent (6.5% -> 6.5). "
-    +"Dates as YYYY-MM-DD. Omit or null anything not present. For every classification use ONLY the allowed enum values; map each item to the closest one. "
-    +"Holdings classes ("+Object.keys(INV_CLASS_LABELS).join(", ")+"); holding types ("+Object.keys(INV_TYPE_LABELS).join(", ")+"); regions ("+Object.keys(INV_REGION_LABELS).join(", ")+"). "
-    +"Retirement: capture desired annual spending in retirement, each client's planned retirement age, and each client's pension / social-security ANNUAL benefit and start age. If a pension figure is written per month, multiply by 12 to report an annual amount. "
-    +"Give a 0-1 confidence and a short sourceQuote for each value."+hint;
+  return "Extract the household financial profile from the attached documents (questionnaires, bank / brokerage / pension statements, tax forms, screenshots, photos, spreadsheets, handwritten notes) and submit it with submit_profile. "
+    +"Read every page and every section, including notes, before you submit."+hint;
 }
 
 // ── AI call (forced tool_use → guaranteed structured object) ─────────────
@@ -10260,7 +10293,7 @@ function _daInstruction(docType){
 // body is JSON like {"type":"error","error":{"message":"Your credit balance is
 // too low…"}} — shown verbatim it reads as a crash, not as "add credit".
 function _aiErrorMessage(status, apiMsg){
-  const m=String(apiMsg||"").trim();
+  const m=String(apiMsg||"").trim().replace(/\.+$/,"");   // the sentences below add their own full stop
   if(/credit balance/i.test(m)) return "Your Anthropic account has no credit left — add credit at console.anthropic.com → Plans & Billing, then try again.";
   if(status===401) return "Anthropic rejected the AI key (invalid or revoked) — paste a valid key in Settings → Data & integrations.";
   if(status===403) return "This AI key isn't allowed to do that ("+(m||"permission denied")+") — check the key's workspace at console.anthropic.com.";
@@ -10275,21 +10308,45 @@ function _aiErrorMessage(status, apiMsg){
   if(status===400) return "Anthropic couldn't process this upload"+(m?": "+m:"")+".";
   return "AI service error "+status+(m?": "+m:"")+".";
 }
-const AI_TIMEOUT_MS = 240000;   // a 4-page PDF normally answers in well under a minute
+const AI_TIMEOUT_MS = 240000;   // hard ceiling per request; a read normally streams in well under a minute
 let _daLastAI = null;           // key-free summary of the last AI reply (diagnostics only)
-// Run the extraction with a live timer. If the reply can't be read at all, ask
-// once more before giving up — an occasional malformed reply usually succeeds on
-// a second try. Sets _daExtraction; returns {raw,total}.
+// Live progress of the read in flight, fed by the streamed reply: how many rows
+// Claude has written so far and which section it is on.
+let _daLive = null;
+const _DA_SEC_LABEL={household:"people",income:"income",expenses:"expenses",assets:"accounts & property",liabilities:"loans",goals:"goals",holdings:"holdings",retirement:"retirement",tax:"tax"};
+function _daModelLabel(){ return AI_MODEL+((_daLive&&_daLive.fast)?" · fast mode":""); }
+// Incremental scan of the tool-call JSON as it streams in (never re-reads what it
+// has seen): counts rows ('{' one or two levels down) and notes the current section.
+function _daTrack(json){ const L=_daLive; if(!L) return;
+  let i=L.pos||0, d=L.depth||0, s=!!L.inStr, e=!!L.esc, n=L.items||0;
+  for(; i<json.length; i++){ const c=json[i];
+    if(s){ if(e) e=false; else if(c==="\\") e=true; else if(c==='"'){ s=false;
+        if(L.keyStart!=null){ const k=json.slice(L.keyStart+1,i); if(k in _DA_SEC_LABEL) L.section=k; L.keyStart=null; } }
+      continue; }
+    if(c==='"'){ s=true; L.keyStart=(d===1)?i:null; continue; }
+    if(c==="{"||c==="["){ if(c==="{" && (d===1||d===2)) n++; d++; }
+    else if(c==="}"||c==="]") d--;
+  }
+  L.pos=i; L.depth=d; L.inStr=s; L.esc=e; L.items=n; }
+// Run the extraction with a live timer and live row count. If the reply can't be
+// read at all, ask once more before giving up — an occasional malformed reply
+// usually succeeds on a second try. Returns {raw,total,ext}.
 async function _daExtractWithRetry(content, st, signal){
   let raw=null, total=0, ext=null;
   for(let pass=0; pass<2; pass++){
-    const t0=Date.now(), label = pass ? "Claude's first reply couldn't be read — asking again… " : "Reading with Claude (Anthropic)… ";
-    if(pass){ _daStep("send","active",AI_MODEL+" · asking again"); _daStep("reply","active","first reply had no usable data — asking Claude once more"); }
-    const tickFn=()=>{ if(signal&&signal.aborted) return; const secs=Math.round((Date.now()-t0)/1000);
-      if(st){ st.textContent=label+secs+"s — usually under a minute"; st.style.color="var(--text3)"; }
-      if(_daReport && (_daReport.steps.send||{}).state==="active") _daStep("send","active",AI_MODEL+" · waiting "+secs+" s"); };
-    tickFn(); const tick=setInterval(tickFn,1000);
-    try{ raw=await callAIExtract(content, signal); } finally{ clearInterval(tick); }
+    const t0=Date.now(), again=pass>0;
+    if(again){ _daStep("send","active",AI_MODEL+" · asking again"); _daStep("reply","pending","first reply had no usable data — asking once more"); }
+    _daLive={t0:t0, items:0, section:"", streaming:false, fast:false};
+    const tickFn=()=>{ if(signal&&signal.aborted) return; const secs=Math.round((Date.now()-t0)/1000), L=_daLive||{};
+      const found=L.items?(" — "+L.items+" item"+(L.items!==1?"s":"")+" so far"+(L.section?" ("+(_DA_SEC_LABEL[L.section]||L.section)+")":"")):"";
+      if(st){ st.textContent=(again?"Asking Claude once more… ":"Reading with Claude (Anthropic)… ")+secs+" s"+found; st.style.color="var(--text3)"; }
+      if(_daReport){ const S=_daReport.steps;
+        if((S.send||{}).state==="active") _daStep("send","active",_daModelLabel()+" · waiting "+secs+" s");
+        else if((S.reply||{}).state==="active" && L.streaming) _daStep("reply","active","receiving · "+secs+" s"+found); } };
+    tickFn(); const tick=setInterval(tickFn,400);
+    try{ raw=await callAIExtract(content, signal); }
+    catch(e){ if(e && e.badJson && !again){ try{ console.warn("[AI extract] unreadable reply — asking again"); }catch(_){} raw=null; continue; } throw e; }   // one re-ask, like an empty reply
+    finally{ clearInterval(tick); _daLive=null; }
     ext=normalizeExtraction(raw);   // not written to _daExtraction here: a cancelled / superseded run must not replace an open review
     total=Object.keys(ext).reduce((s,k)=>s+ext[k].length,0);
     if(total) break;
@@ -10310,67 +10367,160 @@ function _daCancelledErr(){ const e=new Error("Cancelled — nothing was read.")
 function _daSleep(ms, signal){ return new Promise((res,rej)=>{ if(signal&&signal.aborted) return rej(_daCancelledErr());
   const t=setTimeout(()=>{ if(signal) signal.removeEventListener("abort",onA); res(); }, ms);
   const onA=()=>{ clearTimeout(t); rej(_daCancelledErr()); }; if(signal) signal.addEventListener("abort",onA,{once:true}); }); }
+// Fast mode (research preview): the same Opus 4.8 model with output generated
+// about 2.5× faster, at 2× the per-token price. Not every key or account has it,
+// so a refusal falls straight back to standard speed for the same read.
+const AI_FAST_BETA = "fast-mode-2026-02-01";
+const AI_FAST_OFF_DAYS = 7;     // a key found without fast mode is re-tried after a week (or as soon as a key is saved)
+let _daFastOff = false;         // fast mode found unavailable to this key during this session
+function _daFastWanted(){ if(_daFastOff) return false;
+  try{ const v=localStorage.getItem("wa_ai_fast")||"", m=/^off:(\d+)$/.exec(v);
+    if(m && Date.now()-(+m[1]) < AI_FAST_OFF_DAYS*864e5) return false;
+    if(v) localStorage.removeItem("wa_ai_fast"); }catch(_){}
+  return true; }
+function _daFastRemember(){ _daFastOff=true; try{ localStorage.setItem("wa_ai_fast","off:"+Date.now()); }catch(_){} }
+// A refusal that is plainly about the upload or the account, not the speed —
+// re-sending it at standard speed would only fail the same way.
+const _DA_NOT_FAST=/credit balance|x-api-key|api key|pdf|image|document|too (large|long|many)|prompt is too long|exceed|max_tokens/i;
+// Read a streamed (SSE) Messages reply into the same shape a non-streamed call
+// returns. onJson is called with the tool call's JSON-so-far as it arrives.
+async function _daReadStream(r, onJson){
+  const reader=r.body.getReader(), dec=new TextDecoder(); let buf="";
+  const msg={stop_reason:"", usage:{}, content:[]}, blocks={};
+  const handle=line=>{ if(line.endsWith("\r")) line=line.slice(0,-1); if(!line.startsWith("data:")) return;
+    let d; try{ d=JSON.parse(line.slice(5).trim()); }catch(_){ return; }
+    const t=d.type;
+    if(t==="message_start"){ const u=(d.message&&d.message.usage)||{}; msg.usage.input_tokens=u.input_tokens; msg.usage.cache_read_input_tokens=u.cache_read_input_tokens; }
+    else if(t==="content_block_start"){ const cb=d.content_block||{}; blocks[d.index]={type:cb.type, name:cb.name, json:"", text:""}; }
+    else if(t==="content_block_delta"){ const b=blocks[d.index], dl=d.delta||{}; if(!b) return;
+      if(dl.type==="input_json_delta"){ b.json+=dl.partial_json||""; if(onJson) onJson(b.json); }
+      else if(dl.type==="text_delta") b.text+=dl.text||""; }
+    else if(t==="message_delta"){ if(d.delta&&d.delta.stop_reason) msg.stop_reason=d.delta.stop_reason; if(d.usage&&d.usage.output_tokens!=null) msg.usage.output_tokens=d.usage.output_tokens; }
+    else if(t==="error"){ const er=d.error||{}; const e=new Error(er.message||"stream error"); e.streamErrorType=er.type||"error"; throw e; } };
+  for(;;){ const {value,done}=await reader.read(); if(done) break;
+    buf+=dec.decode(value,{stream:true}); let i;
+    while((i=buf.indexOf("\n"))>=0){ const line=buf.slice(0,i); buf=buf.slice(i+1); handle(line); } }
+  buf+=dec.decode(); if(buf) handle(buf);
+  msg.content=Object.keys(blocks).sort((a,b)=>a-b).map(k=>{ const b=blocks[k];
+    if(b.type!=="tool_use") return {type:b.type, text:b.text};
+    let input=null; try{ input=b.json?JSON.parse(b.json):{}; }catch(_){ input=null; }   // null = unparseable (checked by the caller)
+    return {type:"tool_use", name:b.name, input:input}; });
+  return msg;
+}
 async function callAIExtract(content, signal){
   _daLastAI=null;
   if(signal && signal.aborted) throw _daCancelledErr();
   const key=getAIKey(); if(!key) throw new Error("No AI key set — add it in Settings → Data & integrations.");
-  const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
-  // 16000 = the API's recommended non-streaming default. 8192 left too little room
-  // for a full multi-page / multi-file profile (a cut-off tool call is unusable).
-  const body={ model:AI_MODEL, max_tokens:16000, system:"You are a meticulous financial-document data-extraction engine. Never fabricate values.",
-    tools:[buildExtractionSchema()], tool_choice:{type:"tool",name:"submit_profile"},
+  // Streamed, so rows appear as Claude writes them. The system prompt + tool
+  // definition are identical on every read and are cached: the next document
+  // starts faster and that part is billed at a tenth of the input price.
+  // eager_input_streaming: rows stream as Claude writes them instead of one
+  // section at a time (the reply is then parsed strictly, and re-asked if broken).
+  const tool=buildExtractionSchema();
+  const base={ model:AI_MODEL, max_tokens:16000, stream:true,
+    system:[{type:"text",text:AI_SYSTEM_PROMPT,cache_control:{type:"ephemeral"}}],
+    tool_choice:{type:"tool",name:"submit_profile"},
     messages:[{role:"user",content}] };
-  const payload=JSON.stringify(body);
-  for(let attempt=0; attempt<2; attempt++){
+  let fast=_daFastWanted(), busyRetried=false, eager=true, fastFail=null;
+  for(let attempt=0; attempt<4; attempt++){
+    const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
+    const body=Object.assign({},base,{tools:[eager?Object.assign({},tool,{eager_input_streaming:true}):tool]});
+    if(fast){ body.speed="fast"; headers["anthropic-beta"]=AI_FAST_BETA; }
+    if(_daLive){ _daLive.fast=fast; _daLive.streaming=false; _daLive.pos=0; _daLive.depth=0; _daLive.inStr=false; _daLive.esc=false; _daLive.items=0; _daLive.section=""; _daLive.keyStart=null; }
+    const payload=JSON.stringify(body), mode=fast?"fast":"standard";
     // One controller per attempt, aborted by the timeout OR by the user's Cancel
     // (closing the window), so a cancelled run stops paying for the request.
     const ctl=new AbortController(); let timedOut=false;
     const timer=setTimeout(()=>{ timedOut=true; ctl.abort(); }, AI_TIMEOUT_MS);
     const onUserAbort=()=>ctl.abort(); if(signal) signal.addEventListener("abort",onUserAbort,{once:true});
     const done=()=>{ clearTimeout(timer); if(signal) signal.removeEventListener("abort",onUserAbort); };
+    const aborted=(e,t0,where)=>{ const userCancel=!timedOut;
+      _daReportHttp({attempt:attempt+1,status:where==="connect"?0:200,ms:Math.round(performance.now()-t0),mode,msg:userCancel?"cancelled":"timed out"});
+      if(!userCancel){ _daStep(where==="connect"?"send":"reply","fail","no answer within "+Math.round(AI_TIMEOUT_MS/60000)+" minutes"); }
+      if(userCancel) return _daCancelledErr();
+      return new Error("Anthropic took longer than "+Math.round(AI_TIMEOUT_MS/60000)+" minutes to answer — try again, or upload fewer / smaller files."); };
     let r; const t0=performance.now();
     try{ r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers,body:payload,signal:ctl.signal}); }
     catch(e){
       done();
-      const userCancel=!!(e && e.name==="AbortError" && !timedOut);
-      _daReportHttp({attempt:attempt+1,status:0,ms:Math.round(performance.now()-t0),msg:userCancel?"cancelled":(timedOut?"timed out":String((e&&e.message)||e))});
-      if(!userCancel) _daStep("send","fail", timedOut ? "no answer within "+Math.round(AI_TIMEOUT_MS/60000)+" minutes" : "couldn't reach api.anthropic.com — "+((e&&e.message)||e)+" (network, firewall or a browser extension blocking it?)");
-      if(e && e.name==="AbortError"){ if(!timedOut) throw _daCancelledErr();
-        throw new Error("Anthropic took longer than "+Math.round(AI_TIMEOUT_MS/60000)+" minutes to answer — try again, or upload fewer / smaller files."); }
+      if(e && e.name==="AbortError") throw aborted(e,t0,"connect");
+      _daReportHttp({attempt:attempt+1,status:0,ms:Math.round(performance.now()-t0),mode,msg:String((e&&e.message)||e)});
+      // A fast-mode request that never got an answer: one standard-speed try
+      // before calling it a network problem (e.g. a proxy that strips the beta
+      // header). Not remembered — a network blip says nothing about fast mode.
+      if(fast){ fast=false; fastFail={status:0}; _daStep("send","active",AI_MODEL+" · standard speed"); continue; }
+      _daStep("send","fail","couldn't reach api.anthropic.com — "+((e&&e.message)||e)+" (network, firewall or a browser extension blocking it?)");
       throw new Error("Couldn't reach Anthropic's API ("+((e&&e.message)||e)+") — check your internet connection, then try again.");
     }
-    done();
-    const ms=Math.round(performance.now()-t0);
-    _daStep("send","ok",AI_MODEL+" · "+Math.max(1,Math.round(payload.length/1024))+" KB request");
+    const ttfb=Math.round(performance.now()-t0);
     if(!r.ok){
+      done();
       const t=await r.text(); let apiMsg=""; try{ const j=JSON.parse(t); apiMsg=(j&&j.error&&j.error.message)||""; }catch(_){ apiMsg=t.slice(0,200); }
-      _daReportHttp({attempt:attempt+1,status:r.status,ms,msg:String(apiMsg||"").slice(0,200)});
+      _daReportHttp({attempt:attempt+1,status:r.status,ms:ttfb,mode,msg:String(apiMsg||"").slice(0,200)});
+      // A field this API version doesn't know: drop it and re-send.
+      if(eager && r.status===400 && /eager_input_streaming/i.test(apiMsg)){ eager=false; continue; }
+      // Fast mode refused (not enabled for this key / account, or its separate
+      // rate limit used up): the same read at standard speed, straight away —
+      // unless the refusal is plainly about the upload or the account. Fast mode
+      // is switched off for later reads only when the refusal names it, or when
+      // standard speed then succeeds where fast failed (see below); a 429 is
+      // fast mode's own limit, not a missing feature, and is never remembered.
+      const specific=r.status!==429 && /\bspeed\b|fast[ -]?mode|fast-mode|research preview|\bbeta\b/i.test(apiMsg);
+      if(fast && (r.status===400||r.status===403||r.status===404||r.status===429) && (specific || r.status===429 || !_DA_NOT_FAST.test(apiMsg))){
+        fast=false; fastFail={status:r.status, specific:specific}; if(specific) _daFastRemember();
+        _daStep("send","active",AI_MODEL+" · standard speed"+(specific?" (fast mode not available on this key)":"")); continue; }
+      _daStep("send","ok",_daModelLabel()+" · "+Math.max(1,Math.round(payload.length/1024))+" KB request");
       // Busy / overloaded / rate-limited: one automatic retry after a short pause —
       // honouring retry-after when Anthropic sends it (and readable across CORS);
       // a long wait is reported instead of silently retried.
-      if(attempt===0 && (r.status===429 || r.status===529 || r.status>=500)){
+      if(!busyRetried && (r.status===429 || r.status===529 || r.status>=500)){
         const ra=parseInt(r.headers.get("retry-after")||"",10), wait=(isFinite(ra)&&ra>0)?ra:5;
-        if(wait<=20 && !(r.status===429 && /token/i.test(apiMsg))){ _daStep("reply","active","HTTP "+r.status+" — Anthropic busy, retrying in "+wait+" s"); await _daSleep(wait*1000, signal); continue; }
+        if(wait<=20 && !(r.status===429 && /token/i.test(apiMsg))){ busyRetried=true; _daStep("reply","pending","HTTP "+r.status+" — Anthropic busy, retrying in "+wait+" s"); await _daSleep(wait*1000, signal); _daStep("send","active",_daModelLabel()); continue; }
       }
       const friendly=_aiErrorMessage(r.status, apiMsg);
       _daStep("reply","fail","HTTP "+r.status+" — "+friendly);
       throw new Error(friendly);
     }
-    const data=await r.json();
-    _daReportHttp({attempt:attempt+1,status:r.status,ms});
+    _daStep("send","ok",_daModelLabel()+" · "+Math.max(1,Math.round(payload.length/1024))+" KB request");
+    _daStep("reply","active","receiving…"); if(_daLive) _daLive.streaming=true;
+    let data;
+    try{
+      data = /event-stream/i.test(r.headers.get("content-type")||"") ? await _daReadStream(r, _daTrack) : await r.json();
+    }catch(e){
+      done();
+      if(e && e.name==="AbortError") throw aborted(e,t0,"stream");
+      const et=(e&&e.streamErrorType)||"";
+      _daReportHttp({attempt:attempt+1,status:r.status,ms:Math.round(performance.now()-t0),mode,msg:"reply interrupted: "+(et?et+" — ":"")+((e&&e.message)||e)});
+      // Anthropic can report overload mid-stream: one retry, like a 529 before the stream.
+      if(!busyRetried && /overloaded|api_error|rate_limit/i.test(et)){ busyRetried=true;
+        if(_daLive){ _daLive.streaming=false; _daLive.items=0; _daLive.section=""; }   // no stale "receiving · N items" during the pause
+        _daStep("reply","pending","Anthropic busy — retrying in 5 s"); await _daSleep(5000, signal); _daStep("send","active",_daModelLabel()); continue; }
+      const friendly = /overloaded/i.test(et) ? _aiErrorMessage(529,(e&&e.message)||"") : "Claude's reply was interrupted ("+((e&&e.message)||e)+") — try again.";
+      _daStep("reply","fail",friendly); throw new Error(friendly);
+    }
+    done();
+    const ms=Math.round(performance.now()-t0);
+    _daReportHttp({attempt:attempt+1,status:r.status,ms,mode,ttfb});
     // Key-free summary of the reply, for the "nothing extracted" diagnostic.
     _daLastAI={ stop_reason:data.stop_reason||"", output_tokens:(data.usage&&data.usage.output_tokens!=null)?data.usage.output_tokens:null,
-      input_tokens:(data.usage&&data.usage.input_tokens!=null)?data.usage.input_tokens:null, blocks:(data.content||[]).map(b=>b.type).join("+") };
+      input_tokens:(data.usage&&data.usage.input_tokens!=null)?data.usage.input_tokens:null, blocks:(data.content||[]).map(b=>b.type).join("+"),
+      mode:mode, seconds:+(ms/1000).toFixed(1) };
+    if(_daReport) _daReport.reply=Object.assign({},_daLastAI);
     if(data.stop_reason==="refusal") throw new Error("Claude declined to process this document.");
     // A tool call cut off by max_tokens is incomplete — never apply a partial profile.
     if(data.stop_reason==="max_tokens") throw new Error("The document produced more data than fits in one answer — upload fewer files at a time.");
-    if(_daReport) _daReport.reply=Object.assign({},_daLastAI);
     const tu=(data.content||[]).find(b=>b.type==="tool_use");
     if(!tu) throw new Error("The model returned no structured data — try again.");
+    // Unparseable tool JSON (possible with eager streaming): _daExtractWithRetry asks once more.
+    if(tu.input==null){ const e=new Error("Claude's reply arrived incomplete and couldn't be read — try again."); e.badJson=true; throw e; }
+    // Standard speed worked where fast mode was refused without saying why: it is
+    // fast mode this key lacks — skip it for a while instead of failing first every time.
+    if(fastFail && !fastFail.specific && fastFail.status>=400 && fastFail.status!==429) _daFastRemember();
     if(_daReport && _daReport.reply) _daReport.reply.shape=_daDescribeRaw(tu.input||{});
-    _daStep("reply","ok","HTTP "+r.status+" · "+(ms/1000).toFixed(1)+" s · "+(_daLastAI.output_tokens!=null?_daLastAI.output_tokens:"?")+" output tokens");
+    _daStep("reply","ok","HTTP "+r.status+" · "+(ms/1000).toFixed(1)+" s"+(fast?" · fast mode":"")+" · "+(_daLastAI.output_tokens!=null?_daLastAI.output_tokens:"?")+" output tokens");
     return tu.input||{};
   }
+  throw new Error("Anthropic couldn't complete the read — try again in a minute.");
 }
 
 // ── Normalization (coerce to the app's exact vocabularies; defense in depth) ─
@@ -10416,7 +10566,7 @@ function _daEnum(v,allowed,dflt){ if(v==null) return dflt; const k=String(v).tri
 // like this one — or wraps the whole profile one level deeper. The normalizer
 // used to iterate only real arrays, so those replies came back as "no financial
 // data detected" even though Claude had read everything. Accept all shapes.
-const _DA_LIST_KEYS=["household","income","assets","liabilities","goals","holdings"], _DA_OBJ_KEYS=["expenses","retirement"];
+const _DA_LIST_KEYS=["household","income","assets","liabilities","goals","holdings"], _DA_OBJ_KEYS=["expenses","retirement","tax"];
 function _daParseMaybe(v){ if(typeof v!=="string") return v; const s=v.trim(); if(!/^[\[{]/.test(s)) return v; try{ return JSON.parse(s); }catch(_){ return v; } }
 function _daCoerceRaw(raw){
   raw=_daParseMaybe(raw); if(!raw || typeof raw!=="object" || Array.isArray(raw)) return {};
@@ -10440,7 +10590,7 @@ function _daDescribeRaw(raw, meta){
 }
 function normalizeExtraction(raw){
   raw=_daCoerceRaw(raw);
-  const out={household:[],income:[],expenses:[],assets:[],liabilities:[],goals:[],holdings:[],retirement:[]};
+  const out={household:[],income:[],expenses:[],assets:[],liabilities:[],goals:[],holdings:[],retirement:[],tax:[]};
   const ok=_daConf;
   (raw.household||[]).forEach(h=>{ out.household.push({ _ok:ok(h.confidence), _src:h.sourceQuote||"",
     role:_daEnum(h.role,["client1","client2","child"],"client1"), first:h.first||"", last:h.last||"", dob:_daDate(h.dob),
@@ -10471,6 +10621,7 @@ function normalizeExtraction(raw){
     else if(val>0 && propWord && !accountLike){ kind="property"; }
     out.assets.push({ _ok:ok(a.confidence), _src:a.sourceQuote||"", _kind:kind,
       label:a.label||"", accountTypeHint:a.accountTypeHint||(kind==="property"?"Property / real estate":kind==="other"?"Other personal assets":""),
+      accountType:(a.accountType?String(a.accountType).trim():""), taxType:_daEnum(a.taxType,["taxable","tax_deferred","tax_free"],""),
       value:value, country:_daCountry(a.country)||"",
       ccy:a.ccy||"", propertyValue:pv, otherValue:ov }); });
   (raw.liabilities||[]).forEach(l=>{ out.liabilities.push({ _ok:ok(l.confidence), _src:l.sourceQuote||"",
@@ -10491,6 +10642,15 @@ function normalizeExtraction(raw){
         client1RetirementAge:age(rt.client1RetirementAge), client2RetirementAge:age(rt.client2RetirementAge),
         client1PensionAnnual:_daNum(rt.client1PensionAnnual), client1PensionStartAge:age(rt.client1PensionStartAge),
         client2PensionAnnual:_daNum(rt.client2PensionAnnual), client2PensionStartAge:age(rt.client2PensionStartAge) }); } }
+  if(raw.tax && typeof raw.tax==="object"){ const tx=raw.tax;
+    const inc=tx.includeTaxes, incl=(inc===true||/^(yes|true|ja|oui)$/i.test(String(inc)))?"yes":(inc===false||/^(no|false|nein|non)$/i.test(String(inc)))?"no":"";
+    const row={ _ok:ok(tx.confidence), _src:tx.sourceQuote||"", incomeTaxPct:_daRate(tx.incomeTaxPct), capitalGainsPct:_daRate(tx.capitalGainsPct), includeTaxes:incl };
+    if(row.incomeTaxPct!=null || row.capitalGainsPct!=null || incl) out.tax.push(row); }
+  // An account row without a country: the country Claude's account code belongs
+  // to (when only one has it), else the primary client's — not the app's current
+  // country, which discarded a valid Swiss code in an app still set to the US.
+  const hhC=((out.household.find(h=>h.role==="client1")||out.household.find(h=>h.country)||{}).country)||"";
+  out.assets.forEach(a=>{ if(!a.country) a.country=_daCountryForCode(a.accountType, hhC) || hhC || ""; });
   // Drop records that carry nothing — they'd count as "extracted" (blocking the
   // re-ask / diagnostic) and show as empty review rows.
   out.household=out.household.filter(h=>h.first||h.last||h.dob);
@@ -10587,13 +10747,17 @@ function renderReviewModal(){
   // correctable. When the app already holds a property / other-asset value, the
   // reviewer chooses whether imported values replace it or are added to it.
   const KIND=[{v:"account",l:"Account"},{v:"property",l:"Property / home"},{v:"other",l:"Other personal asset"}];
-  const assetRows=x.assets.map((a,i)=>_daRow("assets",i,a._ok,a._src,[
+  // Account type is a real choice from the row's country (the same list as the
+  // Assets tab), pre-selected from Claude's code or matched from the document's
+  // wording — so the reviewer sees "BVG/LPP – 2nd pillar" and can correct it.
+  const assetRows=x.assets.map((a,i)=>{ const cc=a.country||val("c1co")||"US";
+    return _daRow("assets",i,a._ok,a._src,[
     {lbl:"Label",html:_daInput("assets",i,"label",a.label),w:"flex:1.3"},
-    {lbl:"Add as",html:_daSelect("assets",i,"_kind",a._kind||"account",KIND),w:"flex:0 0 150px"},
-    {lbl:"Account type (hint)",html:_daInput("assets",i,"accountTypeHint",a.accountTypeHint),w:"flex:1.2"},
+    {lbl:"Add as",html:_daSelect("assets",i,"_kind",a._kind||"account",KIND).replace("<select ",'<select onchange="_daKindChange(this)" '),w:"flex:0 0 150px"},
+    {lbl:"Account type",html:_daAcctTypeSelect(i,cc,_daAcctPick(cc,a),(a._kind||"account")!=="account"),w:"flex:1.3"},
     {lbl:"Value",html:_daInput("assets",i,"value",a.value,"number"),w:"flex:1"},
-    {lbl:"Country",html:_daSelect("assets",i,"country",a.country||val("c1co")||"US",CTRY),w:"flex:0 0 120px"}
-  ],a.value>0&&req(a._ok)));
+    {lbl:"Country",html:_daSelect("assets",i,"country",cc,CTRY).replace("<select ",'<select onchange="_daAcctCountryChange(this)" '),w:"flex:0 0 120px"}
+  ],a.value>0&&req(a._ok)); });
   const curProp=num("aProp",0), curOther=num("aOther",0);
   if(assetRows.length && (curProp>0||curOther>0)){
     const impProp=x.assets.filter(a=>a._kind==="property").reduce((s,a)=>s+(+a.value||0),0);
@@ -10642,7 +10806,13 @@ function renderReviewModal(){
     {lbl:"C2 from age",html:_daInput("retirement",i,"client2PensionStartAge",r.client2PensionStartAge,"number"),w:"flex:0 0 85px"}
   ],req(r._ok))));
 
-  const total=Object.keys(x).reduce((s,k)=>s+x[k].length,0);
+  html+=section("Tax", (x.tax||[]).map((r,i)=>_daRow("tax",i,r._ok,r._src,[
+    {lbl:"Income tax % (total, incl. canton / state)",html:_daInput("tax",i,"incomeTaxPct",r.incomeTaxPct,"number"),w:"flex:1.3"},
+    {lbl:"Capital gains %",html:_daInput("tax",i,"capitalGainsPct",r.capitalGainsPct,"number"),w:"flex:1"},
+    {lbl:"Include taxes in projections",html:_daSelect("tax",i,"includeTaxes",r.includeTaxes||"",[{v:"",l:"— keep —"},{v:"yes",l:"Yes"},{v:"no",l:"No"}]),w:"flex:1"}
+  ],req(r._ok))));
+
+  const total=Object.keys(x).reduce((s,k)=>s+((x[k]&&x[k].length)||0),0);
   // The dimmed background no longer closes the window: one stray click used to
   // throw away the whole extraction ("review screen, then nothing"). ✕ / Cancel
   // ask first while the data hasn't been added.
@@ -10717,15 +10887,124 @@ function _daSetState(id,st){ const el=$(id); if(!el || !st) return;
   const alias=_DA_STATE_ALIAS[n]; if(alias){ const o=opts.find(o=>o.value===alias); if(o) return pick(o); }
   const exact=opts.find(o=>_daStateNorm(o.text)===n); if(exact) return pick(exact);
   const pre=opts.filter(o=>_daStateNorm(o.text).startsWith(n)); if(n.length>=3 && pre.length===1) return pick(pre[0]); }
-function _daMatchAccount(country,hint){
+// The country an account-type code belongs to: the preferred one if it has the
+// code, else the only country that does ("bvg_lpp" → CH), else "".
+function _daCountryForCode(code, prefer){ if(!code) return ""; const k=String(code).trim().toLowerCase();
+  const hits=Object.keys(COUNTRY_ACCOUNTS).filter(cc=>COUNTRY_ACCOUNTS[cc].groups.some(g=>g.accounts.some(a=>String(a.value).toLowerCase()===k)));
+  if(prefer && hits.indexOf(prefer)>=0) return prefer; return hits.length===1?hits[0]:""; }
+// An exact account-type code for this country, or null.
+function _daAccountByCode(country, code){
+  const c=COUNTRY_ACCOUNTS[country]; if(!c || !code) return null; const k=String(code).trim().toLowerCase(); let hit=null;
+  c.groups.forEach(g=>g.accounts.forEach(a=>{ if(!hit && String(a.value).toLowerCase()===k) hit={type:a.value,group:g.group,liquid:a.liquid}; }));
+  return hit; }
+// Document wording → account-type codes. Specific rules (pensions, tax wrappers,
+// named products) run before the "exact code in the wording" pass and before the
+// generic bank words (third element = 1), so "Health savings account" is an HSA
+// and "Pension depot" a pension, not savings / a depot. Each code list is tried
+// against the row country's own codes, so one table serves every country. (The
+// original matcher only did whole-hint substring matching: "Pillar 2 / BVG" found
+// nothing and fell through to a *savings* account — a locked pension counted as cash.)
+const _DA_ACCT_SYN=[
+  [/fr[eé]iz[uü]gig|vested benefit|libre passage/, ["vested_benefits"]],
+  [/pensionskasse|caisse de pension|pension fund|vorsorgeeinrichtung|\bpk\b|2nd pillar|second pillar|pillar\s*(2|ii)\b|2\.\s*s[äa]ule|s[äa]ule\s*2\b|zweite s[äa]ule|2e pilier|\bbvg\b|\blpp\b|occupational/, ["bvg_lpp","workplace_pension","occupational_pension","dcpp","pension_db","db_pension"]],
+  [/workplace pension|company pension|employer pension|betriebsrente|betriebliche altersvorsorge|\bbav\b/, ["workplace_pension","bav","bvg_lpp","dcpp","occupational_pension"]],
+  [/state pension|gesetzliche rente|age pension/, ["state_pension","gesetzliche_rente","age_pension","ahv_avs","social_security","cpp"]],
+  [/riester/, ["riester"]], [/r[üu]e?rup|basisrente/, ["ruerup"]],
+  [/superannuation|super fund/, ["super_accum","smsf"]],
+  [/\b3a\b|pillar\s*3a|s[äa]ule\s*3a|third pillar|pilier 3a/, ["__3a"]],
+  [/\b3b\b|pillar\s*3b|s[äa]ule\s*3b|pilier 3b/, ["pillar_3b"]],
+  [/\bahv\b|\bavs\b|1st pillar|first pillar|pillar\s*(1|i)\b/, ["ahv_avs"]],
+  [/social security/, ["social_security"]],
+  [/roth\s*401/, ["roth_401k"]], [/roth ira/, ["roth_ira"]], [/solo\s*401/, ["solo_401k"]], [/\b401\s*\(?k\)?/, ["401k"]],
+  [/\b403\s*\(?b\)?/, ["403b"]], [/\b457\s*\(?b\)?|\b457 plan|deferred comp/, ["457b"]],   // anchored: "457" inside an account number is not a 457(b)
+  [/sep[- ]ira/, ["sep_ira"]], [/simple ira/, ["simple_ira"]], [/\bira\b/, ["ira"]],
+  [/\b529\b|college savings/, ["529"]], [/coverdell|\besa\b/, ["esa"]], [/\bhsa\b|health savings/, ["hsa"]],
+  [/\bsipp\b/, ["sipp"]], [/lifetime isa|\blisa\b/, ["lifetime_isa"]], [/junior isa|\bjisa\b/, ["junior_isa"]], [/innovative finance isa|\bifisa\b/, ["innovative_finance_isa"]],
+  [/cash isa/, ["cash_isa"]], [/stocks? (and|&) shares isa|s&s isa|\bisa\b/, ["stocks_isa"]],
+  [/\brrsp\b/, ["rrsp"]], [/\btfsa\b/, ["tfsa"]], [/\bresp\b/, ["resp"]], [/\brrif\b/, ["rrif"]], [/\blira\b/, ["lira"]],
+  [/life insurance|life assurance|lebensversicherung|whole[- ]of[- ]life/, ["life_insurance","life_assurance"]],
+  [/annuity|\brente\b/, ["annuity_fixed","annuity_var"]],
+  [/crypto|bitcoin|\bbtc\b|ethereum|\beth\b/, ["crypto"]],
+  [/\bgold\b|\bsilver\b|precious|edelmetall/, ["physical_gold","precious_metals"]],   // \b: "Goldman Sachs" is a broker
+  [/private equity|venture/, ["private_equity"]],
+  [/structured/, ["structured_products"]],
+  [/mandate|verm[öo]gensverwaltung|private banking|discretionary/, ["private_banking","managed_account"], 1],
+  [/depot|securities|wertschrift|brokerage|custody|investment account|trading account|share dealing|titres/, ["depot","brokerage","securities_account","investment_account","gia","non_reg"], 1],
+  [/fund account|fondskonto|fund savings/, ["fund_account","managed_fund","mutual_fund"], 1],
+  [/money market/, ["money_market","mmf"], 1],
+  [/festgeld|fixed deposit|term deposit|time deposit|certificate of deposit|\bcd\b|d[ée]p[oô]t [àa] terme|\bgic\b/, ["fixed_deposit","festgeld","term_deposit","cd","gic","fixed_bond"], 1],
+  [/jugend|youth/, ["savings_youth"], 1],
+  [/sparkonto|savings|[ée]pargne|\bspar|tagesgeld|sparbuch/, ["savings_account","savings","tagesgeld","sparbuch","hysab","hisa"], 1],
+  [/privatkonto|\bcurrent\b|checking|chequing|compte priv[ée]|girokonto|\bgiro\b|salary account|lohnkonto|cheque|transaction account/, ["private_account","checking","chequing","current","current_account","girokonto","transaction"], 1],   // \b: not "currency"
+  [/bank account|cash account|\bcash\b|\bkonto\b|\bcompte\b|\bbank\b/, ["private_account","checking","chequing","current","girokonto","transaction","savings_account","savings"], 1]   // e.g. the camt feed's "Bank account"
+];
+// Wording that names a pension or another locked, tax-advantaged wrapper.
+const _DA_LOCKED_WORD=/pension|pillar|pilier|s[äa]ule|\b3a\b|\bbvg\b|\blpp\b|\bahv\b|\bavs\b|\b401\s*\(?k|\b403\s*\(?b|\bira\b|\bsipp\b|retire|vorsorge|pr[ée]voyance|fr[eé]iz[uü]gig|vested|libre passage|superannuation|\brrsp\b|\brrif\b|\blira\b|\bcpf\b|\bmpf\b|\bnps\b|\bepf\b|\bhsa\b|health savings|\b529\b|coverdell|\besa\b|thrift savings|riester|r[üu]e?rup/;
+// Fallback order when all that is known is "a pension" / "tax-advantaged".
+const _DA_LOCKED_PREF=["bvg_lpp","workplace_pension","401k","db_pension","pension_db","super_accum","dcpp","bav","ira","rrsp","sipp"];
+const _DA_TAXFREE_PREF=["pillar_3a_bank","roth_ira","tfsa","lifetime_isa","roth_401k"];
+function _daMatchAccount(country,hint,taxType,label){
   const c=COUNTRY_ACCOUNTS[country]||COUNTRY_ACCOUNTS.US; if(!c) return {type:"other",group:"Other assets",liquid:true};
-  const h=String(hint||"").toLowerCase().trim(); let best=null;
-  if(h) c.groups.forEach(g=>g.accounts.forEach(a=>{ const hay=(a.value+" "+a.label).toLowerCase(); if(!best && (hay.indexOf(h)>=0||h.indexOf(a.value.toLowerCase())>=0)) best={type:a.value,group:g.group,liquid:a.liquid}; }));
-  if(best) return best;
-  c.groups.forEach(g=>g.accounts.forEach(a=>{ if(!best && /broker|taxable|securities|checking|current|savings|deposit/.test((a.value+a.label).toLowerCase())) best={type:a.value,group:g.group,liquid:a.liquid}; }));
-  if(best) return best;
-  const g0=c.groups[0], a0=g0&&g0.accounts[0]; return a0?{type:a0.value,group:g0.group,liquid:a0.liquid}:{type:"other",group:"Other assets",liquid:true};
+  const all=[]; c.groups.forEach(g=>g.accounts.forEach(a=>all.push({type:a.value,group:g.group,liquid:a.liquid,hay:(a.value+" "+a.label).toLowerCase()})));
+  const pick=code=>{ const a=all.find(x=>x.type===code); return a?{type:a.type,group:a.group,liquid:a.liquid}:null; };
+  const norm=s=>String(s||"").toLowerCase().replace(/\s+/g," ").trim();
+  // The hint (the kind as written) and the label (the account's name) are read
+  // together by the rules, but matched against the app's labels one at a time.
+  const parts=[norm(hint),norm(label)].filter((p,i,arr)=>p && arr.indexOf(p)===i), h=parts.join(" ");
+  const locked=_DA_LOCKED_WORD.test(h);
+  const rule=generic=>{ for(const [re,codes,g] of _DA_ACCT_SYN){ if(!!g!==generic || !re.test(h)) continue;
+      for(const code of codes){
+        if(code==="__3a"){ const want=/fund|fonds|securit|wertschrift|viac|finpension|frankly|invest|etf|titres/.test(h)?"pillar_3a_fund":/insur|versicher|assur/.test(h)?"pillar_3a_insurance":"pillar_3a_bank";
+          const m=pick(want)||pick("pillar_3a_bank")||pick("savings_3a_bank"); if(m) return m; continue; }
+        const m=pick(code); if(m) return m; } }
+    return null; };
+  if(h){
+    let m=rule(false); if(m) return m;                                    // 1. specific rules
+    for(const a of all){ if(locked && a.liquid) continue;                  // 2. an exact code in the wording ("bvg_lpp", "premium bonds")
+      const code=a.type.toLowerCase(); if(code.length>3 && (h.indexOf(code)>=0 || h.indexOf(code.replace(/_/g," "))>=0)) return pick(a.type); }
+    if(!locked){ m=rule(true); if(m) return m; }                           // 3. generic bank / investment words
+    for(const p of parts) for(const a of all){ if(locked && a.liquid) continue; if(a.hay.indexOf(p)>=0) return pick(a.type); }   // 4. the wording inside an app label
+  }
+  // Nothing recognisable. A tax-advantaged account — or wording that names a
+  // pension this country has no code for ("Säule 3a" on a US row) — is at least
+  // locked, never spendable cash; anything else a plain bank account.
+  if(taxType==="tax_deferred"||taxType==="tax_free"||locked){
+    const pref=(taxType==="tax_free"?_DA_TAXFREE_PREF:[]).concat(_DA_LOCKED_PREF).map(pick).find(x=>x && !x.liquid);
+    if(pref) return pref;
+    const lk=all.find(a=>!a.liquid && /pension|retire|pillar|vorsorge/i.test(a.group+" "+a.hay)) || all.find(a=>!a.liquid);
+    if(lk) return {type:lk.type,group:lk.group,liquid:lk.liquid}; }
+  const liquid=all.find(a=>a.liquid && /private|checking|chequing|current|giro|transaction/.test(a.hay)) || all.find(a=>a.liquid && /savings|spar/.test(a.hay))
+    || all.find(a=>a.liquid && /depot|broker|securities|investment/.test(a.hay)) || all.find(a=>a.liquid);
+  if(liquid) return {type:liquid.type,group:liquid.group,liquid:liquid.liquid};
+  const a0=all[0]; return a0?{type:a0.type,group:a0.group,liquid:a0.liquid}:{type:"other",group:"Other assets",liquid:true};
 }
+// Review-window helpers for the account-type choice.
+function _daAcctPick(country, a){
+  const byCode=_daAccountByCode(country, a.accountType); if(byCode) return byCode.type;
+  return _daMatchAccount(country, a.accountTypeHint, a.taxType, a.label).type; }
+// Disabled (and blank) for a row added as property / other asset — those go to the
+// property / other-asset fields, so an account type there would only mislead.
+function _daAcctTypeSelect(i, country, selected, off){
+  const c=COUNTRY_ACCOUNTS[country]||COUNTRY_ACCOUNTS.US; if(!c) return _daInput("assets",i,"accountType",selected);
+  return `<select data-dom="assets" data-i="${i}" data-f="accountType" class="da-in"${off?' disabled title="Not an account — added as property / other asset"':""}>`
+    + (off?`<option value="" selected>— not an account —</option>`:"")
+    + c.groups.map(g=>`<optgroup label="${_daEsc(g.group)}">`+g.accounts.map(a=>`<option value="${_daEsc(a.value)}"${(!off && a.value===selected)?" selected":""}>${_daEsc(a.label)}</option>`).join("")+`</optgroup>`).join("")
+    + `</select>`; }
+function _daAcctCountryChange(sel){
+  const i=sel.dataset.i, row=((_daExtraction||{}).assets||[])[+i]||{};
+  const cur=document.querySelector(`#aiReviewModal .da-in[data-dom="assets"][data-i="${i}"][data-f="accountType"]`); if(!cur) return;
+  const lbl=document.querySelector(`#aiReviewModal .da-in[data-dom="assets"][data-i="${i}"][data-f="label"]`);
+  const code=_daAcctPick(sel.value, Object.assign({}, row, {accountType:cur.value, label:lbl?lbl.value:row.label}));
+  const tmp=document.createElement("div"); tmp.innerHTML=_daAcctTypeSelect(i, sel.value, code, _daRowKind(i)!=="account"); cur.replaceWith(tmp.firstChild); }
+function _daRowKind(i){ const k=document.querySelector(`#aiReviewModal .da-in[data-dom="assets"][data-i="${i}"][data-f="_kind"]`); return k?k.value:"account"; }
+// "Add as" changed: an account row gets a real account-type choice back.
+function _daKindChange(sel){
+  const i=sel.dataset.i, row=((_daExtraction||{}).assets||[])[+i]||{};
+  const cur=document.querySelector(`#aiReviewModal .da-in[data-dom="assets"][data-i="${i}"][data-f="accountType"]`); if(!cur) return;
+  const ctry=document.querySelector(`#aiReviewModal .da-in[data-dom="assets"][data-i="${i}"][data-f="country"]`);
+  const cc=(ctry&&ctry.value)||row.country||val("c1co")||"US";
+  const tmp=document.createElement("div"); tmp.innerHTML=_daAcctTypeSelect(i, cc, cur.value||_daAcctPick(cc,row), sel.value!=="account"); cur.replaceWith(tmp.firstChild); }
+window._daAcctCountryChange=_daAcctCountryChange; window._daKindChange=_daKindChange;
 // Provenance label for whatever produced the current extraction — the AI Data
 // Agent, the statement importer, or a custodian/CRM feed. Written into the
 // note on each imported record so the origin is visible in the app later.
@@ -10783,7 +11062,8 @@ function applyDataAgent(){
   each("assets",x.assets,r=>{ const v=_daNum(r.value); if(!(v>0)){ skipped.push("“"+(r.label||"an account")+"” (no value)"); return; }
     if(r._kind==="property"){ propSum+=v; bump("property"); return; }
     if(r._kind==="other"){ otherSum+=v; bump("other assets"); return; }
-    const ctry=r.country||val("c1co")||"US"; const mk=_daMatchAccount(ctry,r.accountTypeHint);
+    // The reviewer's account-type choice (or Claude's exact code); wording-based matching only as a fallback.
+    const ctry=r.country||val("c1co")||"US"; const mk=_daAccountByCode(ctry,r.accountType) || _daMatchAccount(ctry,r.accountTypeHint,r.taxType,r.label);
     assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))});
     bump("accounts"); });
   // Replace or add, as chosen in the review window when a value already existed
@@ -10827,6 +11107,19 @@ function applyDataAgent(){
     if(parseInt(r.client2PensionStartAge,10)>0){ _daSet("penStartAge2",parseInt(r.client2PensionStartAge,10)); touched=true; }
     if(touched) bump("retirement plan"); else skipped.push("a retirement row with no values"); });
 
+  // Tax as the document states it. The stated income-tax rate is the client's
+  // TOTAL rate, while the app's manual flat rate is the national part only — the
+  // canton / state rate is still added on top (computeStateTax). So the flat rate
+  // is the stated total minus the canton rate (household applied above, so the
+  // canton is already the client's); otherwise the tax would be counted twice.
+  each("tax",x.tax,r=>{ let touched=false; const it=_daRate(r.incomeTaxPct), cg=_daRate(r.capitalGainsPct);
+    const inc=(r.includeTaxes===true||r.includeTaxes==="yes")?"yes":(r.includeTaxes===false||r.includeTaxes==="no")?"no":"";
+    if(it!=null && it>=0 && it<=70){ let sr=0; try{ sr=+getStateTaxRate()||0; }catch(_){}
+      _daSetSel("taxMode","flat"); _daSet("taxFlat",Math.max(0,+(it-sr).toFixed(2))); touched=true; }
+    if(cg!=null && cg>=0 && cg<=70){ _daSet("cgtRate",cg); try{ _taxUserEdited=true; }catch(_){} touched=true; }
+    if(inc && _daSetSel("taxApply",inc)) touched=true;
+    if(touched) bump("tax settings"); else skipped.push("a tax row with no values"); });
+
   // Re-render everything affected
   const safe=fn=>{ try{ if(typeof window[fn]==="function") window[fn](); }catch(e){ console.warn("[DataAgent] "+fn,e); } };
   ["renderChildren","updateDisplays","updateIncTotal","updateExpTotal","updateTaxPanel","renderAssets","renderLoans","renderGoals","renderInvestments","renderPortfolioMetrics","drawPortfolioPie","refreshTopMetrics"].forEach(safe);
@@ -10842,7 +11135,7 @@ function applyDataAgent(){
     _daApplyRecord(false, "nothing added — "+why, errors, skipped);
     return;
   }
-  const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"retirement plan":["retirement plan","retirement plans"]};
+  const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"retirement plan":["retirement plan","retirement plans"],"tax settings":["tax setting","tax settings"]};
   const summary=Object.keys(added).map(k=>{ const w=NOUN[k]||[k,k]; return added[k]+" "+(added[k]===1?w[0]:w[1]); }).join(", ");
   const tail=(errors.length?" · "+errors.length+" row"+(errors.length!==1?"s":"")+" couldn't be added":"")+(skipped.length?" · skipped "+skipped.length+" empty row"+(skipped.length!==1?"s":""):"");
   if(stt){ stt.textContent="✓ Added to the app: "+summary+tail+"."; stt.style.color="var(--green)"; }
@@ -10855,7 +11148,7 @@ function applyDataAgent(){
   // overview), else the tab holding what was added.
   const dest = (added.people||added.incomes||added.expenses||added["retirement plan"]) ? "household"
     : (added.accounts||added.property||added["other assets"]) ? "assets" : added.loans ? "liabilities"
-    : added.goals ? "goals" : added.holdings ? "portfolio" : "";
+    : added.goals ? "goals" : added.holdings ? "portfolio" : added["tax settings"] ? "expenses" : "";
   setTimeout(()=>{ try{ closeReviewModal(); }catch(_){}
     try{ const cur=(document.querySelector(".tab.active")||{}).id;
       if(dest && cur!=="tab-"+dest && typeof showTab==="function"){ showTab(dest,document.querySelector('.nav-item[data-tab="'+dest+'"]')); window.scrollTo(0,0); } }catch(_){} }, 1400);
