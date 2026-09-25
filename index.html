@@ -1833,7 +1833,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <div id="mdKeysBody" style="display:none;padding-top:12px">
           <div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:12px">Paste free API keys to enable richer market data and AI features. Keys are stored only in your browser and are shared with the Admin console below. Get keys from each provider's link.</div>
           <div id="mdKeysGrid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
-          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Some providers (CoinMarketCap, FRED, NewsAPI, Marketstack) block direct browser requests — the app retries those via corsproxy.io.</div>
+          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Some sources (Yahoo Finance, OpenFIGI, CoinMarketCap, FRED, NewsAPI, Marketstack) block direct browser requests — the app retries those through your data proxy (set its URL in Admin console → Market Data).</div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button class="btn-secondary" onclick="testAllMdKeys()" style="font-size:12px;padding:7px 14px">⚡ Test all keys</button>
             <span id="mdKeysTestStatus" style="font-size:12px;color:var(--text3)"></span>
@@ -4539,7 +4539,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1022";
+const APP_VERSION = "20260925-1044";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -11888,7 +11888,7 @@ function pfDelete(){
 // Save the free market-data proxy (Cloudflare Worker) URL used for live prices.
 function savePfProxy(v){
   try{ localStorage.setItem("wa_cors_proxy", String(v||"").trim()); }catch(_){}
-  const s=$("pfRefreshStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Proxy saved — live prices will route through it." : "Proxy cleared — using public fallback (unreliable).";
+  const s=$("pfRefreshStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Proxy saved — live prices will route through it." : "Proxy cleared — Yahoo prices and ticker lookups are off until a proxy is set.";
 }
 
 // Swiss pension is retirement content, not portfolio analytics — relocate the two
@@ -16033,6 +16033,20 @@ const FIGI_SUFFIX={
 const ISIN_CC_TO_EXCH={CH:'SW',GB:'LN',IE:'LN',DE:'GY',FR:'PA',NL:'NA',IT:'IM',ES:'SM',SE:'SS',NO:'OS',DK:'DC',FI:'HN',AT:'AV',BE:'BT',GR:'AT',JP:'TK',HK:'HK',AU:'AU',SG:'SI',KR:'KS',TW:'TW',IN:'IN',MX:'MX',CA:'CN'};
 
 // OpenFIGI: ISIN → {ticker, name, exchCode, securityType2}
+// ── Data proxy (Yahoo, OpenFIGI, and other sources that block browser calls) ──
+// These hosts send no CORS headers, so a browser can only reach them through a
+// proxy. The public corsproxy.io fallback stopped accepting anonymous requests
+// in 2026 (it now answers 403 "keyless_legacy_url"), so the only working route
+// is the user's own free Cloudflare Worker (wa-price-proxy.worker.js).
+// DEFAULT_DATA_PROXY is baked in at build time so the demo works on ANY device;
+// a URL set in Admin console → Market Data (localStorage wa_cors_proxy) wins.
+// `var`, not const: these are read from functions that may run before this
+// line is evaluated, and a const there would throw (temporal dead zone).
+var DEFAULT_DATA_PROXY = "";
+var NO_DATA_PROXY_MSG = "this lookup needs the data proxy — set its URL in Admin console → Market Data";
+function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
+function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
+
 // OpenFIGI accepts several identifier types; ID_CUSIP is a first-class one,
 // so a CUSIP resolves directly rather than being routed through a derived
 // ISIN. `hintCc` only steers which listing is preferred, never which
@@ -16043,7 +16057,7 @@ async function openFigiMap(idType,idValue,hintCc){
   const opts={ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify([{idType:idType,idValue:String(idValue||'').toUpperCase()}]) };
   let d=null;
   try{ const r=await fetch(url,opts); if(r.ok) d=await r.json(); }catch(e){}
-  if(!d){ const r2=await fetch('https://corsproxy.io/?'+encodeURIComponent(url),opts); if(!r2.ok) throw new Error('OpenFIGI HTTP '+r2.status); d=await r2.json(); }   // OpenFIGI blocks direct browser calls (CORS) → proxy fallback
+  if(!d){ const pu=dataProxyUrl(url); if(!pu) throw new Error(NO_DATA_PROXY_MSG); const r2=await fetch(pu,opts); if(!r2.ok) throw new Error('OpenFIGI HTTP '+r2.status); d=await r2.json(); }   // OpenFIGI blocks direct browser calls (CORS) → proxy fallback
   const data=d[0]?.data;
   if(!data?.length) return null;
   // Prefer the ISIN's home exchange (best Yahoo coverage), then a US listing,
@@ -16064,8 +16078,11 @@ async function yahooSearchInstr(query){
   const url=`https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=6&newsCount=0&enableFuzzyQuery=false`;
   let d=null;
   try{ const r=await fetch(url); if(r.ok) d=await r.json(); }catch(e){}
-  if(!d){ const r2=await fetch("https://corsproxy.io/?"+encodeURIComponent(url)); if(!r2.ok) throw new Error('Yahoo search HTTP '+r2.status); d=await r2.json(); }   // CORS fallback
-  return d?.finance?.result?.quotes||[];
+  if(!d){ const pu=dataProxyUrl(url); if(!pu) throw new Error(NO_DATA_PROXY_MSG); const r2=await fetch(pu); if(!r2.ok) throw new Error('Yahoo search HTTP '+r2.status); d=await r2.json(); }   // CORS fallback via the data proxy
+  // Yahoo's v1 search returns `quotes` at the top level; the older nested
+  // finance.result.quotes shape is kept only as a fallback. Reading just the
+  // nested path made every name search come back empty.
+  return d?.quotes || d?.finance?.result?.quotes || [];
 }
 
 // Yahoo Finance chart v8: returns meta with name, quoteType, exchange, currency, price, yield
@@ -16073,20 +16090,20 @@ async function yahooChartMeta(symbol){
   const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d&includePrePost=false`;
   let d=null;
   try{ const r=await fetch(url); if(r.ok) d=await r.json(); }catch(e){}
-  if(!d){ try{ const r2=await fetch("https://corsproxy.io/?"+encodeURIComponent(url)); if(r2.ok) d=await r2.json(); }catch(e){} }   // CORS fallback
+  if(!d){ const pu=dataProxyUrl(url); if(pu){ try{ const r2=await fetch(pu); if(r2.ok) d=await r2.json(); }catch(e){} } }   // CORS fallback via the data proxy
   return d?.chart?.result?.[0]?.meta||null;
 }
 
 // Total-return performance from Yahoo: per-calendar-year returns, trailing 1/3/5/10yr
 // (annualized) and since-inception. Uses the v8 chart endpoint's adjusted close (= total
-// return, dividends reinvested) — same source as yahooChartMeta — with a corsproxy fallback.
+// return, dividends reinvested) — same source as yahooChartMeta — via the data proxy.
 // Returns null on failure. Figures track Morningstar closely; methodology may differ slightly.
 async function fetchFundPerformance(symbol){
   if(!symbol) return null;
   const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1mo&range=max`;
   let d=null;
   try{ const r=await fetch(url); if(r.ok) d=await r.json(); }catch(e){}
-  if(!d){ try{ const r2=await fetch("https://corsproxy.io/?"+encodeURIComponent(url)); if(r2.ok) d=await r2.json(); }catch(_){ } }
+  if(!d){ const pu=dataProxyUrl(url); if(pu){ try{ const r2=await fetch(pu); if(r2.ok) d=await r2.json(); }catch(_){ } } }   // via the data proxy
   const res=d&&d.chart&&d.chart.result&&d.chart.result[0]; if(!res) return null;
   const ts=res.timestamp||[];
   const adj=(res.indicators&&res.indicators.adjclose&&res.indicators.adjclose[0]&&res.indicators.adjclose[0].adjclose)
@@ -16588,15 +16605,12 @@ const MarketData = (function(){
 
   // ─── CORS-resilient fetch ──────────────────────────────────────────────
   // Tries the direct URL first. If it fails with a network/CORS error
-  // (TypeError or opaque response), retries through corsproxy.io which
-  // adds the missing Access-Control-Allow-Origin header for us.
-  // Build the proxy URL for a target. Prefers a user-configured proxy
-  // (a free Cloudflare Worker set in the Live Prices panel) over the public
-  // corsproxy.io fallback, so keyless sources like Yahoo work reliably.
-  function _proxyUrl(u){
-    const base=(localStorage.getItem("wa_cors_proxy")||"").trim().replace(/\/+$/,"");
-    return base ? (base+"/?url="+encodeURIComponent(u)) : ("https://corsproxy.io/?"+encodeURIComponent(u));
-  }
+  // (TypeError or opaque response), retries through the data proxy (the
+  // user's Cloudflare Worker — see dataProxyUrl), which adds the missing
+  // Access-Control-Allow-Origin header. There is no public fallback any more:
+  // corsproxy.io refuses anonymous requests, so without a proxy we fail fast
+  // with a clear message instead of firing a request that always 403s.
+  function _proxyUrl(u){ return dataProxyUrl(u); }
   async function corsFetch(url, opts){
     opts = opts || {};
     try {
@@ -16608,8 +16622,9 @@ const MarketData = (function(){
       if(r.status >= 400 && r.status < 500) return r;
       throw new Error("HTTP "+r.status);
     } catch(_){
-      // Network error → retry through the configured proxy (Worker) or public fallback
+      // Network/CORS error → retry through the data proxy (Worker), if one is set
       const proxied = _proxyUrl(url);
+      if(!proxied) throw new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
       return await fetch(proxied, opts);
     }
   }
@@ -16765,7 +16780,9 @@ const MarketData = (function(){
     // FX only — accepts pairs like "EURUSD" or "GBPJPY"
     if(t.length !== 6) throw new Error("Frankfurter expects FX pair (e.g. EURUSD)");
     const base = t.slice(0,3), quote = t.slice(3,6);
-    const r = await corsFetch(`https://api.frankfurter.app/latest?from=${base}&to=${quote}`);
+    // api.frankfurter.app now answers with a 301 that carries no CORS header, so
+    // browsers refuse to follow it — call the new host directly (same response shape).
+    const r = await corsFetch(`https://api.frankfurter.dev/v1/latest?from=${base}&to=${quote}`);
     if(!r.ok) throw new Error("HTTP "+r.status);
     const j = await r.json(); const rate = j.rates && j.rates[quote];
     if(!rate) throw new Error("No FX rate returned");

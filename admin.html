@@ -109,7 +109,18 @@ body{font-family:var(--font-sans);background:var(--color-bg-canvas);color:var(--
 /* "NEW" badge — same recipe as the demo (purple → primary) */
 .nav-new{margin-left:auto;background:linear-gradient(135deg,#7c3aed,var(--color-primary));color:var(--color-on-primary);font-size:8px;padding:2px 6px;border-radius:var(--radius-pill);font-weight:700;letter-spacing:.04em;pointer-events:none}
 .main{flex:1;min-width:0;overflow-y:auto;padding:28px 32px;background:radial-gradient(1100px 480px at 88% -8%,var(--color-glow-canvas),transparent 62%),var(--color-bg-canvas)}
-@media(max-width:900px){.sidebar{display:none}.main{padding:16px}}
+/* Narrow screens: the sidebar becomes a horizontal, swipeable tab strip above
+   the content. (It used to be display:none with no replacement, which left
+   phones / tablets / narrow windows stuck on the Dashboard with no navigation.) */
+@media(max-width:900px){
+  .body{flex-direction:column}
+  .sidebar{display:flex;width:auto;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--color-border-subtle);padding:6px 8px;gap:2px;flex-shrink:0;-webkit-overflow-scrolling:touch}
+  .sidebar .grp{display:none}
+  .sidebar .nav{flex-shrink:0;white-space:nowrap;padding:8px 12px;border-left:0;border-bottom:3px solid transparent;border-radius:var(--radius-md) var(--radius-md) 0 0}
+  .sidebar .nav:hover{transform:none}
+  .sidebar .nav.active{border-bottom-color:var(--color-primary);background:var(--color-primary-tint-2)}
+  .main{padding:16px}
+}
 
 /* ── Tabs ── */
 .tab{display:none}.tab.active{display:block}
@@ -995,34 +1006,33 @@ Citations:<br>
 <div class="tab" id="tab-market">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="trending-up" class="icon" aria-hidden="true"></i><span class="wh-title-text">Market Data Console</span></h1>
-    <p class="wh-sub">Test live quote retrieval. Verified keyless on 2026-08-02: <strong>Yahoo Finance</strong> (equities/ETFs), <strong>CoinGecko</strong> and <strong>Coinbase</strong> (crypto), <strong>Frankfurter/ECB</strong> and <strong>Open ER API</strong> (FX), <strong>Treasury.gov</strong> (yield curve). <strong>SEC EDGAR</strong> resolves ticker&rarr;CIK but its filings API refuses browser requests &mdash; that half needs a server relay. Everything else needs a key in the API Keys tab; enterprise feeds (Bloomberg, FactSet, Refinitiv) need a user-deployed proxy.</p>
+    <p class="wh-sub">Test live quote retrieval from free, keyless sources (verified 2026-09-25). Working directly from the browser: <strong>CoinGecko</strong> and <strong>Coinbase</strong> (crypto), <strong>Frankfurter/ECB</strong> and <strong>Open ER API</strong> (FX). <strong>Yahoo Finance</strong> (equities/ETFs) and ticker/ISIN lookups via <strong>OpenFIGI</strong> send no CORS headers, so they need the data proxy below &mdash; the public corsproxy.io fallback no longer accepts anonymous requests. Stooq was retired upstream and CryptoCompare now requires a key, so both were removed.</p>
   </div></div>
   <div class="panel">
-    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(120,120,120,.2)">
+    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--color-border-subtle)">
       <div class="row" style="margin-bottom:6px">
         <label class="lbl">Live Prices — data proxy URL</label>
         <input id="mdProxyUrl" placeholder="https://your-worker.workers.dev" class="w260" style="min-width:300px" onchange="saveMdProxy(this.value)">
-        <span id="mdProxyStatus" style="font-size:11px;color:var(--ink3)"></span>
+        <span id="mdProxyStatus" style="font-size:11px;color:var(--color-text-muted)"></span>
       </div>
-      <div style="font-size:11px;color:var(--ink3);line-height:1.5">Free Cloudflare Worker that proxies the keyless sources (Yahoo can't be called from a browser directly). Set once here — the client app and the tests below both use it. Leave blank to use the public fallback. Prices are cached so a last-known value still shows if a fetch fails.</div>
+      <div style="font-size:11px;color:var(--color-text-muted);line-height:1.5">Your free Cloudflare Worker (<code>wa-price-proxy.worker.js</code>). Required for Yahoo prices, ticker/ISIN lookups (OpenFIGI) and Research Library feeds, which block direct browser calls. There is no public fallback any more &mdash; corsproxy.io now refuses anonymous requests. Set it once here: the client app and the tests below share it (per browser). Prices are cached, so a last-known value still shows if a fetch fails.</div>
       <script>(function(){var e=document.getElementById('mdProxyUrl');if(e){try{e.value=localStorage.getItem('wa_cors_proxy')||'';}catch(_){}}})();</script>
     </div>
     <div class="row">
       <label class="lbl">Ticker</label><input id="mdTicker" placeholder="AAPL" class="w160" value="AAPL">
       <label class="lbl" style="min-width:60px">Provider</label>
       <select id="mdProvider" class="w260">
-        <option value="auto">Auto (try all keyless in failover order)</option>
+        <option value="auto">Auto (try each keyless source in turn)</option>
         <optgroup label="── Equities — free, no key ──">
-          <option value="yahoo">Yahoo Finance (via proxy)</option>
-          <option value="stooq">Stooq (via proxy)</option>
+          <option value="yahoo">Yahoo Finance (needs data proxy)</option>
         </optgroup>
         <optgroup label="── Crypto — free, no key ──">
           <option value="coingecko">CoinGecko</option>
           <option value="coinbase">Coinbase Spot</option>
-          <option value="cryptocompare">CryptoCompare</option>
         </optgroup>
         <optgroup label="── FX — free, no key ──">
           <option value="frankfurter">Frankfurter / ECB</option>
+          <option value="open_er_api">Open ER API</option>
         </optgroup>
       </select>
       <button class="btn" data-action="testQuote">▶ Fetch Quote</button>
@@ -1239,7 +1249,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1022";
+const APP_VERSION = "20260925-1044";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3654,6 +3664,18 @@ function curatedItems(id){
   return [...base, ...expanded];
 }
 
+// ── Data proxy (Yahoo, OpenFIGI, research RSS feeds — hosts that block browser calls) ──
+// The public corsproxy.io fallback stopped accepting anonymous requests in 2026
+// (403 "keyless_legacy_url"), so the only working route is the user's own free
+// Cloudflare Worker (wa-price-proxy.worker.js). DEFAULT_DATA_PROXY is baked in at
+// build time so it works on any device; the Market Data tab's URL (localStorage
+// wa_cors_proxy, shared with the client app) overrides it. `var`, not const:
+// read from functions that can run before this line is evaluated.
+var DEFAULT_DATA_PROXY = "";
+var NO_DATA_PROXY_MSG = "needs the data proxy — set its URL on the Market Data tab";
+function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
+function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
+
 // `report` is an optional out-param: the return value stays a plain array so
 // every existing caller is unaffected, but a caller that cares can find out
 // WHY it got nothing back. Without this a dead feed and an empty feed are the
@@ -3662,7 +3684,9 @@ async function fetchFeedItems(url, report){
   const note = (state, detail) => { if(report){ report.state = state; report.detail = detail || ""; } };
   if(!url){ note("absent"); return []; }
   try {
-    const r = await fetch("https://corsproxy.io/?"+encodeURIComponent(url));
+    const pu = dataProxyUrl(url);
+    if(!pu){ note("noproxy", "feed "+NO_DATA_PROXY_MSG); return []; }
+    const r = await fetch(pu);
     if(!r.ok){ note("http", "HTTP "+r.status); return []; }
     const text = await r.text();
     const doc = new DOMParser().parseFromString(text, "application/xml");
@@ -3749,20 +3773,21 @@ function renderDashboard(){
   $("dashKpis").innerHTML = h;
 
   // Provider status — grouped by data class
-  // Free, keyless market-data sources only — routed through the app's data proxy.
-  // Key-required and enterprise providers were removed (they can't feed live data here).
+  // Free, keyless market-data sources only (verified 2026-09-25). CoinGecko,
+  // Coinbase, Frankfurter and Open ER API are CORS-open and work directly; Yahoo
+  // sends no CORS headers, so it shows Connected only once a data proxy is set.
+  // Stooq (retired upstream) and CryptoCompare (now key-only) were removed.
   const groups = [
     {label:"Equities — free, no key", items:[
-      {n:"Yahoo Finance", k:"always"},
-      {n:"Stooq",         k:"always"}
+      {n:"Yahoo Finance (via data proxy)", k:dataProxyBase()}
     ]},
     {label:"Crypto — free, no key", items:[
       {n:"CoinGecko",     k:"always"},
-      {n:"Coinbase Spot", k:"always"},
-      {n:"CryptoCompare", k:"always"}
+      {n:"Coinbase Spot", k:"always"}
     ]},
     {label:"FX — free, no key", items:[
-      {n:"Frankfurter (ECB)", k:"always"}
+      {n:"Frankfurter (ECB)", k:"always"},
+      {n:"Open ER API",       k:"always"}
     ]},
     {label:"AI / LLM", items:[
       {n:"AI Assistant", k:aiKey}
@@ -3849,7 +3874,7 @@ async function autoRefreshAllResearch(silent){
   const status = $("agStatus");
   if(status && !silent) setIconLabel(status, "radio", `Refreshing ${RESEARCH_PROVIDERS.length} institutional sources…`);
   let done = 0, ok = 0;
-  // Parallel refresh with cap of 4 concurrent (be polite to corsproxy)
+  // Parallel refresh with cap of 4 concurrent (be polite to the data proxy)
   const queue = RESEARCH_PROVIDERS.slice();
   const workers = Array(4).fill(0).map(async () => {
     while(queue.length){
@@ -5125,9 +5150,9 @@ async function fetchQuote(ticker, provider){
       }
       // ─── EQUITIES — Free without API key ───────────────────────
       case "yahoo": {
-        let r;
-        try { r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`); }
-        catch(_) { r = await fetch(`https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`); }
+        // Yahoo sends no CORS headers, so from a browser this only works through
+        // the data proxy — corsFetch routes it there (and says so if none is set).
+        const r = await corsFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d`);
         if(!r.ok) throw new Error("HTTP "+r.status);
         const j=await r.json(); const m=j.chart?.result?.[0]?.meta; if(!m) throw new Error("No data");
         return {price:m.regularMarketPrice,change:m.regularMarketPrice-m.previousClose,changePct:(m.regularMarketPrice/m.previousClose-1)*100,high:m.regularMarketDayHigh,low:m.regularMarketDayLow,currency:m.currency,exchange:m.exchangeName,source:"yahoo"};
@@ -5226,7 +5251,8 @@ async function fetchQuote(ticker, provider){
       // ─── FX ─────────────────────────────────────────────────────
       case "frankfurter": {
         if(ticker.length!==6) throw new Error("FX expects 6-char pair (e.g. EURUSD)");
-        const r=await corsFetch(`https://api.frankfurter.app/latest?from=${ticker.slice(0,3)}&to=${ticker.slice(3,6)}`);
+        // api.frankfurter.app now 301-redirects here; call the new host directly.
+        const r=await corsFetch(`https://api.frankfurter.dev/v1/latest?from=${ticker.slice(0,3)}&to=${ticker.slice(3,6)}`);
         const j=await r.json(); if(!j.rates) throw new Error("No rate");
         return {price:j.rates[ticker.slice(3,6)],source:"frankfurter"};
       }
@@ -5398,8 +5424,16 @@ async function fetchQuote(ticker, provider){
     }
   }
   if(provider !== "auto") return await tryFn(provider);
-  // Auto-failover order: fast paid → free with key → free → reference data
-  const order = ["finnhub","twelvedata","fmp","tiingo","alphavantage","polygon","tradier","alpaca","intrinio","stockdata","finazon","rapidapi_yahoo","yahoo","stooq","eodhd","marketstack","nasdaq","cryptocompare"];
+  // Auto-failover: the keyless sources only (verified 2026-09-25). Stooq
+  // (endpoint retired upstream) and CryptoCompare (now key-only) are out.
+  // Route by the ticker's shape so the first answer is the RIGHT instrument:
+  // on Yahoo "BTC" is a bitcoin ETF, not bitcoin, and "EURUSD" isn't a stock.
+  const T = String(ticker||"").toUpperCase();
+  const CRYPTO = new Set(["BTC","ETH","SOL","ADA","DOT","DOGE","MATIC","AVAX","LINK","UNI","ATOM","LTC","XRP","BNB","USDT","USDC"]);
+  const isFxPair = /^[A-Z]{6}$/.test(T);          // e.g. EURUSD (US tickers are ≤5 letters)
+  const order = isFxPair       ? ["frankfurter","open_er_api","yahoo"]
+              : CRYPTO.has(T)  ? ["coingecko","coinbase","yahoo"]
+              :                  ["yahoo","coingecko","coinbase","frankfurter","open_er_api"];
   for(const p of order){
     try { const d = await tryFn(p); if(d?.price>0) return d; } catch(_){}
   }
@@ -5429,14 +5463,14 @@ async function testQuote(){
 // Live-prices data proxy (shared with the client app via wa_cors_proxy in localStorage).
 function saveMdProxy(v){
   try{ localStorage.setItem("wa_cors_proxy", String(v||"").trim()); }catch(_){}
-  var s=document.getElementById("mdProxyStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Saved — used by the client app and these tests." : "Cleared — using public fallback.";
+  var s=document.getElementById("mdProxyStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Saved — used by the client app and these tests." : (DEFAULT_DATA_PROXY ? "Cleared — using the built-in proxy." : "Cleared — Yahoo, ticker lookups and research feeds are off until a proxy is set.");
 }
 async function testAllProviders(){
   const ticker = $("mdTicker").value.trim().toUpperCase();
   if(!ticker) return toast("Enter a ticker","err");
   $("mdResult").innerHTML = "Testing all providers for "+ticker+"…";
   // Free, keyless sources only — the providers that actually feed live data with no API key.
-  const providers = ["yahoo","stooq","coingecko","cryptocompare","coinbase","frankfurter"];
+  const providers = ["yahoo","coingecko","coinbase","frankfurter","open_er_api"];
   const results = await Promise.all(providers.map(async p => {
     const t0 = performance.now();
     try { const d = await fetchQuote(ticker, p); return {p, ok:true, price:d.price, ms:performance.now()-t0}; }
@@ -5684,9 +5718,12 @@ function saveKey(el){
 }
 
 // ─── CORS-resilient fetch ───────────────────────────────────────────
-// Mirrors the same helper in wealth-analyzer.html. Tries direct first,
-// falls back to corsproxy.io on network/CORS failure. Real 4xx API
-// errors bypass the proxy retry so callers see the actual rejection.
+// Mirrors the same helper in wealth-analyzer.html. Tries direct first, and
+// on a network/CORS failure retries through the data proxy (the user's
+// Cloudflare Worker — see dataProxyUrl). There is no public fallback any
+// more (corsproxy.io refuses anonymous requests), so with no proxy set it
+// fails fast with a clear message. Real 4xx API errors bypass the retry so
+// callers see the actual rejection.
 async function corsFetch(url, opts){
   opts = opts || {};
   try {
@@ -5695,10 +5732,8 @@ async function corsFetch(url, opts){
     if(r.status >= 400 && r.status < 500) return r;
     throw new Error("HTTP "+r.status);
   } catch(_){
-    // Prefer the app's configured data proxy (free Cloudflare Worker) over the public
-    // fallback, so keyless sources like Yahoo actually return live data.
-    const base=(localStorage.getItem("wa_cors_proxy")||"").trim().replace(/\/+$/,"");
-    const proxied = base ? (base+"/?url="+encodeURIComponent(url)) : ("https://corsproxy.io/?"+encodeURIComponent(url));
+    const proxied = dataProxyUrl(url);
+    if(!proxied) throw new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
     return await fetch(proxied, opts);
   }
 }
