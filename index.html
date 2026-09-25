@@ -3557,7 +3557,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div id="aiAgentKeyNote" style="font-size:11px;margin-bottom:8px"></div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn-primary" onclick="runDataAgent()">Extract data</button>
-      <button class="btn-secondary" onclick="show('aiAgentPanel',false)">Cancel</button>
+      <button class="btn-secondary" onclick="daCancelAgent()">Cancel</button>
       <span id="aiAgentStatus" style="font-size:12px;color:var(--text3);margin-left:6px"></span>
     </div>
   </div>
@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1324";
+const APP_VERSION = "20260925-1331";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9694,7 +9694,9 @@ function uploadDocument(){
   uploadDocKeyNote();
   m.style.display = "flex";
 }
-function closeUploadDoc(){ const m=$("uploadDocModal"); if(m) m.style.display="none"; }
+// Closing the window cancels a read it started (it used to keep running, keep
+// billing, and then pop a review window up later).
+function closeUploadDoc(){ if(_daBusy && _daRunOwner==="upload") _daCancelRun(); const m=$("uploadDocModal"); if(m) m.style.display="none"; }
 function uploadDocKeyNote(){
   const n=$("uploadDocKeyNote"), b=$("uploadDocExtractBtn"), kb=$("uploadDocKeyBtn");
   const has = !!getAIKey();
@@ -9730,8 +9732,12 @@ async function runUploadDocExtract(){
     return; }
   const inp=$("uploadDocFiles"), files=inp&&inp.files?Array.from(inp.files):[];
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
-  // Lock Extract while a read runs — a second click would pay for a duplicate request.
-  const xb=$("uploadDocExtractBtn"); if(xb && xb.disabled) return; if(xb) xb.disabled=true;
+  // One AI read at a time, shared with the AI Data Agent panel — a second click, a
+  // re-opened window or the other panel would otherwise pay for a duplicate read.
+  if(_daBusy){ if(st){ st.textContent="⏳ A document is already being read — wait for it to finish, or close its window to cancel it."; st.style.color="var(--amber)"; } return; }
+  _daBusy=true; _daRunOwner="upload"; const run=_daRunCtl=new AbortController();
+  _fdActiveLabel=""; _daSourceLabel="Upload Document (AI)";   // provenance: never label this data with a previous import's name
+  const xb=$("uploadDocExtractBtn"); if(xb) xb.disabled=true;
   try{
     if(st){ st.textContent="Reading "+files.length+" file"+(files.length>1?"s":"")+"…"; st.style.color="var(--text3)"; }
     const content=[]; let readOk=0, lastReadErr="";
@@ -9744,13 +9750,18 @@ async function runUploadDocExtract(){
     if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
     // Live elapsed-time status, so a normal 30-60 s read doesn't look frozen.
-    const {raw,total}=await _daExtractWithRetry(content, st);
+    const {raw,total,ext}=await _daExtractWithRetry(content, st, run.signal);
+    if(run.signal.aborted) return;
     if(!total){ if(st){ st.textContent=_daNothingMsg(raw); st.style.color="var(--amber)"; } return; }
+    _daExtraction=ext;
     if(st){ st.textContent="✓ Extracted "+total+" item"+(total!==1?"s":"")+" — review below."; st.style.color="var(--green)"; }
+    _daRunCtl=null;          // finished: closing the window now must not "cancel" it
     closeUploadDoc();
     renderReviewModal();
-  }catch(e){ if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[UploadDoc]",e); }
-  finally{ if(xb) xb.disabled=false; }
+  }catch(e){
+    if(e && e.cancelled){ if(st){ st.textContent="Cancelled — nothing was read."; st.style.color="var(--text3)"; } return; }
+    if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[UploadDoc]",e); }
+  finally{ if(_daRunCtl===run) _daRunCtl=null; _daBusy=false; _daRunOwner=""; if(xb) xb.disabled=false; }
 }
 // Back-compat: keep the panel-based AI Data Agent flow working (Portfolio tab).
 function onAgentFilesChange(){
@@ -10138,7 +10149,11 @@ function _aiErrorMessage(status, apiMsg){
   if(status===403) return "This AI key isn't allowed to do that ("+(m||"permission denied")+") — check the key's workspace at console.anthropic.com.";
   if(status===404) return "The AI model ("+AI_MODEL+") isn't available to this key"+(m?" — "+m:"")+".";
   if(status===413) return "The upload is too large for one request — try fewer or smaller files.";
-  if(status===429) return "Anthropic's rate limit was reached — wait a minute, then try again.";
+  // A request bigger than the account's per-minute token allowance fails every
+  // time — "wait a minute" would be wrong advice for that case.
+  if(status===429) return /token/i.test(m)
+    ? "This upload is larger than your Anthropic account's per-minute token limit — upload fewer or smaller files, or raise the limit at console.anthropic.com ("+m+")."
+    : "Anthropic's rate limit was reached — wait a minute, then try again"+(m?" ("+m+")":"")+".";
   if(status===529||status>=500) return "Anthropic's API is busy or temporarily unavailable — try again in a minute.";
   if(status===400) return "Anthropic couldn't process this upload"+(m?": "+m:"")+".";
   return "AI service error "+status+(m?": "+m:"")+".";
@@ -10148,26 +10163,36 @@ let _daLastAI = null;           // key-free summary of the last AI reply (diagno
 // Run the extraction with a live timer. If the reply can't be read at all, ask
 // once more before giving up — an occasional malformed reply usually succeeds on
 // a second try. Sets _daExtraction; returns {raw,total}.
-async function _daExtractWithRetry(content, st){
-  let raw=null, total=0;
+async function _daExtractWithRetry(content, st, signal){
+  let raw=null, total=0, ext=null;
   for(let pass=0; pass<2; pass++){
     const t0=Date.now(), label = pass ? "Claude's first reply couldn't be read — asking again… " : "Reading with Claude (Anthropic)… ";
-    const tickFn=()=>{ if(st){ st.textContent=label+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
+    const tickFn=()=>{ if(st && !(signal&&signal.aborted)){ st.textContent=label+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
     tickFn(); const tick=setInterval(tickFn,1000);
-    try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
-    _daExtraction=normalizeExtraction(raw);
-    total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
+    try{ raw=await callAIExtract(content, signal); } finally{ clearInterval(tick); }
+    ext=normalizeExtraction(raw);   // not written to _daExtraction here: a cancelled / superseded run must not replace an open review
+    total=Object.keys(ext).reduce((s,k)=>s+ext[k].length,0);
     if(total) break;
     try{ console.warn("[AI extract] reply had no usable data (pass "+(pass+1)+")", _daLastAI, raw); }catch(_){}
   }
-  return {raw,total};
+  return {raw,total,ext};
 }
+// One AI read at a time, app-wide: a second click, a re-opened window or the other
+// panel must not start a duplicate paid request. _daRunCtl cancels the live read.
+var _daBusy=false, _daRunCtl=null, _daRunOwner="";   // var: read by functions defined earlier in the file
+function _daCancelRun(){ if(_daRunCtl){ try{ _daRunCtl.abort(); }catch(_){} } }
 // Status text when a reply produced zero items: say what actually came back.
 function _daNothingMsg(raw){
   return "⚠ Claude answered, but nothing could be read from its reply ("+_daDescribeRaw(raw,_daLastAI)+"). Try once more — if it repeats, send a screenshot of this line.";
 }
-async function callAIExtract(content){
+function _daCancelledErr(){ const e=new Error("Cancelled — nothing was read."); e.cancelled=true; return e; }
+// Sleep that a Cancel can interrupt (the retry pause must not keep a closed run alive).
+function _daSleep(ms, signal){ return new Promise((res,rej)=>{ if(signal&&signal.aborted) return rej(_daCancelledErr());
+  const t=setTimeout(()=>{ if(signal) signal.removeEventListener("abort",onA); res(); }, ms);
+  const onA=()=>{ clearTimeout(t); rej(_daCancelledErr()); }; if(signal) signal.addEventListener("abort",onA,{once:true}); }); }
+async function callAIExtract(content, signal){
   _daLastAI=null;
+  if(signal && signal.aborted) throw _daCancelledErr();
   const key=getAIKey(); if(!key) throw new Error("No AI key set — add it in Settings → Data & integrations.");
   const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
   // 16000 = the API's recommended non-streaming default. 8192 left too little room
@@ -10177,19 +10202,30 @@ async function callAIExtract(content){
     messages:[{role:"user",content}] };
   const payload=JSON.stringify(body);
   for(let attempt=0; attempt<2; attempt++){
-    const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(), AI_TIMEOUT_MS);
+    // One controller per attempt, aborted by the timeout OR by the user's Cancel
+    // (closing the window), so a cancelled run stops paying for the request.
+    const ctl=new AbortController(); let timedOut=false;
+    const timer=setTimeout(()=>{ timedOut=true; ctl.abort(); }, AI_TIMEOUT_MS);
+    const onUserAbort=()=>ctl.abort(); if(signal) signal.addEventListener("abort",onUserAbort,{once:true});
+    const done=()=>{ clearTimeout(timer); if(signal) signal.removeEventListener("abort",onUserAbort); };
     let r;
     try{ r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers,body:payload,signal:ctl.signal}); }
     catch(e){
-      clearTimeout(timer);
-      if(e && e.name==="AbortError") throw new Error("Anthropic took longer than "+Math.round(AI_TIMEOUT_MS/60000)+" minutes to answer — try again, or upload fewer / smaller files.");
+      done();
+      if(e && e.name==="AbortError"){ if(!timedOut) throw _daCancelledErr();
+        throw new Error("Anthropic took longer than "+Math.round(AI_TIMEOUT_MS/60000)+" minutes to answer — try again, or upload fewer / smaller files."); }
       throw new Error("Couldn't reach Anthropic's API ("+((e&&e.message)||e)+") — check your internet connection, then try again.");
     }
-    clearTimeout(timer);
+    done();
     if(!r.ok){
       const t=await r.text(); let apiMsg=""; try{ const j=JSON.parse(t); apiMsg=(j&&j.error&&j.error.message)||""; }catch(_){ apiMsg=t.slice(0,200); }
-      // Busy / overloaded / rate-limited: one automatic retry after a short pause.
-      if(attempt===0 && (r.status===429 || r.status===529 || r.status>=500)){ await new Promise(res=>setTimeout(res,5000)); continue; }
+      // Busy / overloaded / rate-limited: one automatic retry after a short pause —
+      // honouring retry-after when Anthropic sends it (and readable across CORS);
+      // a long wait is reported instead of silently retried.
+      if(attempt===0 && (r.status===429 || r.status===529 || r.status>=500)){
+        const ra=parseInt(r.headers.get("retry-after")||"",10), wait=(isFinite(ra)&&ra>0)?ra:5;
+        if(wait<=20 && !(r.status===429 && /token/i.test(apiMsg))){ await _daSleep(wait*1000, signal); continue; }
+      }
       throw new Error(_aiErrorMessage(r.status, apiMsg));
     }
     const data=await r.json();
@@ -10281,21 +10317,26 @@ function normalizeExtraction(raw){
     timeHorizon:_daEnum(h.timeHorizon,["1_5","5_10","10_15","15_plus"],"") }); });
   (raw.income||[]).forEach(i=>{ out.income.push({ _ok:ok(i.confidence), _src:i.sourceQuote||"",
     who:_daEnum(i.who,["client1","client2"],"client1"), primary:_daNum(i.primary), secondary:_daNum(i.secondary), raisePct:_daRate(i.raisePct) }); });
-  if(raw.expenses && typeof raw.expenses==="object"){ const e=raw.expenses; out.expenses.push({ _ok:ok(e.confidence), _src:e.sourceQuote||"",
-    living:_daNum(e.living), insurance:_daNum(e.insurance), other:_daNum(e.other), annualSavings:_daNum(e.annualSavings), inflationPct:_daRate(e.inflationPct) }); }
+  if(raw.expenses && typeof raw.expenses==="object"){ const e=raw.expenses;
+    const row={ _ok:ok(e.confidence), _src:e.sourceQuote||"",
+      living:_daNum(e.living), insurance:_daNum(e.insurance), other:_daNum(e.other), annualSavings:_daNum(e.annualSavings), inflationPct:_daRate(e.inflationPct) };
+    // An empty {} is not data — counting it blocked the re-ask and the diagnostic.
+    if([row.living,row.insurance,row.other,row.annualSavings,row.inflationPct].some(v=>v!=null)) out.expenses.push(row); }
   (raw.assets||[]).forEach(a=>{
     // _kind routes the row on Apply: "property" → aProp, "other" → aOther, else an
-    // account. A property row arrives as propertyValue with no value, which used to
-    // show an empty, unticked review row and then vanish on Apply.
+    // account. It is shown and editable in the review window ("Add as"), so a wrong
+    // guess can be corrected. A house is inferred only on strong evidence.
     const val=_daNum(a.value), pv=_daNum(a.propertyValue), ov=_daNum(a.otherValue);
     const txt=((a.label||"")+" "+(a.accountTypeHint||"")).toLowerCase();
-    const propLike=(/\b(property|residence|real estate|house|apartment|flat|condo|villa|chalet|immobilie|wohnung|eigenheim)\b/.test(txt)
-                 || (/\bhome\b/.test(txt) && !/\b(loan|mortgage|insurance|equity line)\b/.test(txt)))
-                 && !/\b(fund|funds|reit|etf|depot|konto|account|portfolio|shares?|securities)\b/.test(txt);   // a "Property Fund" is an investment, not a house
+    // Anything that looks like an account / pension / fund is never a house —
+    // substring match, so "Sparkonto", "Säule 3a", "Home savings account" all count.
+    const accountLike=/(fund|reit|etf|depot|konto|spar|account|portfolio|share|securit|saving|deposit|cash|pension|pillar|s[äa]ule|\b3a\b|trust|bank|checking|current acc|\bisa\b|brokerage|plan\b)/.test(txt);
+    const propWord=/\b(property|residence|real estate|house|apartment|condo|villa|chalet|immobilie|wohnung|liegenschaft|stockwerkeigentum)\b/.test(txt);
     let kind="account", value=val;
-    if(pv>0){ kind="property"; value=pv; }
+    if(pv>0 && !/\b(fund|funds|reit|etf)\b/.test(txt)){ kind="property"; value=pv; }   // model said it's property — unless it's plainly a fund
+    else if(pv>0){ value=(val>0?val:pv); }
     else if(ov>0 && !(val>0)){ kind="other"; value=ov; }
-    else if(val>0 && propLike){ kind="property"; }
+    else if(val>0 && propWord && !accountLike){ kind="property"; }
     out.assets.push({ _ok:ok(a.confidence), _src:a.sourceQuote||"", _kind:kind,
       label:a.label||"", accountTypeHint:a.accountTypeHint||(kind==="property"?"Property / real estate":kind==="other"?"Other personal assets":""),
       value:value, country:_daCountry(a.country)||"",
@@ -10318,6 +10359,14 @@ function normalizeExtraction(raw){
         client1RetirementAge:age(rt.client1RetirementAge), client2RetirementAge:age(rt.client2RetirementAge),
         client1PensionAnnual:_daNum(rt.client1PensionAnnual), client1PensionStartAge:age(rt.client1PensionStartAge),
         client2PensionAnnual:_daNum(rt.client2PensionAnnual), client2PensionStartAge:age(rt.client2PensionStartAge) }); } }
+  // Drop records that carry nothing — they'd count as "extracted" (blocking the
+  // re-ask / diagnostic) and show as empty review rows.
+  out.household=out.household.filter(h=>h.first||h.last||h.dob);
+  out.income=out.income.filter(i=>i.primary!=null||i.secondary!=null);
+  out.assets=out.assets.filter(a=>a.label||a.value>0);
+  out.liabilities=out.liabilities.filter(l=>l.label||l.balance>0);
+  out.goals=out.goals.filter(g=>g.name||g.amount>0);
+  out.holdings=out.holdings.filter(h=>h.name||h.tkr||h.val>0);
   return out;
 }
 
@@ -10328,6 +10377,10 @@ async function runDataAgent(){
   if(!getAIKey()){ daKeyNote(); if(st){st.textContent="⚠ Add your AI key first."; st.style.color="var(--amber)";} return; }
   const inp=$("aiAgentFiles"), files=inp&&inp.files?Array.from(inp.files):[];
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
+  // Same single-read guard as Upload Document (this panel had none: a double click
+  // or an impatient re-click paid for duplicate reads).
+  if(_daBusy){ if(st){ st.textContent="⏳ A document is already being read — wait for it to finish, or press Cancel to stop it."; st.style.color="var(--amber)"; } return; }
+  _daBusy=true; _daRunOwner="agent"; const run=_daRunCtl=new AbortController();
   try{
     if(st){ st.textContent="Reading "+files.length+" file"+(files.length>1?"s":"")+"…"; st.style.color="var(--text3)"; }
     const content=[]; let readOk=0, lastReadErr="";
@@ -10335,12 +10388,19 @@ async function runDataAgent(){
       catch(e){ lastReadErr=e.message; content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
     if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daHoldingsInstruction()});
-    const {raw,total}=await _daExtractWithRetry(content, st);
+    const {raw,total,ext}=await _daExtractWithRetry(content, st, run.signal);
+    if(run.signal.aborted) return;
     if(!total){ if(st){ st.textContent=_daNothingMsg(raw); st.style.color="var(--amber)"; } return; }
+    _daExtraction=ext;
     if(st){ st.textContent="✓ Extracted "+total+" item"+(total!==1?"s":"")+" — review below."; st.style.color="var(--green)"; }
     renderReviewModal();
-  }catch(e){ if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[DataAgent]",e); }
+  }catch(e){
+    if(e && e.cancelled){ if(st){ st.textContent="Cancelled — nothing was read."; st.style.color="var(--text3)"; } return; }
+    if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[DataAgent]",e); }
+  finally{ if(_daRunCtl===run) _daRunCtl=null; _daBusy=false; _daRunOwner=""; }
 }
+// Panel Cancel: stop a read this panel started, then hide the panel.
+function daCancelAgent(){ if(_daBusy && _daRunOwner==="agent") _daCancelRun(); show("aiAgentPanel",false); }
 
 // ── Review modal ─────────────────────────────────────────────────────────────
 function _daOpts(obj){ return Object.keys(obj).map(k=>({v:k,l:obj[k]})); }
@@ -10366,7 +10426,8 @@ function renderReviewModal(){
   const GTIER=["essential","important","aspirational","legacy"].map(v=>({v,l:v}));
   const req=(c)=>c>=0.6;
   let html="";
-  const section=(title,rows)=> rows.length?`<div class="da-sec"><div class="da-sec-h">${title} <span style="color:var(--text3);font-weight:400">(${rows.length})</span></div>${rows.join("")}</div>`:"";
+  const section=(title,rows)=>{ const nRows=rows.filter(r=>r.indexOf("da-chk")>=0).length;
+    return nRows?`<div class="da-sec"><div class="da-sec-h">${title} <span style="color:var(--text3);font-weight:400">(${nRows})</span></div>${rows.join("")}</div>`:""; };
 
   html+=section("Household & clients", x.household.map((h,i)=>_daRow("household",i,h._ok,h._src,[
     {html:_daSelect("household",i,"role",h.role,ROLE),w:"flex:0 0 90px"},
@@ -10375,7 +10436,14 @@ function renderReviewModal(){
     {lbl:"DOB",html:_daInput("household",i,"dob",h.dob,"date"),w:"flex:0 0 130px"},
     {lbl:"Country",html:_daSelect("household",i,"country",h.country,[{v:"",l:"—"}].concat(CTRY)),w:"flex:0 0 120px"},
     {lbl:"Risk",html:_daSelect("household",i,"riskTolerance",h.riskTolerance,[{v:"",l:"—"}].concat(RISK)),w:"flex:0 0 130px"},
-    {lbl:"Horizon",html:_daSelect("household",i,"timeHorizon",h.timeHorizon,[{v:"",l:"—"}].concat(HOR)),w:"flex:0 0 100px"}
+    {lbl:"Horizon",html:_daSelect("household",i,"timeHorizon",h.timeHorizon,[{v:"",l:"—"}].concat(HOR)),w:"flex:0 0 100px"},
+    // Address + relationship are applied too, so they're shown and editable here
+    // (they used to be applied from hidden data the reviewer never saw).
+    {lbl:"Street",html:_daInput("household",i,"street",h.street),w:"flex:1.4"},
+    {lbl:"City",html:_daInput("household",i,"city",h.city),w:"flex:1"},
+    {lbl:"Postcode",html:_daInput("household",i,"postal",h.postal),w:"flex:0 0 90px"},
+    {lbl:"Canton / state",html:_daInput("household",i,"state",h.state),w:"flex:0 0 120px"},
+    {lbl:"Relationship",html:_daInput("household",i,"relationship",h.relationship),w:"flex:0 0 110px"}
   ],req(h._ok))));
 
   html+=section("Income", x.income.map((r,i)=>_daRow("income",i,r._ok,r._src,[
@@ -10393,12 +10461,26 @@ function renderReviewModal(){
     {lbl:"Inflation %",html:_daInput("expenses",i,"inflationPct",r.inflationPct,"number"),w:"flex:0 0 90px"}
   ],req(r._ok))));
 
-  html+=section("Assets / accounts", x.assets.map((a,i)=>_daRow("assets",i,a._ok,a._src,[
+  // "Add as" makes the account / property / other-asset routing visible and
+  // correctable. When the app already holds a property / other-asset value, the
+  // reviewer chooses whether imported values replace it or are added to it.
+  const KIND=[{v:"account",l:"Account"},{v:"property",l:"Property / home"},{v:"other",l:"Other personal asset"}];
+  const assetRows=x.assets.map((a,i)=>_daRow("assets",i,a._ok,a._src,[
     {lbl:"Label",html:_daInput("assets",i,"label",a.label),w:"flex:1.3"},
-    {lbl:"Account type (hint)",html:_daInput("assets",i,"accountTypeHint",a.accountTypeHint),w:"flex:1.3"},
+    {lbl:"Add as",html:_daSelect("assets",i,"_kind",a._kind||"account",KIND),w:"flex:0 0 150px"},
+    {lbl:"Account type (hint)",html:_daInput("assets",i,"accountTypeHint",a.accountTypeHint),w:"flex:1.2"},
     {lbl:"Value",html:_daInput("assets",i,"value",a.value,"number"),w:"flex:1"},
     {lbl:"Country",html:_daSelect("assets",i,"country",a.country||val("c1co")||"US",CTRY),w:"flex:0 0 120px"}
-  ],a.value>0&&req(a._ok))));
+  ],a.value>0&&req(a._ok)));
+  const curProp=num("aProp",0), curOther=num("aOther",0);
+  if(assetRows.length && (curProp>0||curOther>0)){
+    const impProp=x.assets.filter(a=>a._kind==="property").reduce((s,a)=>s+(+a.value||0),0);
+    const same = curProp>0 && impProp>0 && Math.abs(impProp-curProp)<=curProp*0.01;   // re-import of the same home → replace
+    assetRows.unshift(`<div class="da-row" style="font-size:12px;color:var(--text2);align-items:center">The app already holds `
+      +(curProp>0?`<strong>${_daEsc(_daMoneyFmt(curProp))}</strong> of property`:"")+(curProp>0&&curOther>0?" and ":"")
+      +(curOther>0?`<strong>${_daEsc(_daMoneyFmt(curOther))}</strong> of other personal assets`:"")
+      +`. Rows added as property / other asset should <select id="daPropMode" style="font-size:12px"><option value="replace"${same?" selected":""}>replace that value</option><option value="add"${same?"":" selected"}>be added to it</option></select></div>`); }
+  html+=section("Assets / accounts", assetRows);
 
   html+=section("Liabilities / loans", x.liabilities.map((l,i)=>_daRow("liabilities",i,l._ok,l._src,[
     {lbl:"Type",html:_daSelect("liabilities",i,"type",l.type,LOANS),w:"flex:0 0 150px"},
@@ -10448,7 +10530,7 @@ function renderReviewModal(){
         <button class="btn-x" onclick="daRequestClose()" aria-label="Close">✕</button></div>
       <div class="da-modal-tools"><button class="btn-secondary" onclick="daCheckAll(true)">Select all</button>
         <button class="btn-secondary" onclick="daCheckAll(false)">Clear all</button>
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing is added to the app until you click <strong>Add to the app</strong>. Untick anything wrong; edit any value inline. Your existing data is kept.</span></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing changes in the app until you click <strong>Add to the app</strong>. Untick anything wrong; edit any value inline. Ticked accounts, loans, goals and holdings are added alongside your existing ones; ticked profile fields (names, address, income, expenses, retirement) replace the current values.</span></div>
       <div class="da-modal-body">${html||'<div class="pf-empty">Nothing to review.</div>'}</div>
       <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3);flex:1;min-width:0"></span>
         <span id="daTickCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
@@ -10489,13 +10571,28 @@ function _daSetSel(id,v){ const el=$(id); if(!el || v==null || v==="") return fa
 // canton, the spouse relationship, and property values.)
 function _daMerged(dom,i){ const base=((_daExtraction||{})[dom]||[])[i]||{}; return Object.assign({}, base, _daCollect(dom,i)); }
 // State / canton → the select's code: "ZH", "Zürich (ZH)" and "Zürich" all land on ZH.
+// Option labels are English names with a tax suffix ("Zurich (13.2%)",
+// "Washington D.C. (8.5%)"); documents use local names ("Zürich", "Genf",
+// "Luzern"). Normalise both sides; exact name before any prefix, and a prefix
+// only when it is unambiguous ("Washington D.C." must not land on Washington).
+const _DA_STATE_ALIAS={ "genf":"GE","geneve":"GE","geneva":"GE","ginevra":"GE","luzern":"LU","lucerne":"LU","wallis":"VS","valais":"VS",
+  "tessin":"TI","ticino":"TI","freiburg":"FR","fribourg":"FR","sankt gallen":"SG","st gallen":"SG","saint gall":"SG","graubunden":"GR","grisons":"GR","grigioni":"GR",
+  "basel stadt":"BS","basel-stadt":"BS","basel landschaft":"BL","basel-landschaft":"BL","baselland":"BL","bern":"BE","berne":"BE","waadt":"VD","vaud":"VD",
+  "neuenburg":"NE","neuchatel":"NE","solothurn":"SO","soleure":"SO","thurgau":"TG","thurgovie":"TG","aargau":"AG","argovie":"AG","schaffhausen":"SH",
+  "appenzell ausserrhoden":"AR","appenzell innerrhoden":"AI","glarus":"GL","zug":"ZG","zoug":"ZG","schwyz":"SZ","uri":"UR","obwalden":"OW","nidwalden":"NW","jura":"JU",
+  "zurich":"ZH","zuerich":"ZH","washington dc":"DC","district of columbia":"DC" };
+function _daStateNorm(t){ return String(t||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/\([^)]*%\)/g,"").replace(/[.,]/g,"").replace(/\s+/g," ").trim(); }
 function _daSetState(id,st){ const el=$(id); if(!el || !st) return;
   if(el.tagName!=="SELECT"){ el.value=st; return; }
   const s=String(st).trim(), code=(s.match(/\(([A-Za-z]{2,3})\)\s*$/)||[])[1];
-  if(code && _daSetSel(id,code.toUpperCase())) return;
-  if(_daSetSel(id,s)) return;
-  const lo=s.toLowerCase(), o=[...el.options].find(o=>{ const t=o.text.trim().toLowerCase(); return t && (t.startsWith(lo)||lo.startsWith(t)); });
-  if(o){ el.value=o.value; try{ el.dispatchEvent(new Event("change")); }catch(_){} } }
+  if(code && _daSetSel(id,code.toUpperCase())) return;             // "Zürich (ZH)"
+  if(/^[A-Za-z]{2,3}$/.test(s) && _daSetSel(id,s.toUpperCase())) return;   // "ZH"
+  const n=_daStateNorm(s.replace(/\(([A-Za-z]{2,3})\)\s*$/,""));
+  const opts=[...el.options].filter(o=>o.value);
+  const pick=o=>{ el.value=o.value; try{ el.dispatchEvent(new Event("change")); }catch(_){} };
+  const alias=_DA_STATE_ALIAS[n]; if(alias){ const o=opts.find(o=>o.value===alias); if(o) return pick(o); }
+  const exact=opts.find(o=>_daStateNorm(o.text)===n); if(exact) return pick(exact);
+  const pre=opts.filter(o=>_daStateNorm(o.text).startsWith(n)); if(n.length>=3 && pre.length===1) return pick(pre[0]); }
 function _daMatchAccount(country,hint){
   const c=COUNTRY_ACCOUNTS[country]||COUNTRY_ACCOUNTS.US; if(!c) return {type:"other",group:"Other assets",liquid:true};
   const h=String(hint||"").toLowerCase().trim(); let best=null;
@@ -10565,8 +10662,11 @@ function applyDataAgent(){
     const ctry=r.country||val("c1co")||"US"; const mk=_daMatchAccount(ctry,r.accountTypeHint);
     assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))});
     bump("accounts"); });
-  if(propSum>0) _daSet("aProp",propSum);
-  if(otherSum>0) _daSet("aOther",otherSum);
+  // Replace or add, as chosen in the review window when a value already existed
+  // (overwriting silently used to wipe a property entered earlier).
+  const propMode=(($("daPropMode")||{}).value)||"add";
+  if(propSum>0) _daSet("aProp", propMode==="replace" ? propSum : num("aProp",0)+propSum);
+  if(otherSum>0) _daSet("aOther", propMode==="replace" ? otherSum : num("aOther",0)+otherSum);
 
   // Liabilities
   each("liabilities",x.liabilities,r=>{ const b=_daNum(r.balance); if(!(b>0)){ skipped.push("“"+(r.label||"a loan")+"” (no balance)"); return; }
