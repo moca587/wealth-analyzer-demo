@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1148";
+const APP_VERSION = "20260925-1316";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9744,12 +9744,8 @@ async function runUploadDocExtract(){
     if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
     // Live elapsed-time status, so a normal 30-60 s read doesn't look frozen.
-    const t0=Date.now(), tickFn=()=>{ if(st){ st.textContent="Reading with Claude (Anthropic)… "+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
-    tickFn(); const tick=setInterval(tickFn,1000);
-    let raw; try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
-    _daExtraction=normalizeExtraction(raw);
-    const total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
-    if(!total){ if(st){st.textContent="No financial data detected — try a clearer file."; st.style.color="var(--amber)";} return; }
+    const {raw,total}=await _daExtractWithRetry(content, st);
+    if(!total){ if(st){ st.textContent=_daNothingMsg(raw); st.style.color="var(--amber)"; } return; }
     if(st){ st.textContent="✓ Extracted "+total+" item"+(total!==1?"s":"")+" — review below."; st.style.color="var(--green)"; }
     closeUploadDoc();
     renderReviewModal();
@@ -10148,7 +10144,30 @@ function _aiErrorMessage(status, apiMsg){
   return "AI service error "+status+(m?": "+m:"")+".";
 }
 const AI_TIMEOUT_MS = 240000;   // a 4-page PDF normally answers in well under a minute
+let _daLastAI = null;           // key-free summary of the last AI reply (diagnostics only)
+// Run the extraction with a live timer. If the reply can't be read at all, ask
+// once more before giving up — an occasional malformed reply usually succeeds on
+// a second try. Sets _daExtraction; returns {raw,total}.
+async function _daExtractWithRetry(content, st){
+  let raw=null, total=0;
+  for(let pass=0; pass<2; pass++){
+    const t0=Date.now(), label = pass ? "Claude's first reply couldn't be read — asking again… " : "Reading with Claude (Anthropic)… ";
+    const tickFn=()=>{ if(st){ st.textContent=label+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
+    tickFn(); const tick=setInterval(tickFn,1000);
+    try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
+    _daExtraction=normalizeExtraction(raw);
+    total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
+    if(total) break;
+    try{ console.warn("[AI extract] reply had no usable data (pass "+(pass+1)+")", _daLastAI, raw); }catch(_){}
+  }
+  return {raw,total};
+}
+// Status text when a reply produced zero items: say what actually came back.
+function _daNothingMsg(raw){
+  return "⚠ Claude answered, but nothing could be read from its reply ("+_daDescribeRaw(raw,_daLastAI)+"). Try once more — if it repeats, send a screenshot of this line.";
+}
 async function callAIExtract(content){
+  _daLastAI=null;
   const key=getAIKey(); if(!key) throw new Error("No AI key set — add it in Settings → Data & integrations.");
   const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
   // 16000 = the API's recommended non-streaming default. 8192 left too little room
@@ -10174,6 +10193,9 @@ async function callAIExtract(content){
       throw new Error(_aiErrorMessage(r.status, apiMsg));
     }
     const data=await r.json();
+    // Key-free summary of the reply, for the "nothing extracted" diagnostic.
+    _daLastAI={ stop_reason:data.stop_reason||"", output_tokens:(data.usage&&data.usage.output_tokens!=null)?data.usage.output_tokens:null,
+      input_tokens:(data.usage&&data.usage.input_tokens!=null)?data.usage.input_tokens:null, blocks:(data.content||[]).map(b=>b.type).join("+") };
     if(data.stop_reason==="refusal") throw new Error("Claude declined to process this document.");
     // A tool call cut off by max_tokens is incomplete — never apply a partial profile.
     if(data.stop_reason==="max_tokens") throw new Error("The document produced more data than fits in one answer — upload fewer files at a time.");
@@ -10202,8 +10224,35 @@ function _daCountry(v){ if(!v) return null; const k=String(v).trim().toUpperCase
   const A={USA:"US","UNITED STATES":"US",UK:"GB","UNITED KINGDOM":"GB",ENGLAND:"GB",SWITZERLAND:"CH",GERMANY:"DE",JAPAN:"JP",CANADA:"CA",AUSTRALIA:"AU",SINGAPORE:"SG"}; return A[k]||(k in COUNTRY_ACCOUNTS?k:null); }
 function _daEnum(v,allowed,dflt){ if(v==null) return dflt; const k=String(v).trim().toLowerCase().replace(/\s+/g,"_"); return allowed.indexOf(k)>=0?k:dflt; }
 
+// Claude sometimes returns a nested tool parameter as a JSON-encoded STRING
+// ("[{...}]") instead of a real array/object — most often with a large schema
+// like this one — or wraps the whole profile one level deeper. The normalizer
+// used to iterate only real arrays, so those replies came back as "no financial
+// data detected" even though Claude had read everything. Accept all shapes.
+const _DA_LIST_KEYS=["household","income","assets","liabilities","goals","holdings"], _DA_OBJ_KEYS=["expenses","retirement"];
+function _daParseMaybe(v){ if(typeof v!=="string") return v; const s=v.trim(); if(!/^[\[{]/.test(s)) return v; try{ return JSON.parse(s); }catch(_){ return v; } }
+function _daCoerceRaw(raw){
+  raw=_daParseMaybe(raw); if(!raw || typeof raw!=="object" || Array.isArray(raw)) return {};
+  const ALL=_DA_LIST_KEYS.concat(_DA_OBJ_KEYS), hasKnown=o=>o && typeof o==="object" && ALL.some(k=>k in o);
+  if(!hasKnown(raw)){   // unwrap {profile:{...}} / {input:"{...}"}
+    const inner=Object.values(raw).map(_daParseMaybe).find(v=>hasKnown(v) && !Array.isArray(v)); if(inner) raw=inner; }
+  const out={};
+  _DA_LIST_KEYS.forEach(k=>{ let v=_daParseMaybe(raw[k]);
+    if(v && typeof v==="object" && !Array.isArray(v)) v=[v];          // a single item instead of a list
+    out[k]=Array.isArray(v) ? v.map(_daParseMaybe).filter(x=>x && typeof x==="object" && !Array.isArray(x)) : []; });
+  _DA_OBJ_KEYS.forEach(k=>{ let v=_daParseMaybe(raw[k]); if(Array.isArray(v)) v=v[0]; out[k]=(v && typeof v==="object") ? v : null; });
+  return out;
+}
+// One-line description of what the model actually returned — shown when nothing
+// could be extracted, so a failure can be diagnosed from a screenshot.
+function _daDescribeRaw(raw, meta){
+  let r=raw; try{ r=_daParseMaybe(raw); }catch(_){}
+  const parts = (r && typeof r==="object") ? Object.keys(r).slice(0,8).map(k=>{ const v=r[k]; return k+":"+(Array.isArray(v)?("list "+v.length):(v===null?"null":typeof v)); }) : [typeof raw];
+  const m=meta||{};
+  return (parts.length?parts.join(", "):"empty reply")+(m.stop_reason?"; stop "+m.stop_reason:"")+(m.output_tokens!=null?"; "+m.output_tokens+" output tokens":"");
+}
 function normalizeExtraction(raw){
-  raw=raw||{};
+  raw=_daCoerceRaw(raw);
   const out={household:[],income:[],expenses:[],assets:[],liabilities:[],goals:[],holdings:[],retirement:[]};
   const ok=c=>c==null?0.7:(+c||0);
   (raw.household||[]).forEach(h=>{ out.household.push({ _ok:ok(h.confidence), _src:h.sourceQuote||"",
@@ -10267,12 +10316,8 @@ async function runDataAgent(){
       catch(e){ lastReadErr=e.message; content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
     if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daHoldingsInstruction()});
-    const t0=Date.now(), tickFn=()=>{ if(st){ st.textContent="Reading with Claude (Anthropic)… "+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
-    tickFn(); const tick=setInterval(tickFn,1000);
-    let raw; try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
-    _daExtraction=normalizeExtraction(raw);
-    const total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
-    if(!total){ if(st){st.textContent="No financial data detected — try a clearer file."; st.style.color="var(--amber)";} return; }
+    const {raw,total}=await _daExtractWithRetry(content, st);
+    if(!total){ if(st){ st.textContent=_daNothingMsg(raw); st.style.color="var(--amber)"; } return; }
     if(st){ st.textContent="✓ Extracted "+total+" item"+(total!==1?"s":"")+" — review below."; st.style.color="var(--green)"; }
     renderReviewModal();
   }catch(e){ if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[DataAgent]",e); }
