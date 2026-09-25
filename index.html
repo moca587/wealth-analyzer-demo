@@ -1436,7 +1436,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 .sim-run-panel .btn-primary.full{font-size:15px;padding:13px}
 #tab-simulation .sim-group:first-of-type{margin-top:18px}
 /* Results-at-a-glance strip (populated after a run) */
-.sim-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:2px 0 6px;animation:wowFadeUp .4s ease both}
+.sim-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:2px 0 6px;animation:wowFadeUp .4s ease both}
 .ss-card{background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r);padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s,border-color .15s;cursor:default}
 .ss-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,87,184,.10);border-color:rgba(0,87,184,.22)}
 .ss-card.good{border-left-color:var(--green)}
@@ -1449,6 +1449,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 .ss-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:5px}
 .ss-val{font-size:23px;font-weight:800;color:var(--text);letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.05}
 .ss-sub{font-size:11px;color:var(--text3);margin-top:3px}
+@media (max-width:1024px){ .sim-summary{grid-template-columns:repeat(3,1fr)} }
 @media (max-width:760px){ .sim-summary{grid-template-columns:1fr 1fr} }
 /* Expand / collapse all */
 .sim-subnav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;margin:6px 2px 18px}
@@ -4535,7 +4536,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260924-1930";
+const APP_VERSION = "20260925-1000";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -7371,7 +7372,7 @@ function renderSimSummary(){
   // Sustainable annual spend (expected / 50%) — same MC solver as the lifestyle
   // panel. Pension income is folded into the survival model, and the result is
   // deflated to today's money so it reads on the same basis as Projected wealth.
-  let spend = "—";
+  let spend = "—", lasts = "—", lastsCls = "";
   try{
     const a1 = (typeof ageFromDOB==="function" ? ageFromDOB(val("c1d")) : 0) || 40;
     const retAge = num("retAge",65);
@@ -7381,6 +7382,16 @@ function renderSimSummary(){
     const pens = _retirementPensionSchedule(retAge, yearsInRet, inf);
     const spendNom = _solveSustainableSpendMC(Math.max(0,w), yearsInRet, P.mu, P.sig, inf, 90, 150, pens);
     spend = fmtMoney(spendNom / Math.pow(1+inf, yrsToRet));   // nominal-at-retirement → today's money
+    // Money-lasts: probability the household's PLANNED retirement spending
+    // survives to age 90 from the median wealth at retirement (same survival
+    // model as the drawdown panel), so this tile fills on every run — not only
+    // after the separate "Run drawdown analysis" button.
+    const plannedSpend = num("retSpend",0) || (num("expL",0)+num("expI",0)+num("expO",0));
+    if(plannedSpend > 0){
+      const pL = Math.round(_survivalProb(Math.max(0,w), plannedSpend, yearsInRet, P.mu, P.sig, inf, 300, pens) * 100);
+      lasts = pL + "%";
+      lastsCls = pL>=80 ? "good" : (pL>=50 ? "warn" : "bad");
+    }
   }catch(_){}
   const pn = parseFloat(prob);
   const probCls = isFinite(pn) ? (pn>=80?"good":(pn>=50?"warn":"bad")) : "";
@@ -7390,6 +7401,7 @@ function renderSimSummary(){
     card("Projected wealth", med, "median · today's money", "", "<strong>Projected wealth</strong> — the median (50th percentile) simulated net worth at the end of your simulation horizon, shown in today's money (deflated for inflation). Half of simulated paths end above this figure, half below.") +
     card("Goal success", prob, "across your goals", probCls, "<strong>Goal success</strong> — the average probability, across all your goals, of being fully funded by its target year, read from the same simulated outcomes used throughout the Simulation tab.") +
     card("Sustainable spend", spend, "per year · today's money", "", "<strong>Sustainable spend</strong> — the highest annual retirement spending, in today's purchasing power, with a 90% chance of lasting to age 90, from the median (50th percentile) simulated wealth at your retirement age. Includes your projected pension / state-benefit income — the portfolio only has to cover spending above what pensions provide.") +
+    card("Money lasts", lasts, "planned spend to age 90", lastsCls, "<strong>Money lasts</strong> — the probability your <em>planned</em> retirement spending lasts to age 90, drawn from the median (50th percentile) simulated wealth at your retirement age and net of your projected pension income. This is the flip side of Sustainable spend: it scores the spending you entered rather than solving for a 90% level. Below 80% suggests trimming planned spending, saving more, or retiring later. Run the drawdown panel below for a full year-by-year view.") +
     card("Retirement funding", gapTxt, gapGood?"ahead of target":"vs. present-value target", gapCls, "<strong>Retirement funding</strong> — your current net worth compared to the present-value cost of funding your planned retirement spending (an actuarial annuity calculation, discounted at 6.8%). Positive means you're ahead of target; negative means additional savings are needed.");
   el.style.display = "grid";
 }
