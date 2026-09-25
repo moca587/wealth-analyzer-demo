@@ -4580,7 +4580,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1535";
+const APP_VERSION = "20260925-1715";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9874,7 +9874,7 @@ async function runUploadDocExtract(){
 function _daOpenReview(st){
   let shown=false, err="";
   try{ shown=renderReviewModal(); }catch(e){ err=(e&&e.message)||String(e); try{ console.error("[AI intake] review window",e); }catch(_){} }
-  if(shown){ _daStep("review","ok","tick the rows you want, then “Add to the app”"); return true; }
+  if(shown){ _daStep("review","ok","tick the rows you want, then “Add”"); return true; }
   const why="the review window couldn't be shown"+(err?" ("+err+")":"");
   _daStep("review","fail",why); if(_daReport) _daReport.error=why;
   if(st){ st.textContent="✗ The document was read, but "+why+". Click “Copy report” and send it to support."; st.style.color="var(--red)"; }
@@ -10652,13 +10652,13 @@ function renderReviewModal(){
         <button class="btn-x" onclick="daRequestClose()" aria-label="Close">✕</button></div>
       <div class="da-modal-tools"><button class="btn-secondary" onclick="daCheckAll(true)">Select all</button>
         <button class="btn-secondary" onclick="daCheckAll(false)">Clear all</button>
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing changes in the app until you click <strong>Add to the app</strong>. Untick anything wrong; edit any value inline. Ticked accounts, loans, goals and holdings are added alongside your existing ones; ticked profile fields (names, address, income, expenses, retirement) replace the current values.</span></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing changes in the app until you click <strong>Add</strong>. Untick anything wrong; edit any value inline. Ticked accounts, loans, goals and holdings are added alongside your existing ones; ticked profile fields (names, address, income, expenses, retirement) replace the current values.</span></div>
       <div class="da-modal-body">${html||'<div class="pf-empty">Nothing to review.</div>'}</div>
       <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3);flex:1;min-width:0"></span>
         <span id="daTickCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
         ${(_daReviewReport && _daReviewToken===_daExtraction)?`<button class="btn-secondary" onclick="daCopyReport(this,'review')" title="Copy a report of this read (no key included)">Copy report</button>`:""}
         <button class="btn-secondary" onclick="daRequestClose()">Cancel</button>
-        <button class="btn-primary da-apply-btn" onclick="applyDataAgent()">✓ Add to the app</button></div>
+        <button class="btn-primary da-apply-btn" onclick="applyDataAgent()">✓ Add</button></div>
     </div>`;
   _daApplied=false;
   m.querySelectorAll(".da-chk").forEach(c=>c.addEventListener("change",_daUpdateTickCount));
@@ -10677,7 +10677,7 @@ function daRequestClose(){
 function _daUpdateTickCount(){
   const all=document.querySelectorAll("#aiReviewModal .da-chk"), on=[...all].filter(c=>c.checked).length;
   const el=$("daTickCount"); if(el) el.textContent=on+" of "+all.length+" rows ticked";
-  document.querySelectorAll("#aiReviewModal .da-apply-btn").forEach(b=>{ b.textContent="✓ Add "+on+" to the app"; });
+  document.querySelectorAll("#aiReviewModal .da-apply-btn").forEach(b=>{ b.textContent="✓ Add"; });   // the count is shown beside it
 }
 function daCheckAll(v){ document.querySelectorAll("#aiReviewModal .da-chk").forEach(c=>c.checked=v); _daUpdateTickCount(); }
 function _daCollect(dom,i){ const o={}; document.querySelectorAll(`#aiReviewModal .da-in[data-dom="${dom}"][data-i="${i}"]`).forEach(el=>{ o[el.dataset.f]=el.value; }); return o; }
