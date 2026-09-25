@@ -1146,6 +1146,11 @@ input[type=date]{color-scheme:light}
 .ai-tip-pop .ai-tip-h{display:block;font-weight:700;color:var(--gold);margin-bottom:4px;font-size:12px}
 .ai-tip-pop::after{content:"";position:absolute;bottom:100%;right:24px;border:6px solid transparent;border-bottom-color:var(--border2)}
 @media (prefers-reduced-motion:reduce){.ai-tip-pop{transition:none}}
+/* Same disclosure, always visible inside the upload windows — touch devices
+   have no hover, so the card above never shows there. */
+.ai-provider-note{display:flex;gap:9px;align-items:flex-start;background:rgba(0,87,184,.05);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--rs,6px);padding:9px 12px;font-size:11.5px;line-height:1.55;color:var(--text2)}
+.ai-provider-note strong{color:var(--text)}
+.ai-provider-note .ai-provider-mark{color:var(--gold);font-weight:700;flex:0 0 auto;line-height:1.55}
 #inv-tip-box{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 15px;font-size:11.5px;font-family:var(--fb);color:var(--text);line-height:1.85;box-shadow:0 8px 28px rgba(0,0,0,.55);pointer-events:none;opacity:0;transition:opacity .12s;min-width:270px;max-width:320px}
 #inv-tip-box.vis{opacity:1}
 /* ── Probability explanation tooltip ── */
@@ -1897,6 +1902,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         household details, income, expenses, assets, liabilities, goals, and holdings. Nothing is
         written to the app until you review and approve each row.
       </p>
+      <div class="ai-provider-note" role="note" style="margin-bottom:14px">
+        <span class="ai-provider-mark" aria-hidden="true">✦</span>
+        <span><strong>Powered by Anthropic.</strong> <strong>Claude</strong>, Anthropic's AI model, reads your document. Files go straight from this browser to Anthropic's API using the AI key set in Settings — they are not uploaded to any Wealth Analyzer server.</span>
+      </div>
 
       <div style="margin-bottom:14px">
         <label style="display:block;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
@@ -3536,6 +3545,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div id="aiAgentPanel" class="panel" style="display:none;background:var(--bg3);border:1px solid rgba(124,58,237,.28);margin-bottom:14px">
     <div class="ptitle" style="margin:0 0 6px">✦ AI Data Agent</div>
     <div class="da-note">Upload a <strong>brokerage or bank statement</strong>, a fund / portfolio listing, or any document that lists <strong>investment positions</strong> (PDF, image / scan, screenshot, CSV / XLSX, Word / PowerPoint). The agent reads it (vision for images &amp; scans) and extracts the <strong>holdings</strong> — name, ticker / ISIN, asset class, market value, expense ratio &amp; yield — into this portfolio. You review every row before anything is written. For household, income, goals and the rest, use <em>Upload Document</em> at the top.</div>
+    <div class="ai-provider-note" role="note" style="margin-top:10px">
+      <span class="ai-provider-mark" aria-hidden="true">✦</span>
+      <span><strong>Powered by Anthropic.</strong> <strong>Claude</strong>, Anthropic's AI model, reads your statement. Files go straight from this browser to Anthropic's API using the AI key set in Settings — they are not uploaded to any Wealth Analyzer server.</span>
+    </div>
     <div class="frow" style="margin-top:8px">
       <label class="flbl">Files <span style="color:var(--text3)">(any number, mixed types)</span></label>
       <input type="file" id="aiAgentFiles" multiple onchange="onAgentFilesChange()" accept=".pdf,.doc,.docx,.rtf,.odt,.pptx,.xls,.xlsx,.ods,.csv,.tsv,.txt,.json,.md,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif,.tiff,.tif,.bmp,image/*" style="font-size:12px;color:var(--text2)">
@@ -4555,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1109";
+const APP_VERSION = "20260925-1127";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
