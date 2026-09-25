@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1130";
+const APP_VERSION = "20260925-1141";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9724,16 +9724,23 @@ async function runUploadDocExtract(){
   if(!getAIKey()){ uploadDocKeyNote(); if(st){st.textContent="⚠ Add your AI key first."; st.style.color="var(--amber)";} return; }
   const inp=$("uploadDocFiles"), files=inp&&inp.files?Array.from(inp.files):[];
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
+  // Lock Extract while a read runs — a second click would pay for a duplicate request.
+  const xb=$("uploadDocExtractBtn"); if(xb && xb.disabled) return; if(xb) xb.disabled=true;
   try{
     if(st){ st.textContent="Reading "+files.length+" file"+(files.length>1?"s":"")+"…"; st.style.color="var(--text3)"; }
-    const content=[];
+    const content=[]; let readOk=0, lastReadErr="";
     for(const f of files){
-      try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); }
-      catch(e){ content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); }
+      try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); readOk++; }
+      catch(e){ lastReadErr=e.message; content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); }
     }
+    // Nothing readable → stop here, rather than sending Anthropic an empty request
+    // that comes back as a misleading "no financial data detected".
+    if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daInstruction(val("uploadDocType"))});
-    if(st) st.textContent="Analyzing with AI…";
-    const raw=await callAIExtract(content);
+    // Live elapsed-time status, so a normal 30-60 s read doesn't look frozen.
+    const t0=Date.now(), tickFn=()=>{ if(st){ st.textContent="Reading with Claude (Anthropic)… "+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
+    tickFn(); const tick=setInterval(tickFn,1000);
+    let raw; try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
     _daExtraction=normalizeExtraction(raw);
     const total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
     if(!total){ if(st){st.textContent="No financial data detected — try a clearer file."; st.style.color="var(--amber)";} return; }
@@ -9741,6 +9748,7 @@ async function runUploadDocExtract(){
     closeUploadDoc();
     renderReviewModal();
   }catch(e){ if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[UploadDoc]",e); }
+  finally{ if(xb) xb.disabled=!getAIKey(); }
 }
 // Back-compat: keep the panel-based AI Data Agent flow working (Portfolio tab).
 function onAgentFilesChange(){
@@ -10118,18 +10126,55 @@ function _daInstruction(docType){
 }
 
 // ── AI call (forced tool_use → guaranteed structured object) ─────────────
+// Turn an Anthropic API failure into something an advisor can act on. The raw
+// body is JSON like {"type":"error","error":{"message":"Your credit balance is
+// too low…"}} — shown verbatim it reads as a crash, not as "add credit".
+function _aiErrorMessage(status, apiMsg){
+  const m=String(apiMsg||"").trim();
+  if(/credit balance/i.test(m)) return "Your Anthropic account has no credit left — add credit at console.anthropic.com → Plans & Billing, then try again.";
+  if(status===401) return "Anthropic rejected the AI key (invalid or revoked) — paste a valid key in Settings → Data & integrations.";
+  if(status===403) return "This AI key isn't allowed to do that ("+(m||"permission denied")+") — check the key's workspace at console.anthropic.com.";
+  if(status===404) return "The AI model ("+AI_MODEL+") isn't available to this key"+(m?" — "+m:"")+".";
+  if(status===413) return "The upload is too large for one request — try fewer or smaller files.";
+  if(status===429) return "Anthropic's rate limit was reached — wait a minute, then try again.";
+  if(status===529||status>=500) return "Anthropic's API is busy or temporarily unavailable — try again in a minute.";
+  if(status===400) return "Anthropic couldn't process this upload"+(m?": "+m:"")+".";
+  return "AI service error "+status+(m?": "+m:"")+".";
+}
+const AI_TIMEOUT_MS = 240000;   // a 4-page PDF normally answers in well under a minute
 async function callAIExtract(content){
-  const key=getAIKey(); if(!key) throw new Error("No AI key set.");
+  const key=getAIKey(); if(!key) throw new Error("No AI key set — add it in Settings → Data & integrations.");
   const headers={ "x-api-key":key, "anthropic-version":"2023-06-01", "content-type":"application/json", "anthropic-dangerous-direct-browser-access":"true" };
-  const body={ model:AI_MODEL, max_tokens:8192, system:"You are a meticulous financial-document data-extraction engine. Never fabricate values.",
+  // 16000 = the API's recommended non-streaming default. 8192 left too little room
+  // for a full multi-page / multi-file profile (a cut-off tool call is unusable).
+  const body={ model:AI_MODEL, max_tokens:16000, system:"You are a meticulous financial-document data-extraction engine. Never fabricate values.",
     tools:[buildExtractionSchema()], tool_choice:{type:"tool",name:"submit_profile"},
     messages:[{role:"user",content}] };
-  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers,body:JSON.stringify(body)});
-  if(!r.ok){ const t=await r.text(); throw new Error("AI service "+r.status+": "+t.slice(0,300)); }
-  const data=await r.json();
-  const tu=(data.content||[]).find(b=>b.type==="tool_use");
-  if(!tu){ if(data.stop_reason==="max_tokens") throw new Error("Result was truncated — try fewer/smaller files."); throw new Error("The model returned no structured data."); }
-  return tu.input||{};
+  const payload=JSON.stringify(body);
+  for(let attempt=0; attempt<2; attempt++){
+    const ctl=new AbortController(), timer=setTimeout(()=>ctl.abort(), AI_TIMEOUT_MS);
+    let r;
+    try{ r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers,body:payload,signal:ctl.signal}); }
+    catch(e){
+      clearTimeout(timer);
+      if(e && e.name==="AbortError") throw new Error("Anthropic took longer than "+Math.round(AI_TIMEOUT_MS/60000)+" minutes to answer — try again, or upload fewer / smaller files.");
+      throw new Error("Couldn't reach Anthropic's API ("+((e&&e.message)||e)+") — check your internet connection, then try again.");
+    }
+    clearTimeout(timer);
+    if(!r.ok){
+      const t=await r.text(); let apiMsg=""; try{ const j=JSON.parse(t); apiMsg=(j&&j.error&&j.error.message)||""; }catch(_){ apiMsg=t.slice(0,200); }
+      // Busy / overloaded / rate-limited: one automatic retry after a short pause.
+      if(attempt===0 && (r.status===429 || r.status===529 || r.status>=500)){ await new Promise(res=>setTimeout(res,5000)); continue; }
+      throw new Error(_aiErrorMessage(r.status, apiMsg));
+    }
+    const data=await r.json();
+    if(data.stop_reason==="refusal") throw new Error("Claude declined to process this document.");
+    // A tool call cut off by max_tokens is incomplete — never apply a partial profile.
+    if(data.stop_reason==="max_tokens") throw new Error("The document produced more data than fits in one answer — upload fewer files at a time.");
+    const tu=(data.content||[]).find(b=>b.type==="tool_use");
+    if(!tu) throw new Error("The model returned no structured data — try again.");
+    return tu.input||{};
+  }
 }
 
 // ── Normalization (coerce to the app's exact vocabularies; defense in depth) ─
@@ -10164,9 +10209,23 @@ function normalizeExtraction(raw){
     who:_daEnum(i.who,["client1","client2"],"client1"), primary:_daNum(i.primary), secondary:_daNum(i.secondary), raisePct:_daRate(i.raisePct) }); });
   if(raw.expenses && typeof raw.expenses==="object"){ const e=raw.expenses; out.expenses.push({ _ok:ok(e.confidence), _src:e.sourceQuote||"",
     living:_daNum(e.living), insurance:_daNum(e.insurance), other:_daNum(e.other), annualSavings:_daNum(e.annualSavings), inflationPct:_daRate(e.inflationPct) }); }
-  (raw.assets||[]).forEach(a=>{ out.assets.push({ _ok:ok(a.confidence), _src:a.sourceQuote||"",
-    label:a.label||"", accountTypeHint:a.accountTypeHint||"", value:_daNum(a.value), country:_daCountry(a.country)||"",
-    ccy:a.ccy||"", propertyValue:_daNum(a.propertyValue), otherValue:_daNum(a.otherValue) }); });
+  (raw.assets||[]).forEach(a=>{
+    // _kind routes the row on Apply: "property" → aProp, "other" → aOther, else an
+    // account. A property row arrives as propertyValue with no value, which used to
+    // show an empty, unticked review row and then vanish on Apply.
+    const val=_daNum(a.value), pv=_daNum(a.propertyValue), ov=_daNum(a.otherValue);
+    const txt=((a.label||"")+" "+(a.accountTypeHint||"")).toLowerCase();
+    const propLike=(/\b(property|residence|real estate|house|apartment|flat|condo|villa|chalet|immobilie|wohnung|eigenheim)\b/.test(txt)
+                 || (/\bhome\b/.test(txt) && !/\b(loan|mortgage|insurance|equity line)\b/.test(txt)))
+                 && !/\b(fund|funds|reit|etf|depot|konto|account|portfolio|shares?|securities)\b/.test(txt);   // a "Property Fund" is an investment, not a house
+    let kind="account", value=val;
+    if(pv>0){ kind="property"; value=pv; }
+    else if(ov>0 && !(val>0)){ kind="other"; value=ov; }
+    else if(val>0 && propLike){ kind="property"; }
+    out.assets.push({ _ok:ok(a.confidence), _src:a.sourceQuote||"", _kind:kind,
+      label:a.label||"", accountTypeHint:a.accountTypeHint||(kind==="property"?"Property / real estate":kind==="other"?"Other personal assets":""),
+      value:value, country:_daCountry(a.country)||"",
+      ccy:a.ccy||"", propertyValue:pv, otherValue:ov }); });
   (raw.liabilities||[]).forEach(l=>{ out.liabilities.push({ _ok:ok(l.confidence), _src:l.sourceQuote||"",
     type:_daKey(l.type,_DA_LOAN_ALIAS,LOAN_LABELS,"other"), label:l.label||"", balance:_daNum(l.balance), ratePct:_daRate(l.ratePct), years:(l.years!=null?(parseInt(String(l.years).replace(/[^\d]/g,""),10)||null):null) }); });   // term length, NOT a calendar year
   (raw.goals||[]).forEach(g=>{ out.goals.push({ _ok:ok(g.confidence), _src:g.sourceQuote||"",
@@ -10197,12 +10256,14 @@ async function runDataAgent(){
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
   try{
     if(st){ st.textContent="Reading "+files.length+" file"+(files.length>1?"s":"")+"…"; st.style.color="var(--text3)"; }
-    const content=[];
-    for(const f of files){ try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); }
-      catch(e){ content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
+    const content=[]; let readOk=0, lastReadErr="";
+    for(const f of files){ try{ const blocks=await fileToBlocks(f); content.push({type:"text",text:"=== Source: "+f.name+" ==="}, ...blocks); readOk++; }
+      catch(e){ lastReadErr=e.message; content.push({type:"text",text:"=== Source: "+f.name+" (could not read: "+e.message+") ==="}); } }
+    if(!readOk){ if(st){ st.textContent="✗ Couldn't read "+(files.length>1?"any of the files":"the file")+": "+lastReadErr; st.style.color="var(--red)"; } return; }
     content.push({type:"text",text:_daHoldingsInstruction()});
-    if(st) st.textContent="Analyzing with AI…";
-    const raw=await callAIExtract(content);
+    const t0=Date.now(), tickFn=()=>{ if(st){ st.textContent="Reading with Claude (Anthropic)… "+Math.round((Date.now()-t0)/1000)+"s — usually under a minute"; st.style.color="var(--text3)"; } };
+    tickFn(); const tick=setInterval(tickFn,1000);
+    let raw; try{ raw=await callAIExtract(content); } finally{ clearInterval(tick); }
     _daExtraction=normalizeExtraction(raw);
     const total=Object.keys(_daExtraction).reduce((s,k)=>s+_daExtraction[k].length,0);
     if(!total){ if(st){st.textContent="No financial data detected — try a clearer file."; st.style.color="var(--amber)";} return; }
@@ -10327,7 +10388,25 @@ function daCheckAll(v){ document.querySelectorAll("#aiReviewModal .da-chk").forE
 function _daCollect(dom,i){ const o={}; document.querySelectorAll(`#aiReviewModal .da-in[data-dom="${dom}"][data-i="${i}"]`).forEach(el=>{ o[el.dataset.f]=el.value; }); return o; }
 function _daChecked(dom,i){ const c=document.querySelector(`#aiReviewModal .da-chk[data-dom="${dom}"][data-i="${i}"]`); return c&&c.checked; }
 function _daSet(id,v){ const el=$(id); if(el!=null && v!=null && v!=="") el.value=v; }
-function _daSetSel(id,v){ const el=$(id); if(el && v && [...el.options].some(o=>o.value===v)){ el.value=v; try{ el.dispatchEvent(new Event("change")); }catch(_){} return true; } return false; }
+// Tolerant select setter: exact value, then case-insensitive value, then option
+// text — the model writes "Spouse" / "Zürich" where the <select> holds "spouse" / "ZH".
+function _daSetSel(id,v){ const el=$(id); if(!el || v==null || v==="") return false;
+  const s=String(v).trim(), lo=s.toLowerCase(), opts=[...el.options];
+  const hit=opts.find(o=>o.value===s) || opts.find(o=>o.value.toLowerCase()===lo) || opts.find(o=>o.text.trim().toLowerCase()===lo);
+  if(!hit) return false; el.value=hit.value; try{ el.dispatchEvent(new Event("change")); }catch(_){} return true; }
+// Review rows show only the key fields, but Apply must use EVERYTHING extracted:
+// start from the normalized record, then let the reviewer's edits override it.
+// (Reading only the visible inputs silently dropped street / city / postcode /
+// canton, the spouse relationship, and property values.)
+function _daMerged(dom,i){ const base=((_daExtraction||{})[dom]||[])[i]||{}; return Object.assign({}, base, _daCollect(dom,i)); }
+// State / canton → the select's code: "ZH", "Zürich (ZH)" and "Zürich" all land on ZH.
+function _daSetState(id,st){ const el=$(id); if(!el || !st) return;
+  if(el.tagName!=="SELECT"){ el.value=st; return; }
+  const s=String(st).trim(), code=(s.match(/\(([A-Za-z]{2,3})\)\s*$/)||[])[1];
+  if(code && _daSetSel(id,code.toUpperCase())) return;
+  if(_daSetSel(id,s)) return;
+  const lo=s.toLowerCase(), o=[...el.options].find(o=>{ const t=o.text.trim().toLowerCase(); return t && (t.startsWith(lo)||lo.startsWith(t)); });
+  if(o){ el.value=o.value; try{ el.dispatchEvent(new Event("change")); }catch(_){} } }
 function _daMatchAccount(country,hint){
   const c=COUNTRY_ACCOUNTS[country]||COUNTRY_ACCOUNTS.US; if(!c) return {type:"other",group:"Other assets",liquid:true};
   const h=String(hint||"").toLowerCase().trim(); let best=null;
@@ -10354,51 +10433,58 @@ function applyDataAgent(){
   if(needC2 && typeof showC2==="function"){ try{ showC2(); }catch(_){} }
 
   // Household
-  x.household.forEach((h,i)=>{ if(!_daChecked("household",i)) return; const r=_daCollect("household",i); n++;
+  x.household.forEach((h,i)=>{ if(!_daChecked("household",i)) return; const r=_daMerged("household",i); n++;
     if(r.role==="child"){ if(typeof children!=="undefined"){ children.push({id:"ch"+(++childSeq),first:r.first||"",last:r.last||"",dob:r.dob||""}); } return; }
     const p=r.role==="client2"?"c2":"c1";
     _daSet(p+"f",r.first); _daSet(p+"l",r.last); _daSet(p+"d",r.dob); _daSet(p+"ci",r.city); _daSet(p+"s1",r.street); _daSet(p+"zp",r.postal);
-    if(r.country) _daSetSel(p+"co",r.country);
-    if(r.state){ const stEl=$(p+"st"); if(stEl){ if(stEl.tagName==="SELECT"){ if([...stEl.options].some(o=>o.value===r.state)) stEl.value=r.state; } else stEl.value=r.state; } }
+    if(r.country) _daSetSel(p+"co",r.country);   // country first: it repopulates the state/canton list
+    if(r.state) _daSetState(p+"st",r.state);
     if(p==="c2" && r.relationship) _daSetSel("rel",r.relationship);
     if(r.riskTolerance && _daSetSel(p+"r",r.riskTolerance)){ try{ if(typeof updateRisk==="function") updateRisk(p==="c2"?2:1); }catch(_){} }
     if(r.timeHorizon && _daSetSel(p+"h",r.timeHorizon)){ try{ if(typeof updateHorizon==="function") updateHorizon(p==="c2"?2:1); }catch(_){} }
   });
 
   // Income
-  x.income.forEach((r0,i)=>{ if(!_daChecked("income",i)) return; const r=_daCollect("income",i); n++;
+  x.income.forEach((r0,i)=>{ if(!_daChecked("income",i)) return; const r=_daMerged("income",i); n++;
     if(r.who==="client2"){ _daSet("inc1b",r.primary); _daSet("inc2b",r.secondary); } else { _daSet("inc1",r.primary); _daSet("inc2",r.secondary); }
     if(r.raisePct) _daSet("raise",r.raisePct); });
 
   // Expenses
-  x.expenses.forEach((r0,i)=>{ if(!_daChecked("expenses",i)) return; const r=_daCollect("expenses",i); n++;
+  x.expenses.forEach((r0,i)=>{ if(!_daChecked("expenses",i)) return; const r=_daMerged("expenses",i); n++;
     _daSet("expL",r.living); _daSet("expI",r.insurance); _daSet("expO",r.other); _daSet("savAnnual",r.annualSavings);
     if(r.inflationPct){ _daSet("inf",r.inflationPct); } });
 
-  // Assets
-  x.assets.forEach((a0,i)=>{ if(!_daChecked("assets",i)) return; const r=_daCollect("assets",i); const v=parseFloat(r.value); if(!(v>0)) return; n++;
+  // Assets. Property and other personal assets have dedicated fields (aProp /
+  // aOther) — as an account a house would count as spendable cash in the simulation.
+  let propSum=0, otherSum=0;
+  x.assets.forEach((a0,i)=>{ if(!_daChecked("assets",i)) return; const r=_daMerged("assets",i); const v=parseFloat(r.value); if(!(v>0)) return; n++;
+    if(r._kind==="property"){ propSum+=v; return; }
+    if(r._kind==="other"){ otherSum+=v; return; }
     const ctry=r.country||val("c1co")||"US"; const mk=_daMatchAccount(ctry,r.accountTypeHint);
     assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))}); });
 
+  if(propSum>0) _daSet("aProp",propSum);
+  if(otherSum>0) _daSet("aOther",otherSum);
+
   // Liabilities
-  x.liabilities.forEach((l0,i)=>{ if(!_daChecked("liabilities",i)) return; const r=_daCollect("liabilities",i); const b=parseFloat(r.balance); if(!(b>0)) return; n++;
+  x.liabilities.forEach((l0,i)=>{ if(!_daChecked("liabilities",i)) return; const r=_daMerged("liabilities",i); const b=parseFloat(r.balance); if(!(b>0)) return; n++;
     const t=(r.type in LOAN_LABELS)?r.type:"other";
     loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,rate:parseFloat(r.ratePct)||0,yrs:parseInt(r.years,10)||0}); });
 
   // Goals
-  x.goals.forEach((g0,i)=>{ if(!_daChecked("goals",i)) return; const r=_daCollect("goals",i); const amt=parseFloat(r.amount); if(!(amt>0)||!r.name) return; n++;
+  x.goals.forEach((g0,i)=>{ if(!_daChecked("goals",i)) return; const r=_daMerged("goals",i); const amt=parseFloat(r.amount); if(!(amt>0)||!r.name) return; n++;
     const sY=parseInt(r.startYear,10)||(typeof currentYear==="function"?currentYear():new Date().getFullYear());
     let eY=parseInt(r.endYear,10); if(!eY||eY<sY) eY=sY+1;
     goals.push({id:"g"+(++goalSeq),name:r.name,amt:amt,homePrice:(r.category==="home"?parseFloat(r.amount):undefined),startYear:sY,endYear:eY,cat:r.category||"other",tier:r.tier||"important"}); });
 
   // Holdings
-  x.holdings.forEach((h0,i)=>{ if(!_daChecked("holdings",i)) return; const r=_daCollect("holdings",i); const v=parseFloat(r.val); if(!(v>0)||!r.name) return; n++;
+  x.holdings.forEach((h0,i)=>{ if(!_daChecked("holdings",i)) return; const r=_daMerged("holdings",i); const v=parseFloat(r.val); if(!(v>0)||!r.name) return; n++;
     investments.push({id:"inv"+(++invSeq),name:r.name,tkr:r.tkr||"",
       type:(r.type in INV_TYPE_LABELS)?r.type:"other", cls:(r.cls in INV_CLASS_LABELS)?r.cls:"other", region:(r.region in INV_REGION_LABELS)?r.region:"other",
       val:v, er:(r.er!==""&&r.er!=null&&isFinite(+r.er))?+r.er:null, yld:(r.yld!==""&&r.yld!=null&&isFinite(+r.yld))?+r.yld:null, note:"Imported by "+_daImportSource()}); });
 
   // Retirement plan → spending, retirement ages, and each client's pension.
-  (x.retirement||[]).forEach((r0,i)=>{ if(!_daChecked("retirement",i)) return; const r=_daCollect("retirement",i); let touched=false;
+  (x.retirement||[]).forEach((r0,i)=>{ if(!_daChecked("retirement",i)) return; const r=_daMerged("retirement",i); let touched=false;
     if(parseFloat(r.desiredAnnualSpend)>0){ _daSet("retSpend",r.desiredAnnualSpend); touched=true; }
     if(parseInt(r.client1RetirementAge,10)>0){ _daSet("retAge",r.client1RetirementAge); touched=true; }
     if(parseInt(r.client2RetirementAge,10)>0 && $("retAge2")){ _daSet("retAge2",r.client2RetirementAge); touched=true; }
