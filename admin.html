@@ -1249,7 +1249,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1044";
+const APP_VERSION = "20260925-1057";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3675,6 +3675,16 @@ var DEFAULT_DATA_PROXY = "";
 var NO_DATA_PROXY_MSG = "needs the data proxy — set its URL on the Market Data tab";
 function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
 function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
+// Hosts the Worker forwards to — keep in sync with ALLOW_GET/ALLOW_POST in
+// wa-price-proxy.worker.js (research-feed hosts included). Anything else can't be
+// rescued by the proxy, so its errors must not say "set the data proxy".
+var DATA_PROXY_HOSTS = new Set(["query1.finance.yahoo.com","query2.finance.yahoo.com","api.openfigi.com",
+  "api.frankfurter.dev","api.frankfurter.app","api.coingecko.com",
+  "seekingalpha.com","feeds.megaphone.fm","www.morningstar.com","www.morganstanley.com","www.eatonvance.com",
+  "www.bloomberg.com","feeds.bloomberg.com","www.blackrock.com","newsroom.bankofamerica.com",
+  "insight.factset.com","feeds.feedburner.com","am.jpmorgan.com","news.google.com"]);
+function dataProxyServes(u){ try{ return DATA_PROXY_HOSTS.has(new URL(u).hostname); }catch(_){ return false; } }
+function _urlHost(u){ try{ return new URL(u).hostname; }catch(_){ return "this provider"; } }
 
 // `report` is an optional out-param: the return value stays a plain array so
 // every existing caller is unaffected, but a caller that cares can find out
@@ -5431,13 +5441,18 @@ async function fetchQuote(ticker, provider){
   const T = String(ticker||"").toUpperCase();
   const CRYPTO = new Set(["BTC","ETH","SOL","ADA","DOT","DOGE","MATIC","AVAX","LINK","UNI","ATOM","LTC","XRP","BNB","USDT","USDC"]);
   const isFxPair = /^[A-Z]{6}$/.test(T);          // e.g. EURUSD (US tickers are ≤5 letters)
+  // Equities go to Yahoo ONLY: falling through to crypto sources would price a
+  // stock with a same-named token (T, COMP, DASH, AMP, STX all exist on CoinGecko).
   const order = isFxPair       ? ["frankfurter","open_er_api","yahoo"]
               : CRYPTO.has(T)  ? ["coingecko","coinbase","yahoo"]
-              :                  ["yahoo","coingecko","coinbase","frankfurter","open_er_api"];
+              :                  ["yahoo"];
+  const errs = [];
   for(const p of order){
-    try { const d = await tryFn(p); if(d?.price>0) return d; } catch(_){}
+    try { const d = await tryFn(p); if(d?.price>0) return d; errs.push(p+": no price"); }
+    catch(e){ errs.push(p+": "+(e && e.message || e)); }
   }
-  throw new Error("All providers failed");
+  // Surface WHY (e.g. "needs the data proxy") instead of a bare "All providers failed".
+  throw new Error("All providers failed — "+errs.join(" · "));
 }
 
 async function testQuote(){
@@ -5731,9 +5746,13 @@ async function corsFetch(url, opts){
     if(r.ok) return r;
     if(r.status >= 400 && r.status < 500) return r;
     throw new Error("HTTP "+r.status);
-  } catch(_){
+  } catch(err){
+    // Retry through the proxy only for hosts it serves and only if one is set;
+    // an upstream 5xx is reported as-is rather than blamed on CORS.
+    const upstreamHttp = /^HTTP \d/.test(String(err && err.message));
+    if(!dataProxyServes(url)) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+_urlHost(url)+" can't be reached from a browser and isn't served by the data proxy");
     const proxied = dataProxyUrl(url);
-    if(!proxied) throw new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
+    if(!proxied) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
     return await fetch(proxied, opts);
   }
 }

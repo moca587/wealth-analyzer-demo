@@ -1833,7 +1833,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <div id="mdKeysBody" style="display:none;padding-top:12px">
           <div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:12px">Paste free API keys to enable richer market data and AI features. Keys are stored only in your browser and are shared with the Admin console below. Get keys from each provider's link.</div>
           <div id="mdKeysGrid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
-          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Some sources (Yahoo Finance, OpenFIGI, CoinMarketCap, FRED, NewsAPI, Marketstack) block direct browser requests — the app retries those through your data proxy (set its URL in Admin console → Market Data).</div>
+          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Yahoo Finance and OpenFIGI (ticker/ISIN lookup) block direct browser requests — the app routes those through your data proxy (set its URL in Admin console → Market Data). Keyed providers that also block browsers (CoinMarketCap, FRED, NewsAPI, Marketstack) can't be reached from the browser app.</div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button class="btn-secondary" onclick="testAllMdKeys()" style="font-size:12px;padding:7px 14px">⚡ Test all keys</button>
             <span id="mdKeysTestStatus" style="font-size:12px;color:var(--text3)"></span>
@@ -4539,7 +4539,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1044";
+const APP_VERSION = "20260925-1057";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -16046,6 +16046,13 @@ var DEFAULT_DATA_PROXY = "";
 var NO_DATA_PROXY_MSG = "this lookup needs the data proxy — set its URL in Admin console → Market Data";
 function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
 function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
+// Hosts the Worker actually forwards to — keep in sync with ALLOW_GET/ALLOW_POST
+// in wa-price-proxy.worker.js. A host outside this set can't be rescued by the
+// proxy, so errors for it must not tell the user to "set the data proxy".
+var DATA_PROXY_HOSTS = new Set(["query1.finance.yahoo.com","query2.finance.yahoo.com","api.openfigi.com",
+  "api.frankfurter.dev","api.frankfurter.app","api.coingecko.com"]);
+function dataProxyServes(u){ try{ return DATA_PROXY_HOSTS.has(new URL(u).hostname); }catch(_){ return false; } }
+function _urlHost(u){ try{ return new URL(u).hostname; }catch(_){ return "this provider"; } }
 
 // OpenFIGI accepts several identifier types; ID_CUSIP is a first-class one,
 // so a CUSIP resolves directly rather than being routed through a derived
@@ -16400,7 +16407,11 @@ async function fetchInstrumentLive(prefix){
       if(!figiData||!figiData.ticker){
         if(ambiguous){
           // Could be either identifier and neither resolved — fill NOTHING.
-          setStatus('⚠ '+cus+' did not resolve as a CUSIP or as a Swiss Valor. '
+          // If OpenFIGI was unreachable, say so: "did not resolve" would wrongly
+          // suggest the number is bad.
+          if(figiErr) setStatus('⚠ Could not reach OpenFIGI ('+figiErr.message+'). '
+            +cus+' could be a CUSIP or a Swiss Valor, so nothing was filled.','#a83232');
+          else setStatus('⚠ '+cus+' did not resolve as a CUSIP or as a Swiss Valor. '
             +'Enter the ISIN directly, or use the Valor field if it is Swiss.','#a83232');
         } else if(figiErr){
           _applyResolvedIds(prefix,cus,derivedIsin);
@@ -16445,6 +16456,22 @@ async function fetchInstrumentLive(prefix){
         const sr=await yahooSearchInstr(symbol);
         if(sr.length) searchHit=sr.find(x=>x.symbol===symbol)||sr[0];
       }catch(e){}
+    }
+
+    // Nothing resolved at all — typically because no data proxy is set, so Yahoo
+    // and OpenFIGI are unreachable. Stop HERE: Step 5 would otherwise overwrite
+    // the fields with fallbacks (the raw symbol as the name, a default region)
+    // on top of the built-in ticker prefill, and Step 6 would show a green ✓
+    // for a lookup that found nothing.
+    if(!yahooMeta && !searchHit && !figiData){
+      const known = (typeof TICKER_DB!=='undefined') && TICKER_DB[String(symbol||'').toUpperCase()];
+      if(!dataProxyBase()){
+        if(known) setStatus('ℹ '+symbol+' filled from the built-in fund list. Live price and details need the data proxy — set its URL in Admin console → Market Data.','#b7791f');
+        else setStatus('⚠ Could not look up '+symbol+': '+NO_DATA_PROXY_MSG+'.','#a83232');
+      } else {
+        setStatus('⚠ No data found for '+symbol+'. Check the ticker, or enter its ISIN.','#a83232');
+      }
+      return;
     }
 
     // ── Step 3: compile metadata ──────────────────────────────────────
@@ -16621,10 +16648,14 @@ const MarketData = (function(){
       // 4xx is a real API error, not CORS — return as-is so caller sees it.
       if(r.status >= 400 && r.status < 500) return r;
       throw new Error("HTTP "+r.status);
-    } catch(_){
-      // Network/CORS error → retry through the data proxy (Worker), if one is set
+    } catch(err){
+      // Network/CORS error (or an upstream 5xx) → retry through the data proxy,
+      // but only for hosts the Worker serves and only if a proxy is set. An
+      // upstream 5xx is reported as-is rather than blamed on CORS.
+      const upstreamHttp = /^HTTP \d/.test(String(err && err.message));
+      if(!dataProxyServes(url)) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+_urlHost(url)+" can't be reached from a browser and isn't served by the data proxy");
       const proxied = _proxyUrl(url);
-      if(!proxied) throw new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
+      if(!proxied) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
       return await fetch(proxied, opts);
     }
   }
@@ -16760,8 +16791,9 @@ const MarketData = (function(){
   // ─── FREE: no API key needed ───────────────────────────────────────────
   async function tryYahoo(t){
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(t)}?interval=1d`;
-    let r;
-    try { r = await fetch(url); } catch(e){ r = await fetch(_proxyUrl(url)); }
+    // corsFetch: direct → data proxy → clear error. (A bare fetch(_proxyUrl(url))
+    // here would be fetch("") with no proxy set — i.e. re-download this page.)
+    const r = await corsFetch(url);
     if(!r.ok) throw new Error("HTTP "+r.status);
     const j = await r.json(); const m = j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
     if(!m) throw new Error("No meta");
@@ -16789,11 +16821,14 @@ const MarketData = (function(){
     return {price:rate, currency:quote, base:base, asOf:j.date, source_label:"ECB reference rate"};
   }
   async function tryStooq(t){
-    // CSV format - free, no key, supports global tickers
+    // RETIRED: stooq.com's CSV quote endpoint answers 404 for every URL shape
+    // (re-checked 2026-09-25; the admin console retired it 2026-08-02). Kept as an
+    // explicit refusal so a saved hint pointing here fails loudly, not silently.
+    throw new Error("Stooq's CSV quote endpoint was retired upstream — use Yahoo Finance for equities");
+    /* eslint-disable no-unreachable */
     const sym = t.includes(".") ? t.toLowerCase() : t.toLowerCase() + ".us";
     const url = `https://stooq.com/q/l/?s=${encodeURIComponent(sym)}&f=sd2t2ohlcv&h&e=csv`;
-    let r;
-    try { r = await fetch(url); } catch(e){ r = await fetch(_proxyUrl(url)); }
+    const r = await corsFetch(url);
     if(!r.ok) throw new Error("HTTP "+r.status);
     const txt = await r.text();
     const lines = txt.trim().split("\n"); if(lines.length < 2) throw new Error("No data");
@@ -16997,7 +17032,7 @@ const MarketData = (function(){
         "finnhub","polygon","intrinio","twelvedata","fmp","tiingo","alphavantage",
         "tradier","alpaca","rapidapi",
         "eodhd","marketstack","stockdata","finazon","nasdaq",
-        "yahoo","stooq",
+        "yahoo",   // stooq removed: endpoint retired upstream
         "bloomberg","refinitiv","factset","capiq","morningstar","ibkr"
       ];
     }
