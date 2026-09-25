@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1316";
+const APP_VERSION = "20260925-1324";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -10206,11 +10206,30 @@ async function callAIExtract(content){
 }
 
 // ── Normalization (coerce to the app's exact vocabularies; defense in depth) ─
+// Money parser for model output AND review-window inputs. Handles what real
+// documents contain: "CHF 185,000" (currency code — used to become NULL, leaving
+// an empty, unticked review row), Swiss "185'000" (used to parse as 185),
+// "1.250.000,50" / "1,250,000.50", "1.2M", "CHF 1.25 Mio.", "(1,200)" / "-5,000".
 function _daNum(x){ if(x==null) return null; if(typeof x==="number") return isFinite(x)?x:null;
-  let s=String(x).trim().replace(/[$,€£¥\s]/g,""); const neg=/^\(.*\)$/.test(s); s=s.replace(/[()]/g,"");
-  let mult=1; const m=s.match(/([kmb])$/i); if(m){ mult={k:1e3,m:1e6,b:1e9}[m[1].toLowerCase()]; s=s.slice(0,-1); }
+  let s=String(x).trim(); if(!s) return null;
+  let mult=1; const sm=s.match(/(\d)\s*(k|m|mio\.?|mn|b|bn)\s*$/i);   // magnitude suffix, read before letters are stripped
+  if(sm){ mult=({k:1e3,m:1e6,mio:1e6,mn:1e6,b:1e9,bn:1e9})[sm[2].toLowerCase().replace(/\./g,"")]||1; s=s.slice(0, sm.index+1); }
+  const neg=/^\s*\(.*\)\s*$/.test(s) || /^[^\d]*-/.test(s);
+  s=s.replace(/[^\d.,]/g,"");                                        // currency codes/symbols, spaces, apostrophes, signs
+  if(!s || !/\d/.test(s)) return null;
+  const dots=(s.match(/\./g)||[]).length, commas=(s.match(/,/g)||[]).length;
+  if(dots && commas){ s = s.lastIndexOf(",")>s.lastIndexOf(".") ? s.replace(/\./g,"").replace(",",".") : s.replace(/,/g,""); }
+  else if(commas){ s = (commas>1 || /,\d{3}$/.test(s)) ? s.replace(/,/g,"") : s.replace(",","."); }
+  else if(dots>1){ s=s.replace(/\./g,""); }
   const n=parseFloat(s); if(!isFinite(n)) return null; return (neg?-1:1)*n*mult; }
-function _daRate(x){ if(x==null) return null; const n=typeof x==="number"?x:parseFloat(String(x).replace(/[%\s]/g,"")); return isFinite(n)?n:null; }
+function _daRate(x){ if(x==null||x==="") return null; if(typeof x==="number") return isFinite(x)?x:null;
+  const s=String(x).replace(/[%\s]/g,"").replace(/^(-?\d+),(\d+)$/,"$1.$2");   // "1,9" (decimal comma) → 1.9
+  const n=parseFloat(s); return isFinite(n)?n:null; }
+// Confidence as the model may write it: 0.95, "0.95", 95, "95%", "high".
+// Unknown → 0.7 (ticked, "check") rather than 0 (silently unticked).
+function _daConf(c){ if(c==null||c==="") return 0.7;
+  if(typeof c==="string"){ const w=c.trim().toLowerCase(); if(/^(very\s+)?high$/.test(w)) return 0.9; if(/^(medium|moderate)$/.test(w)) return 0.7; if(/^(very\s+)?low$/.test(w)) return 0.4; }
+  let n=parseFloat(String(c).replace("%","")); if(!isFinite(n)) return 0.7; if(n>1) n=n/100; return Math.max(0,Math.min(1,n)); }
 function _daYear(x){ if(x==null) return null; let n=parseInt(String(x).replace(/[^\d]/g,""),10); if(!isFinite(n)) return null; if(n<100) n+=2000; return (n>=1900&&n<=2200)?n:null; }
 function _daDate(x){ if(!x) return ""; const s=String(x).trim(); if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   const d=new Date(s); if(isNaN(d.getTime())) return "";
@@ -10254,7 +10273,7 @@ function _daDescribeRaw(raw, meta){
 function normalizeExtraction(raw){
   raw=_daCoerceRaw(raw);
   const out={household:[],income:[],expenses:[],assets:[],liabilities:[],goals:[],holdings:[],retirement:[]};
-  const ok=c=>c==null?0.7:(+c||0);
+  const ok=_daConf;
   (raw.household||[]).forEach(h=>{ out.household.push({ _ok:ok(h.confidence), _src:h.sourceQuote||"",
     role:_daEnum(h.role,["client1","client2","child"],"client1"), first:h.first||"", last:h.last||"", dob:_daDate(h.dob),
     street:h.street||"", city:h.city||"", state:h.state||"", postal:h.postal||"", country:_daCountry(h.country)||"",
@@ -10420,22 +10439,41 @@ function renderReviewModal(){
   ],req(r._ok))));
 
   const total=Object.keys(x).reduce((s,k)=>s+x[k].length,0);
-  m.innerHTML=`<div class="da-modal-bg" onclick="closeReviewModal()"></div>
+  // The dimmed background no longer closes the window: one stray click used to
+  // throw away the whole extraction ("review screen, then nothing"). ✕ / Cancel
+  // ask first while the data hasn't been added.
+  m.innerHTML=`<div class="da-modal-bg"></div>
     <div class="da-modal">
       <div class="da-modal-h"><span class="ptitle" style="margin:0">Review extracted data — ${total} item${total!==1?"s":""}</span>
-        <button class="btn-x" onclick="closeReviewModal()">✕</button></div>
+        <button class="btn-x" onclick="daRequestClose()" aria-label="Close">✕</button></div>
       <div class="da-modal-tools"><button class="btn-secondary" onclick="daCheckAll(true)">Select all</button>
         <button class="btn-secondary" onclick="daCheckAll(false)">Clear all</button>
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">Untick anything wrong. Edit any value inline. Only checked rows are added (appended — your existing data is kept).</span></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing is added to the app until you click <strong>Add to the app</strong>. Untick anything wrong; edit any value inline. Your existing data is kept.</span></div>
       <div class="da-modal-body">${html||'<div class="pf-empty">Nothing to review.</div>'}</div>
-      <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3)"></span>
-        <button class="btn-secondary" onclick="closeReviewModal()">Cancel</button>
-        <button class="btn-primary" onclick="applyDataAgent()">✓ Apply selected</button></div>
+      <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3);flex:1;min-width:0"></span>
+        <span id="daTickCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
+        <button class="btn-secondary" onclick="daRequestClose()">Cancel</button>
+        <button class="btn-primary da-apply-btn" onclick="applyDataAgent()">✓ Add to the app</button></div>
     </div>`;
+  _daApplied=false;
+  m.querySelectorAll(".da-chk").forEach(c=>c.addEventListener("change",_daUpdateTickCount));
+  _daUpdateTickCount();
   m.style.display="block";
 }
 function closeReviewModal(){ const m=$("aiReviewModal"); if(m) m.style.display="none"; }
-function daCheckAll(v){ document.querySelectorAll("#aiReviewModal .da-chk").forEach(c=>c.checked=v); }
+let _daApplied=false;   // has the current extraction been added to the app?
+// ✕ / Cancel: confirm before discarding an extraction that hasn't been added yet.
+function daRequestClose(){
+  const rows=document.querySelectorAll("#aiReviewModal .da-chk").length;
+  if(!_daApplied && rows>0 && !confirm("Close without adding the extracted data to the app?\n\nNothing has been added yet — you'd need to upload and extract again.")) return;
+  closeReviewModal();
+}
+function _daUpdateTickCount(){
+  const all=document.querySelectorAll("#aiReviewModal .da-chk"), on=[...all].filter(c=>c.checked).length;
+  const el=$("daTickCount"); if(el) el.textContent=on+" of "+all.length+" rows ticked";
+  document.querySelectorAll("#aiReviewModal .da-apply-btn").forEach(b=>{ b.textContent="✓ Add "+on+" to the app"; });
+}
+function daCheckAll(v){ document.querySelectorAll("#aiReviewModal .da-chk").forEach(c=>c.checked=v); _daUpdateTickCount(); }
 function _daCollect(dom,i){ const o={}; document.querySelectorAll(`#aiReviewModal .da-in[data-dom="${dom}"][data-i="${i}"]`).forEach(el=>{ o[el.dataset.f]=el.value; }); return o; }
 function _daChecked(dom,i){ const c=document.querySelector(`#aiReviewModal .da-chk[data-dom="${dom}"][data-i="${i}"]`); return c&&c.checked; }
 function _daSet(id,v){ const el=$(id); if(el!=null && v!=null && v!=="") el.value=v; }
@@ -10476,16 +10514,24 @@ function _daImportSource(){ return _daSourceLabel||"AI Data Agent"; }
 function applyDataAgent(){
   if(!_daExtraction) return;
   const x=_daExtraction; let n=0; let needC2=false;
-  // figure out if any client2 row is selected (so we reveal client 2 first)
-  x.household.forEach((h,i)=>{ if(_daChecked("household",i) && _daCollect("household",i).role==="client2") needC2=true; });
-  x.income.forEach((r,i)=>{ if(_daChecked("income",i) && _daCollect("income",i).who==="client2") needC2=true; });
-  (x.retirement||[]).forEach((r,i)=>{ if(_daChecked("retirement",i)){ const c=_daCollect("retirement",i);
-    if((parseFloat(c.client2PensionAnnual)>0)||(parseInt(c.client2RetirementAge,10)>0)) needC2=true; } });
+  const added={}, skipped=[], errors=[];
+  const bump=k=>{ added[k]=(added[k]||0)+1; n++; };
+  // Apply one ticked review row in isolation: a row that throws is reported and
+  // skipped, never silently stops the rows after it (it used to abort the whole
+  // Apply with no message — "review screen, then nothing").
+  const each=(dom,list,fn)=>{ (list||[]).forEach((row0,i)=>{ if(!_daChecked(dom,i)) return;
+    try{ fn(_daMerged(dom,i),i); }
+    catch(e){ errors.push(dom+" row "+(i+1)+": "+((e&&e.message)||e)); try{ console.error("[DataAgent] "+dom+" row "+(i+1),e); }catch(_){} } }); };
+
+  // Reveal client 2 first if any ticked row belongs to them.
+  each("household",x.household,r=>{ if(r.role==="client2") needC2=true; });
+  each("income",x.income,r=>{ if(r.who==="client2") needC2=true; });
+  each("retirement",x.retirement,r=>{ if((_daNum(r.client2PensionAnnual)>0)||(parseInt(r.client2RetirementAge,10)>0)) needC2=true; });
   if(needC2 && typeof showC2==="function"){ try{ showC2(); }catch(_){} }
 
   // Household
-  x.household.forEach((h,i)=>{ if(!_daChecked("household",i)) return; const r=_daMerged("household",i); n++;
-    if(r.role==="child"){ if(typeof children!=="undefined"){ children.push({id:"ch"+(++childSeq),first:r.first||"",last:r.last||"",dob:r.dob||""}); } return; }
+  each("household",x.household,r=>{
+    if(r.role==="child"){ if(typeof children!=="undefined"){ children.push({id:"ch"+(++childSeq),first:r.first||"",last:r.last||"",dob:r.dob||""}); bump("people"); } return; }
     const p=r.role==="client2"?"c2":"c1";
     _daSet(p+"f",r.first); _daSet(p+"l",r.last); _daSet(p+"d",r.dob); _daSet(p+"ci",r.city); _daSet(p+"s1",r.street); _daSet(p+"zp",r.postal);
     if(r.country) _daSetSel(p+"co",r.country);   // country first: it repopulates the state/canton list
@@ -10493,71 +10539,96 @@ function applyDataAgent(){
     if(p==="c2" && r.relationship) _daSetSel("rel",r.relationship);
     if(r.riskTolerance && _daSetSel(p+"r",r.riskTolerance)){ try{ if(typeof updateRisk==="function") updateRisk(p==="c2"?2:1); }catch(_){} }
     if(r.timeHorizon && _daSetSel(p+"h",r.timeHorizon)){ try{ if(typeof updateHorizon==="function") updateHorizon(p==="c2"?2:1); }catch(_){} }
+    bump("people");
   });
 
-  // Income
-  x.income.forEach((r0,i)=>{ if(!_daChecked("income",i)) return; const r=_daMerged("income",i); n++;
-    if(r.who==="client2"){ _daSet("inc1b",r.primary); _daSet("inc2b",r.secondary); } else { _daSet("inc1",r.primary); _daSet("inc2",r.secondary); }
-    if(r.raisePct) _daSet("raise",r.raisePct); });
+  // Income (amounts via _daNum, so a typed "185'000" or "CHF 185,000" still lands)
+  each("income",x.income,r=>{ const a=_daNum(r.primary), b=_daNum(r.secondary);
+    if(!(a>0) && !(b>0)){ skipped.push("an income row with no amount"); return; }
+    if(r.who==="client2"){ if(a>0) _daSet("inc1b",a); if(b>0) _daSet("inc2b",b); } else { if(a>0) _daSet("inc1",a); if(b>0) _daSet("inc2",b); }
+    const rp=_daRate(r.raisePct); if(rp!=null) _daSet("raise",rp);
+    bump("incomes"); });
 
   // Expenses
-  x.expenses.forEach((r0,i)=>{ if(!_daChecked("expenses",i)) return; const r=_daMerged("expenses",i); n++;
-    _daSet("expL",r.living); _daSet("expI",r.insurance); _daSet("expO",r.other); _daSet("savAnnual",r.annualSavings);
-    if(r.inflationPct){ _daSet("inf",r.inflationPct); } });
+  each("expenses",x.expenses,r=>{ const L=_daNum(r.living), I=_daNum(r.insurance), O=_daNum(r.other), S=_daNum(r.annualSavings), inf=_daRate(r.inflationPct);
+    if(L==null && I==null && O==null && S==null && inf==null){ skipped.push("an expenses row with no amounts"); return; }
+    if(L!=null) _daSet("expL",L); if(I!=null) _daSet("expI",I); if(O!=null) _daSet("expO",O); if(S!=null) _daSet("savAnnual",S);
+    if(inf) _daSet("inf",inf);
+    bump("expenses"); });
 
   // Assets. Property and other personal assets have dedicated fields (aProp /
   // aOther) — as an account a house would count as spendable cash in the simulation.
   let propSum=0, otherSum=0;
-  x.assets.forEach((a0,i)=>{ if(!_daChecked("assets",i)) return; const r=_daMerged("assets",i); const v=parseFloat(r.value); if(!(v>0)) return; n++;
-    if(r._kind==="property"){ propSum+=v; return; }
-    if(r._kind==="other"){ otherSum+=v; return; }
+  each("assets",x.assets,r=>{ const v=_daNum(r.value); if(!(v>0)){ skipped.push("“"+(r.label||"an account")+"” (no value)"); return; }
+    if(r._kind==="property"){ propSum+=v; bump("property"); return; }
+    if(r._kind==="other"){ otherSum+=v; bump("other assets"); return; }
     const ctry=r.country||val("c1co")||"US"; const mk=_daMatchAccount(ctry,r.accountTypeHint);
-    assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))}); });
-
+    assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))});
+    bump("accounts"); });
   if(propSum>0) _daSet("aProp",propSum);
   if(otherSum>0) _daSet("aOther",otherSum);
 
   // Liabilities
-  x.liabilities.forEach((l0,i)=>{ if(!_daChecked("liabilities",i)) return; const r=_daMerged("liabilities",i); const b=parseFloat(r.balance); if(!(b>0)) return; n++;
+  each("liabilities",x.liabilities,r=>{ const b=_daNum(r.balance); if(!(b>0)){ skipped.push("“"+(r.label||"a loan")+"” (no balance)"); return; }
     const t=(r.type in LOAN_LABELS)?r.type:"other";
-    loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,rate:parseFloat(r.ratePct)||0,yrs:parseInt(r.years,10)||0}); });
+    loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,rate:_daRate(r.ratePct)||0,yrs:parseInt(r.years,10)||0});
+    bump("loans"); });
 
   // Goals
-  x.goals.forEach((g0,i)=>{ if(!_daChecked("goals",i)) return; const r=_daMerged("goals",i); const amt=parseFloat(r.amount); if(!(amt>0)||!r.name) return; n++;
+  each("goals",x.goals,r=>{ const amt=_daNum(r.amount); if(!(amt>0)||!r.name){ skipped.push("“"+(r.name||"a goal")+"” (no "+(!r.name?"name":"amount")+")"); return; }
     const sY=parseInt(r.startYear,10)||(typeof currentYear==="function"?currentYear():new Date().getFullYear());
     let eY=parseInt(r.endYear,10); if(!eY||eY<sY) eY=sY+1;
-    goals.push({id:"g"+(++goalSeq),name:r.name,amt:amt,homePrice:(r.category==="home"?parseFloat(r.amount):undefined),startYear:sY,endYear:eY,cat:r.category||"other",tier:r.tier||"important"}); });
+    goals.push({id:"g"+(++goalSeq),name:r.name,amt:amt,homePrice:(r.category==="home"?amt:undefined),startYear:sY,endYear:eY,cat:r.category||"other",tier:r.tier||"important"});
+    bump("goals"); });
 
   // Holdings
-  x.holdings.forEach((h0,i)=>{ if(!_daChecked("holdings",i)) return; const r=_daMerged("holdings",i); const v=parseFloat(r.val); if(!(v>0)||!r.name) return; n++;
+  each("holdings",x.holdings,r=>{ const v=_daNum(r.val); if(!(v>0)||!r.name){ skipped.push("“"+(r.name||"a holding")+"” (no "+(!r.name?"name":"value")+")"); return; }
+    const er=_daRate(r.er), yld=_daRate(r.yld);
     investments.push({id:"inv"+(++invSeq),name:r.name,tkr:r.tkr||"",
       type:(r.type in INV_TYPE_LABELS)?r.type:"other", cls:(r.cls in INV_CLASS_LABELS)?r.cls:"other", region:(r.region in INV_REGION_LABELS)?r.region:"other",
-      val:v, er:(r.er!==""&&r.er!=null&&isFinite(+r.er))?+r.er:null, yld:(r.yld!==""&&r.yld!=null&&isFinite(+r.yld))?+r.yld:null, note:"Imported by "+_daImportSource()}); });
+      val:v, er:er, yld:yld, note:"Imported by "+_daImportSource()});
+    bump("holdings"); });
 
   // Retirement plan → spending, retirement ages, and each client's pension.
-  (x.retirement||[]).forEach((r0,i)=>{ if(!_daChecked("retirement",i)) return; const r=_daMerged("retirement",i); let touched=false;
-    if(parseFloat(r.desiredAnnualSpend)>0){ _daSet("retSpend",r.desiredAnnualSpend); touched=true; }
-    if(parseInt(r.client1RetirementAge,10)>0){ _daSet("retAge",r.client1RetirementAge); touched=true; }
-    if(parseInt(r.client2RetirementAge,10)>0 && $("retAge2")){ _daSet("retAge2",r.client2RetirementAge); touched=true; }
+  each("retirement",x.retirement,r=>{ let touched=false;
+    const spend=_daNum(r.desiredAnnualSpend), p1=_daNum(r.client1PensionAnnual), p2=_daNum(r.client2PensionAnnual);
+    if(spend>0){ _daSet("retSpend",spend); touched=true; }
+    if(parseInt(r.client1RetirementAge,10)>0){ _daSet("retAge",parseInt(r.client1RetirementAge,10)); touched=true; }
+    if(parseInt(r.client2RetirementAge,10)>0 && $("retAge2")){ _daSet("retAge2",parseInt(r.client2RetirementAge,10)); touched=true; }
     // Client 1 pension: switch source to Manual, then set the benefit + start age
-    if(parseFloat(r.client1PensionAnnual)>0){ _daSetSel("penSrc","manual"); _daSet("penAnnual",r.client1PensionAnnual);
-      try{ if(typeof markPenEdited==="function") markPenEdited(); }catch(_){} touched=true; }
-    if(parseInt(r.client1PensionStartAge,10)>0){ _daSet("penStartAge",r.client1PensionStartAge); touched=true; }
+    if(p1>0){ _daSetSel("penSrc","manual"); _daSet("penAnnual",p1); try{ if(typeof markPenEdited==="function") markPenEdited(); }catch(_){} touched=true; }
+    if(parseInt(r.client1PensionStartAge,10)>0){ _daSet("penStartAge",parseInt(r.client1PensionStartAge,10)); touched=true; }
     // Client 2 pension
-    if(parseFloat(r.client2PensionAnnual)>0){ _daSetSel("penSrc2","manual"); _daSet("penAnnual2",r.client2PensionAnnual);
-      try{ if(typeof markPen2Edited==="function") markPen2Edited(); }catch(_){} touched=true; }
-    if(parseInt(r.client2PensionStartAge,10)>0){ _daSet("penStartAge2",r.client2PensionStartAge); touched=true; }
-    if(touched) n++; });
+    if(p2>0){ _daSetSel("penSrc2","manual"); _daSet("penAnnual2",p2); try{ if(typeof markPen2Edited==="function") markPen2Edited(); }catch(_){} touched=true; }
+    if(parseInt(r.client2PensionStartAge,10)>0){ _daSet("penStartAge2",parseInt(r.client2PensionStartAge,10)); touched=true; }
+    if(touched) bump("retirement plan"); else skipped.push("a retirement row with no values"); });
 
   // Re-render everything affected
   const safe=fn=>{ try{ if(typeof window[fn]==="function") window[fn](); }catch(e){ console.warn("[DataAgent] "+fn,e); } };
   ["renderChildren","updateDisplays","updateIncTotal","updateExpTotal","updateTaxPanel","renderAssets","renderLoans","renderGoals","renderInvestments","renderPortfolioMetrics","drawPortfolioPie","refreshTopMetrics"].forEach(safe);
-  const stt=$("daApplyStatus"); if(stt){ stt.textContent="✓ Added "+n+" item"+(n!==1?"s":"")+" to the app."; stt.style.color="var(--green)"; }
-  const ast=$("aiAgentStatus"); if(ast){ ast.textContent="✓ Applied "+n+" item"+(n!==1?"s":"")+"."; ast.style.color="var(--green)"; }
-  try{ if(typeof _topStatus==="function") _topStatus("AI Data Agent added "+n+" item"+(n!==1?"s":"")); }catch(_){}
-  // Auto-close the review modal after a beat, so the success message is seen
-  // but the user isn't left dismissing a modal that already did its job.
-  if(n>0){ setTimeout(()=>{ try{ closeReviewModal(); }catch(_){} }, 900); }
+
+  // Say exactly what happened — never a bare "✓ Added 0 items".
+  const stt=$("daApplyStatus"), ast=$("aiAgentStatus");
+  const ticked=document.querySelectorAll("#aiReviewModal .da-chk:checked").length;
+  if(n===0){
+    const why = !ticked ? "no rows are ticked — tick the rows you want, then click Add."
+              : errors.length ? "the ticked rows couldn't be added ("+errors[0]+")."
+              : "the ticked rows have no values"+(skipped.length?" ("+skipped.slice(0,3).join("; ")+")":"")+" — fill them in, then click Add.";
+    if(stt){ stt.textContent="⚠ Nothing was added: "+why; stt.style.color="var(--amber)"; }
+    return;
+  }
+  const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"retirement plan":["retirement plan","retirement plans"]};
+  const summary=Object.keys(added).map(k=>{ const w=NOUN[k]||[k,k]; return added[k]+" "+(added[k]===1?w[0]:w[1]); }).join(", ");
+  const tail=(errors.length?" · "+errors.length+" row"+(errors.length!==1?"s":"")+" couldn't be added":"")+(skipped.length?" · skipped "+skipped.length+" empty row"+(skipped.length!==1?"s":""):"");
+  if(stt){ stt.textContent="✓ Added to the app: "+summary+tail+"."; stt.style.color="var(--green)"; }
+  if(ast){ ast.textContent="✓ Added "+summary+"."; ast.style.color="var(--green)"; }
+  _daApplied=true;
+  try{ if(typeof _topStatus==="function") _topStatus("✓ Added from "+_daImportSource()+": "+summary); }catch(_){}
+  // Close after a beat and show the Household tab, where the result is visible
+  // straight away (clients, address, net worth in the overview).
+  setTimeout(()=>{ try{ closeReviewModal(); }catch(_){}
+    try{ if(added.people||added.incomes||added.expenses||added["retirement plan"]){
+      const nav=[...document.querySelectorAll(".nav-item")].find(el=>/^\s*Household\s*$/i.test(el.textContent)); if(typeof showTab==="function") showTab("household",nav); window.scrollTo(0,0); } }catch(_){} }, 1400);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
