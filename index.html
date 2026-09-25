@@ -1136,6 +1136,16 @@ input[type=date]{color-scheme:light}
 .info-ic .info-pop{visibility:hidden;opacity:0;position:absolute;bottom:140%;left:50%;transform:translateX(-50%);width:260px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;font-size:11px;font-weight:400;color:var(--text2);line-height:1.65;box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:9999;transition:opacity .15s;text-align:left;pointer-events:none}
 .info-ic:hover .info-pop{visibility:visible;opacity:1}
 .info-ic .info-pop::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border2)}
+/* AI-provider disclosure: hover / keyboard-focus card on buttons that send a
+   document to the AI (Upload Document, AI Data Agent). Opens BELOW the button —
+   these sit in the top bar / panel headers, where a card above would be cut off. */
+.ai-tip{position:relative;display:inline-flex}
+.ai-tip-pop{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 10px);right:0;width:310px;z-index:1000;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;box-shadow:0 10px 28px rgba(15,23,42,.14);font-size:11.5px;line-height:1.55;color:var(--text2);text-align:left;font-weight:400;letter-spacing:0;text-transform:none;white-space:normal;transition:opacity .15s,visibility .15s;pointer-events:none}
+.ai-tip:hover .ai-tip-pop,.ai-tip:focus-within .ai-tip-pop{visibility:visible;opacity:1}
+.ai-tip-pop strong{color:var(--text);font-weight:700}
+.ai-tip-pop .ai-tip-h{display:block;font-weight:700;color:var(--gold);margin-bottom:4px;font-size:12px}
+.ai-tip-pop::after{content:"";position:absolute;bottom:100%;right:24px;border:6px solid transparent;border-bottom-color:var(--border2)}
+@media (prefers-reduced-motion:reduce){.ai-tip-pop{transition:none}}
 #inv-tip-box{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 15px;font-size:11.5px;font-family:var(--fb);color:var(--text);line-height:1.85;box-shadow:0 8px 28px rgba(0,0,0,.55);pointer-events:none;opacity:0;transition:opacity .12s;min-width:270px;max-width:320px}
 #inv-tip-box.vis{opacity:1}
 /* ── Probability explanation tooltip ── */
@@ -1683,10 +1693,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <span id="topbarStatus" style="font-size:11px;color:var(--green);font-weight:600;min-width:90px;text-align:right"></span>
-    <button class="btn-secondary" onclick="uploadDocument()" title="Upload any client document — the AI agent reads it and fills your data fields after review" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Upload Document
-    </button>
+    <span class="ai-tip">
+      <button class="btn-secondary" onclick="uploadDocument()" aria-describedby="aiTipUpload" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Document
+      </button>
+      <span class="ai-tip-pop" id="aiTipUpload" role="tooltip"><span class="ai-tip-h">✦ AI document intake — powered by Anthropic</span>Upload any client document and <strong>Claude</strong>, Anthropic's AI model, reads it and fills the matching fields. The file goes straight from this browser to <strong>Anthropic's API</strong> using the AI key set in Settings — it is not uploaded to any Wealth Analyzer server. You review every value before anything is applied.</span>
+    </span>
     <button class="btn-primary" onclick="runSim()">
       <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6z"/></svg>
       Run Simulation
@@ -1822,7 +1835,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
              onchange="onAiKeyInput()" oninput="onAiKeyInput()"
              style="width:100%;font-family:var(--fm);font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg2);color:var(--text)">
       <div id="aiKeyNote" style="font-size:11px;margin-top:5px;line-height:1.5"></div>
-      <div class="set-note">Powers <strong>Upload Document</strong> extraction and AI features. The key is stored only in your browser and sent only to the AI provider.</div>
+      <div class="set-note">Powers <strong>Upload Document</strong> extraction and AI features, using <strong>Claude by Anthropic</strong>. The key is stored only in your browser and sent only to Anthropic's API.</div>
 
       <!-- Market data provider keys (collapsed by default) -->
       <div id="mdKeysPanel" style="margin-top:14px">
@@ -3513,7 +3526,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span style="display:flex;gap:8px">
       <button class="btn-secondary" onclick="openFeedPanel()" style="font-size:11px;padding:4px 10px">🔌 Data feeds</button>
       <button class="btn-secondary" onclick="openStatementImporter()" style="font-size:11px;padding:4px 10px">⭳ Import statement</button>
-      <button class="btn-secondary" onclick="openDataAgent()" style="font-size:11px;padding:4px 10px">✦ AI Data Agent</button>
+      <span class="ai-tip">
+        <button class="btn-secondary" onclick="openDataAgent()" aria-describedby="aiTipAgent" style="font-size:11px;padding:4px 10px">✦ AI Data Agent</button>
+        <span class="ai-tip-pop" id="aiTipAgent" role="tooltip"><span class="ai-tip-h">✦ AI Data Agent — powered by Anthropic</span>Upload a brokerage statement or position listing and <strong>Claude</strong>, Anthropic's AI model, extracts the holdings. The file goes straight from this browser to <strong>Anthropic's API</strong> using the AI key set in Settings — it is not uploaded to any Wealth Analyzer server. You review every holding before it is added.</span>
+      </span>
     </span>
   </div>
   <!-- AI Data Agent panel (hidden by default) — reads any file, fills the whole app after review -->
@@ -4539,7 +4555,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1057";
+const APP_VERSION = "20260925-1109";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
