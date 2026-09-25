@@ -1860,7 +1860,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       </div>
       <!-- Admin console — full key manager + advanced tools -->
       <a class="set-link" href="admin.html" target="_blank" style="margin-top:10px">⚙ Admin Console <span class="set-link-ext">full manager ↗</span></a>
-      <div class="set-note">Keys you set here and in the Admin console are the same — manage them in whichever is handier.</div>
+      <div class="set-note">Keys you set here and in the Admin console are the same — as long as both are open on the same site in the same browser (keys are saved per browser and per site, so a copy opened from a file or on another address keeps its own).</div>
     </div>
 
     <div class="set-sec">
@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1141";
+const APP_VERSION = "20260925-1148";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9700,8 +9700,10 @@ function uploadDocKeyNote(){
   const has = !!getAIKey();
   if(n) n.innerHTML = has
     ? '<span style="color:var(--green)">✓ AI key detected — ready to read documents.</span>'
-    : '<span style="color:var(--amber)">⚠ No AI key set. The agent needs your AI API key to read documents.</span>';
-  if(b) b.disabled = !has;
+    : '<span style="color:var(--amber)">⚠ No AI key on this site. Keys are saved per browser and per site — add yours with <strong>Add AI key</strong>.</span>';
+  // Extract stays ENABLED without a key: a greyed-out button that silently ignores
+  // clicks read as "nothing happened". Clicking it explains what's missing instead.
+  if(b) b.disabled = false;
   if(kb) kb.style.display = has ? "none" : "inline-flex";
 }
 function uploadDocOpenKeySettings(){
@@ -9721,7 +9723,11 @@ function onUploadDocFilesChange(){
 }
 async function runUploadDocExtract(){
   const st=$("uploadDocStatus");
-  if(!getAIKey()){ uploadDocKeyNote(); if(st){st.textContent="⚠ Add your AI key first."; st.style.color="var(--amber)";} return; }
+  if(!getAIKey()){
+    uploadDocKeyNote();
+    if(st){ st.textContent="⚠ No AI key on this site yet — click “Add AI key” to paste it (keys are saved per browser and per site)."; st.style.color="var(--amber)"; }
+    const kb=$("uploadDocKeyBtn"); if(kb){ try{ kb.focus(); }catch(_){} }
+    return; }
   const inp=$("uploadDocFiles"), files=inp&&inp.files?Array.from(inp.files):[];
   if(!files.length){ if(st){st.textContent="⚠ Choose one or more files first."; st.style.color="var(--amber)";} return; }
   // Lock Extract while a read runs — a second click would pay for a duplicate request.
@@ -9748,7 +9754,7 @@ async function runUploadDocExtract(){
     closeUploadDoc();
     renderReviewModal();
   }catch(e){ if(st){ st.textContent="✗ "+e.message; st.style.color="var(--red)"; } console.error("[UploadDoc]",e); }
-  finally{ if(xb) xb.disabled=!getAIKey(); }
+  finally{ if(xb) xb.disabled=false; }
 }
 // Back-compat: keep the panel-based AI Data Agent flow working (Portfolio tab).
 function onAgentFilesChange(){
