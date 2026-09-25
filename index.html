@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Wealth Analyzer by Private Wealth Intelligence</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <!-- Fonts: warm the connection early (preconnect), then load the stylesheet
      NON-blocking (media=print flips to all on load). display=swap means text
      paints immediately in the system-sans fallback and upgrades when Plus
@@ -570,6 +571,8 @@ body.shared-view .nav-item{cursor:pointer;opacity:.95}
 .nav-item:hover{color:var(--text);background:rgba(0,87,184,0.03)}
 .nav-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(0,87,184,.06)}
 .nav-item svg{width:14px;height:14px;flex-shrink:0;opacity:.65}
+/* "NEW" badge — shared with admin console (purple → primary) */
+.nav-new{margin-left:auto;background:linear-gradient(135deg,#7c3aed,var(--gold));color:#fff;font-size:8px;padding:2px 6px;border-radius:50px;font-weight:700;letter-spacing:.04em;pointer-events:none}
 
 /* ── Main ── */
 .main{flex:1;min-width:0;overflow-x:hidden;overflow-y:auto;padding:28px 32px;background:var(--bg)}
@@ -1982,7 +1985,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
   <div class="nav-item" data-tab="ai-builder" onclick="showTab('ai-builder',this)">
     <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 00-3 3v1.5L3 7v5l2 1.5V15h6v-1.5L13 12V7l-2-1.5V4a3 3 0 00-3-3zm-1 7a1 1 0 110 2 1 1 0 010-2zm2 0a1 1 0 110 2 1 1 0 010-2z"/></svg>AI Portfolio Builder
-    <span style="margin-left:auto;background:linear-gradient(135deg,#7c3aed,var(--gold));color:#fff;font-size:8px;padding:2px 6px;border-radius:50px;font-weight:700;pointer-events:none">NEW</span>
+    <span class="nav-new">NEW</span>
   </div>
   <div class="nav-item" data-tab="compare" onclick="showTab('compare',this);runComparison()">
     <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2v12h5V2H2zm7 0v6h5V2H9zm0 7.5v4.5h5V9.5H9z"/></svg>Portfolio Comparison
@@ -4536,7 +4539,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1000";
+const APP_VERSION = "20260925-1022";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
