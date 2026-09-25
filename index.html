@@ -4568,7 +4568,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1127";
+const APP_VERSION = "20260925-1130";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -26455,7 +26455,9 @@ document.addEventListener("DOMContentLoaded",function(){
       // user explicitly configured: every market-data/AI API key (APP_KEY_DEFS),
       // report branding & settings (wa_rpt_*), key health, and feature flags.
       // (The old filter deleted 12 saved API keys + the advisor logo per update.)
-      const keep = new Set(["wa_ai_key","wa_av_key","wa_fh_key","wa_ai_builder_enabled","wa_key_health","wa_app_version"]);
+      // wa_cors_proxy = the data proxy URL (Admin → Market Data); without it,
+      // Yahoo prices and ticker lookups would switch off after every deploy.
+      const keep = new Set(["wa_ai_key","wa_av_key","wa_fh_key","wa_ai_builder_enabled","wa_key_health","wa_app_version","wa_cors_proxy"]);
       try{ APP_KEY_DEFS.forEach(d => keep.add(d.id)); }catch(_){}
       Object.keys(localStorage)
         .filter(k => k.startsWith("wa_") && !keep.has(k) && !k.startsWith("wa_rpt_"))
