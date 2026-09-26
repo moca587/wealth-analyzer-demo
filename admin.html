@@ -1102,6 +1102,7 @@ Citations:<br>
       <div class="ptitle" style="margin:0">Free Providers <span style="color:var(--color-success);font-weight:600">— health-checked every 2 minutes</span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="keyHealthSummary" style="font-size:11px;color:var(--color-text-muted)"></span>
+        <button class="btn-ghost" data-action="quickLoadKeys" title="Load keys from dev-api.key (gitignored) next to this page" style="font-size:12px;padding:8px 14px"><i data-lucide="file-key" class="icon" aria-hidden="true"></i> Quick Load</button>
         <button class="btn" data-action="testAllKeysNow" style="font-size:12px;padding:8px 14px"><i data-lucide="zap" class="icon" aria-hidden="true"></i> Test All Configured Keys Now</button>
       </div>
     </div>
@@ -1249,7 +1250,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260925-1810";
+const APP_VERSION = "20260926-1517";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -5961,6 +5962,56 @@ async function testKeyHealthNow(el){
   addLog(r.ok ? "ok" : "err", `Key check ${id}: ${r.ok ? `OK ${r.latencyMs}ms` : "FAILED — "+r.error}`);
 }
 
+// Dev quick-load: provider keys from a gitignored `dev-api.key` beside this page — a JSON object
+// keyed by the localStorage ids above ({"fhKey":"…","wa_ai_key":"…"}); see dev-api.key.example.
+// Served over http it is fetched directly; on file:// (fetch blocked) the user picks the file.
+// Same logic as wealth-analyzer.html quickLoadMdKeys().
+const DEV_KEYS_FILE = "dev-api.key";
+const DEV_KEY_ID_RE = /^(fhKey|avKey|wa_[a-z0-9]+_(key|secret))$/;
+async function readDevKeysFile(){
+  try {
+    const r = await fetch(DEV_KEYS_FILE, {cache:"no-store"});
+    if(r.ok) return await r.text();
+  } catch(_){}
+  return new Promise((resolve, reject) => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = ".key,.json,application/json";
+    inp.onchange = () => { const f = inp.files && inp.files[0]; f ? f.text().then(resolve, reject) : resolve(null); };
+    inp.oncancel = () => resolve(null);
+    inp.click();
+  });
+}
+// Writes recognised non-blank keys to localStorage; a changed key drops its stale health record.
+function applyDevKeys(text){
+  const obj = JSON.parse(text);
+  if(!obj || typeof obj !== "object" || Array.isArray(obj)) throw new Error("expected a JSON object of { keyId: \"value\" }");
+  const health = getKeyHealth();
+  let loaded = 0; const skipped = [];
+  Object.keys(obj).forEach(id => {
+    const v = obj[id];
+    if(!DEV_KEY_ID_RE.test(id) || typeof v !== "string"){ if(id.charAt(0) !== "_") skipped.push(id); return; }
+    const t = v.trim(); if(!t) return;
+    if(localStorage.getItem(id) !== t){ localStorage.setItem(id, t); delete health[id]; }
+    loaded++;
+  });
+  setKeyHealth(health);
+  return {loaded, skipped};
+}
+async function quickLoadKeys(){
+  try {
+    const text = await readDevKeysFile();
+    if(text == null) return;
+    const r = applyDevKeys(text);
+    renderKeys();
+    const msg = `Loaded ${r.loaded} key${r.loaded === 1 ? "" : "s"} from ${DEV_KEYS_FILE}` + (r.skipped.length ? ` · ignored: ${r.skipped.join(", ")}` : "");
+    toast(msg, r.loaded ? (r.skipped.length ? "warn" : "ok") : "warn");
+    addLog(r.loaded ? "ok" : "warn", msg);
+  } catch(e){
+    toast(`${DEV_KEYS_FILE}: ${e.message || e}`, "err");
+    addLog("err", `Quick load failed: ${e.message || e}`);
+  }
+}
+
 // Manually test ALL configured keys right now
 async function testAllKeysNow(el){
   const configured = API_KEY_DEFS.filter(k => !!localStorage.getItem(k.id));
@@ -8164,6 +8215,7 @@ window.renderTaxBracket = renderTaxBracket;
 window.saveKey = saveKey;
 window.testKeyHealthNow = testKeyHealthNow;
 window.testAllKeysNow = testAllKeysNow;
+window.quickLoadKeys = quickLoadKeys;
 window.copyLogs = copyLogs;
 window.downloadLogs = downloadLogs;
 window.clearLogs = clearLogs;
