@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>Wealth Analyzer — Admin Console</title>
+<title>Wealth Analyzer | Admin Console</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <!-- Google Fonts removed â system fonts used (standalone mode) -->
 <script>/* Chart.js 4.4.1 â inlined */
@@ -320,7 +320,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">WealthAnalyzer<span class="badge">ADMIN</span><small id="ver">v—</small></div>
+  <div class="logo">WealthAnalyzer<span class="badge">ADMIN</span><small id="ver">v-</small></div>
   <div style="display:flex;align-items:center;gap:8px">
     <a class="btn-link" href="wealth-analyzer.html" target="_blank">↗ Open Main App</a>
   </div>
@@ -366,7 +366,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 <div class="tab active" id="tab-dashboard">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="layout-dashboard" class="icon" aria-hidden="true"></i><span class="wh-title-text">Admin Console Dashboard</span></h1>
-    <p class="wh-sub">Connected to your local Wealth Analyzer app — shares localStorage for profile, keys, and configuration. No backend required.</p>
+    <p class="wh-sub">Connected to your local Wealth Analyzer app, sharing localStorage for profile, keys, and configuration. No backend required.</p>
   </div></div>
   <div class="kpi-grid" id="dashKpis"></div>
   <div class="grid2">
@@ -406,7 +406,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 
   <!-- User detail panel (slides in when a user is selected) -->
   <div class="panel" id="userDetailPanel" style="display:none">
-    <div class="ptitle">User Detail — <span id="userDetailName" style="text-transform:none;color:var(--color-text)">—</span></div>
+    <div class="ptitle">User Detail: <span id="userDetailName" style="text-transform:none;color:var(--color-text)">-</span></div>
     <div id="userDetailBody"></div>
   </div>
 </div>
@@ -452,8 +452,8 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
         </div>
         <div class="row"><label class="lbl">Horizon</label>
           <select id="agHorizon" class="fw">
-            <option value="1_5">1–5 years</option><option value="5_10">5–10 years</option>
-            <option value="10_15">10–15 years</option><option value="15_plus" selected>15+ years</option>
+            <option value="1_5">1-5 years</option><option value="5_10">5-10 years</option>
+            <option value="10_15">10-15 years</option><option value="15_plus" selected>15+ years</option>
           </select>
         </div>
         <div class="row"><label class="lbl">Country</label>
@@ -504,7 +504,7 @@ Down payment | 2028 | 150000</textarea>
   </div>
 
   <div class="panel">
-    <div class="ptitle">② Research Sources <span style="color:var(--color-success);font-weight:600">— all <span class="js-prov-count">16</span> enabled by default</span></div>
+    <div class="ptitle">② Research Sources <span style="color:var(--color-success);font-weight:600">(all <span class="js-prov-count">16</span> enabled by default)</span></div>
     <div class="pdesc">All institutional sources are automatically pulled when you open this tab. <strong style="color:var(--color-success)">Auto-refresh runs every 5 minutes</strong>. Uncheck any you want to exclude from the agent's reasoning.</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <button class="btn-ghost" data-action="manualResearchRefresh"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Pull latest now</button>
@@ -516,9 +516,9 @@ Down payment | 2028 | 150000</textarea>
   </div>
 
   <div class="panel" style="background:linear-gradient(135deg,#fff,#f0fdf4);border-color:rgba(0,135,90,.25)">
-    <div class="ptitle" style="color:var(--color-success)">③ Build Portfolio — Deterministic Research Engine</div>
+    <div class="ptitle" style="color:var(--color-success)">③ Build Portfolio: Deterministic Research Engine</div>
     <div class="pdesc">
-      The <strong>Research Engine</strong> scans every cached research item across all <span class="js-prov-count">16</span> institutions, extracts <strong>asset-class signals</strong>, <strong>theme votes</strong>, <strong>sector calls</strong>, and <strong>regional positioning</strong> via keyword matching. It then picks funds from the universe based on consensus strength and your constraints. <strong>Every decision is explained with full citations to the underlying research.</strong> No LLM call required — runs instantly and is fully deterministic + auditable.
+      The <strong>Research Engine</strong> scans every cached research item across all <span class="js-prov-count">16</span> institutions, extracts <strong>asset-class signals</strong>, <strong>theme votes</strong>, <strong>sector calls</strong>, and <strong>regional positioning</strong> via keyword matching. It then picks funds from the universe based on consensus strength and your constraints. <strong>Every decision is explained with full citations to the underlying research.</strong> No LLM call required. It runs instantly and is fully deterministic + auditable.
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <button class="btn" data-action="runResearchEngine" style="font-size:14px;padding:11px 24px"><i data-lucide="microscope" class="icon" aria-hidden="true"></i> Build with Research Engine</button>
@@ -527,7 +527,7 @@ Down payment | 2028 | 150000</textarea>
   </div>
 
   <div class="panel">
-    <div class="ptitle">③b Build Portfolio — AI Agent</div>
+    <div class="ptitle">③b Build Portfolio: AI Agent</div>
     <div class="pdesc">Alternative: send the full client brief + research excerpts to the AI engine for an LLM-augmented recommendation. Use this when you want narrative reasoning beyond signal counts.</div>
     <div class="row">
       <label class="lbl">AI model</label>
@@ -552,15 +552,15 @@ Down payment | 2028 | 150000</textarea>
   <!-- Methodology — How the Agent Selects Funds -->
   <div class="panel" style="background:linear-gradient(135deg,#fff,#f0f9ff);border:1px solid rgba(0,87,184,.20)">
     <div class="ptitle" style="color:var(--color-primary);display:flex;align-items:center;justify-content:space-between">
-      <span><i data-lucide="microscope" class="icon" aria-hidden="true"></i> How the Agent Selects Funds — Full Decision Logic</span>
+      <span><i data-lucide="microscope" class="icon" aria-hidden="true"></i> How the Agent Selects Funds: Full Decision Logic</span>
       <button class="btn-ghost" onclick="document.getElementById('methodBody').style.display = document.getElementById('methodBody').style.display==='none'?'block':'none'" style="font-size:11px;padding:4px 12px">Show / Hide</button>
     </div>
     <div id="methodBody">
-      <div class="pdesc">Every fund selection is fully traceable. The engine follows a deterministic 5-stage pipeline with explicit scoring, constraints, and rationale. Below is the complete decision logic — same logic used by both the Research Engine and the AI agent.</div>
+      <div class="pdesc">Every fund selection is fully traceable. The engine follows a deterministic 5-stage pipeline with explicit scoring, constraints, and rationale. Below is the complete decision logic, the same logic used by both the Research Engine and the AI agent.</div>
 
       <!-- Stage 1 — Signal extraction -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #0057b8;border-radius:8px;padding:16px 20px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#0057b8;margin-bottom:8px">STAGE 1 — Signal Extraction from Research</div>
+        <div style="font-weight:700;font-size:14px;color:#0057b8;margin-bottom:8px">STAGE 1: Signal Extraction from Research</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           For each cached research item (typically 100+ per provider, 1,600+ total), the engine parses the title + summary against keyword lexicons:
           <ul style="margin:8px 0 0 20px">
@@ -576,7 +576,7 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Stage 2 — Aggregation -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #00875a;border-radius:8px;padding:16px 20px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#00875a;margin-bottom:8px">STAGE 2 — Cross-Provider Consensus Aggregation</div>
+        <div style="font-weight:700;font-size:14px;color:#00875a;margin-bottom:8px">STAGE 2: Cross-Provider Consensus Aggregation</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           Net votes summed across all <span class="js-prov-count">16</span> providers. For each signal (e.g. "overweight Equity"), the engine tracks:
           <ul style="margin:8px 0 0 20px">
@@ -593,7 +593,7 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Stage 3 — Allocation -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #f59e0b;border-radius:8px;padding:16px 20px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#f59e0b;margin-bottom:8px">STAGE 3 — Strategic Asset Allocation (Risk Baseline + Research Tilt)</div>
+        <div style="font-weight:700;font-size:14px;color:#f59e0b;margin-bottom:8px">STAGE 3: Strategic Asset Allocation (Risk Baseline + Research Tilt)</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           Starts with a <strong>risk-profile baseline</strong>, then tilts based on research consensus:
         </div>
@@ -621,7 +621,7 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Stage 4 — Fund Selection -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid var(--color-primary);border-radius:8px;padding:16px 20px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:var(--color-primary);margin-bottom:8px">STAGE 4 — Fund Selection from Universe</div>
+        <div style="font-weight:700;font-size:14px;color:var(--color-primary);margin-bottom:8px">STAGE 4: Fund Selection from Universe</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           For each asset class with allocation ≥ 2%, the engine picks specific funds:
           <ol style="margin:8px 0 0 20px">
@@ -655,7 +655,7 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Stage 5 — Rationale -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #e31837;border-radius:8px;padding:16px 20px;margin-bottom:12px">
-        <div style="font-weight:700;font-size:14px;color:#e31837;margin-bottom:8px">STAGE 5 — Rationale Generation (per position)</div>
+        <div style="font-weight:700;font-size:14px;color:#e31837;margin-bottom:8px">STAGE 5: Rationale Generation (per position)</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           Every fund pick gets a multi-part rationale:
           <ul style="margin:8px 0 0 20px">
@@ -670,7 +670,7 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Worked example -->
       <div style="background:linear-gradient(135deg,#fff,#fef3c7);border:1px solid rgba(245,158,11,.30);border-radius:8px;padding:16px 20px">
-        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:8px"><i data-lucide="notebook-pen" class="icon" aria-hidden="true"></i> WORKED EXAMPLE — Moderate Profile, Sample Walkthrough</div>
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:8px"><i data-lucide="notebook-pen" class="icon" aria-hidden="true"></i> WORKED EXAMPLE: Moderate Profile, Sample Walkthrough</div>
         <div style="font-size:11.5px;line-height:1.8;color:var(--color-text-secondary);font-family:var(--font-mono)">
 <strong>Brief:</strong> risk = moderate · NW = $500k · ESG = none · tax = medium · liquidity = medium · max pos = 20%<br>
 <strong>Research scanned:</strong> 1,420 items across 16 providers<br><br>
@@ -691,9 +691,9 @@ Down payment | 2028 | 150000</textarea>
 • Normalized to 100%<br><br>
 
 <strong>Fund picks for Equity (62% → 3 funds):</strong><br>
-• <strong>IVV</strong> 20% — score = 0.97 + 2 + 1.8 (mentions) − 0 = 4.77 → highest<br>
-• <strong>QQQ</strong> 20% — score = 0.80 + 2 + 2.4 (8 mentions) − 0.2 (BlackRock used) = 5.00 → highest<br>
-• <strong>VXUS</strong> 22% — score = 0.93 + 0 − 0.2 = 0.73 (no mention, but good for diversification)<br><br>
+• <strong>IVV</strong> 20%: score = 0.97 + 2 + 1.8 (mentions) − 0 = 4.77 → highest<br>
+• <strong>QQQ</strong> 20%: score = 0.80 + 2 + 2.4 (8 mentions) − 0.2 (BlackRock used) = 5.00 → highest<br>
+• <strong>VXUS</strong> 22%: score = 0.93 + 0 − 0.2 = 0.73 (no mention, but good for diversification)<br><br>
 
 <strong>Rationale for IVV:</strong><br>
 14/16 providers overweight Equity (+28 net votes) ·<br>
@@ -732,7 +732,7 @@ Citations:<br>
     <p class="wh-sub"><span class="js-prov-count">16</span> institutional sources from the world's largest wealth managers, investment banks, private banks, and analyst platforms. Refresh feeds and the AI Agent uses them when building portfolios.</p>
   </div></div>
   <div class="panel">
-    <div class="ptitle">Sources <span style="color:var(--color-success);font-weight:600">— auto-refresh every 5 minutes</span></div>
+    <div class="ptitle">Sources <span style="color:var(--color-success);font-weight:600">(auto-refresh every 5 minutes)</span></div>
     <div id="researchCorpusSummary" style="font-size:11.5px;margin:-2px 0 12px;line-height:1.5"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
       <button class="btn" data-action="refreshAll"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh ALL</button>
@@ -748,11 +748,11 @@ Citations:<br>
   <!-- ─── Ingest a monthly issue you are entitled to ─── -->
   <div class="panel">
     <div class="ptitle section-dropdown" data-action="toggleIngest" style="margin:0;cursor:pointer">
-      <i data-lucide="download" class="icon" aria-hidden="true"></i> Ingest a monthly issue <span style="font-weight:400;color:var(--color-text-muted);font-size:12px">— paste or upload an issue you have access to · click to expand</span>
+      <i data-lucide="download" class="icon" aria-hidden="true"></i> Ingest a monthly issue <span style="font-weight:400;color:var(--color-text-muted);font-size:12px">(paste or upload an issue you have access to · click to expand)</span>
     </div>
     <div id="ingestBody" style="display:none;padding-top:14px">
       <div class="pdesc" style="margin-bottom:12px">
-        For subscription publications (CIO Viewpoint, RIC Report, US 1 List) the console cannot fetch the issue itself — the feeds behind them only carry
+        For subscription publications (CIO Viewpoint, RIC Report, US 1 List) the console cannot fetch the issue itself; the feeds behind them only carry
         <em>news about</em> the report. Paste the text of an issue <strong>you are entitled to</strong>, or upload it as .txt / .md / .pdf, and it will be
         parsed into research items, tagged with the issue month, and fed to the engine like any other source. Nothing is uploaded anywhere; parsing happens in this browser.
       </div>
@@ -764,7 +764,7 @@ Citations:<br>
           <input type="month" id="ingestMonth" style="width:100%;margin-top:4px">
         </label>
       </div>
-      <textarea id="ingestText" rows="8" placeholder="Paste the issue text here — headings, bullets and paragraphs are all handled." style="width:100%;font-family:var(--font-mono);font-size:12px;padding:10px;margin-bottom:10px"></textarea>
+      <textarea id="ingestText" rows="8" placeholder="Paste the issue text here. Headings, bullets and paragraphs are all handled." style="width:100%;font-family:var(--font-mono);font-size:12px;padding:10px;margin-bottom:10px"></textarea>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
         <input type="file" id="ingestFile" accept=".txt,.md,.text,.pdf" style="font-size:12px">
         <button class="btn-ghost" data-action="previewIngest"><i data-lucide="search" class="icon" aria-hidden="true"></i> Parse &amp; preview</button>
@@ -786,7 +786,7 @@ Citations:<br>
 <div class="tab" id="tab-enginestress">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="flask-conical" class="icon" aria-hidden="true"></i><span class="wh-title-text">AI Portfolio Engine Stress Test</span></h1>
-    <p class="wh-sub">Daily sensitivity & robustness testing for the deterministic Research Engine. Sweep across risk profiles, net worth levels, ESG settings, and research provider counts — verify the engine reacts coherently to every input change. Daily benchmark snapshots track engine drift over time.</p>
+    <p class="wh-sub">Daily sensitivity & robustness testing for the deterministic Research Engine. Sweep across risk profiles, net worth levels, ESG settings, and research provider counts, then verify the engine reacts coherently to every input change. Daily benchmark snapshots track engine drift over time.</p>
   </div></div>
 
   <!-- Daily Benchmark — record today's engine output for a standard client -->
@@ -935,7 +935,7 @@ Citations:<br>
 <div class="tab" id="tab-stress">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="chart-column" class="icon" aria-hidden="true"></i><span class="wh-title-text">Monte Carlo Stress Test</span></h1>
-    <p class="wh-sub">Parameter sweep — vary one input while holding others constant, plot p10/p50/p90 across the sweep range.</p>
+    <p class="wh-sub">Parameter sweep: vary one input while holding others constant, plot p10/p50/p90 across the sweep range.</p>
   </div></div>
   <div class="panel">
     <div class="grid2">
@@ -987,7 +987,7 @@ Citations:<br>
   </div>
   <div class="panel" id="questionnairePanel">
     <div class="ptitle"><i data-lucide="file-text" class="icon" aria-hidden="true"></i> Client Intake Questionnaire</div>
-    <p style="color:var(--color-text-muted);font-size:13px;margin:6px 0 12px;line-height:1.6">The blank 4-page client questionnaire (household, income, expenses, assets, goals, retirement, risk, tax, disclosure). Download it to send to a client, or print and have them fill it in — then transcribe into the main app.</p>
+    <p style="color:var(--color-text-muted);font-size:13px;margin:6px 0 12px;line-height:1.6">The blank 4-page client questionnaire (household, income, expenses, assets, goals, retirement, risk, tax, disclosure). Download it to send to a client, or print and have them fill it in, then transcribe into the main app.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" data-action="downloadQuestionnaire">⬇ Download questionnaire (PDF)</button>
       <button class="btn-ghost" data-action="toggleQuestionnairePreview" id="qPreviewBtn"><i data-lucide="eye" class="icon" aria-hidden="true"></i> Preview</button>
@@ -1006,16 +1006,16 @@ Citations:<br>
 <div class="tab" id="tab-market">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="trending-up" class="icon" aria-hidden="true"></i><span class="wh-title-text">Market Data Console</span></h1>
-    <p class="wh-sub">Test live quote retrieval from free, keyless sources (verified 2026-09-25). Working directly from the browser: <strong>CoinGecko</strong> and <strong>Coinbase</strong> (crypto), <strong>Frankfurter/ECB</strong> and <strong>Open ER API</strong> (FX). <strong>Yahoo Finance</strong> (equities/ETFs) and ticker/ISIN lookups via <strong>OpenFIGI</strong> send no CORS headers, so they need the data proxy below &mdash; the public corsproxy.io fallback no longer accepts anonymous requests. Stooq was retired upstream and CryptoCompare now requires a key, so both were removed.</p>
+    <p class="wh-sub">Test live quote retrieval from free, keyless sources (verified 2026-09-25). Working directly from the browser: <strong>CoinGecko</strong> and <strong>Coinbase</strong> (crypto), <strong>Frankfurter/ECB</strong> and <strong>Open ER API</strong> (FX). <strong>Yahoo Finance</strong> (equities/ETFs) and ticker/ISIN lookups via <strong>OpenFIGI</strong> send no CORS headers, so they need the data proxy below. The public corsproxy.io fallback no longer accepts anonymous requests. Stooq was retired upstream and CryptoCompare now requires a key, so both were removed.</p>
   </div></div>
   <div class="panel">
     <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--color-border-subtle)">
       <div class="row" style="margin-bottom:6px">
-        <label class="lbl">Live Prices — data proxy URL</label>
+        <label class="lbl">Live Prices: data proxy URL</label>
         <input id="mdProxyUrl" placeholder="https://your-worker.workers.dev" class="w260" style="min-width:300px" onchange="saveMdProxy(this.value)">
         <span id="mdProxyStatus" style="font-size:11px;color:var(--color-text-muted)"></span>
       </div>
-      <div style="font-size:11px;color:var(--color-text-muted);line-height:1.5">Your free Cloudflare Worker (<code>wa-price-proxy.worker.js</code>). Required for Yahoo prices, ticker/ISIN lookups (OpenFIGI) and Research Library feeds, which block direct browser calls. There is no public fallback any more &mdash; corsproxy.io now refuses anonymous requests. Set it once here: the client app and the tests below share it (per browser). Prices are cached, so a last-known value still shows if a fetch fails.</div>
+      <div style="font-size:11px;color:var(--color-text-muted);line-height:1.5">Your free Cloudflare Worker (<code>wa-price-proxy.worker.js</code>). Required for Yahoo prices, ticker/ISIN lookups (OpenFIGI) and Research Library feeds, which block direct browser calls. There is no public fallback any more, because corsproxy.io now refuses anonymous requests. Set it once here: the client app and the tests below share it (per browser). Prices are cached, so a last-known value still shows if a fetch fails.</div>
       <script>(function(){var e=document.getElementById('mdProxyUrl');if(e){try{e.value=localStorage.getItem('wa_cors_proxy')||'';}catch(_){}}})();</script>
     </div>
     <div class="row">
@@ -1023,14 +1023,14 @@ Citations:<br>
       <label class="lbl" style="min-width:60px">Provider</label>
       <select id="mdProvider" class="w260">
         <option value="auto">Auto (try each keyless source in turn)</option>
-        <optgroup label="── Equities — free, no key ──">
+        <optgroup label="── Equities (free, no key) ──">
           <option value="yahoo">Yahoo Finance (needs data proxy)</option>
         </optgroup>
-        <optgroup label="── Crypto — free, no key ──">
+        <optgroup label="── Crypto (free, no key) ──">
           <option value="coingecko">CoinGecko</option>
           <option value="coinbase">Coinbase Spot</option>
         </optgroup>
-        <optgroup label="── FX — free, no key ──">
+        <optgroup label="── FX (free, no key) ──">
           <option value="frankfurter">Frankfurter / ECB</option>
           <option value="open_er_api">Open ER API</option>
         </optgroup>
@@ -1046,7 +1046,7 @@ Citations:<br>
 <div class="tab" id="tab-taxdb">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="landmark" class="icon" aria-hidden="true"></i><span class="wh-title-text">Tax Database</span></h1>
-    <p class="wh-sub">Browse income tax for all 39 supported countries — national/federal brackets + representative regional/state/municipal tax, synced live from the client app. US ZIP auto-detection is wired into the main app (below).</p>
+    <p class="wh-sub">Browse income tax for all 39 supported countries: national/federal brackets + representative regional/state/municipal tax, synced live from the client app. US ZIP auto-detection is wired into the main app (below).</p>
   </div></div>
   <div class="panel">
     <div class="ptitle">ZIP Lookup</div>
@@ -1074,7 +1074,7 @@ Citations:<br>
 <div class="tab" id="tab-taxaccuracy">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="badge-check" class="icon" aria-hidden="true"></i><span class="wh-title-text">Tax Data Accuracy</span></h1>
-    <p class="wh-sub">Tracks the income-tax dataset the client app actually uses — coverage, the official source authority per country, tax year, automated sanity checks, and your manual verification status. The dataset syncs live from the main app via shared browser storage.</p>
+    <p class="wh-sub">Tracks the income-tax dataset the client app actually uses: coverage, the official source authority per country, tax year, automated sanity checks, and your manual verification status. The dataset syncs live from the main app via shared browser storage.</p>
   </div></div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
@@ -1092,14 +1092,14 @@ Citations:<br>
 <div class="tab" id="tab-keys">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="key" class="icon" aria-hidden="true"></i><span class="wh-title-text">API Keys & Endpoints</span></h1>
-    <p class="wh-sub">All credentials stored in browser localStorage and shared with the main app. <strong>Keys are auto-tested every 2 minutes</strong> to ensure they're working — see the Health column.</p>
+    <p class="wh-sub">All credentials stored in browser localStorage and shared with the main app. <strong>Keys are auto-tested every 2 minutes</strong> to ensure they're working (see the Health column).</p>
   </div></div>
   <div class="panel" style="padding:12px 16px">
-    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI — no key needed. <strong>API keys for enhanced data are managed here</strong> and auto-checked every 2 minutes.</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed). <strong>API keys for enhanced data are managed here</strong> and auto-checked every 2 minutes.</div>
   </div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px">
-      <div class="ptitle" style="margin:0">Free Providers <span style="color:var(--color-success);font-weight:600">— health-checked every 2 minutes</span></div>
+      <div class="ptitle" style="margin:0">Free Providers <span style="color:var(--color-success);font-weight:600">(health-checked every 2 minutes)</span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="keyHealthSummary" style="font-size:11px;color:var(--color-text-muted)"></span>
         <button class="btn-ghost" data-action="quickLoadKeys" title="Load keys from dev-api.key (gitignored) next to this page" style="font-size:12px;padding:8px 14px"><i data-lucide="file-key" class="icon" aria-hidden="true"></i> Quick Load</button>
@@ -1200,17 +1200,17 @@ Citations:<br>
     </table>
     <h2 style="font-size:17px;margin:18px 0 10px">Tab guide</h2>
     <ul style="margin-left:20px;line-height:1.85;color:var(--color-text-secondary)">
-      <li><strong>Dashboard</strong> — KPI grid + provider status + recent activity</li>
-      <li><strong>AI Portfolio Agent</strong> — AI-powered portfolio construction with 16 research sources</li>
-      <li><strong>Research Library</strong> — Configure RSS feeds for each institutional source</li>
-      <li><strong>Calc Test Bench</strong> — Verify every internal financial calculation</li>
-      <li><strong>Constants Editor</strong> — Live-edit RISK_PROFILES, REGIONS, LOAN_DEFAULTS</li>
-      <li><strong>Monte Carlo Stress</strong> — Parameter sweep with p10/p50/p90 chart</li>
-      <li><strong>Profile Manager</strong> — Load, edit, inject user profiles</li>
-      <li><strong>Market Data</strong> — Test 18 provider APIs live</li>
-      <li><strong>Tax Database</strong> — 9 countries, ZIP → state lookup</li>
-      <li><strong>API Keys</strong> — Central credential management</li>
-      <li><strong>System Logs</strong> — Audit trail + diagnostics</li>
+      <li><strong>Dashboard</strong>: KPI grid + provider status + recent activity</li>
+      <li><strong>AI Portfolio Agent</strong>: AI-powered portfolio construction with 16 research sources</li>
+      <li><strong>Research Library</strong>: Configure RSS feeds for each institutional source</li>
+      <li><strong>Calc Test Bench</strong>: Verify every internal financial calculation</li>
+      <li><strong>Constants Editor</strong>: Live-edit RISK_PROFILES, REGIONS, LOAN_DEFAULTS</li>
+      <li><strong>Monte Carlo Stress</strong>: Parameter sweep with p10/p50/p90 chart</li>
+      <li><strong>Profile Manager</strong>: Load, edit, inject user profiles</li>
+      <li><strong>Market Data</strong>: Test 18 provider APIs live</li>
+      <li><strong>Tax Database</strong>: 9 countries, ZIP → state lookup</li>
+      <li><strong>API Keys</strong>: Central credential management</li>
+      <li><strong>System Logs</strong>: Audit trail + diagnostics</li>
     </ul>
   </div>
 </div>
@@ -1250,20 +1250,34 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260926-1627";
+const APP_VERSION = "20260926-1655";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
 const fmt$ = (n) => {
-  if(n==null||isNaN(n)) return "—";
+  if(n==null||isNaN(n)) return "-";
   const a=Math.abs(n), s=n<0?"−":"";
   if(a>=1e9) return s+"$"+(a/1e9).toFixed(2)+"B";
   if(a>=1e6) return s+"$"+(a/1e6).toFixed(2)+"M";
   if(a>=1e3) return s+"$"+Math.round(a).toLocaleString();
   return s+"$"+a.toFixed(0);
 };
-const fmtN = (n,d=2) => n==null||isNaN(n)?"—":Number(n).toFixed(d);
+const fmtN = (n,d=2) => n==null||isNaN(n)?"-":Number(n).toFixed(d);
 const fmtBytes = (n) => n<1024?n+" B":n<1024*1024?(n/1024).toFixed(1)+" KB":(n/1024/1024).toFixed(2)+" MB";
+// AI-written text (summaries, rationales, risks) is shown to clients, where long dashes
+// read as machine-written: turn them into ordinary punctuation before display.
+function plainDashes(s){
+  return String(s)
+    .replace(/(\d)\s*[\u2013\u2014]\s*(\d)/g, "$1-$2")   // ranges: 2025–2030 → 2025-2030
+    .replace(/\s+[\u2013\u2014]\s+/g, ", ")               // between clauses → comma
+    .replace(/[\u2013\u2014]/g, "-");                        // anything left → hyphen
+}
+function plainDashesDeep(o){
+  if(typeof o==="string") return plainDashes(o);
+  if(Array.isArray(o)){ for(let i=0;i<o.length;i++) o[i]=plainDashesDeep(o[i]); return o; }
+  if(o && typeof o==="object"){ for(const k of Object.keys(o)) o[k]=plainDashesDeep(o[k]); return o; }
+  return o;
+}
 const escapeHtml = (s) => String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 /* Lucide helpers — decorative icons; call refreshIcons() after injecting HTML */
@@ -3213,15 +3227,15 @@ const CURATED_RESEARCH = {
     {t:"Bonds: Add duration in IG credit as Fed cuts begin; favor 5-7yr Treasuries", s:"Lock in real yields above historical averages before terminal rate compression."},
     {t:"Themes: AI infrastructure, US re-industrialization, defense spending", s:"Three secular themes BofA highlights as multi-year capex tailwinds."},
     {t:"Sector calls: Overweight Technology, Financials, Industrials; Underweight Real Estate, Utilities", s:""},
-    {t:"Magnificent 7 concentration risk — diversify into equal-weight indices", s:"S&P 500 top 10 stocks now >35% of index; equal-weight (RSP) offers cheaper valuations."},
+    {t:"Magnificent 7 concentration risk: diversify into equal-weight indices", s:"S&P 500 top 10 stocks now >35% of index; equal-weight (RSP) offers cheaper valuations."},
     {t:"Asia ex-Japan: Tactical underweight, structural overweight India", s:"BofA EM strategist sees Indian structural growth thesis intact through 2030."},
     {t:"Private markets: 15-25% allocation for $5M+ portfolios", s:"Private credit yielding 10%+ with seniority and shorter duration than HY."},
     {t:"Munis: AAA 10yr offers 6.2% tax-equivalent for top federal bracket", s:""},
-    {t:"Gold: Constructive — maintain strategic allocation", s:"Central bank buying, reserve diversification and the real-rate regime remain structural supports."},
-    {t:"Oil: Range-bound $70-90 — overweight integrated majors over E&Ps", s:"BofA energy team prefers cash-generative supermajors (XOM, CVX, SHEL) over capex-heavy producers."},
+    {t:"Gold: Constructive, maintain strategic allocation", s:"Central bank buying, reserve diversification and the real-rate regime remain structural supports."},
+    {t:"Oil: Range-bound $70-90, overweight integrated majors over E&Ps", s:"BofA energy team prefers cash-generative supermajors (XOM, CVX, SHEL) over capex-heavy producers."},
     {t:"Risks: Policy uncertainty, sticky services inflation, geopolitical premium", s:""},
     {t:"Crypto: 1-3% bitcoin allocation appropriate for diversification", s:"BofA Digital Assets group views BTC as portfolio diversifier with low correlation to equities."},
-    {t:"Currency: USD overvalued long-term — diversify with EUR/JPY exposure", s:""}
+    {t:"Currency: USD overvalued long-term, so diversify with EUR/JPY exposure", s:""}
   ],
   // ── Merrill CIO Viewpoint ────────────────────────────────────────────────
   // Monthly CIO e-report: market view plus asset allocation and portfolio
@@ -3231,14 +3245,14 @@ const CURATED_RESEARCH = {
   // positioning guidance rather than standalone market calls.
   ml_viewpoint:[
     {t:"Tactical tilts are 12-18 month deviations from the Strategic Asset Allocation, not standalone bets", s:"CIO asset class views are expressed relative to the SAA of a multi-asset portfolio; the strategic allocation remains the anchor."},
-    {t:"Equities: favor quality — profitable, cash-generative companies over lower-quality cyclicals", s:"A durable CIO preference expressed within the strategic equity weight rather than as a market-timing call."},
+    {t:"Equities: favor quality (profitable, cash-generative companies) over lower-quality cyclicals", s:"A durable CIO preference expressed within the strategic equity weight rather than as a market-timing call."},
     {t:"Fixed income: prefer high-quality core bonds as the portfolio's primary diversifier", s:"Investment-grade duration is the standing diversifier against an equity drawdown."},
     {t:"Diversification across and within asset classes remains the primary risk control", s:"CIO emphasizes breadth over concentration when index leadership narrows."},
     {t:"Rebalancing discipline: return to target weights after large market moves", s:"Systematic rebalancing enforces sell-high/buy-low and keeps portfolio risk aligned to the SAA."},
     {t:"Portfolio tiering: match each liquidity tier to the time horizon of the need it funds", s:"Viewpoint asset allocation tables are published per tier so near-term needs are not exposed to long-horizon risk."},
     {t:"International developed equities: the valuation gap versus US large caps favors maintaining strategic exposure", s:""},
     {t:"Alternatives for qualified investors: diversification beyond traditional market beta", s:"Considered where liquidity, lockups and suitability permit."},
-    {t:"Cash: hold planned operating liquidity — avoid over-allocating cash against long-horizon goals", s:"Cash reduces near-term volatility but carries reinvestment and purchasing-power risk over full cycles."},
+    {t:"Cash: hold planned operating liquidity and avoid over-allocating cash against long-horizon goals", s:"Cash reduces near-term volatility but carries reinvestment and purchasing-power risk over full cycles."},
     {t:"Staying invested through volatility beats attempting to time entries and exits", s:"CIO repeatedly notes that missing a small number of best days materially lowers long-run outcomes."},
     {t:"Municipal bonds for taxable accounts in higher brackets", s:"After-tax yield comparison drives the allocation decision, not headline yield."},
     {t:"Gold and real assets as portfolio diversifiers rather than return engines", s:""},
@@ -3254,9 +3268,9 @@ const CURATED_RESEARCH = {
     {t:"AI infrastructure and data-center capex as a multi-year investment theme", s:"Power, cooling, networking and semiconductor supply chains as the picks-and-shovels expression."},
     {t:"Reshoring and supply chain reconfiguration drive sustained industrial capex", s:""},
     {t:"Demographics and healthcare innovation: aging populations reshape long-run demand", s:""},
-    {t:"Energy transition raises commodity intensity — favor upstream and grid infrastructure", s:"Electrification is metals-intensive; grid capex is a long-cycle constraint."},
+    {t:"Energy transition raises commodity intensity, so favor upstream and grid infrastructure", s:"Electrification is metals-intensive; grid capex is a long-cycle constraint."},
     {t:"Index concentration risk: diversify away from cap-weighted mega-cap exposure", s:"RIC flags equal-weight and broader-breadth expressions when index leadership narrows."},
-    {t:"Credit: maintain a quality bias — prefer investment grade over high yield when spreads are tight", s:""},
+    {t:"Credit: maintain a quality bias and prefer investment grade over high yield when spreads are tight", s:""},
     {t:"Emerging markets: selectivity by country fundamentals rather than broad EM beta", s:""},
     {t:"Defense and security spending as a structural, policy-supported theme", s:""},
     {t:"Value versus growth leadership tends to follow the rate and inflation regime", s:""},
@@ -3272,9 +3286,9 @@ const CURATED_RESEARCH = {
   bofa_us1:[
     {t:"US 1 List: BofA's highest-conviction ideas drawn from the Buy-rated US coverage universe", s:"Selected by BofA Global Research fundamental equity analysts and managed with a long-term performance objective."},
     {t:"List construction: no fewer than 15 names, typically 20-30", s:"Deliberately concentrated relative to a diversified benchmark."},
-    {t:"Additions and deletions are the actionable signal — membership turns over as conviction changes", s:"A name entering or leaving the list is the event worth reading, not the static roster."},
+    {t:"Additions and deletions are the actionable signal: membership turns over as conviction changes", s:"A name entering or leaving the list is the event worth reading, not the static roster."},
     {t:"Eligibility: US-listed equities including ADRs under BofA Global Research fundamental coverage", s:""},
-    {t:"A Buy rating is a prerequisite — the list is a high-conviction subset of the Buy-rated universe", s:""},
+    {t:"A Buy rating is a prerequisite: the list is a high-conviction subset of the Buy-rated universe", s:""},
     {t:"Sector representation reflects bottom-up analyst conviction, not a target sector weight", s:"Concentration by sector can drift well away from the index."},
     {t:"Single-stock ideas carry idiosyncratic risk that index exposure does not", s:"Suitability and position sizing matter more than for diversified vehicles."},
     {t:"For fund-based portfolios, treat list membership as a sector and theme signal rather than a direct holding", s:"A high-conviction stock list is not a substitute for a diversified allocation."},
@@ -3286,14 +3300,14 @@ const CURATED_RESEARCH = {
     {t:"EM equities: Tactical underweight, structural overweight India", s:"Indian equities 4Y CAGR projected 11-13% USD-terms, highest among major EMs."},
     {t:"Alternatives: 20% target for $5M+ portfolios", s:"Mix of private equity (8%), private credit (6%), real estate (4%), infrastructure (2%)."},
     {t:"Munis: AA-rated 10yr offer 6% taxable-equivalent for top brackets", s:""},
-    {t:"Real Estate: Public REITs trading at meaningful discount to NAV", s:"~25% NAV discount in industrials, data centers — selective opportunities."},
+    {t:"Real Estate: Public REITs trading at meaningful discount to NAV", s:"~25% NAV discount in industrials, data centers (selective opportunities)."},
     {t:"Long Term Capital Market Assumptions 2025: US equity 7.0% / Intl 7.8% / Bonds 4.6%", s:""},
     {t:"Direct Indexing: tax-alpha 0.5-1.0% annually for taxable accounts >$250k", s:"JPM 55ip and ETF-of-ETFs direct indexing platform."},
     {t:"Healthcare: Overweight on GLP-1 secular tailwind + ageing demographics", s:""},
-    {t:"Japan: Overweight — TOPIX corporate governance reforms unlocking value", s:"Tokyo Stock Exchange's PBR-below-1 initiative driving share buybacks + dividend hikes."},
+    {t:"Japan: Overweight (TOPIX corporate governance reforms unlocking value)", s:"Tokyo Stock Exchange's PBR-below-1 initiative driving share buybacks + dividend hikes."},
     {t:"Fixed income: Barbell long Treasuries + IG corporate; underweight HY", s:"HY spreads tight; risk/reward favors quality."},
     {t:"Commodities: 5% strategic allocation as inflation hedge", s:"Mix of broad commodity (DBC) and gold (GLD)."},
-    {t:"China: Underweight — structural deflation + policy uncertainty", s:""},
+    {t:"China: Underweight (structural deflation + policy uncertainty)", s:""},
     {t:"Currency hedging: 50% hedge ratio for international bond allocations", s:""}
   ],
   ms:[
@@ -3301,19 +3315,19 @@ const CURATED_RESEARCH = {
     {t:"Cross-asset: Add convertible bonds for asymmetric equity exposure", s:"5-7% allocation in convertibles captures upside with bond floor."},
     {t:"Currencies: USD overvalued vs JPY medium-term, but yield differential keeps it bid", s:""},
     {t:"Themes: Generative AI productivity, GLP-1 medical revolution, Western capex cycle", s:""},
-    {t:"US equity strategy: constructive on large-cap quality — earnings breadth and margin resilience drive the index view", s:"Chief US Equity Strategist weekly note."},
-    {t:"Thoughts on the Market podcast: Recent topics — AI capex, election risk, China stimulus", s:"Daily 5-minute audio from senior MS strategists."},
+    {t:"US equity strategy: constructive on large-cap quality, as earnings breadth and margin resilience drive the index view", s:"Chief US Equity Strategist weekly note."},
+    {t:"Thoughts on the Market podcast: Recent topics include AI capex, election risk, China stimulus", s:"Daily 5-minute audio from senior MS strategists."},
     {t:"Energy transition: Long copper, uranium; short coal", s:"Copper deficit structural through 2030."},
     {t:"Munis: Best risk-adjusted income in 5+ years", s:""},
-    {t:"India: Overweight — 7% real GDP growth, Modi continuity", s:""},
-    {t:"Earnings: 12% YoY growth expected 2025 — peaks in tech, broadens to healthcare and financials", s:""},
+    {t:"India: Overweight (7% real GDP growth, Modi continuity)", s:""},
+    {t:"Earnings: 12% YoY growth expected 2025 (peaks in tech, broadens to healthcare and financials)", s:""},
     {t:"Sector tilt: Overweight Tech, Financials, Comm Services; underweight Cons Discretionary, Utilities", s:""},
     {t:"Wealth Management Note: Tax-loss harvest more aggressively before YE", s:""},
-    {t:"Risk Indicators: MS Risk-Reward Indicator near +1σ — tactically cautious", s:""}
+    {t:"Risk Indicators: MS Risk-Reward Indicator near +1σ, so tactically cautious", s:""}
   ],
   citi:[
     {t:"Wealth Outlook: Add private equity secondaries at 15-20% discount to NAV", s:"Citi PE secondaries strategy capitalizing on LP-led liquidity needs."},
-    {t:"Income: Investment-grade preferreds offer 7%+ yields with limited duration", s:"PFF and equivalents — fixed-rate IG preferreds trading at meaningful discount."},
+    {t:"Income: Investment-grade preferreds offer 7%+ yields with limited duration", s:"PFF and equivalents: fixed-rate IG preferreds trading at meaningful discount."},
     {t:"Themes: G2 polarisation, climate adaptation infrastructure, cybersecurity", s:""},
     {t:"FX: Long EM carry baskets vs short G10 funders", s:"Brazil/Mexico carry trades funded by JPY/CHF."},
     {t:"Citi Wealth Outlook 2025: 5% USD equity return, 4% global bonds, 6% blended 60/40", s:""},
@@ -3324,26 +3338,26 @@ const CURATED_RESEARCH = {
     {t:"India: Overweight large-cap equities; structural growth thesis", s:""},
     {t:"Infrastructure: 5-7% allocation as inflation-linked income", s:"Listed infrastructure (IGF) yielding 4%+ with utility-like cash flows."},
     {t:"Gold + Silver: 5% allocation each as crisis hedge + monetary debasement protection", s:""},
-    {t:"Risk: Markets pricing in soft landing — barbell with cash and quality equities", s:""}
+    {t:"Risk: Markets pricing in soft landing, so barbell with cash and quality equities", s:""}
   ],
   gs:[
     {t:"GSAM SAA: Lift bonds to 35% from 25% as real yields normalize", s:"Strategic Asset Allocation update."},
-    {t:"Equities: Magnificent 7 valuations stretched but earnings still compounding", s:"GS top stock picks within Mag 7 — keep MSFT, AMZN, NVDA; trim AAPL, TSLA."},
+    {t:"Equities: Magnificent 7 valuations stretched but earnings still compounding", s:"GS top stock picks within Mag 7: keep MSFT, AMZN, NVDA; trim AAPL, TSLA."},
     {t:"Commodities: structural copper deficit through the decade; gold supported by central-bank demand", s:""},
     {t:"Themes: Energy transition capex, AI silicon supply chain, defense", s:""},
-    {t:"US Portfolio Strategy: index returns driven by EPS growth; valuations broadly full — favor quality and earnings visibility", s:""},
-    {t:"GS Briefings podcast: Recent — Fed pivot, EM debt, AI margins", s:""},
+    {t:"US Portfolio Strategy: index returns driven by EPS growth; valuations broadly full, so favor quality and earnings visibility", s:""},
+    {t:"GS Briefings podcast (recent): Fed pivot, EM debt, AI margins", s:""},
     {t:"Sector calls: Overweight Tech (AI infra), Industrials (re-shoring), Healthcare; UW Energy, Utilities", s:""},
     {t:"Real Estate: Public REITs trading 15-25% below replacement cost", s:""},
-    {t:"Munis: 5-year AAA TEY 6.2% — strong demand from $50k+ income demographic", s:""},
-    {t:"Japan: Overweight — corporate governance reforms unlocking $400bn in cash returns", s:""},
-    {t:"India: Overweight — multi-decade structural growth story", s:""},
-    {t:"Crypto: Bitcoin as digital gold — 1-3% strategic allocation", s:""},
-    {t:"Risk: Election year volatility — hedge with VIX calls or low-vol equity tilt", s:""},
+    {t:"Munis: 5-year AAA TEY 6.2%, strong demand from $50k+ income demographic", s:""},
+    {t:"Japan: Overweight, corporate governance reforms unlocking $400bn in cash returns", s:""},
+    {t:"India: Overweight, multi-decade structural growth story", s:""},
+    {t:"Crypto: Bitcoin as digital gold, 1-3% strategic allocation", s:""},
+    {t:"Risk: Election year volatility, hedge with VIX calls or low-vol equity tilt", s:""},
     {t:"Stop-loss discipline: trim equity beta if S&P 500 breaks 200-day moving average", s:""}
   ],
   julius:[
-    {t:"Next Generation: AI-driven biotech discovery, longevity therapeutics, climate tech", s:"Julius Baer Next Generation theme — investing in transformative trends."},
+    {t:"Next Generation: AI-driven biotech discovery, longevity therapeutics, climate tech", s:"Julius Baer Next Generation theme: investing in transformative trends."},
     {t:"Geographic: Switzerland + Singapore favored for wealth preservation", s:""},
     {t:"Alternatives: Trend-following CTAs for tail-risk hedging", s:"15-20% CTA allocation for clients seeking uncorrelated returns."},
     {t:"Cash: Hold 5-10% in CHF money market as portfolio ballast", s:""},
@@ -3351,8 +3365,8 @@ const CURATED_RESEARCH = {
     {t:"European equities: Selective opportunities in Swiss multinationals (NESN, ROG, NOVN)", s:""},
     {t:"Private debt: 8-10% allocation with floating-rate exposure", s:""},
     {t:"Wealth structuring: Multi-jurisdictional family office setups for $50M+ families", s:""},
-    {t:"Sustainability: ESG integration without giving up returns — best-in-class screening", s:""},
-    {t:"Premiumization in luxury (LVMH, Hermes) — long-term consumer thesis", s:""},
+    {t:"Sustainability: ESG integration without giving up returns, with best-in-class screening", s:""},
+    {t:"Premiumization in luxury (LVMH, Hermes): long-term consumer thesis", s:""},
     {t:"Healthcare: GLP-1 winners (NOVO-B, LLY) + medical devices (ROG, ZMH)", s:""},
     {t:"Gold: 5-7% allocation as central bank reserve diversifier", s:""},
     {t:"Currency: Diversify away from USD into CHF and gold", s:""}
@@ -3362,7 +3376,7 @@ const CURATED_RESEARCH = {
     {t:"Bonds: Lock in 5%+ yields in 5-10yr IG credit before Fed cuts", s:""},
     {t:"Themes: Decarbonization, generative AI, healthcare innovation", s:""},
     {t:"Risks: US election outcomes, China property contagion, oil price spikes", s:""},
-    {t:"UBS CIO Year Ahead 2025: 'A new world' — themes and tactical positioning", s:""},
+    {t:"UBS CIO Year Ahead 2025: 'A new world' (themes and tactical positioning)", s:""},
     {t:"Asia ex-Japan: Tactical preference for India + ASEAN over China", s:""},
     {t:"Listed alternatives: Hedge fund replicators + liquid alts gaining ground", s:""},
     {t:"Sustainable investing: 100% integrated for new client mandates", s:""},
@@ -3383,8 +3397,8 @@ const CURATED_RESEARCH = {
     {t:"Conviction stocks: Tencent, Tata Consultancy, AIA Group, NESN, ASML", s:""},
     {t:"Active share >85% across flagship equity strategies", s:""},
     {t:"Income solutions: Vontobel Fund-Smart Dividend (high-conviction dividend payers)", s:""},
-    {t:"Alpha is alive in EM small-cap — Vontobel mtx EM Small Cap", s:""},
-    {t:"AI Revolution: 5 secular winners — NVDA, MSFT, GOOGL, TSM, ASML", s:""},
+    {t:"Alpha is alive in EM small-cap: Vontobel mtx EM Small Cap", s:""},
+    {t:"AI Revolution: 5 secular winners (NVDA, MSFT, GOOGL, TSM, ASML)", s:""},
     {t:"Multi-asset: Conservative 4-6% / Balanced 5-7% / Growth 6-8% expected returns", s:""}
   ],
   pictet:[
@@ -3392,14 +3406,14 @@ const CURATED_RESEARCH = {
     {t:"Secular Outlook: Premiumization in EM consumer, water scarcity, robotics", s:"Pictet AM secular themes franchise."},
     {t:"Style: Quality + low-volatility factor tilt for current cycle phase", s:""},
     {t:"Alternatives: Global infrastructure 8-10% real returns expected", s:""},
-    {t:"Pictet Mega — long-only equity fund picking secular megatrend winners", s:""},
+    {t:"Pictet Mega: long-only equity fund picking secular megatrend winners", s:""},
     {t:"Water fund: 30-yr track record, top quartile vs global thematic peers", s:""},
     {t:"Robotics: AI-adjacent industrial automation theme, double-digit revenue growth in winners", s:""},
-    {t:"Health: GLP-1, longevity, gene therapy — Pictet Health fund flagship", s:""},
+    {t:"Health: GLP-1, longevity, gene therapy (Pictet Health fund flagship)", s:""},
     {t:"Strategic AA Conservative: 35% equity / 50% bond / 10% alt / 5% cash", s:""},
     {t:"Strategic AA Balanced: 55% equity / 30% bond / 12% alt / 3% cash", s:""},
     {t:"Strategic AA Growth: 75% equity / 12% bond / 12% alt / 1% cash", s:""},
-    {t:"EM Debt local currency — selective, prefer high-yield single-name corporates", s:""},
+    {t:"EM Debt local currency: selective, prefer high-yield single-name corporates", s:""},
     {t:"Wealth platform: Direct indexing + tax-loss harvesting for taxable mandates", s:""}
   ],
   factset:[
@@ -3407,8 +3421,8 @@ const CURATED_RESEARCH = {
     {t:"Sector: Tech earnings revisions strongest, energy weakest", s:""},
     {t:"Valuation: S&P 500 fwd P/E 21x vs 10-yr avg 17.9x", s:""},
     {t:"Guidance: 65% of companies issuing positive guidance for Q4", s:""},
-    {t:"Buyback Quarterly: $230B in Q3 buybacks — second highest ever", s:""},
-    {t:"Dividend Quarterly: 8% YoY dividend growth — broad-based across sectors", s:""},
+    {t:"Buyback Quarterly: $230B in Q3 buybacks, second highest ever", s:""},
+    {t:"Dividend Quarterly: 8% YoY dividend growth, broad-based across sectors", s:""},
     {t:"Analyst sentiment: Sell-side maintains overweight on Tech, Comm Services, Industrials", s:""},
     {t:"Sector revenue growth 2025 estimate: Tech +11%, Healthcare +8%, Financials +6%", s:""},
     {t:"Margins: S&P 500 net margin 12.0% vs 10.7% 10-yr average", s:""},
@@ -3418,18 +3432,18 @@ const CURATED_RESEARCH = {
   ],
   bloomberg:[
     {t:"BI: ETF flows pivoting from large-cap blend to international value YTD", s:"Bloomberg Intelligence ETF research."},
-    {t:"BI Credit: HY spreads at 320bp — tight vs history but supported by fundamentals", s:""},
+    {t:"BI Credit: HY spreads at 320bp, tight vs history but supported by fundamentals", s:""},
     {t:"BI Sector: Tech free-cash-flow margins to reach 30%+ by 2026", s:""},
     {t:"BI: Active manager equal-weight strategies outperform cap-weight YTD by 4%", s:""},
     {t:"BI Energy: Oil demand peaks 2030; majors pivoting to renewables", s:""},
     {t:"BI Healthcare: GLP-1 market $130B+ by 2030; LLY, NOVO dominance", s:""},
-    {t:"BI Tech: AI hyperscaler capex $300B+ in 2025 — NVDA primary beneficiary", s:""},
+    {t:"BI Tech: AI hyperscaler capex $300B+ in 2025, with NVDA the primary beneficiary", s:""},
     {t:"BI Financials: Regional banks under-owned; selective opportunity in well-capitalized names", s:""},
     {t:"BI ESG: Sustainable bond issuance to exceed $1T in 2025", s:""},
     {t:"BI Real Estate: Cap rates have peaked; core to value-add opportunities", s:""},
     {t:"Bloomberg Opinion: Multiple columns daily on macro, markets, policy", s:""},
     {t:"BI Crypto: BTC ETF flows topping $50B since January 2024 launch", s:""},
-    {t:"BI Macro: Global liquidity cycle inflecting positive — risk-on bias", s:""}
+    {t:"BI Macro: Global liquidity cycle inflecting positive, risk-on bias", s:""}
   ],
   oppen:[
     {t:"OAM Weekly: Risk-on tactical bias, prefer cyclical sectors + small caps", s:""},
@@ -3441,22 +3455,22 @@ const CURATED_RESEARCH = {
     {t:"International developed: Tactical overweight Japan, neutral Europe", s:""},
     {t:"EM: Overweight India, neutral LatAm, underweight China", s:""},
     {t:"Credit: Investment grade preferred; HY spreads tight historically", s:""},
-    {t:"Alternatives: 10-15% allocation for accredited investors — focus on lower-corr strategies", s:""},
-    {t:"Energy: OXY, FANG, EOG — capital-disciplined E&Ps with shareholder returns", s:""},
-    {t:"Defense: LMT, RTX, NOC — multi-year capex cycle", s:""}
+    {t:"Alternatives: 10-15% allocation for accredited investors, with a focus on lower-corr strategies", s:""},
+    {t:"Energy (OXY, FANG, EOG): capital-disciplined E&Ps with shareholder returns", s:""},
+    {t:"Defense (LMT, RTX, NOC): multi-year capex cycle", s:""}
   ],
   sa:[
     {t:"Wall Street Breakfast: Earnings season focus on margin trends", s:"Daily premarket Seeking Alpha newsletter."},
     {t:"Top SA contributors: Bullish on quality dividend growers (VIG-style screens)", s:""},
-    {t:"Sector views: Healthcare underweight overdone — overweight medtech", s:""},
+    {t:"Sector views: Healthcare underweight overdone, overweight medtech", s:""},
     {t:"Income: BDCs at 11%+ yields screening attractive on coverage ratios", s:""},
     {t:"SA Quant ratings: 25 'Strong Buy' picks include NVDA, GOOG, META", s:""},
     {t:"SA Market Currents: Real-time analyst note feed across all coverage", s:""},
     {t:"Dividend Aristocrats: Best long-term performance in 25+ yr dividend growers", s:""},
     {t:"REITs: O, AMT, EQIX trading attractively post-rate-rise reset", s:""},
-    {t:"Energy: OXY, EOG, DVN — quality E&Ps with capital discipline", s:""},
-    {t:"Technology: MSFT, GOOGL, META — AI beneficiaries with reasonable valuations", s:""},
-    {t:"Closed-end funds: Trading at 8-15% discounts to NAV — selective opportunities", s:""},
+    {t:"Energy (OXY, EOG, DVN): quality E&Ps with capital discipline", s:""},
+    {t:"Technology (MSFT, GOOGL, META): AI beneficiaries with reasonable valuations", s:""},
+    {t:"Closed-end funds: Trading at 8-15% discounts to NAV, selective opportunities", s:""},
     {t:"Preferred stocks: PFF, PGX yielding 6.5%+ with limited duration", s:""},
     {t:"International: VEA, VWO best low-cost international exposure", s:""}
   ],
@@ -3467,26 +3481,26 @@ const CURATED_RESEARCH = {
     {t:"Private markets: 20% target allocation for institutional portfolios", s:""},
     {t:"BlackRock Year-Ahead Outlook 2025: 'Rebooting investing in a transformed world'", s:""},
     {t:"Geopolitical fragmentation = AI capex + defense spending tailwind", s:""},
-    {t:"Energy transition: Renewables + grid build-out — long-duration capex theme", s:""},
+    {t:"Energy transition: Renewables + grid build-out, a long-duration capex theme", s:""},
     {t:"Demographics: Aging populations = higher healthcare allocation + GLP-1", s:""},
     {t:"Active fixed income: Find alpha in IG short-duration, EM debt", s:""},
     {t:"iShares Top Picks: IVV (S&P 500), AGG (US Agg Bond), IEMG (EM)", s:""},
     {t:"ESG: ESGV, SUSL maintain tracking error <50bp vs parent index", s:""},
     {t:"Direct indexing: SMA platforms enable tax-loss harvesting at $250k+", s:""},
-    {t:"Crypto: IBIT (spot bitcoin ETF) — 1-2% strategic allocation for diversification", s:""}
+    {t:"Crypto: IBIT (spot bitcoin ETF), 1-2% strategic allocation for diversification", s:""}
   ],
   eaton:[
     {t:"Capital Markets: Floating-rate loans 9%+ yields with low duration", s:""},
     {t:"Parametric: Direct indexing for tax-loss harvesting at $250k+ portfolios", s:""},
     {t:"Munis: Tax-equivalent yields 6.5%+ for top brackets", s:""},
     {t:"Active equity: Quality value screens outperforming since rates inflected", s:""},
-    {t:"Eaton Vance Income Fund (EOI) — covered call S&P 500 yielding 8%+", s:""},
-    {t:"Floating rate income: EFR, BSI — senior loans yielding 9-11%", s:""},
+    {t:"Eaton Vance Income Fund (EOI): covered call S&P 500 yielding 8%+", s:""},
+    {t:"Floating rate income (EFR, BSI): senior loans yielding 9-11%", s:""},
     {t:"Calvert ESG: Equity + fixed income ESG-integrated strategies", s:""},
-    {t:"High-yield muni: ETJ, EVN — 5-6% tax-free for high-income clients", s:""},
+    {t:"High-yield muni (ETJ, EVN): 5-6% tax-free for high-income clients", s:""},
     {t:"Parametric Custom Beta: Direct indexing with after-tax alpha 50-100bp", s:""},
     {t:"Atlanta Capital: Small-cap quality value with 25-yr track record", s:""},
-    {t:"Eaton Vance Bond Mosaic — multi-sector fixed income flagship", s:""},
+    {t:"Eaton Vance Bond Mosaic: multi-sector fixed income flagship", s:""},
     {t:"Closed-end fund opportunities: 8-12% discounts to NAV at quarter-end", s:""}
   ],
   mstar:[
@@ -3497,7 +3511,7 @@ const CURATED_RESEARCH = {
     {t:"Morningstar Gold-rated funds: Vanguard Wellington, Dodge & Cox Stock, T. Rowe Price Blue Chip", s:""},
     {t:"Bond fund top picks (Gold): Dodge & Cox Income, PIMCO Total Return, Vanguard Total Bond", s:""},
     {t:"International fund top picks: Vanguard Total International, Dodge & Cox International", s:""},
-    {t:"Best ETFs 2025: IVV, AGG, VXUS, VWO, MUB — low cost broad exposure", s:""},
+    {t:"Best ETFs 2025 (IVV, AGG, VXUS, VWO, MUB): low cost broad exposure", s:""},
     {t:"Top mutual funds: Vanguard Wellington (Gold), Fidelity Contrafund (Bronze)", s:""},
     {t:"Style box analysis: Large-cap blend outperforming small-cap blend YTD", s:""},
     {t:"Behavior gap research: Investors underperform their funds by ~1.5% annually", s:""},
@@ -3519,14 +3533,14 @@ const COMMON_THEMES = [
   "Aggressive growth: 85% equity / 5% bond / 10% alts",
   // Equity
   "US equities: Overweight quality factor, large-cap growth bias",
-  "US equities near record highs — favor quality factor and equal-weight diversification over index concentration",
+  "US equities near record highs, so favor quality factor and equal-weight diversification over index concentration",
   "International developed markets: Tactical overweight Japan",
-  "Emerging markets: Selective — overweight India, underweight China",
+  "Emerging markets: Selective, overweight India, underweight China",
   "Small-cap value: Trading near multi-year discount to large-cap growth",
   "Dividend growers outperforming over rolling 10-year periods",
   "ESG-integrated portfolios tracking parent universe within 50bp",
   "Equal-weight S&P 500 outperforming cap-weighted YTD by 4%",
-  "Magnificent 7 concentration risk — diversify with RSP",
+  "Magnificent 7 concentration risk: diversify with RSP",
   "Sector overweight: Technology, Healthcare, Financials",
   "Sector underweight: Utilities, Real Estate, Consumer Staples",
   // Fixed income
@@ -3534,7 +3548,7 @@ const COMMON_THEMES = [
   "Treasury barbell: Front + long end, avoid belly",
   "TIPS attractive at breakevens near 2.3% inflation",
   "Municipal bonds: 6%+ tax-equivalent yields for top brackets",
-  "High-yield credit: Spreads tight — caution; prefer IG",
+  "High-yield credit: Spreads tight, caution advised; prefer IG",
   "Emerging market debt: Local currency selective opportunities",
   "Preferred stocks (PFF): 6.5%+ yields with limited duration",
   "Floating-rate loans: 9%+ yields, low duration",
@@ -3544,20 +3558,20 @@ const COMMON_THEMES = [
   "Private equity secondaries: 15-20% discount to NAV",
   "Real estate: REITs trading at 15-25% below replacement cost",
   "Infrastructure: 5-7% real returns, inflation hedge",
-  "Gold: 5% strategic allocation — central-bank buying and reserve diversification support the regime",
+  "Gold: 5% strategic allocation, as central-bank buying and reserve diversification support the regime",
   "Commodities: 3-5% portfolio inflation hedge",
   "Hedge funds: Multi-strat 6-8% net of fees, low correlation",
   "Trend-following CTAs: Tail-risk hedge for portfolio",
   // Regions
-  "Japan: Overweight — corporate governance reforms, weak yen tailwind",
-  "India: Multi-year structural growth story — overweight",
-  "Europe: Neutral — valuations attractive but growth weak",
-  "China: Underweight — structural deflation, policy uncertainty",
-  "ASEAN: Selective — Indonesia, Vietnam, Philippines",
-  "Mexico: Nearshoring beneficiary — overweight",
+  "Japan: Overweight (corporate governance reforms, weak yen tailwind)",
+  "India: Multi-year structural growth story, overweight",
+  "Europe: Neutral, valuations attractive but growth weak",
+  "China: Underweight (structural deflation, policy uncertainty)",
+  "ASEAN: Selective (Indonesia, Vietnam, Philippines)",
+  "Mexico: Nearshoring beneficiary, overweight",
   "UK: Trading at 8-year forward P/E low",
   // Themes
-  "Generative AI: Long capex beneficiaries — NVDA, MSFT, TSM, AVGO",
+  "Generative AI: Long capex beneficiaries (NVDA, MSFT, TSM, AVGO)",
   "Decarbonization: Long renewables, grid build-out",
   "Healthcare innovation: GLP-1 secular tailwind (LLY, NOVO)",
   "Cybersecurity: Multi-decade growth (CRWD, PANW, ZS)",
@@ -3573,8 +3587,8 @@ const COMMON_THEMES = [
   "China property contagion: Limit direct China exposure",
   "Oil price spikes: Energy sector hedge",
   // Currency
-  "USD: Overvalued long-term — diversify into EUR/JPY/CHF",
-  "JPY: Undervalued vs USD — accumulate on dips",
+  "USD: Overvalued long-term, so diversify into EUR/JPY/CHF",
+  "JPY: Undervalued vs USD, accumulate on dips",
   "CHF: Safe-haven during volatility",
   "Gold: Reserve diversifier, central bank buying",
   // Wealth structuring
@@ -3599,8 +3613,8 @@ const COMMON_THEMES = [
   "Financials: Bank net interest margins benefit from steepening curve",
   "Energy: Capital-disciplined E&Ps with capital returns",
   "Industrials: Reshoring + defense + infrastructure",
-  "Consumer Discretionary: Cautious — consumer weakening",
-  "Real Estate: Selective — data centers, industrials",
+  "Consumer Discretionary: Cautious (consumer weakening)",
+  "Real Estate: Selective (data centers, industrials)",
   "Utilities: AI power demand thesis emerging",
   // Behavioral
   "Behavior gap: investors underperform their funds by ~1.5%/yr",
@@ -3641,7 +3655,7 @@ function expandResearchForProvider(providerId){
       // points tally can count each distinct theme once instead of mistaking
       // replication for cross-provider consensus.
       shared: true,
-      summary: `${firmShort} positioning — curated baseline theme as of ${CURATED_RESEARCH_AS_OF}; configure live RSS for current views.`
+      summary: `${firmShort} positioning: curated baseline theme as of ${CURATED_RESEARCH_AS_OF}; configure live RSS for current views.`
     };
   });
 }
@@ -3657,7 +3671,7 @@ function curatedItems(id){
       date: CURATED_RESEARCH_AS_OF,
       curated: true,
       summary: (typeof item === "string" ? "Institutional view." : (item.s || "Curated institutional positioning."))
-        + ` [curated baseline as of ${CURATED_RESEARCH_AS_OF} — configure live RSS for current views]`
+        + ` [curated baseline as of ${CURATED_RESEARCH_AS_OF}, configure live RSS for current views]`
     };
   });
   // Append ~50 expanded items based on common themes
@@ -3673,7 +3687,7 @@ function curatedItems(id){
 // wa_cors_proxy, shared with the client app) overrides it. `var`, not const:
 // read from functions that can run before this line is evaluated.
 var DEFAULT_DATA_PROXY = "";
-var NO_DATA_PROXY_MSG = "needs the data proxy — set its URL on the Market Data tab";
+var NO_DATA_PROXY_MSG = "needs the data proxy (set its URL on the Market Data tab)";
 function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
 function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
 // Hosts the Worker forwards to — keep in sync with ALLOW_GET/ALLOW_POST in
@@ -3789,14 +3803,14 @@ function renderDashboard(){
   // sends no CORS headers, so it shows Connected only once a data proxy is set.
   // Stooq (retired upstream) and CryptoCompare (now key-only) were removed.
   const groups = [
-    {label:"Equities — free, no key", items:[
+    {label:"Equities|free, no key", items:[
       {n:"Yahoo Finance (via data proxy)", k:dataProxyBase()}
     ]},
-    {label:"Crypto — free, no key", items:[
+    {label:"Crypto|free, no key", items:[
       {n:"CoinGecko",     k:"always"},
       {n:"Coinbase Spot", k:"always"}
     ]},
-    {label:"FX — free, no key", items:[
+    {label:"FX|free, no key", items:[
       {n:"Frankfurter (ECB)", k:"always"},
       {n:"Open ER API",       k:"always"}
     ]},
@@ -3808,7 +3822,7 @@ function renderDashboard(){
   // each expands to its sub-groups, collapsed by default so the panel isn't cramped.
   const prim = {};
   groups.forEach(g => {
-    const parts = g.label.split(" — ");
+    const parts = g.label.split("|");   // "Primary|sub-group"
     (prim[parts[0]] = prim[parts[0]] || []).push({sub: parts[1] || null, items: g.items});
   });
   // Count only what can actually be reached. A retired endpoint counted as
@@ -3904,7 +3918,7 @@ async function autoRefreshAllResearch(silent){
   });
   await Promise.all(workers);
   _agentRefreshInProgress = false;
-  if(status && !silent) setIconLabel(status, "check", `${ok}/${RESEARCH_PROVIDERS.length} sources ready — open AI Agent to build`);
+  if(status && !silent) setIconLabel(status, "check", `${ok}/${RESEARCH_PROVIDERS.length} sources ready. Open AI Agent to build`);
   addLog("ok", `Auto-refreshed research: ${ok}/${RESEARCH_PROVIDERS.length} sources have items`);
   // If the Research Library tab is currently active, re-render it live
   if(document.getElementById("tab-research")?.classList.contains("active")){
@@ -3928,7 +3942,7 @@ function renderAIBuilderSwitch(){
   const lbl = document.getElementById("aiBuilderSwitchState");
   const on  = aiBuilderEnabled();
   if(sw){ sw.classList.toggle("on", on); sw.setAttribute("aria-checked", on ? "true" : "false"); }
-  if(lbl){ lbl.textContent = on ? "ON — visible to clients" : "OFF — hidden in client app"; lbl.style.color = on ? "var(--color-success)" : "var(--color-text-muted)"; }
+  if(lbl){ lbl.textContent = on ? "ON (visible to clients)" : "OFF (hidden in client app)"; lbl.style.color = on ? "var(--color-success)" : "var(--color-text-muted)"; }
 }
 function toggleAIBuilderFeature(){
   const next = !aiBuilderEnabled();
@@ -3948,7 +3962,7 @@ function renderAgent(){
   setTimeout(() => autoRefreshAllResearch(false), 100);
   // 3. Populate fund universe table
   const fao = $("fundAsOf");
-  if(fao) fao.textContent = FUND_UNIVERSE.length + " vehicles · expense ratios and yields as of " + FUND_DATA_AS_OF + " (" + fundDataAgeLabel() + ") — a point-in-time snapshot, not live market data";
+  if(fao) fao.textContent = FUND_UNIVERSE.length + " vehicles · expense ratios and yields as of " + FUND_DATA_AS_OF + " (" + fundDataAgeLabel() + "), a point-in-time snapshot, not live market data";
   const ft = $("fundTable");
   if(ft){
     ft.innerHTML = '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Ticker</th><th>Name</th><th>Sponsor</th><th>Class</th><th>Vehicle</th><th class="num">ER%</th><th class="num">Yld%</th></tr></thead><tbody>' +
@@ -4048,7 +4062,7 @@ ${brief.notes || "(none)"}
 # RESEARCH FROM SELECTED INSTITUTIONS
 ${research || "(no research selected)"}
 
-# ELIGIBLE FUND UNIVERSE (pick ONLY from this — ${eligibleUniverse.length} of ${FUND_UNIVERSE.length} vehicles, filtered by ${brief.country} domicile rules)
+# ELIGIBLE FUND UNIVERSE (pick ONLY from this: ${eligibleUniverse.length} of ${FUND_UNIVERSE.length} vehicles, filtered by ${brief.country} domicile rules)
 # Schema: TICKER | class | vehicle | ER/Yield | μ (expected return) σ (volatility) Sharpe β (beta) maxDD | trailing 1y/3y/5y/10y returns | holdings count, AUM in B USD, inception, tracking error | domicile [UCITS] [ESG] | sponsor | full name
 ${universe}
 
@@ -4059,7 +4073,7 @@ ${universe}
   "positions":[{
     "ticker":"VTI",
     "weight":25.0,
-    "rationale":"why — MUST cite at least one quantitative metric (Sharpe, 5y/10y return, β, ER, AUM, holdings count, maxDD) AND one research source"
+    "rationale":"why, citing at least one quantitative metric (Sharpe, 5y/10y return, β, ER, AUM, holdings count, maxDD) AND one research source"
   }],
   "expectedReturn":0.07,
   "expectedVolatility":0.12,
@@ -4073,15 +4087,16 @@ Selection criteria (use ALL the metrics provided above):
 1. **Quality screen**: prefer funds with Sharpe > 0.4, AUM > $1B, an established track record (a 5y/10y figure is present rather than "n/a"), low tracking error for index trackers (<0.3%)
 2. **Cost discipline**: prefer ETFs with ER < 0.20% over higher-ER mutual funds unless active mgmt is clearly worth it (e.g., DODGX, PIMIX, PRWCX have proven alpha)
 3. **Diversification**: ensure broad-holdings funds (1000+ positions) for core exposure; thematic concentrated funds (50-200 holdings) only for satellite allocations
-4. **Risk/return fit**: match each fund's μ/σ profile to the client's risk tolerance — aggressive clients can absorb σ > 18%, conservative clients capped at σ ≤ 10% per position
+4. **Risk/return fit**: match each fund's μ/σ profile to the client's risk tolerance: aggressive clients can absorb σ > 18%, conservative clients capped at σ ≤ 10% per position
 5. **Drawdown awareness**: avoid funds with maxDD < -50% for moderate or conservative clients
 6. **Trailing performance**: weigh 3y and 5y annualized returns more than 1y (recency bias guard)
 7. **Beta calibration**: aggregate portfolio beta should align with risk profile (very_conservative ≤0.4, moderate ~0.7, aggressive ~1.0+)
 8. **Tax/liquidity**: high tax-sensitivity → only ETFs (vehicle:etf); high liquidity → AUM ≥ $500M
 9. **ESG-strict**: only [ESG]-flagged funds
-10. **Domicile**: the universe above is ALREADY filtered for the client's country — do NOT suggest any ticker not in the list
+10. **Domicile**: the universe above is ALREADY filtered for the client's country, so do NOT suggest any ticker not in the list
 
 Constraints:
+- Write every text field as plain prose for a client: no em dashes (—) or en dashes (–); use commas, colons, parentheses or separate sentences, and a hyphen for ranges
 - Weights sum to exactly 100
 - Tickers MUST come from the eligible universe (no fabrication)
 - No single position above ${brief.maxPosition}%
@@ -4099,13 +4114,13 @@ Constraints:
     const text = j.content?.[0]?.text || "";
     const m = text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error("No JSON in response");
-    const rec = validateAgentRec(JSON.parse(m[0]), eligibleUniverse, brief);
+    const rec = validateAgentRec(plainDashesDeep(JSON.parse(m[0])), eligibleUniverse, brief);   // the model's prose is shown to clients
     lastAgentRec = rec;
     renderAgentResult(rec);
     $("agExportBtn").disabled = false;
     setIconLabel($("agStatus"), "check",
       rec.validation.warnings.length
-        ? "Portfolio constructed — "+rec.validation.warnings.length+" auto-correction(s)"
+        ? "Portfolio constructed with "+rec.validation.warnings.length+" auto-correction(s)"
         : "Portfolio constructed");
     addLog(rec.validation.warnings.length ? "warn" : "ok",
       "Agent built portfolio: "+(rec.positions?.length||0)+" positions"
@@ -4114,9 +4129,9 @@ Constraints:
     $("agResult").innerHTML = `<div class="code" style="background:#7f1d1d">Error: ${escapeHtml(e.message)}</div>
       <div style="font-size:12px;color:var(--color-text-muted);margin-top:14px;line-height:1.6">
         <strong>Common issues:</strong><br>
-        • AI key missing/invalid — set one in API Keys tab<br>
-        • Network/CORS — try a different model or check connection<br>
-        • Rate-limited — wait 60s and retry
+        • AI key missing/invalid: set one in API Keys tab<br>
+        • Network/CORS: try a different model or check connection<br>
+        • Rate-limited: wait 60s and retry
       </div>`;
     setIconLabel($("agStatus"), "x", "Failed");
     addLog("err","Agent: "+e.message);
@@ -4142,8 +4157,8 @@ function validateAgentRec(rec, eligibleUniverse, brief){
   positions.forEach(p => {
     const tkr = String(p && (p.ticker || p.tkr) || "").toUpperCase().trim();
     const w = Number(p && p.weight);
-    if(!tkr || !eligible.has(tkr)){ warnings.push(`dropped ${tkr||"(blank ticker)"} — not in eligible universe`); return; }
-    if(!isFinite(w) || w <= 0){ warnings.push(`dropped ${tkr} — invalid weight`); return; }
+    if(!tkr || !eligible.has(tkr)){ warnings.push(`dropped ${tkr||"(blank ticker)"}: not in eligible universe`); return; }
+    if(!isFinite(w) || w <= 0){ warnings.push(`dropped ${tkr}: invalid weight`); return; }
     kept.push({...p, ticker: tkr, weight: w});
   });
   if(kept.length === 0) throw new Error("No valid positions remained after validation (all tickers were outside the eligible universe)");
@@ -4169,7 +4184,7 @@ function validateAgentRec(rec, eligibleUniverse, brief){
   if(maxPos < 100){
     const capped = new Set();
     if(positions.length * maxPos < 100 - 1e-9){
-      warnings.push(`cap ${maxPos}% cannot be met with ${positions.length} positions — left uncapped`);
+      warnings.push(`cap ${maxPos}% cannot be met with ${positions.length} positions, so left uncapped`);
     } else {
       for(let pass=0; pass<20; pass++){
         const over = positions.filter(p => p.weight > maxPos + 1e-9);
@@ -4274,7 +4289,7 @@ function exportToProposal(){
     summary: lastAgentRec.summary
   };
   localStorage.setItem("wa_pending_proposal", JSON.stringify(payload));
-  toast("Exported — open main app to see the import banner","ok");
+  toast("Exported. Open the main app to see the import banner","ok");
   addLog("ok","Exported recommendation to main app (wa_pending_proposal)");
 }
 
@@ -4314,7 +4329,7 @@ function startResearchAutoRefresh(){
     _researchNextRefresh = Date.now() + RESEARCH_REFRESH_INTERVAL_MS;
     updateAutoRefreshIndicator();
   }, RESEARCH_REFRESH_INTERVAL_MS);
-  addLog("ok","Research auto-refresh started — 5 minute interval");
+  addLog("ok","Research auto-refresh started (5-minute interval)");
   updateAutoRefreshIndicator();
 }
 
@@ -4371,7 +4386,7 @@ function monthlyIssueStatus(p, cfg, now){
   const late = d.getDate() - due;
   return {
     state: late > 14 ? "overdue" : "due",
-    label: (late > 14 ? "OVERDUE — " : "") + ym + " issue not ingested" + (ingested ? " (last: " + ingested + ")" : ""),
+    label: (late > 14 ? "OVERDUE: " : "") + ym + " issue not ingested" + (ingested ? " (last: " + ingested + ")" : ""),
     ym
   };
 }
@@ -4532,11 +4547,11 @@ async function previewIngest(){
       return;
     }
   }
-  if(!raw.trim()){ status.textContent = "Nothing to parse — paste text or choose a file."; host.innerHTML = ""; return; }
+  if(!raw.trim()){ status.textContent = "Nothing to parse. Paste text or choose a file."; host.innerHTML = ""; return; }
   const items = parseIssueText(raw);
   if(items.length === 0){
     status.textContent = "";
-    host.innerHTML = `<div class="code" style="background:#7f1d1d">No research items could be extracted — the text may be mostly page furniture or images.</div>`;
+    host.innerHTML = `<div class="code" style="background:#7f1d1d">No research items could be extracted. The text may be mostly page furniture or images.</div>`;
     return;
   }
   _ingestParsed = items;
@@ -4547,7 +4562,7 @@ async function previewIngest(){
       <div style="font-weight:600;color:var(--color-text)">${i+1}. ${escapeHtml(it.title)}</div>
       ${it.summary ? `<div style="color:var(--color-text-muted);margin-top:2px">${escapeHtml(it.summary)}</div>` : ""}
     </div>`).join("")}</div>
-    <div style="font-size:11px;color:var(--color-text-muted);margin-top:6px">Review before ingesting — anything that looks like a page header or disclaimer can be removed by editing the pasted text and re-parsing.</div>`;
+    <div style="font-size:11px;color:var(--color-text-muted);margin-top:6px">Review before ingesting: anything that looks like a page header or disclaimer can be removed by editing the pasted text and re-parsing.</div>`;
 }
 function commitIngest(){
   if(!_ingestParsed || !_ingestParsed.length) return;
@@ -4561,7 +4576,7 @@ function commitIngest(){
   // and put ahead of the news items so the engine reads the report first.
   const stamped = _ingestParsed.map(it => ({
     title: it.title,
-    summary: it.summary || `${p.name} — ${ym} issue.`,
+    summary: it.summary || `${p.name}: ${ym} issue.`,
     date: ym + "-01",
     issueYM: ym,
     source: "issue"
@@ -4570,7 +4585,7 @@ function commitIngest(){
   const kept = existing.filter(it => !(it.source === "issue" && it.issueYM === ym));
   setProviderCfg(pid, {items: stamped.concat(kept), lastIssueYM: ym, lastRefresh: Date.now()});
   addLog("ok", `Ingested ${stamped.length} items into ${p.name} (${ym} issue)`);
-  toast(`${stamped.length} items ingested — ${p.name} ${ym}`, "ok");
+  toast(`${stamped.length} items ingested for ${p.name} ${ym}`, "ok");
   clearIngest();
   renderResearch();
 }
@@ -4613,13 +4628,13 @@ function renderMonthlyIssueBanner(){
     return;
   }
   const rows = outstanding.map(({p, st}) =>
-    `<li style="margin-bottom:3px"><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(st.label)}${p.homepage ? ` · <a href="${p.homepage}" target="_blank" rel="noopener noreferrer">open publication ↗</a>` : ""}</li>`
+    `<li style="margin-bottom:3px"><strong>${escapeHtml(p.name)}</strong>: ${escapeHtml(st.label)}${p.homepage ? ` · <a href="${p.homepage}" target="_blank" rel="noopener noreferrer">open publication ↗</a>` : ""}</li>`
   ).join("");
   const anyOverdue = outstanding.some(o => o.st.state === "overdue");
   host.innerHTML = `<div style="margin:0 0 12px;padding:11px 14px;background:${anyOverdue?'rgba(227,24,55,.06)':'rgba(245,158,11,.08)'};border:1px solid ${anyOverdue?'rgba(227,24,55,.3)':'rgba(245,158,11,.35)'};border-radius:8px;font-size:12px;line-height:1.65">
     <div style="font-weight:700;color:${anyOverdue?'var(--color-error)':'var(--color-warning)'};margin-bottom:5px">${anyOverdue?icon("triangle-alert"):icon("circle")} ${outstanding.length} monthly issue${outstanding.length>1?'s':''} outstanding for ${currentIssueYM()}</div>
     <ul style="margin:0 0 0 18px;padding:0;color:var(--color-text-secondary)">${rows}</ul>
-    <div style="font-size:11px;color:var(--color-text-muted);margin-top:7px">The news feeds behind these sources refresh continuously, but the monthly issue itself has to be ingested — use “Mark ingested” on the card once it is in the library.</div>
+    <div style="font-size:11px;color:var(--color-text-muted);margin-top:7px">The news feeds behind these sources refresh continuously, but the monthly issue itself has to be ingested. Use “Mark ingested” on the card once it is in the library.</div>
   </div>`;
 }
 
@@ -4663,10 +4678,10 @@ function renderResearchCorpusSummary(){
     '</span>' +
     (unmeasured
       ? '<div style="color:var(--color-warning);margin-top:3px">' + unmeasured + ' source' + (unmeasured === 1 ? '' : 's') +
-        ' not yet refreshed since feed-health tracking was added — nothing above describes ' +
+        ' not yet refreshed since feed-health tracking was added, so nothing above describes ' +
         (unmeasured === 1 ? 'it' : 'them') + '. Use &ldquo;Refresh ALL&rdquo; for a complete picture.</div>'
       : '') +
-    (dark ? '<div style="color:var(--color-text-muted);margin-top:3px">Sources on curated fallback still contribute to the tally — the agent is reading fewer independent live views than the source count suggests.</div>' : '');
+    (dark ? '<div style="color:var(--color-text-muted);margin-top:3px">Sources on curated fallback still contribute to the tally, so the agent is reading fewer independent live views than the source count suggests.</div>' : '');
 }
 
 function renderResearch(){
@@ -4687,7 +4702,7 @@ function renderResearch(){
     const feedNote = live === undefined ? ""
       : (live > 0 ? ` · ${live} live` : " · curated only");
     const feedWarn = live === 0
-      ? `<div style="font-size:11px;font-weight:600;color:var(--color-error);margin-top:3px" title="${escapeHtml((cfg.feedErrors||[]).join(" · "))}">${icon("triangle-alert")} ${cfg.feedsConfigured || 0} feed${(cfg.feedsConfigured||0) === 1 ? "" : "s"} unreachable — showing curated library only</div>`
+      ? `<div style="font-size:11px;font-weight:600;color:var(--color-error);margin-top:3px" title="${escapeHtml((cfg.feedErrors||[]).join(" · "))}">${icon("triangle-alert")} ${cfg.feedsConfigured || 0} feed${(cfg.feedsConfigured||0) === 1 ? "" : "s"} unreachable, showing curated library only</div>`
       : "";
     const iss = monthlyIssueStatus(p, cfg);
     const issColor = iss ? ({current:"var(--color-success)", pending:"var(--color-text-muted)", due:"var(--color-warning)", overdue:"var(--color-error)"})[iss.state] : "";
@@ -5174,7 +5189,7 @@ async function fetchQuote(ticker, provider){
         // without the field list, and the .pl mirror). Kept as an explicit
         // refusal rather than deleted, so a saved config pointing here fails
         // loudly instead of silently returning nothing.
-        throw new Error("Stooq CSV endpoint was retired upstream — use Yahoo Finance (direct) for equities");
+        throw new Error("Stooq CSV endpoint was retired upstream. Use Yahoo Finance (direct) for equities");
         /* eslint-disable no-unreachable */
         const sym = ticker.includes(".") ? ticker.toLowerCase() : ticker.toLowerCase() + ".us";
         const url = `https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`;
@@ -5218,7 +5233,7 @@ async function fetchQuote(ticker, provider){
         // asks for a declaring User-Agent, which is a forbidden header in the
         // browser fetch spec — so this endpoint is only reachable from a
         // server-side relay, never from this page.
-        if(r.status === 403) throw new Error("data.sec.gov blocks browser/proxy requests (403) — SEC requires a declaring User-Agent, which only a server-side relay can send. Ticker→CIK lookup works; filings data does not.");
+        if(r.status === 403) throw new Error("data.sec.gov blocks browser/proxy requests (403). SEC requires a declaring User-Agent, which only a server-side relay can send. Ticker→CIK lookup works; filings data does not.");
         if(!r.ok) throw new Error("HTTP "+r.status);
         const j = await r.json();
         return {price:0,name:j.entityName,cik:cik,source:"secedgar",isReferenceOnly:true,filingsCount:Object.keys(j.facts?.["us-gaap"]||{}).length};
@@ -5247,7 +5262,7 @@ async function fetchQuote(ticker, provider){
         // Moved behind an API key in 2024 — the endpoint answers 401 with an
         // empty Data object, which read as "No data" and looked like a bad
         // symbol. CoinGecko and Coinbase both cover crypto with no key.
-        if(!d && (j.Err || j.Response === "Error")) throw new Error("CryptoCompare now requires an API key ("+((j.Err&&j.Err.message)||"401").slice(0,60)+") — use CoinGecko or Coinbase for keyless crypto");
+        if(!d && (j.Err || j.Response === "Error")) throw new Error("CryptoCompare now requires an API key ("+((j.Err&&j.Err.message)||"401").slice(0,60)+"). Use CoinGecko or Coinbase for keyless crypto");
         if(!d) throw new Error("No data");
         return {price:d.PRICE,change:d.CHANGE24HOUR,changePct:d.CHANGEPCT24HOUR,volume:d.VOLUME24HOURTO,marketCap:d.MKTCAP,source:"cryptocompare"};
       }
@@ -5286,7 +5301,7 @@ async function fetchQuote(ticker, provider){
         // ticker is treated as FRED series ID e.g. "DGS10" (10yr Treasury), "UNRATE", "CPIAUCSL"
         const r=await corsFetch(`https://api.stlouisfed.org/fred/series/observations?series_id=${ticker}&api_key=${cfg.fred}&file_type=json&sort_order=desc&limit=2`);
         const j=await r.json(); const obs = j.observations;
-        if(!obs?.length) throw new Error("No FRED series — try DGS10 (10yr Treas), UNRATE (Unemployment), CPIAUCSL (CPI)");
+        if(!obs?.length) throw new Error("No FRED series. Try DGS10 (10yr Treas), UNRATE (Unemployment), CPIAUCSL (CPI)");
         const cur=+obs[0].value, prev = obs[1]?+obs[1].value:cur;
         return {price:cur,change:cur-prev,changePct:prev!==0?(cur/prev-1)*100:0,asOf:obs[0].date,source:"fred"};
       }
@@ -5331,7 +5346,7 @@ async function fetchQuote(ticker, provider){
         const r=await corsFetch(`https://data.nasdaq.com/api/v3/datasets/WIKI/${ticker}.json?api_key=${cfg.nasdaq}&rows=2`);
         if(!r.ok) throw new Error("HTTP "+r.status);
         const j=await r.json();
-        const data=j.dataset?.data; if(!data||!data[0]) throw new Error("No data — WIKI dataset deprecated, try EOD dataset");
+        const data=j.dataset?.data; if(!data||!data[0]) throw new Error("No data: WIKI dataset deprecated, try EOD dataset");
         // WIKI columns: Date, Open, High, Low, Close, Volume, Ex-Dividend, Split Ratio, Adj. Open, Adj. High, Adj. Low, Adj. Close, Adj. Volume
         const today=data[0], prev=data[1]||today;
         return {price:today[4],open:today[1],high:today[2],low:today[3],volume:today[5],prevClose:prev[4],change:today[4]-prev[4],changePct:(today[4]/prev[4]-1)*100,asOf:today[0],source:"nasdaq"};
@@ -5453,7 +5468,7 @@ async function fetchQuote(ticker, provider){
     catch(e){ errs.push(p+": "+(e && e.message || e)); }
   }
   // Surface WHY (e.g. "needs the data proxy") instead of a bare "All providers failed".
-  throw new Error("All providers failed — "+errs.join(" · "));
+  throw new Error("All providers failed: "+errs.join(" · "));
 }
 
 async function testQuote(){
@@ -5479,7 +5494,7 @@ async function testQuote(){
 // Live-prices data proxy (shared with the client app via wa_cors_proxy in localStorage).
 function saveMdProxy(v){
   try{ localStorage.setItem("wa_cors_proxy", String(v||"").trim()); }catch(_){}
-  var s=document.getElementById("mdProxyStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Saved — used by the client app and these tests." : (DEFAULT_DATA_PROXY ? "Cleared — using the built-in proxy." : "Cleared — Yahoo, ticker lookups and research feeds are off until a proxy is set.");
+  var s=document.getElementById("mdProxyStatus"); if(s) s.textContent = (v&&String(v).trim()) ? "Saved. Used by the client app and these tests." : (DEFAULT_DATA_PROXY ? "Cleared. Using the built-in proxy." : "Cleared. Yahoo, ticker lookups and research feeds are off until a proxy is set.");
 }
 async function testAllProviders(){
   const ticker = $("mdTicker").value.trim().toUpperCase();
@@ -5494,7 +5509,7 @@ async function testAllProviders(){
   }));
   let h = '<table class="tbl"><thead><tr><th>Provider</th><th>Status</th><th class="num">Price</th><th class="num">ms</th><th>Note</th></tr></thead><tbody>';
   results.forEach(r => {
-    h += `<tr><td><strong>${r.p}</strong></td><td>${r.ok?'<span class="pill pill-on">OK</span>':'<span class="pill pill-off">FAIL</span>'}</td><td class="num">${r.ok?'$'+fmtN(r.price,2):'—'}</td><td class="num">${r.ms.toFixed(0)}</td><td style="font-size:11px;color:var(--color-text-muted)">${escapeHtml(r.err||"—")}</td></tr>`;
+    h += `<tr><td><strong>${r.p}</strong></td><td>${r.ok?'<span class="pill pill-on">OK</span>':'<span class="pill pill-off">FAIL</span>'}</td><td class="num">${r.ok?'$'+fmtN(r.price,2):'-'}</td><td class="num">${r.ms.toFixed(0)}</td><td style="font-size:11px;color:var(--color-text-muted)">${escapeHtml(r.err||"-")}</td></tr>`;
   });
   h += '</tbody></table>';
   $("mdResult").innerHTML = h;
@@ -5510,7 +5525,7 @@ function renderTaxDb(){
   const reg=_taxRegistry();
   const cc=$("txCountry");
   if(!reg || !reg.countries || !reg.countries.length){
-    if(cc) cc.innerHTML='<option value="">— sync the client app first —</option>';
+    if(cc) cc.innerHTML='<option value="">Sync the client app first</option>';
     if($("taxFedBrackets")) $("taxFedBrackets").innerHTML='<div class="code" style="background:#7c2d12;line-height:1.7">No tax dataset synced. Open the client app once (it writes the dataset to shared storage), then reopen this tab.</div>';
     if($("taxStateBrackets")) $("taxStateBrackets").innerHTML='';
     return;
@@ -5540,16 +5555,16 @@ function _fmtRegBands(bands){
 function renderTaxBracket(){
   const c=_regCountry($("txCountry").value); if(!c) return;
   const src=c.source||{};
-  $("taxFedBrackets").innerHTML = `<h3 style="font-size:13px;margin-bottom:8px;color:var(--color-primary)">National / federal — ${escapeHtml(c.name)} <span style="color:var(--color-text-muted);font-weight:400">(${escapeHtml(src.taxYear||"")}${c.currency?(", "+escapeHtml(c.currency)):""})</span></h3>` + _fmtRegBands(c.bands)
+  $("taxFedBrackets").innerHTML = `<h3 style="font-size:13px;margin-bottom:8px;color:var(--color-primary)">National / federal: ${escapeHtml(c.name)} <span style="color:var(--color-text-muted);font-weight:400">(${escapeHtml(src.taxYear||"")}${c.currency?(", "+escapeHtml(c.currency)):""})</span></h3>` + _fmtRegBands(c.bands)
     + (src.url?`<div style="font-size:11px;margin-top:6px"><a href="${escapeHtml(src.url)}" target="_blank" style="color:var(--color-primary)">${escapeHtml(src.authority||"official source")}</a></div>`:"");
   const sub=c.sub||null;
   if(sub && sub.hasSub){
-    $("taxStateBrackets").innerHTML = `<h3 style="font-size:13px;margin:14px 0 8px;color:var(--color-success)">${escapeHtml(sub.label)} — representative effective add-on (% of income)</h3>`
+    $("taxStateBrackets").innerHTML = `<h3 style="font-size:13px;margin:14px 0 8px;color:var(--color-success)">${escapeHtml(sub.label)}: representative effective add-on (% of income)</h3>`
       + '<table class="tbl"><thead><tr><th>'+escapeHtml(sub.label)+'</th><th class="num">Add-on rate</th></tr></thead><tbody>'
       + sub.items.map(it=>`<tr><td>${escapeHtml(it.name)}</td><td class="num"><strong>${it.rate}%</strong></td></tr>`).join("")+'</tbody></table>'
       + (sub.note?`<div style="font-size:11px;color:var(--color-text-muted);margin-top:8px;line-height:1.6">${escapeHtml(sub.note)}</div>`:"");
   } else {
-    $("taxStateBrackets").innerHTML = `<div style="font-size:12px;color:var(--color-text-muted);margin-top:14px;padding:10px 12px;background:rgba(0,0,0,.03);border-radius:6px">No separate regional/state/municipal income tax — national rates only.${sub&&sub.note?(" "+escapeHtml(sub.note)):""}</div>`;
+    $("taxStateBrackets").innerHTML = `<div style="font-size:12px;color:var(--color-text-muted);margin-top:14px;padding:10px 12px;background:rgba(0,0,0,.03);border-radius:6px">No separate regional/state/municipal income tax. National rates only.${sub&&sub.note?(" "+escapeHtml(sub.note)):""}</div>`;
   }
 }
 function renderBrackets(brackets){
@@ -5588,7 +5603,7 @@ function renderTaxAccuracy(){
   const body=$("taxAccBody"); if(!body) return;
   const reg=_taxRegistry();
   if(!reg || !Array.isArray(reg.countries) || !reg.countries.length){
-    body.innerHTML = '<div class="code" style="background:#7c2d12;line-height:1.8">No tax dataset synced yet.<br>Open the client app once — it writes the dataset to shared browser storage — then click <strong>Refresh</strong>.<br><a href="wealth-analyzer.html" target="_blank" style="color:#fff;text-decoration:underline">Open client app &rarr;</a></div>';
+    body.innerHTML = '<div class="code" style="background:#7c2d12;line-height:1.8">No tax dataset synced yet.<br>Open the client app once (it writes the dataset to shared browser storage), then click <strong>Refresh</strong>.<br><a href="wealth-analyzer.html" target="_blank" style="color:#fff;text-decoration:underline">Open client app &rarr;</a></div>';
     { const _s=$("taxAccSummary"); if(_s) _s.textContent=""; }
     return;
   }
@@ -5606,20 +5621,20 @@ function renderTaxAccuracy(){
       ? '<span style="color:var(--color-success);font-weight:600">&#10003; verified</span>'
       : '<span style="color:var(--color-warning);font-weight:600">&#9679; needs review</span>';
     const src = c.source||{};
-    const link = src.url ? '<a href="'+escapeHtml(src.url)+'" target="_blank" style="color:var(--color-primary)">'+escapeHtml(src.authority||"source")+'</a>' : (src.authority?escapeHtml(src.authority):'—');
+    const link = src.url ? '<a href="'+escapeHtml(src.url)+'" target="_blank" style="color:var(--color-primary)">'+escapeHtml(src.authority||"source")+'</a>' : (src.authority?escapeHtml(src.authority):'-');
     const sub=c.sub||null;
     const subCell = sub
       ? (sub.hasSub
           ? escapeHtml(sub.label)+' <span style="color:var(--color-text-muted)">~'+sub.repRate+'%'+(sub.maxRate>sub.repRate?(' (max '+sub.maxRate+'%)'):'')+'</span>'
           : '<span style="color:var(--color-text-muted)">national only</span>')
-      : '<span style="color:var(--color-text-muted)">—</span>';
+      : '<span style="color:var(--color-text-muted)">-</span>';
     return '<tr>'
       +'<td>'+escapeHtml(c.name||c.code)+' <span style="color:var(--color-text-muted)">'+escapeHtml(c.code)+'</span></td>'
-      +'<td class="num">'+escapeHtml(c.currency||'—')+'</td>'
-      +'<td class="num"><strong>'+(typeof c.topRate==="number"?c.topRate+'%':'—')+'</strong></td>'
+      +'<td class="num">'+escapeHtml(c.currency||'-')+'</td>'
+      +'<td class="num"><strong>'+(typeof c.topRate==="number"?c.topRate+'%':'-')+'</strong></td>'
       +'<td class="num">'+(c.bandCount||0)+'</td>'
       +'<td>'+subCell+'</td>'
-      +'<td class="num">'+escapeHtml(src.taxYear||'—')+'</td>'
+      +'<td class="num">'+escapeHtml(src.taxYear||'-')+'</td>'
       +'<td>'+link+'</td>'
       +'<td>'+chk+'</td>'
       +'<td>'+stBadge+'</td>'
@@ -5698,7 +5713,7 @@ function renderKeys(){
       if(hh.lastCheck){
         const age = Date.now() - hh.lastCheck;
         const ago = age < 60000 ? Math.floor(age/1000)+'s' : Math.floor(age/60000)+'m';
-        if(hh.ok) healthPill = `<span class="pill pill-on" title="Last check: ${ago} ago">${icon("check")} Working (${hh.latencyMs||"—"} ms · ${ago} ago)</span>`;
+        if(hh.ok) healthPill = `<span class="pill pill-on" title="Last check: ${ago} ago">${icon("check")} Working (${hh.latencyMs||"-"} ms · ${ago} ago)</span>`;
         else healthPill = `<span class="pill pill-off" title="${escapeHtml(hh.error||"")}">${icon("x")} Failing (${ago} ago)</span>`;
       } else {
         healthPill = '<span class="pill pill-warn">Pending check…</span>';
@@ -5751,9 +5766,9 @@ async function corsFetch(url, opts){
     // Retry through the proxy only for hosts it serves and only if one is set;
     // an upstream 5xx is reported as-is rather than blamed on CORS.
     const upstreamHttp = /^HTTP \d/.test(String(err && err.message));
-    if(!dataProxyServes(url)) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+_urlHost(url)+" can't be reached from a browser and isn't served by the data proxy");
+    if(!dataProxyServes(url)) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS): "+_urlHost(url)+" can't be reached from a browser and isn't served by the data proxy");
     const proxied = dataProxyUrl(url);
-    if(!proxied) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS) — "+NO_DATA_PROXY_MSG);
+    if(!proxied) throw upstreamHttp ? err : new Error("Blocked by the browser (CORS): "+NO_DATA_PROXY_MSG);
     return await fetch(proxied, opts);
   }
 }
@@ -5959,7 +5974,7 @@ async function testKeyHealthNow(el){
   el.textContent = "Test now";
   renderKeys();
   toast(r.ok ? `${id} working (${r.latencyMs}ms)` : `${id} failed: ${r.error}`, r.ok ? "ok" : "err");
-  addLog(r.ok ? "ok" : "err", `Key check ${id}: ${r.ok ? `OK ${r.latencyMs}ms` : "FAILED — "+r.error}`);
+  addLog(r.ok ? "ok" : "err", `Key check ${id}: ${r.ok ? `OK ${r.latencyMs}ms` : "FAILED: "+r.error}`);
 }
 
 // Dev quick-load: provider keys from a gitignored `dev-api.key` beside this page — a JSON object
@@ -6016,7 +6031,7 @@ async function quickLoadKeys(){
 async function testAllKeysNow(el){
   const configured = API_KEY_DEFS.filter(k => !!localStorage.getItem(k.id));
   if(configured.length === 0){
-    toast("No keys configured yet — add some keys first","warn");
+    toast("No keys configured yet. Add some keys first","warn");
     return;
   }
   if(el){ el.disabled = true; el.textContent = `Testing 0/${configured.length}…`; }
@@ -6035,7 +6050,7 @@ async function testAllKeysNow(el){
   }
   if(el){ el.disabled = false; setIconLabel(el, "zap", "Test All Configured Keys Now"); }
   if(summary) summary.innerHTML = `<span style="color:var(--color-success);font-weight:600">${ok} working</span> · <span style="color:${fail>0?'var(--color-error)':'var(--color-text-muted)'};font-weight:600">${fail} failing</span> · Tested ${new Date().toLocaleTimeString()}`;
-  toast(`Tested ${configured.length} keys — ${ok} working, ${fail} failing`, fail>0?"warn":"ok");
+  toast(`Tested ${configured.length} keys: ${ok} working, ${fail} failing`, fail>0?"warn":"ok");
   addLog(fail>0?"warn":"ok", `Manual key test complete: ${ok} working, ${fail} failing`);
   renderKeys();
   if(document.getElementById("tab-dashboard")?.classList.contains("active")) renderDashboard();
@@ -6066,7 +6081,7 @@ function startKeyHealthAutoCheck(){
   setTimeout(runOnce, 5000);
   // Then every 2 minutes
   _keyCheckTimer = setInterval(runOnce, KEY_CHECK_INTERVAL_MS);
-  addLog("ok","Key auto-check started — 2-minute interval");
+  addLog("ok","Key auto-check started (2-minute interval)");
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -6604,7 +6619,7 @@ function getDomicilePolicy(country){
   if(c === "US") return {
     type: "US_LISTED",
     label: "US 40-Act registered funds",
-    note: "US retail clients cannot purchase UCITS funds — they aren't SEC-registered. The universe is restricted to ETFs and mutual funds listed on US exchanges."
+    note: "US retail clients cannot purchase UCITS funds because they aren't SEC-registered. The universe is restricted to ETFs and mutual funds listed on US exchanges."
   };
   if(c === "CA") return {
     type: "US_LISTED",
@@ -6614,7 +6629,7 @@ function getDomicilePolicy(country){
   return {
     type: "UCITS",
     label: `UCITS-passportable funds for ${c} resident`,
-    note: `${c} retail investors are subject to PRIIPs / KID requirements — only UCITS (Ireland or Luxembourg-domiciled) and local-listed funds are eligible. US 40-Act ETFs cannot be purchased.`
+    note: `${c} retail investors are subject to PRIIPs / KID requirements: only UCITS (Ireland or Luxembourg-domiciled) and local-listed funds are eligible. US 40-Act ETFs cannot be purchased.`
   };
 }
 
@@ -6938,8 +6953,8 @@ function buildPortfolioFromEngine(brief, signals){
       if(fund.esg && brief.esg !== "none") rationaleParts.push("ESG-flagged matches preference");
       if(brief.taxSensitivity === "high" && fund.vehicle === "etf") rationaleParts.push("ETF wrapper preferred for high tax sensitivity");
       // Domicile-based regulatory rationale
-      if(fund.ucits) rationaleParts.push(`UCITS-passportable (${fund.dom}-domiciled) — eligible for ${brief.country || "non-US"} resident under PRIIPs`);
-      else if(fund.dom && fund.dom !== "US") rationaleParts.push(`${fund.dom}-listed — locally accessible for ${brief.country} resident`);
+      if(fund.ucits) rationaleParts.push(`UCITS-passportable (${fund.dom}-domiciled), eligible for ${brief.country || "non-US"} resident under PRIIPs`);
+      else if(fund.dom && fund.dom !== "US") rationaleParts.push(`${fund.dom}-listed, locally accessible for ${brief.country} resident`);
       // Bucket alignment — why this fund rather than another in the same sleeve
       const _bk = fundBucketKeys(fund);
       const aligned = []
@@ -6992,7 +7007,7 @@ function buildPortfolioFromEngine(brief, signals){
   if(positions.length > 1 && maxPos > 0 && maxPos < 100){
     if(positions.length * maxPos < 100 - 1e-9){
       capNotice = `Max position ${maxPos}% cannot be satisfied by ${positions.length} position${positions.length === 1 ? "" : "s"} ` +
-                  `(at least ${Math.ceil(100 / maxPos)} are needed to reach 100%) — the cap was NOT applied to this portfolio`;
+                  `(at least ${Math.ceil(100 / maxPos)} are needed to reach 100%), so the cap was NOT applied to this portfolio`;
     } else {
       for(let pass = 0; pass < 20; pass++){
         const over = positions.filter(p => p.weight > maxPos + 1e-9);
@@ -7071,7 +7086,7 @@ function buildPortfolioFromEngine(brief, signals){
   // Risks — derive from signals (underweight votes = warning sign)
   const risks = [];
   const negClasses = Object.entries(signals.classes).filter(([,d]) => d.votes < -5).slice(0,3);
-  negClasses.forEach(([cls, d]) => risks.push(`${prettyClass(cls)} under pressure — ${d.agreeCount}/${signals.providerCount || d.providerCount} providers underweight`));
+  negClasses.forEach(([cls, d]) => risks.push(`${prettyClass(cls)} under pressure: ${d.agreeCount}/${signals.providerCount || d.providerCount} providers underweight`));
   const negRegions = Object.entries(signals.regions).filter(([,d]) => d.votes < -5).slice(0,2);
   negRegions.forEach(([r, d]) => risks.push(`${prettyRegion(r)} regional risk flagged by ${d.providerCount} providers`));
   if(brief.maxPosition < 20) risks.push("Position size constraint may limit conviction expression");
@@ -7090,9 +7105,9 @@ function buildPortfolioFromEngine(brief, signals){
     const pct = off.reduce((a,b) => a + b.w, 0).toFixed(1);
     risks.push(`${pct}% of the portfolio is denominated outside ${want} (` +
       off.map(o => `${o.tkr} ${o.ccy}${o.hedged ? " hedged" : ""}`).join(", ") +
-      `) — unhedged currency movement affects these holdings in ${want} terms`);
+      `). Unhedged currency movement affects these holdings in ${want} terms`);
     off.filter(o => o.hedged).forEach(o => risks.push(
-      `${o.tkr} is a ${o.ccy}-HEDGED share class held by a ${want} client — the hedge ` +
+      `${o.tkr} is a ${o.ccy}-HEDGED share class held by a ${want} client. The hedge ` +
       `removes ${o.ccy} risk, not ${want} risk, and its cost is borne for no benefit here`));
   })();
   // An unsatisfiable position cap has to reach the advisor: the portfolio below
@@ -7100,7 +7115,7 @@ function buildPortfolioFromEngine(brief, signals){
   if(capNotice) risks.push(capNotice);
   // Sleeves the client's jurisdiction cannot be sold — disclosed, not hidden
   unfillable.forEach(({cls, weight}) => risks.push(
-    `${prettyClass(cls)} sleeve (${weight}% target) has no ${brief.country || "US"}-eligible fund in the universe — reallocated to ${cls === "cash" ? "fixed income" : "the remaining sleeves"}`
+    `${prettyClass(cls)} sleeve (${weight}% target) has no ${brief.country || "US"}-eligible fund in the universe, so it was reallocated to ${cls === "cash" ? "fixed income" : "the remaining sleeves"}`
   ));
   // Cash held in a currency other than the client's is an FX exposure in the one
   // sleeve that is supposed to carry none — say so rather than leaving it implied.
@@ -7112,7 +7127,7 @@ function buildPortfolioFromEngine(brief, signals){
     });
     offCcy.forEach(p => {
       const f = FUND_UNIVERSE.find(x => x.tkr === p.ticker);
-      risks.push(`Cash sleeve held in ${(f.ccy||"USD").toUpperCase()} (${p.ticker}) against a ${want} client — no ${want} money-market line is available in the eligible universe, so this carries FX risk`);
+      risks.push(`Cash sleeve held in ${(f.ccy||"USD").toUpperCase()} (${p.ticker}) against a ${want} client. No ${want} money-market line is available in the eligible universe, so this carries FX risk`);
     });
   })();
 
@@ -7217,7 +7232,7 @@ async function runResearchEngine(){
 
   renderEngineResult(result);
   $("agExportBtn").disabled = false;
-  setIconLabel($("engineStatus"), "check", `Engine analyzed ${signals.totalItems} items across ${signals.providerCount} sources — ${result.positions.length} positions`);
+  setIconLabel($("engineStatus"), "check", `Engine analyzed ${signals.totalItems} items across ${signals.providerCount} sources (${result.positions.length} positions)`);
   addLog("ok", `Engine built portfolio: ${result.positions.length} positions from ${signals.totalItems} research items`);
 }
 
@@ -7276,10 +7291,10 @@ function renderEngineResult(r){
     const pretty = {classes:["Asset class", prettyClass], regions:["Geographic region", prettyRegion],
                     sectors:["Market sector", prettyClass], themes:["Themes", prettyTheme],
                     drivers:["Market drivers", k=>k.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())]};
-    h += `<div class="ablock"><h3 style="color:var(--color-primary)">${icon("calculator")} Points system — ${S.scoredItems} distinct research views scored`
+    h += `<div class="ablock"><h3 style="color:var(--color-primary)">${icon("calculator")} Points system: ${S.scoredItems} distinct research views scored`
        + (S.sharedDuplicatesSkipped ? ` <span style="font-weight:400;font-size:12px;color:var(--color-text-muted)">(${S.sharedDuplicatesSkipped} shared baseline duplicates counted once)</span>` : "")
        + `</h3>`;
-    h += `<div style="font-size:11.5px;color:var(--color-text-muted);margin-bottom:10px">Every view lands in exactly one column — overweight, neutral or underweight. A bucket is only called when at least 3 views point the same way, the net margin is 3+, and the split is at least 2:1.</div>`;
+    h += `<div style="font-size:11.5px;color:var(--color-text-muted);margin-bottom:10px">Every view lands in exactly one column: overweight, neutral or underweight. A bucket is only called when at least 3 views point the same way, the net margin is 3+, and the split is at least 2:1.</div>`;
     Object.entries(pretty).forEach(([bucket, [label, fmtKey]]) => {
       const rows = Object.entries(S.points[bucket] || {})
         .filter(([,e]) => e.total > 0)
@@ -7355,7 +7370,7 @@ function renderEngineResult(r){
   h += `</div>`;
 
   // POSITIONS WITH FULL RATIONALE + METRICS
-  h += `<div class="ablock"><h3>${icon("briefcase")} Recommended Positions (${r.positions.length}) — Full Rationale & Metrics</h3>`;
+  h += `<div class="ablock"><h3>${icon("briefcase")} Recommended Positions (${r.positions.length}): Full Rationale & Metrics</h3>`;
   r.positions.forEach(p => {
     const m = p.metrics || {};
     const flags = [m.ucits?'UCITS':'', m.esg?'ESG':'', (m.dom && m.dom!=='US')?m.dom:''].filter(Boolean).join(' · ');
@@ -7377,7 +7392,7 @@ function renderEngineResult(r){
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">10y</div><strong style="color:${m.r10y==null?'var(--color-text-muted)':(m.r10y>=0?'var(--color-success)':'var(--color-error)')}">${m.r10y==null?'n/a':m.r10y.toFixed(1)+'%'}</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Holdings</div><strong>${(m.holdings||0).toLocaleString()}</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">AUM</div><strong>$${m.aum||0}B</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Inception</div><strong>${m.inception||'—'}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Inception</div><strong>${m.inception||'-'}</strong></div>
       </div>
       <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:8px"><strong>Why selected:</strong> ${escapeHtml(p.rationale)}</div>
       ${p.citations.length ? `<div style="font-size:11px;color:var(--color-text-muted);font-style:italic;line-height:1.6"><strong style="color:var(--color-text-secondary);font-style:normal">Citations:</strong><br>${p.citations.map(c => '• '+escapeHtml(c)).join('<br>')}</div>` : ''}
@@ -7394,13 +7409,13 @@ function renderEngineResult(r){
 
   // METHODOLOGY
   h += `<div class="ablock" style="background:rgba(0,87,184,.04);font-size:11.5px;line-height:1.7">
-    <h3 style="color:var(--color-primary)">${icon("microscope")} Methodology — How This Was Built</h3>
+    <h3 style="color:var(--color-primary)">${icon("microscope")} Methodology: How This Was Built</h3>
     <ol style="margin-left:20px;color:var(--color-text-secondary)">
       <li><strong>Signal extraction:</strong> Scanned ${r.signals.totalItems} research items via keyword lexicons across asset classes, sectors, regions, themes, and ticker mentions. Each item parsed for sentiment direction (overweight/underweight phrases).</li>
-      <li><strong>Aggregation:</strong> Net votes computed per signal — provider count and total votes tracked. Tickers explicitly mentioned by multiple providers get conviction bonus.</li>
+      <li><strong>Aggregation:</strong> Net votes computed per signal, with provider count and total votes tracked. Tickers explicitly mentioned by multiple providers get conviction bonus.</li>
       <li><strong>Allocation:</strong> Started with your ${prettyRisk(r.signals.providerCount ? '' : '')}<strong>${$("agRisk").value.replace(/_/g," ")}</strong> baseline (${Object.entries(RISK_TO_ALLOCATION[$("agRisk").value]||{}).map(([k,v]) => `${k}:${v}%`).slice(0,4).join(", ")}). Tilted ±8% based on net research votes.</li>
-      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">942</span>-fund universe is scored and ranked; the top 1–3 are taken. Scoring: lowest expense ratio + ticker conviction bonus − sponsor concentration penalty. Filtered for ESG-strict, ETF-preference (high tax sensitivity), liquidity needs.</li>
-      <li><strong>Rationale:</strong> Each position's "Why selected" cites the specific consensus vote count + matched research items. Fully deterministic — same inputs always produce same output.</li>
+      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">942</span>-fund universe is scored and ranked; the top 1-3 are taken. Scoring: lowest expense ratio + ticker conviction bonus − sponsor concentration penalty. Filtered for ESG-strict, ETF-preference (high tax sensitivity), liquidity needs.</li>
+      <li><strong>Rationale:</strong> Each position's "Why selected" cites the specific consensus vote count + matched research items. Fully deterministic: same inputs always produce same output.</li>
     </ol>
   </div>`;
 
@@ -7444,7 +7459,7 @@ function runDailyBenchmark(){
   status.textContent = "Running benchmark engine…";
   const providerIds = getAllEnabledProviders();
   if(providerIds.length === 0){
-    setIconLabel(status, "x", "No research available — pull research first in Research Library");
+    setIconLabel(status, "x", "No research available. Pull research first in Research Library");
     return;
   }
   const result = buildEngineRecommendation(STANDARD_BENCHMARK_BRIEF, providerIds);
@@ -7469,7 +7484,7 @@ function runDailyBenchmark(){
   // Cap history at 90 entries
   if(history.length > 90) history.length = 90;
   localStorage.setItem(BENCHMARK_KEY, JSON.stringify(history));
-  setIconLabel(status, "check", `Saved snapshot for ${today} — ${result.positions.length} positions, ${(result.expectedReturn*100).toFixed(2)}% expected return`);
+  setIconLabel(status, "check", `Saved snapshot for ${today}: ${result.positions.length} positions, ${(result.expectedReturn*100).toFixed(2)}% expected return`);
   addLog("ok", `Daily benchmark recorded: ${result.positions.length} positions`);
   renderBenchmarkTimeline();
 }
@@ -7510,7 +7525,7 @@ function renderBenchmarkTimeline(){
   // Recent snapshots table
   h += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th class="num">E[R]</th><th class="num">E[σ]</th><th class="num">Positions</th><th class="num">Research items</th><th>Top theme</th></tr></thead><tbody>';
   history.slice(0,15).forEach(s => {
-    const theme = (s.topThemes||[])[0] || "—";
+    const theme = (s.topThemes||[])[0] || "-";
     h += `<tr><td><strong>${s.date}</strong></td>
       <td class="num">${(s.expectedReturn*100).toFixed(2)}%</td>
       <td class="num">${(s.expectedVolatility*100).toFixed(2)}%</td>
@@ -7549,7 +7564,7 @@ function renderSweepResult(ico, title, sweepVar, results){
     <thead><tr><th>${escapeHtml(sweepVar)}</th>${allClasses.map(c => `<th class="num">${prettyClass(c)}</th>`).join("")}<th class="num">E[R]</th><th class="num">E[σ]</th><th class="num">Positions</th></tr></thead><tbody>`;
   results.forEach(r => {
     h += `<tr><td><strong>${escapeHtml(r.label)}</strong></td>`;
-    allClasses.forEach(c => { const v = r.result.allocation[c] || 0; h += `<td class="num">${v>0?v.toFixed(0)+'%':'—'}</td>`; });
+    allClasses.forEach(c => { const v = r.result.allocation[c] || 0; h += `<td class="num">${v>0?v.toFixed(0)+'%':'-'}</td>`; });
     h += `<td class="num"><strong>${(r.result.expectedReturn*100).toFixed(2)}%</strong></td>`;
     h += `<td class="num">${(r.result.expectedVolatility*100).toFixed(2)}%</td>`;
     h += `<td class="num">${r.result.positions.length}</td></tr>`;
@@ -7579,13 +7594,13 @@ function renderSweepResult(ico, title, sweepVar, results){
 
 function sweepRisk(){
   const providerIds = getAllEnabledProviders();
-  if(providerIds.length === 0){ toast("No research available — pull research first","err"); return; }
+  if(providerIds.length === 0){ toast("No research available. Pull research first","err"); return; }
   const profiles = ["very_conservative","conservative","moderately_conservative","moderate","moderately_aggressive","aggressive","very_aggressive"];
   const results = profiles.map(r => ({
     label: r.replace(/_/g," "),
     result: buildEngineRecommendation(makeBrief({risk: r}), providerIds)
   }));
-  renderSweepResult("target", "Risk Profile Sweep — Allocation by Risk Tolerance", "Risk profile", results);
+  renderSweepResult("target", "Risk Profile Sweep: Allocation by Risk Tolerance", "Risk profile", results);
   addLog("ok", "Risk profile sweep complete");
 }
 
@@ -7597,7 +7612,7 @@ function sweepNW(){
     label: fmt$(nw),
     result: buildEngineRecommendation(makeBrief({nw, deploy:nw}), providerIds)
   }));
-  renderSweepResult("wallet", "Net Worth Sweep — Allocation by Wealth Level", "Net Worth", results);
+  renderSweepResult("wallet", "Net Worth Sweep: Allocation by Wealth Level", "Net Worth", results);
 }
 
 function sweepESG(){
@@ -7608,7 +7623,7 @@ function sweepESG(){
     label: o.l,
     result: buildEngineRecommendation(makeBrief({esg: o.v}), providerIds)
   }));
-  renderSweepResult("sprout", "ESG Strictness Sweep — Position Universe Filter", "ESG mode", results);
+  renderSweepResult("sprout", "ESG Strictness Sweep: Position Universe Filter", "ESG mode", results);
 }
 
 function sweepTax(){
@@ -7619,7 +7634,7 @@ function sweepTax(){
     label: o.l,
     result: buildEngineRecommendation(makeBrief({taxSensitivity: o.v}), providerIds)
   }));
-  renderSweepResult("briefcase", "Tax Sensitivity Sweep — Vehicle Preference", "Tax mode", results);
+  renderSweepResult("briefcase", "Tax Sensitivity Sweep: Vehicle Preference", "Tax mode", results);
 }
 
 function sweepLiquidity(){
@@ -7630,7 +7645,7 @@ function sweepLiquidity(){
     label: o.l,
     result: buildEngineRecommendation(makeBrief({liquidity: o.v}), providerIds)
   }));
-  renderSweepResult("droplets", "Liquidity Need Sweep — Universe Filter", "Liquidity mode", results);
+  renderSweepResult("droplets", "Liquidity Need Sweep: Universe Filter", "Liquidity mode", results);
 }
 
 function sweepResearch(){
@@ -7642,14 +7657,14 @@ function sweepResearch(){
     label: labels[i],
     result: buildEngineRecommendation(makeBrief({}), allProviders.slice(0, cnt))
   }));
-  renderSweepResult("library", "Research Source Count Sweep — Influence of Consensus Breadth", "Source count", results);
+  renderSweepResult("library", "Research Source Count Sweep: Influence of Consensus Breadth", "Source count", results);
 }
 
 // ── ROBUSTNESS CHECKS ──────────────────────────────────────
 function runRobustnessChecks(){
   const providerIds = getAllEnabledProviders();
   if(providerIds.length === 0){
-    $("robustnessResults").innerHTML = '<div style="padding:14px;color:var(--color-error)">No research available — pull research first in Research Library</div>';
+    $("robustnessResults").innerHTML = '<div style="padding:14px;color:var(--color-error)">No research available. Pull research first in Research Library</div>';
     return;
   }
   const checks = [
@@ -7716,7 +7731,7 @@ function runRobustnessChecks(){
       }
     },
     {
-      name: "Determinism — same input twice → same output",
+      name: "Determinism: same input twice → same output",
       run: () => {
         const a = buildEngineRecommendation(makeBrief({}), providerIds);
         const b = buildEngineRecommendation(makeBrief({}), providerIds);
@@ -7787,7 +7802,7 @@ function runAB(){
   h += '</div>';
   // Delta summary
   h += '<div style="background:rgba(0,87,184,.04);border-radius:8px;padding:14px 18px;margin-top:14px">';
-  h += '<div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);margin-bottom:8px">B vs A — Key Differences</div>';
+  h += '<div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);margin-bottom:8px">B vs A: Key Differences</div>';
   const deltaER = (b.expectedReturn - a.expectedReturn) * 100;
   const deltaSig = (b.expectedVolatility - a.expectedVolatility) * 100;
   h += `<div style="font-size:12.5px;line-height:1.7">`;
@@ -8036,14 +8051,14 @@ function renderUserTable(){
   h += '<thead><tr><th>Name</th><th>Status</th><th class="num">Net Worth</th><th class="num">Income</th><th>Risk</th><th class="num">Portfolios</th><th>Last Updated</th><th>Actions</th></tr></thead><tbody>';
   filtered.forEach(u => {
     const s = u.summary || {};
-    const updated = u.lastUpdated ? new Date(u.lastUpdated).toLocaleDateString() : "—";
+    const updated = u.lastUpdated ? new Date(u.lastUpdated).toLocaleDateString() : "-";
     const statusPill = u.plan ? '<span class="pill pill-on">Active</span>' : '<span class="pill pill-warn">Draft</span>';
-    const riskLbl = ({very_conservative:"Very Cons.",conservative:"Cons.",moderately_conservative:"Mod. Cons.",moderate:"Moderate",moderately_aggressive:"Mod. Agg.",aggressive:"Aggressive",very_aggressive:"Very Agg."})[s.risk] || (s.risk || "—");
+    const riskLbl = ({very_conservative:"Very Cons.",conservative:"Cons.",moderately_conservative:"Mod. Cons.",moderate:"Moderate",moderately_aggressive:"Mod. Agg.",aggressive:"Aggressive",very_aggressive:"Very Agg."})[s.risk] || (s.risk || "-");
     h += `<tr style="cursor:pointer" data-action="viewUser" data-uid="${u.id}">
       <td><strong>${escapeHtml(u.name)}</strong>${u.email?'<br><span style="font-size:10.5px;color:var(--color-text-muted)">'+escapeHtml(u.email)+'</span>':''}</td>
       <td>${statusPill}</td>
-      <td class="num">${s.netWorth!=null?fmt$(s.netWorth):'—'}</td>
-      <td class="num">${s.annualIncome?fmt$(s.annualIncome):'—'}</td>
+      <td class="num">${s.netWorth!=null?fmt$(s.netWorth):'-'}</td>
+      <td class="num">${s.annualIncome?fmt$(s.annualIncome):'-'}</td>
       <td><span style="font-size:11px">${riskLbl}</span></td>
       <td class="num">${u.portfolios?.length||0}</td>
       <td style="font-size:11px;color:var(--color-text-muted)">${updated}</td>
@@ -8072,7 +8087,7 @@ function startUserAutoWatch(){
         if(name){
           // Auto-register / update
           captureFromMainApp();
-          addLog("info","Auto-detected profile change in main app — registered "+name);
+          addLog("info","Auto-detected profile change in main app, registered "+name);
         }
       } catch(_){}
     }
@@ -8095,7 +8110,7 @@ function startLivePoll(){
         available = true;
         const bar = $("liveUp");
         let secs = 5;
-        bar.innerHTML = `${icon("rocket")} <span><strong>New version v${escapeHtml(j.version)}</strong> — auto-reloading in <strong id="liveUpSecs">${secs}</strong>s</span> <button class="btn-ghost" onclick="location.reload()" style="background:#fff;color:var(--color-primary)">Reload now</button> <button class="btn-ghost" onclick="this.parentElement.classList.remove('show')" style="border-color:rgba(255,255,255,.3);color:#fff">Cancel</button>`;
+        bar.innerHTML = `${icon("rocket")} <span><strong>New version v${escapeHtml(j.version)}</strong>, auto-reloading in <strong id="liveUpSecs">${secs}</strong>s</span> <button class="btn-ghost" onclick="location.reload()" style="background:#fff;color:var(--color-primary)">Reload now</button> <button class="btn-ghost" onclick="this.parentElement.classList.remove('show')" style="border-color:rgba(255,255,255,.3);color:#fff">Cancel</button>`;
         refreshIcons();
         bar.classList.add("show");
         const iv = setInterval(()=>{ if(!bar.classList.contains("show")){ clearInterval(iv); return;} secs--; const el=$("liveUpSecs"); if(el) el.textContent=secs; if(secs<=0){ clearInterval(iv); if(bar.classList.contains("show")) location.reload(); } }, 1000);
@@ -8126,7 +8141,7 @@ function init(){
     addLog("err","Self-test failed: "+missing.join(", "));
   } else {
     console.log("[selfTest] All tabs present");
-    addLog("ok","Self-test — "+requiredEls.length+" tabs verified");
+    addLog("ok","Self-test: "+requiredEls.length+" tabs verified");
   }
   addLog("info","Admin console loaded v"+APP_VERSION);
 
@@ -8152,7 +8167,7 @@ function init(){
         addLog("info","Background research pull starting…");
         autoRefreshAllResearch(true);
       } else {
-        addLog("ok","Research cache fresh (<5min) — skipping initial pull");
+        addLog("ok","Research cache fresh (<5min), skipping initial pull");
       }
     } catch(e){ console.error("[init research]",e); }
   }, 2000);
