@@ -4955,7 +4955,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260928-1652";
+const APP_VERSION = "20260928-1725";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -10868,6 +10868,12 @@ function lxQuoteFound(quote, docText){
 // nothing under it yields nothing, and a value that does not parse cleanly is left out with
 // a note rather than guessed. Every top-level name here starts with lxQ_ except the entry
 // point, lxReadQuestionnaire(doc), so this file can share a page with the other readers.
+// On a scan (source "ocr", checked against a real Tesseract read of the form, see
+// ocr-questionnaire.mjs): labels match with Tesseract's letter confusions tolerated, a tick
+// may come as x / % / K or with its box ("IX]"), a value may sit a few points off or even on
+// its label's baseline, every value is capped at 0.75 and lower still where Tesseract was
+// unsure of a digit, and what the scan may hold but OCR did not read (a lost tick, an empty
+// table, a label with nothing under it) is listed for the adviser rather than taken as "none".
 
 const lxQ_TITLE = "client questionnaire";
 
@@ -11042,8 +11048,15 @@ function lxQ_lev(a, b, max){
 // label: none for short words (a one-letter slip turns "no" into "so"), up to three in a
 // long label.
 function lxQ_k(len){ return len < 5 ? 0 : len < 10 ? 1 : len < 20 ? 2 : 3; }
+// Tesseract's usual letter confusions, folded to one spelling: "rn" read for "m", "cl" for
+// "d", "vv" for "w", l / 1 / I for i, 0 for o, q for g, v for y. Applied to BOTH sides of a
+// near match on a scan, so "incorne" is one edit from "income", not two; never used for an
+// exact match or on a text PDF.
+function lxQ_canon(s){ return s.replace(/rn/g, "m").replace(/cl/g, "d").replace(/vv/g, "w").replace(/[l1]/g, "i").replace(/0/g, "o").replace(/q/g, "g").replace(/v/g, "y"); }
+// Edit distance, on the OCR spelling when `ocr` is set.
+function lxQ_dist(a, b, k, ocr){ const d = lxQ_lev(a, b, k); return ocr && d > 0 ? Math.min(d, lxQ_lev(lxQ_canon(a), lxQ_canon(b), k)) : d; }
 // Every word-aligned occurrence of folded `N` in folded `hay`, exact (k=0) or within k edits.
-function lxQ_matchIn(hay, N, k){
+function lxQ_matchIn(hay, N, k, ocr){
   const out = [];
   if(!hay || !N) return out;
   if(!k){
@@ -11054,12 +11067,14 @@ function lxQ_matchIn(hay, N, k){
   const words = []; const re = /\S+/g; let m;
   while((m = re.exec(hay))) words.push({ a:m.index, b:m.index + m[0].length });
   const cands = [];
+  // an OCR "rn" for "m" makes the text a character longer than the label per confusion
+  const slack = ocr ? 2 * k : k;
   for(let s = 0; s < words.length; s++){
     for(let e = s; e < words.length; e++){
       const len = words[e].b - words[s].a;
-      if(len > N.length + k) break;
+      if(len > N.length + slack) break;
       if(len < N.length - k) continue;
-      const d = lxQ_lev(hay.slice(words[s].a, words[e].b), N, k);
+      const d = lxQ_dist(hay.slice(words[s].a, words[e].b), N, k, ocr);
       if(d <= k) cands.push({ a:words[s].a, b:words[e].b, d });
     }
   }
@@ -11068,14 +11083,14 @@ function lxQ_matchIn(hay, N, k){
   return out.sort((x, y) => x.a - y.a);
 }
 // Does folded `hay` start with `N` (whole words), allowing k edits?
-function lxQ_starts(hay, N, k){
+function lxQ_starts(hay, N, k, ocr){
   if(hay === N || hay.startsWith(N + " ")) return true;
   if(!k) return false;
   const re = /\S+/g; let m;
   while((m = re.exec(hay))){
     const pre = hay.slice(0, m.index + m[0].length);
-    if(pre.length > N.length + k) break;
-    if(pre.length >= N.length - k && lxQ_lev(pre, N, k) <= k) return true;
+    if(pre.length > N.length + (ocr ? 2 * k : k)) break;
+    if(pre.length >= N.length - k && lxQ_dist(pre, N, k, ocr) <= k) return true;
   }
   return false;
 }
@@ -11111,8 +11126,15 @@ function lxQ_fmt(n){
   return (n < 0 ? "-" : "") + String(int).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (dec ? "." + String(dec).padStart(2, "0") : "");
 }
 // A tick: a lone X (or a check / cross symbol), possibly with the box OCR'd as brackets.
-// Tesseract often reads a boxed X as "K"; a lone K can stand nowhere else on a tick row.
-function lxQ_isTick(s){ return /^[\[(|]?\s*[xX×✕✖✗✘☒☑✓✔■Kk]\s*[\])|]?$/.test(lxClean(s)); }
+// Tesseract often reads a boxed X as "K"; a lone K can stand nowhere else on a tick row. It
+// also reads the box's "[" as I, l, 1 or {, and its "]" as J, I, l or }: "IX]" is a ticked
+// box, "[J" and "DO" are empty ones (no X or K inside).
+function lxQ_isTick(s){ return /^[\[(|Il1{]?\s*[xX×✕✖✗✘☒☑✓✔■Kk]\s*[\])|Il1J}]?$/.test(lxClean(s)); }
+// Where a tick box sits (a tick row, a risk column, a priority line) OCR can also read the X
+// as "%". Only there: elsewhere a "%" is part of a label ("% Essential") or a value.
+function lxQ_isMark(s){ return lxQ_isTick(s) || /^[\[(|Il1{]?\s*%\s*[\])|Il1J}]?$/.test(lxClean(s)); }
+// A lone vertical bar is a form rule OCR read as text: it is never part of a label.
+function lxQ_isRule(s){ return /^[|¦]+$/.test(lxClean(s)); }
 // Items as one text, spaced the way lxPrepare builds doc.text (a space only where the gap is
 // wider than a sliver of the font height), so a quote made from it is found there: OCR can
 // cut one word into touching pieces ("Ann" + "ual"), and "Ann ual" is not in the document.
@@ -11159,6 +11181,17 @@ function lxQ_period(t){
 function lxQ_sepOf(raw){ const m = lxClean(raw).match(/\d([.,'])\d{3}(?!\d)/); return m ? m[1] : ""; }
 // Says that a digit was put back from a letter the scan read (O for 0, l for 1).
 function lxQ_fixNote(ctx, what, raw, shown){ ctx.notes.push(what + ": a digit in '" + lxQ_txt(raw) + "' was unclear in the scan; check " + shown + "."); }
+// Tesseract's own certainty for the words a figure was read from (items carry `conf`, 0-100):
+// the lowest among those holding a digit, when it is below 75, else null. A figure OCR was
+// unsure of is treated like a repaired digit (unticked, with a note): a misread digit is a
+// wrong number.
+const lxQ_DOUBT = 75;
+function lxQ_doubt(ctx, items){
+  if(!ctx.ocr || !items) return null;
+  const cs = items.filter(i => /\d/.test(String(i.str || "")) && typeof i.conf === "number" && isFinite(i.conf)).map(i => i.conf);
+  const lo = cs.length ? Math.min(...cs) : Infinity;
+  return lo < lxQ_DOUBT ? lo : null;
+}
 
 // ── Parsing values ─────────────────────────────────────────────────────────────
 // One money field. Returns { value (per year, positive), ccy, monthly, period (the period
@@ -11166,11 +11199,11 @@ function lxQ_fixNote(ctx, what, raw, shown){ ctx.notes.push(what + ": a digit in
 // amounts, so which one is meant is unclear), range, total, neg, pct (a percentage, not
 // money), why (why there is no value, when that is not one of the above), oddSep } or null
 // when the field is empty.
-function lxQ_money(ctx, raw){
+function lxQ_money(ctx, raw, items){
   let t = lxQ_txt(raw);
   if(lxQ_blank(t)) return null;
   const f = lxFold(t);
-  const r = { raw:t, value:null, ccy:lxQ_ccy(t), monthly:false, period:null, fixed:false, many:false, range:null, total:false, neg:false, pct:false, why:"", oddSep:"" };
+  const r = { raw:t, doubt:lxQ_doubt(ctx, items), value:null, ccy:lxQ_ccy(t), monthly:false, period:null, fixed:false, many:false, range:null, total:false, neg:false, pct:false, why:"", oddSep:"" };
   // The form asks for yearly figures, but clients write what their payslip says.
   r.period = lxQ_period(t);
   r.monthly = !!(r.period && r.period.f === 12);
@@ -11219,21 +11252,24 @@ function lxQ_money(ctx, raw){
 // lxParseAmount, which reads "1.250" as a thousand and a quarter; here it is 1.25.
 // `range` is set when a second number follows as an alternative ("60-65", "60 bis 65",
 // "62 or 65", "2-3 %"): the caller leaves such a value out rather than take the first.
-function lxQ_num(ctx, raw){
+function lxQ_num(ctx, raw, items){
   let t = lxQ_txt(raw);
   if(lxQ_blank(t)) return null;
-  let fixed = false;
+  let fixed = lxQ_doubt(ctx, items) != null;        // OCR was unsure of the digits
   if(ctx.ocr){ const t2 = lxQ_ocrDigits(t); if(t2 !== t){ t = t2; fixed = true; } }
   const m = t.match(/(^|[^\d.,'])(-?\d+(?:[.,]\d+)?)(?![\d'])/);
   if(!m) return null;
   const after = t.slice(m.index + m[0].length);
+  // "1 9" on a scan: a lost decimal point or a stray space splits one number in two, and
+  // neither half is the value. Not read, rather than read as 1.
+  if(ctx.ocr && /^\s+\d/.test(after)) return null;
   const range = /^\s*%?\s*(?:-|to|till|until|bis|or|oder|ou|o|oppure|a|à|au|\/)\s*-?\d/i.test(after);
   return { value:parseFloat(m[2].replace(",", ".")), fixed, raw:t, range };
 }
-function lxQ_date(ctx, raw){
+function lxQ_date(ctx, raw, items){
   let t = lxQ_txt(raw);
   if(lxQ_blank(t)) return null;
-  let fixed = false;
+  let fixed = lxQ_doubt(ctx, items) != null;        // OCR was unsure of the digits
   if(ctx.ocr){ const t2 = lxQ_ocrDigits(t); if(t2 !== t){ t = t2; fixed = true; } }
   const d = lxDates(t)[0];
   return d ? { iso:d.iso, fixed } : null;
@@ -11258,7 +11294,7 @@ function lxQ_name(raw){
   while(i > 1 && /^(von|van|de|der|den|di|da|du|del|della|dos|das|le|la|zu|zum|ten|ter|st\.?)$/.test(w[i - 1])) i--;
   return { first:w.slice(0, i).join(" "), last:w.slice(i).join(" ") };
 }
-function lxQ_country(raw){
+function lxQ_country(raw, ocr){
   const f = lxFold(raw);
   if(!f) return null;
   // "same", or "no" (not different) in client 2's "(if different)" field; but a capital
@@ -11275,8 +11311,23 @@ function lxQ_country(raw){
     if(i >= 0 && (!best || i < best.i || (i === best.i && n.length > best.n.length))) best = { cc, i, n };
   }
   if(best) return { code:best.cc, same:/\bsame\b/.test(f) };
+  // On a scan, a country name with a letter or two misread ("Swltzerland", "Deutsch1and"):
+  // the nearest name within the usual label tolerance, only for names of 6+ letters (a
+  // short name one letter off is another word) and only when exactly one country is that
+  // near.
+  if(ocr){
+    const words = f.split(" "), near = new Set();
+    for(const cc of Object.keys(lxQ_COUNTRY)) for(const n of lxQ_COUNTRY[cc]){
+      if(n.length < 6) continue;
+      const nw = n.split(" ").length, k = lxQ_k(n.length) > 1 ? 2 : 1;
+      for(let i = 0; i + nw <= words.length; i++) if(lxQ_dist(words.slice(i, i + nw).join(" "), n, k, true) <= k) near.add(cc);
+    }
+    if(near.size === 1) return { code:[...near][0], same:/\bsame\b/.test(f), fuzzy:true };
+  }
   return { unknown:lxQ_txt(raw) };
 }
+// A country recognised only by a near match on a scan: inferred, so a little less sure.
+function lxQ_fuzzyCountry(ctx, c, what, raw, code){ c.conf = Math.min(c.conf, 0.7); ctx.notes.push(what + " '" + lxQ_txt(raw) + "' read as " + code + " (the scan misread the name slightly); check it."); }
 function lxQ_state(raw, cc){
   const t = lxQ_txt(raw);
   if(lxQ_blank(t)) return null;
@@ -11302,12 +11353,20 @@ function lxQ_rows(items, ocr, tolOver){
   const rows = [];
   for(const it of its){
     const h = it.h || 8, tol = tolOver || (ocr ? Math.max(3.5, 0.5 * h) : Math.max(2, 0.45 * h)), x1 = lxQ_x1(it);
-    let home = null;
+    let home = null, best = Infinity;
     for(let k = rows.length - 1; k >= 0 && k >= rows.length - 3; k--){
       const R = rows[k];
       if(Math.abs(it.y - R.y) > tol) continue;
-      if(R.items.some(o => it.x < lxQ_x1(o) - 1 && o.x < x1 - 1)) continue;
-      home = R; break;
+      // Tesseract's word boxes on one text line can overlap by a point or two ("salary" and
+      // the "/" after it): on the SAME baseline that is not a label over its value.
+      if(R.items.some(o => it.x < lxQ_x1(o) - 1 && o.x < x1 - 1 && !(ocr && Math.abs(it.y - o.y) <= 1.5 && Math.min(x1, lxQ_x1(o)) - Math.max(it.x, o.x) <= 3))) continue;
+      if(!ocr){ home = R; break; }
+      // On a scan two rows can share a baseline (a value OCR merged into its label's line,
+      // lying on the label): a word joins the row whose words it continues, the nearest one
+      // ending to its left, not simply the row seen last.
+      const ends = R.items.map(lxQ_x1).filter(e => e <= it.x + 3.5);
+      const gap = ends.length ? it.x - Math.max(...ends) : 1e6 + Math.abs(it.y - R.y);
+      if(gap < best){ best = gap; home = R; }
     }
     // the row's baseline is the mean of its items, so one low word does not drag it
     if(home){ home.items.push(it); home.h = Math.max(home.h, h); home.y = home.items.reduce((s, i) => s + i.y, 0) / home.items.length; }
@@ -11345,7 +11404,7 @@ function lxQ_span(r, m){
   // badly aligned scan two neighbouring labels never merge into one phrase; and only words
   // on the label's own baseline, since a value word can share the label's row on a scan.
   const my = its.reduce((s, i) => s + i.y, 0) / its.length, ytol = (r.gap || 6) > 6 ? 2.2 : 1.2;
-  const joins = (it, near) => !lxQ_isTick(it.str) && Math.abs(it.y - my) <= ytol && near <= (r.gap || 6);
+  const joins = (it, near) => !lxQ_isTick(it.str) && !lxQ_isRule(it.str) && Math.abs(it.y - my) <= ytol && near <= (r.gap || 6);
   let i0 = r.items.indexOf(its[0]), i1 = r.items.indexOf(its[its.length - 1]);
   while(i0 > 0 && r.items[i0 - 1].x >= x - 45 && joins(r.items[i0 - 1], r.items[i0].x - lxQ_x1(r.items[i0 - 1]))) i0--;
   while(i1 < r.items.length - 1 && lxQ_x1(r.items[i1 + 1]) <= x1 + 150 && joins(r.items[i1 + 1], r.items[i1 + 1].x - lxQ_x1(r.items[i1]))) i1++;
@@ -11379,7 +11438,7 @@ function lxQ_sections(ctx){
     const rest = hasLetter ? toks.slice(1).join(" ") : lead.fold;
     for(const S of lxQ_SECTIONS){
       const k = ctx.ocr ? lxQ_k(S.n.length) : 0;
-      const ok = S.short ? (hasLetter && lxQ_lev(rest, S.n, Math.min(k, 1)) <= Math.min(k, 1)) : lxQ_starts(rest, S.n, k);
+      const ok = S.short ? (hasLetter && lxQ_dist(rest, S.n, Math.min(k, 1), ctx.ocr) <= Math.min(k, 1)) : lxQ_starts(rest, S.n, k, ctx.ocr);
       if(!ok) continue;
       // The form's first heading printed a second time: the file holds another copy of the
       // form (scanned twice, or an update appended). Only the first copy is read.
@@ -11414,7 +11473,7 @@ function lxQ_find(ctx, needle, opt){
   if(opt.yMax != null) rows = rows.filter(r => r.y <= opt.yMax);
   const out = [];
   const pass = k => {
-    for(const r of rows) for(const m of lxQ_matchIn(r.fold, N, k)){
+    for(const r of rows) for(const m of lxQ_matchIn(r.fold, N, k, ctx.ocr)){
       if(out.some(o => o.row === r && m.a < o.b && o.a < m.b)) continue;
       const s = lxQ_span(r, m);
       if(opt.whole && !lxQ_isWhole(s)) continue;
@@ -11444,13 +11503,18 @@ function lxQ_below(ctx, lab){
   const lx = lab.x0 != null ? lab.x0 : lab.x, le = lab.xe != null ? lab.xe : lab.x1;
   const own = new Set(lab.phrase || lab.items);
   const isText = i => String(i.str || "").trim() && !own.has(i);
-  const starters = (page.items || []).filter(i => isText(i) && i.y - lab.y > 2 && i.y - lab.y <= dyMax && i.x >= lx - 6 && i.x <= lx + 40);
+  // Tesseract can merge a label and the line under it into one text line, giving both the
+  // same baseline: a word lying ON a label word (overlapping it by half its width or more)
+  // cannot be on the label's own line, so it is the line under it.
+  const ownW = [...own];
+  const stacked = i => ctx.ocr && Math.abs(i.y - lab.y) <= 2 && !lxQ_isTick(i.str) && ownW.some(o => Math.min(lxQ_x1(i), lxQ_x1(o)) - Math.max(i.x, o.x) >= 0.5 * Math.max(1, lxQ_x1(i) - i.x));
+  const starters = (page.items || []).filter(i => isText(i) && ((i.y - lab.y > 2 && i.y - lab.y <= dyMax) || stacked(i)) && i.x >= lx - 6 && i.x <= lx + 40);
   if(!starters.length) return null;
   const y0 = Math.min(...starters.map(i => i.y));
   // Which baseline a word belongs to, the label's or the value's: whichever is nearer. A
   // scan can squeeze the two lines to 2-3pt apart, and a fixed cut-off then drops the
   // value's other words ("AHV +" without "Pensionskasse" is a different pension).
-  const isValue = i => i.y - lab.y <= dyMax && Math.abs(i.y - y0) <= tol && (i.y - lab.y > 2 || Math.abs(i.y - y0) < Math.abs(i.y - lab.y));
+  const isValue = i => stacked(i) || (i.y - lab.y <= dyMax && Math.abs(i.y - y0) <= tol && (i.y - lab.y > 2 || Math.abs(i.y - y0) < Math.abs(i.y - lab.y)));
   // The next label on the label's row bounds the value on the right.
   let limit = Infinity, prevEnd = -Infinity;
   for(const it of lab.row.items){
@@ -11483,7 +11547,10 @@ function lxQ_field(ctx, needle, opt){
   const lab = lxQ_find(ctx, needle, opt)[(opt && opt.nth) || 0];
   if(!lab) return null;
   const val = lxQ_below(ctx, lab);
-  return { lab, val:val && !val.blank ? val : null };
+  // On a scan, a label with nothing at all under it (not even a "-") may be an answer OCR
+  // did not read: remembered, and listed for the adviser at the end.
+  if(!val && ctx.ocr && ctx.ocrEmpty) ctx.ocrEmpty.push({ sec:opt && opt.sec, needle, lab });
+  return { lab, val:val && !val.blank ? val : null, empty:!val };
 }
 // Which options on a tick row carry an X. Options are located by their printed text to the
 // right of the row's prefix label; an X belongs to the option that starts just right of it
@@ -11492,13 +11559,13 @@ function lxQ_ticks(ctx, lab, options){
   if(!lab) return null;
   const page = ctx.doc.pages[lab.page], tol = ctx.ocr ? 6 : 3;     // tick rows are 19pt apart
   const line = (page.items || []).filter(i => Math.abs(i.y - lab.y) <= tol && i.x >= lab.x1 - 1 && String(i.str || "").trim()).sort((a, b) => a.x - b.x);
-  const row = lxQ_index({ items:line.filter(i => !lxQ_isTick(i.str)), page:lab.page, pos:lab.pos, y:lab.y });
+  const row = lxQ_index({ items:line.filter(i => !lxQ_isMark(i.str)), page:lab.page, pos:lab.pos, y:lab.y });
   const spans = options.map(o => {
     const N = lxFold(o); let m = lxQ_matchIn(row.fold, N, 0)[0];
-    if(!m && ctx.ocr && lxQ_k(N.length)) m = lxQ_matchIn(row.fold, N, lxQ_k(N.length))[0];
+    if(!m && ctx.ocr && lxQ_k(N.length)) m = lxQ_matchIn(row.fold, N, lxQ_k(N.length), true)[0];
     return m ? lxQ_span(row, m) : null;
   });
-  const ticks = line.filter(i => lxQ_isTick(i.str));
+  const ticks = line.filter(i => lxQ_isMark(i.str));
   const picked = [];
   let stray = 0;
   for(const t of ticks){
@@ -11531,7 +11598,9 @@ function lxReadQuestionnaire(doc){
   if(!doc || !Array.isArray(doc.pages) || !doc.pages.length) return null;
   if(!doc.lines || doc.text == null) lxPrepare(doc);
   const ocr = doc.source === "ocr";
-  const ctx = { doc, ocr, cap:ocr ? 0.75 : 1, rows:[], sec:{}, notes:[] };
+  // `lost`: what a scan may hold that OCR did not read (reported at the end, unless the whole
+  // form is blank); `ocrEmpty`: labels with nothing at all under them on a scan.
+  const ctx = { doc, ocr, cap:ocr ? 0.75 : 1, rows:[], sec:{}, notes:[], lost:[], ocrEmpty:[] };
   doc.pages.forEach((p, pi) => lxQ_rows(p.items, ocr).forEach(r => { r.page = pi; r.pos = pi * 1e5 + r.y; ctx.rows.push(r); }));
   if(!lxQ_isQuestionnaire(ctx)) return null;
   lxQ_sections(ctx);
@@ -11562,12 +11631,34 @@ function lxReadQuestionnaire(doc){
   const rows = out.household.length + out.income.length + out.assets.length + out.liabilities.length + out.goals.length + out.holdings.length;
   const objs = Object.keys(out.expenses).length + Object.keys(out.retirement).length + Object.keys(out.tax).length;
   if(!rows && !objs) ctx.notes.unshift("This Client Questionnaire appears to be blank: no answers were found, so nothing will be imported.");
+  else if(ocr) ctx.notes.push(...lxQ_lostNotes(ctx));
   out._notes = ctx.notes.map(lxQ_txt);
   return out;
 }
 
+// What the scan may hold that OCR did not read: tables with no rows, tick rows with no tick,
+// and the fields this reader imports that had nothing at all under their label. Fields the
+// form asks for only conditionally (client 2's "if different" country, the signature date,
+// the tax section's residence, which is only a cross-check) are not listed, nor client 2's
+// fields when client 2 is blank.
+const lxQ_OPTIONAL = ["place date", "country of residence if different", "country of tax residence", "state province canton for local tax", "of that % essential"];
+function lxQ_lostNotes(ctx){
+  const out = ctx.lost.slice(), names = [];
+  for(const e of ctx.ocrEmpty){
+    if(lxQ_OPTIONAL.includes(e.needle) || (e.sec === "B" && !ctx.c2.present) || (e.sec === "A" && !ctx.c1.present)) continue;
+    let n = lxQ_txt(e.lab.text).replace(/\s*\(.*$/, "").replace(/[\s:]+$/, "").trim();
+    if(!n) continue;
+    if(e.sec === "B") n = "Client 2 " + n.charAt(0).toLowerCase() + n.slice(1);
+    if(!names.includes(n)) names.push(n);
+  }
+  if(names.length){
+    const shown = names.length > 10 ? names.slice(0, 10).join(", ") + " and " + (names.length - 10) + " more" : names.join(", ");
+    out.push("Nothing could be read from the scan under " + (names.length > 1 ? "these labels" : "this label") + ": " + shown + ". If the paper form has an answer there, OCR missed it; enter it by hand.");
+  }
+  return out;
+}
 function lxQ_isQuestionnaire(ctx){
-  const has = N => ctx.rows.some(r => lxQ_matchIn(r.fold, N, 0).length || (ctx.ocr && lxQ_k(N.length) && lxQ_matchIn(r.fold, N, lxQ_k(N.length)).length));
+  const has = N => ctx.rows.some(r => lxQ_matchIn(r.fold, N, 0).length || (ctx.ocr && lxQ_k(N.length) && lxQ_matchIn(r.fold, N, lxQ_k(N.length), true).length));
   if(!has(lxQ_TITLE)) return false;
   let n = 0;
   for(const m of lxQ_MARKERS){ if(has(m) && ++n >= 4) return true; }
@@ -11616,7 +11707,7 @@ function lxQ_client(ctx, n){
   const nm = name && name.val ? lxQ_name(name.val.text) : null;
   if(nm){ c.fields.first = nm.first; c.fields.last = nm.last; c.parts.push(name.lab.text, name.val.text); }
   if(dob && dob.val){
-    const d = lxQ_date(ctx, dob.val.text);
+    const d = lxQ_date(ctx, dob.val.text, dob.val.items);
     if(d){
       c.fields.dob = d.iso; c.birthYear = +d.iso.slice(0, 4); c.parts.push(dob.lab.text, dob.val.text);
       if(d.fixed){ c.conf = Math.min(c.conf, 0.55); lxQ_fixNote(ctx, "Client " + n + " date of birth", dob.val.text, d.iso.split("-").reverse().join(".")); }
@@ -11624,7 +11715,7 @@ function lxQ_client(ctx, n){
     else ctx.notes.push("Client " + n + " date of birth '" + dob.val.text + "' is not a DD.MM.YYYY date; left out.");
   }
   if(ret && ret.val){
-    const a = lxQ_num(ctx, ret.val.text);
+    const a = lxQ_num(ctx, ret.val.text, ret.val.items);
     if(a && a.range) ctx.notes.push("Client " + n + " planned retirement age '" + ret.val.text + "' is a range, not one age; left out, agree the age with the client.");
     else if(a && a.value >= 30 && a.value <= 90 && Number.isInteger(a.value)){ c.retAge = a.value; c.retQuote = [ret.lab.text, ret.val.text]; c.retFixed = a.fixed; c.retRaw = ret.val.text; }
     else ctx.notes.push("Client " + n + " planned retirement age '" + ret.val.text + "' is not an age; left out.");
@@ -11632,8 +11723,8 @@ function lxQ_client(ctx, n){
   if(n === 1){
     const street = F("street address"), city = F("city", false, true), postal = F("postal zip code"), state = F("state province canton"), country = F("country of residence");
     if(country && country.val){
-      const cc = lxQ_country(country.val.text);
-      if(cc && cc.code){ c.fields.country = cc.code; c.parts.push(country.lab.text, country.val.text); }
+      const cc = lxQ_country(country.val.text, ctx.ocr);
+      if(cc && cc.code){ c.fields.country = cc.code; c.parts.push(country.lab.text, country.val.text); if(cc.fuzzy) lxQ_fuzzyCountry(ctx, c, "Client 1 country", country.val.text, cc.code); }
       else if(cc && cc.unknown){ c.fields.country = "OTHER"; ctx.notes.push("Client 1 country '" + cc.unknown + "' is not in the app's country list; set to Other."); }
     }
     if(street && street.val) c.fields.street = street.val.text;
@@ -11644,8 +11735,8 @@ function lxQ_client(ctx, n){
   } else {
     const country = F("country of residence if different"), rel = F("relationship to client 1");
     if(country && country.val){
-      const cc = lxQ_country(country.val.text);
-      if(cc && cc.code){ c.fields.country = cc.code; c.parts.push(country.lab.text, country.val.text); }
+      const cc = lxQ_country(country.val.text, ctx.ocr);
+      if(cc && cc.code){ c.fields.country = cc.code; c.parts.push(country.lab.text, country.val.text); if(cc.fuzzy) lxQ_fuzzyCountry(ctx, c, "Client 2 country", country.val.text, cc.code); }
       else if(cc && cc.same) c.sameCountry = true;
       else if(cc && cc.unknown){ c.fields.country = "OTHER"; ctx.notes.push("Client 2 country '" + cc.unknown + "' is not in the app's country list; set to Other."); }
     } else if(country) c.sameCountry = true;      // printed but left empty: the form asks for it only "if different"
@@ -11660,6 +11751,9 @@ function lxQ_client(ctx, n){
 function lxQ_tickOne(ctx, lab, options, what){
   const t = lxQ_ticks(ctx, lab, options);
   if(t && !t.picked.length && t.stray) ctx.notes.push("A tick for " + what + " could not be matched to one of the printed options; left out.");
+  // On a scan an X can be lost altogether (read as an empty box, or not at all): the answer
+  // is left unset, and the adviser is told it may be on the paper.
+  else if(t && !t.picked.length && ctx.ocr && t.spans.filter(Boolean).length >= 2) ctx.lost.push("No tick could be read from the scan for " + what + "; left unset, check the paper form.");
   if(!t || !t.picked.length) return null;
   if(t.picked.length > 1){ ctx.notes.push("More than one box ticked for " + what + "; left out."); return null; }
   const s = t.spans[t.picked[0]];
@@ -11685,6 +11779,7 @@ function lxQ_household(ctx){
       else if(c.relText) ctx.notes.push("Client 2 relationship '" + c.relText + "' not recognised; left out.");
     }
     if(risk[c.n]){ f.riskTolerance = risk[c.n].value; }
+    else if(risk.lost && risk.lost[c.n]) ctx.lost.push("No risk-profile tick could be read from the scan for Client " + c.n + " (section J, " + (c.n === 1 ? "left" : "right") + " box); left unset, check the paper form.");
     if(hz){ f.timeHorizon = hz.value; }
     out.household.push(lxRow(lxQ_c(ctx, conf), lxQ_quote(ctx, c.parts), f));
   }
@@ -11705,26 +11800,37 @@ function lxQ_relationship(t){
 }
 
 // C: children and dependants table.
+// On a scan, a table whose heading was found but from which no row could be read may have
+// lost its rows to OCR (a ruled table is where Tesseract most often drops text): said, so an
+// empty result is not read as "none".
+function lxQ_tableLost(ctx, T, sec, what){
+  if(!ctx.ocr || (!T && !ctx.sec[sec])) return;
+  if(T && T.rows.some(r => r.cells.some(c => lxFold(c.text)))) return;
+  ctx.lost.push(what + " (section " + sec + "): no rows could be read from the scan; if the paper form lists any, add them by hand.");
+}
 function lxQ_children(ctx){
   const T = lxQ_table(ctx, "C", lxQ_TBL_C, ["salary main income"], 3);
+  lxQ_tableLost(ctx, T, "C", "Children and dependants");
   if(!T) return;
   for(const r of T.rows){
     const [nm, db, rl] = r.cells;
     if(!lxFold(nm.text) && !lxFold(db.text)) continue;
-    const name = lxQ_name(nm.text), d = lxQ_date(ctx, db.text);
+    const name = lxQ_name(nm.text), d = lxQ_date(ctx, db.text, db.items);
     if(!name){ ctx.notes.push("A child row has a date of birth but no name; left out."); continue; }
-    const rel = lxQ_childRel(rl.text);
+    const rel = lxQ_childRel(rl.text, ctx.ocr);
     let conf = 0.8;
     if(!d && lxFold(db.text)) ctx.notes.push("Child '" + nm.text + "': date of birth '" + db.text + "' not read.");
     if(d && d.fixed){ conf = 0.55; lxQ_fixNote(ctx, "Child '" + nm.text + "' date of birth", db.text, d.iso.split("-").reverse().join(".")); }
     ctx.out.household.push(lxRow(lxQ_c(ctx, lxQ_rowConf(r, conf)), r.quote, { role:"child", first:name.first, last:name.last, dob:d ? d.iso : "", relationship:rel }));
   }
 }
-function lxQ_childRel(t){
+function lxQ_childRel(t, ocr){
   const f = lxFold(t || "");
   if(!f) return "";
   if(/\b(step ?)?son\b|\b(stief)?sohn\b|\bfils\b|\bfiglio\b|\bboy\b|\bjunge\b|\bbub\b/.test(f)) return "son";
   if(/\b(step ?)?daughter\b|\b(stief)?tochter\b|\bfille\b|\bfiglia\b|\bgirl\b|\bmadchen\b/.test(f)) return "daughter";
+  // a long word a scan misread by a letter ("Daughtcr", "Tochtcr")
+  if(ocr && f.split(" ").some(w => ["daughter", "tochter"].some(n => lxQ_dist(w, n, 1, true) <= 1))) return "daughter";
   return "dependant";
 }
 
@@ -11801,6 +11907,7 @@ function lxQ_moneyConf(ctx, m, what){
   if(m.period && m.period.f){ c = 0.7; ctx.notes.push(what + " was written per " + m.period.w + " (" + m.raw + "); imported as " + lxQ_fmt(m.value) + " a year."); }
   if(m.fixed){ c = Math.min(c, 0.55); ctx.notes.push(what + ": a digit in '" + m.raw + "' was unclear in the scan; check " + lxQ_fmt(m.value) + "."); }
   else if(m.oddSep){ c = Math.min(c, 0.55); ctx.notes.push(what + ": '" + m.raw + "' is grouped differently from the other amounts in the scan (they use '" + m.oddSep + "'), so a character there may be misread; check " + lxQ_fmt(m.value) + "."); }
+  else if(m.doubt != null){ c = Math.min(c, 0.55); ctx.notes.push(what + ": the scan read '" + m.raw + "' with low certainty (" + Math.round(m.doubt) + "%), so a digit may be misread; check " + lxQ_fmt(m.value) + "."); }
   // The main currency the client wrote; failing that, the one most amounts on the form carry.
   const main = ctx.ccy || ctx.ccyMajor;
   if(m.ccy && main && m.ccy !== main){
@@ -11816,7 +11923,7 @@ function lxQ_moneyWhy(m){
 // Reads a money field; says why when a written value could not be used.
 function lxQ_moneyField(ctx, fld, what){
   if(!fld || !fld.val) return null;
-  const m = lxQ_money(ctx, fld.val.text);
+  const m = lxQ_money(ctx, fld.val.text, fld.val.items);
   if(!m) return null;
   if(m.value == null){
     ctx.notes.push(what + ": '" + fld.val.text + "' " + lxQ_moneyWhy(m) + "; left out.");
@@ -11841,7 +11948,7 @@ function lxQ_income(ctx){
   const raise = lxQ_field(ctx, "expected yearly raise", { sec:"D" });
   let raisePct = null, raiseQ = null, raiseFixed = false;
   if(raise && raise.val){
-    const r = lxQ_num(ctx, raise.val.text);
+    const r = lxQ_num(ctx, raise.val.text, raise.val.items);
     if(r && r.range) ctx.notes.push("Expected yearly raise '" + raise.val.text + "' is a range, not one rate; left out.");
     else if(r && r.value >= -10 && r.value <= 20){
       raisePct = r.value; raiseQ = [raise.lab.text, raise.val.text];
@@ -11889,7 +11996,7 @@ function lxQ_expenses(ctx){
   take("annualSavings", "annual savings target", "D", "Annual savings target");
   const inf = lxQ_field(ctx, "inflation assumption", {});
   if(inf && inf.val){
-    const r = lxQ_num(ctx, inf.val.text);
+    const r = lxQ_num(ctx, inf.val.text, inf.val.items);
     if(r && r.range) ctx.notes.push("Inflation assumption '" + inf.val.text + "' is a range, not one rate; left out, the standard rate applies.");
     else if(r && r.value >= 0 && r.value <= 30){
       e.inflationPct = r.value; parts.push(inf.lab.text, inf.val.text);
@@ -11930,6 +12037,7 @@ function lxQ_owner(ctx, desc){
 function lxQ_assets(ctx){
   const out = ctx.out, home = ctx.c1.fields.country || "";
   const T = lxQ_table(ctx, "F", lxQ_TBL_F, ["primary residence property value", "other assets car art"], 7);
+  lxQ_tableLost(ctx, T, "F", "Accounts and assets");
   let sum = 0, total = null, nRows = 0;
   const lastRow = T ? T.rows.filter(r => lxFold(r.cells[0].text) || lxFold(r.cells[3].text)).pop() : null;
   if(T) for(const r of T.rows){
@@ -11939,10 +12047,10 @@ function lxQ_assets(ctx){
     // A "Total" line is the client's own sum, not an account: it is checked, never imported.
     // The word can come anywhere ("Vermögen total", "Konten insgesamt", "Zwischensumme").
     if(lxQ_TOTAL_RE.test(lxFold(desc))){
-      const m = lxQ_money(ctx, vC.text); if(m && m.value != null) total = { value:m.value, raw:vC.text };
+      const m = lxQ_money(ctx, vC.text, vC.items); if(m && m.value != null) total = { value:m.value, raw:vC.text };
       continue;
     }
-    const m = lxQ_money(ctx, vC.text);
+    const m = lxQ_money(ctx, vC.text, vC.items);
     const name = lxFold(desc) ? desc : "Account (no description)";
     if(!m || m.value == null){
       ctx.notes.push("Account '" + name + "': current value " + (m ? "'" + vC.text + "' is not a single amount" : "is blank") + "; not imported.");
@@ -11968,8 +12076,8 @@ function lxQ_assets(ctx){
     }
     let country = "";
     if(lxFold(cC.text)){
-      const cc = lxQ_country(cC.text);
-      if(cc && cc.code) country = cc.code;
+      const cc = lxQ_country(cC.text, ctx.ocr);
+      if(cc && cc.code){ country = cc.code; if(cc.fuzzy){ conf = Math.min(conf, 0.7); ctx.notes.push("Account '" + name + "': country '" + lxQ_txt(cC.text) + "' read as " + cc.code + " (the scan misread the name slightly); check it."); } }
       else ctx.notes.push("Account '" + name + "': country '" + cC.text + "' not recognised; set to Other.");
       if(!country) country = "OTHER";
     } else country = home;
@@ -12054,6 +12162,7 @@ function lxQ_loanType(t){
 }
 function lxQ_loans(ctx){
   const T = lxQ_table(ctx, "G", lxQ_TBL_G, ["desired yearly spending"], 3);
+  lxQ_tableLost(ctx, T, "G", "Loans and liabilities");
   if(!T) return;
   for(const r of T.rows){
     const [tC, bC, rC, yC, pC] = r.cells;
@@ -12061,12 +12170,14 @@ function lxQ_loans(ctx){
     const name = lxFold(tC.text) ? tC.text : "Loan";
     // The balance comes from its own column only: a limit or amount written in the loan
     // type ("credit card, limit 20,000") is never read as the balance.
-    const b = lxQ_money(ctx, bC.text);
+    const b = lxQ_money(ctx, bC.text, bC.items);
     if(!b || b.value == null || b.value === 0){ ctx.notes.push("Loan '" + name + "': balance " + (b ? "'" + bC.text + "' is not a single amount" : "is blank") + "; not imported."); continue; }
     let conf = lxQ_moneyConf(ctx, b, "Loan '" + name + "'");
     const f = { type:lxQ_loanType(tC.text), label:lxQ_txt(name), balance:b.value };
+    let rateRaw = "", rateLate = false;
     if(lxFold(rC.text)){
-      const rt = lxQ_num(ctx, rC.text);
+      const rt = lxQ_num(ctx, rC.text, rC.items);
+      if(rt) rateRaw = rt.raw;
       // A floating rate written as "SARON + 0.8" gives the margin, not the rate.
       if(/saron|libor|euribor|sonia|sofr|prime|variable|\+/i.test(rC.text)) ctx.notes.push("Loan '" + name + "': rate '" + rC.text + "' is a floating rate or margin; enter the current all-in rate.");
       else if(rt && rt.range) ctx.notes.push("Loan '" + name + "': interest rate '" + rC.text + "' is a range, not one rate; left out.");
@@ -12074,15 +12185,17 @@ function lxQ_loans(ctx){
         f.ratePct = rt.value;
         if(rt.fixed){ conf = Math.min(conf, 0.55); lxQ_fixNote(ctx, "Loan '" + name + "' interest rate", rC.text, rt.value + "%"); }
       }
+      // "175" on a scan may be 1.75 with the point lost: decided below, against the payment
+      else if(ctx.ocr && rt && /^\d{3,4}$/.test(lxClean(rt.raw).replace(/\s*%\s*$/, ""))) rateLate = true;
       else ctx.notes.push("Loan '" + name + "': interest rate '" + rC.text + "' is not a percentage; left out.");
     } else ctx.notes.push("Loan '" + name + "' has no interest rate; the balance is imported, add the rate.");
     if(lxFold(yC.text)){
       // An end date or year ("2034", "31.03.2034", "bis 03/2034") rather than a count: read
       // the year, never the day or month in front of it.
-      let yt = lxQ_txt(yC.text), yFixed = false;
+      let yt = lxQ_txt(yC.text), yFixed = lxQ_doubt(ctx, yC.items) != null;
       if(ctx.ocr){ const t2 = lxQ_ocrDigits(yt); if(t2 !== yt){ yt = t2; yFixed = true; } }
       const ys = (yt.match(/(?<!\d)(?:19|20|21)\d{2}(?!\d)/g) || []).map(Number);
-      const yr = ys.length ? null : lxQ_num(ctx, yC.text);
+      const yr = ys.length ? null : lxQ_num(ctx, yC.text, yC.items);
       if(ys.length){
         const Y = ys[ys.length - 1];
         if(ctx.refYear && Y >= ctx.refYear){
@@ -12105,15 +12218,34 @@ function lxQ_loans(ctx){
     // amortises over the years left, so a payment equal to the interest is worth pointing out.
     const p = lxQ_money(ctx, pC.text);
     const pm = p && p.value != null ? (p.period && p.period.f ? p.value / 12 : p.value) : null;
-    if(f.ratePct != null && pm != null){
-      const interest = b.value * f.ratePct / 1200;
-      if(interest > 0 && pm < interest * 0.97){
-        const implied = Math.round(pm * 1200 / b.value * 100) / 100;
-        ctx.notes.push("Loan '" + name + "': interest rate '" + rC.text + "' does not fit the monthly payment (" + pC.text + "): at " + f.ratePct + "% the interest alone would be "
-          + lxQ_fmt(interest) + " a month, while the payment matches about " + implied + "%. The rate is left out; check it on the form.");
-        delete f.ratePct;
+    if(rateLate){
+      const fix = pm != null ? lxQ_lostPoint(rateRaw, b.value, pm, f.years) : null;
+      if(fix != null){
+        ctx.notes.push("Loan '" + name + "': interest rate read from the scan as '" + lxQ_txt(rC.text) + "'; the scan most likely lost the decimal point, and " + fix + "% fits the monthly payment (" + pC.text + "), so " + fix + "% is imported. Check it on the form.");
+        f.ratePct = fix; conf = Math.min(conf, 0.6);
       }
-      else if(interest > 0 && Math.abs(pm - interest) <= interest * 0.03)
+      else ctx.notes.push("Loan '" + name + "': interest rate '" + rC.text + "' is not a percentage; left out.");
+    }
+    if(f.ratePct != null && pm != null){
+      let interest = b.value * f.ratePct / 1200;
+      if(interest > 0 && pm < interest * 0.97){
+        // A scan that lost the rate's decimal point ("19" for 1.9): the digits were read, and
+        // the payment on the same row says where the point goes. Taken only when exactly one
+        // placement fits the payment, below the usual confidence and with a note.
+        const fix = ctx.ocr ? lxQ_lostPoint(rateRaw, b.value, pm, f.years) : null;
+        if(fix != null){
+          ctx.notes.push("Loan '" + name + "': interest rate read from the scan as '" + lxQ_txt(rC.text) + "', which does not fit the monthly payment (" + pC.text + "); the scan most likely lost the decimal point, and "
+            + fix + "% fits the payment, so " + fix + "% is imported. Check it on the form.");
+          f.ratePct = fix; interest = b.value * fix / 1200;
+          conf = Math.min(conf, 0.6);
+        } else {
+          const implied = Math.round(pm * 1200 / b.value * 100) / 100;
+          ctx.notes.push("Loan '" + name + "': interest rate '" + rC.text + "' does not fit the monthly payment (" + pC.text + "): at " + f.ratePct + "% the interest alone would be "
+            + lxQ_fmt(interest) + " a month, while the payment matches about " + implied + "%. The rate is left out; check it on the form.");
+          delete f.ratePct;
+        }
+      }
+      if(f.ratePct != null && interest > 0 && Math.abs(pm - interest) <= interest * 0.03)
         ctx.notes.push("Loan '" + name + "': the monthly payment written (" + pC.text + ") is the interest only, so the loan may not be repaid; "
           + "the app amortises the balance over the years left, check this.");
     }
@@ -12125,6 +12257,24 @@ function lxQ_loans(ctx){
     }
     ctx.out.liabilities.push(lxRow(lxQ_c(ctx, lxQ_rowConf(r, conf)), r.quote, f));
   }
+}
+// The rate a scan's digits ("19", "175") give once the decimal point it lost is put back,
+// when exactly one placement fits the monthly payment written on the same row: as the
+// interest alone (within 3%), or as a repayment over the years left. Null otherwise: two
+// placements that fit, or none, leave the rate to the adviser.
+function lxQ_lostPoint(raw, balance, pm, years){
+  const dg = lxClean(raw || "").replace(/\s*%\s*$/, "");
+  if(!/^\d{2,4}$/.test(dg) || !(balance > 0) || !(pm > 0)) return null;
+  const fits = [];
+  for(let k = 1; k < dg.length; k++){
+    const v = parseFloat(dg.slice(0, k) + "." + dg.slice(k));
+    if(!(v > 0 && v <= 15)) continue;
+    const r = v / 1200, interest = balance * r;
+    let ok = Math.abs(pm - interest) <= interest * 0.03;
+    if(!ok && years > 0){ const n = years * 12, ann = balance * r / (1 - Math.pow(1 + r, -n)); ok = Math.abs(pm - ann) <= ann * 0.03; }
+    if(ok) fits.push(v);
+  }
+  return fits.length === 1 ? fits[0] : null;
 }
 
 // ── H: retirement ──────────────────────────────────────────────────────────────
@@ -12175,7 +12325,7 @@ function lxQ_retirement(ctx){
     done[n] = true;
     const src = lxQ_val(ctx, a), amtLab = lxQ_beside(ctx, a, "amount per year"), ageLab = lxQ_beside(ctx, a, "from age");
     const amt = amtLab ? lxQ_moneyField(ctx, { lab:amtLab, val:lxQ_val(ctx, amtLab) }, "Client " + n + " pension") : null;
-    const ageV = ageLab ? lxQ_val(ctx, ageLab) : null, age = ageV ? lxQ_num(ctx, ageV.text) : null;
+    const ageV = ageLab ? lxQ_val(ctx, ageLab) : null, age = ageV ? lxQ_num(ctx, ageV.text, ageV.items) : null;
     if(!amt) return;
     const c = n === 1 ? c1 : c2;
     if(!c.present){ ctx.notes.push("Client " + n + " pension given without Client " + n + "'s details; not imported."); return; }
@@ -12267,7 +12417,7 @@ function lxQ_goals(ctx){
       else {
         const dt = ctx.ocr ? lxQ_ocrDigits(lxQ_txt(durV.text)) : durV.text;
         const ys = (dt.match(/(?<!\d)(?:19|20|21)\d{2}(?!\d)/g) || []).map(Number);
-        const n = lxQ_num(ctx, durV.text);
+        const n = lxQ_num(ctx, durV.text, durV.items);
         // "until age 90", "bis 90", "jusqu'à 90 ans": an age the goal runs to, not 90 years
         const toAge = /\b(age|ages|alter|eta)\b|^(until|till|to|up to|bis|jusqu a|jusqu|fino a|fino al|fino ai)\b/.test(df);
         // "6 months", "3 Wochen": shorter than the year the app counts in
@@ -12295,8 +12445,8 @@ function lxQ_goals(ctx){
     }
     // amount
     let amount = null;
-    const am = amtV ? lxQ_money(ctx, amtV.text) : null;
-    const tg = tgtV ? lxQ_money(ctx, tgtV.text) : null;
+    const am = amtV ? lxQ_money(ctx, amtV.text, amtV.items) : null;
+    const tg = tgtV ? lxQ_money(ctx, tgtV.text, tgtV.items) : null;
     if(am && am.value != null){
       amount = am.value; conf = Math.min(conf, lxQ_moneyConf(ctx, am, G + " amount"));
       q.amount.push(amtV.text);
@@ -12323,7 +12473,7 @@ function lxQ_goals(ctx){
     // first year, or an age
     let startYear = null;
     if(firstV){
-      const n = lxQ_num(ctx, firstV.text), ft = lxFold(firstV.text);
+      const n = lxQ_num(ctx, firstV.text, firstV.items), ft = lxFold(firstV.text);
       // "in 5 years", "5 years from now", "now": counted from the questionnaire's date
       const rel = ft.match(/\b(?:in|within|nach|dans|tra|fra|en|after)\s+(\d+)\s*(?:years?|yrs?|jahren?|jahre|j|ans?|anni|anos?)\b/)
         || ft.match(/\b(\d+)\s*(?:years?|yrs?|jahren?|jahre|ans?|anni)\s+(?:from now|hence|from today|ab heute|von heute an|a partir d aujourd hui|da oggi)\b/);
@@ -12393,7 +12543,7 @@ function lxQ_priority(ctx, P, yMax){
   const page = ctx.doc.pages[P.page];
   const labRows = ctx.rows.filter(r => r.page === P.page && r.y > P.y + 4 && r.y < Math.min(P.y + 26, yMax + 12));
   const tiers = ["essential", "important", "aspirational"];
-  const spans = tiers.map(t => { for(const r of labRows){ const m = lxQ_matchIn(r.fold, t, 0)[0] || (ctx.ocr ? lxQ_matchIn(r.fold, t, lxQ_k(t.length))[0] : null); if(m) return lxQ_span(r, m); } return null; });
+  const spans = tiers.map(t => { for(const r of labRows){ const m = lxQ_matchIn(r.fold, t, 0)[0] || (ctx.ocr ? lxQ_matchIn(r.fold, t, lxQ_k(t.length), true)[0] : null); if(m) return lxQ_span(r, m); } return null; });
   const got = spans.filter(Boolean);
   if(got.length < 2) return null;
   // A label OCR could not read must not simply drop out: the X would then go to whichever
@@ -12406,8 +12556,8 @@ function lxQ_priority(ctx, P, yMax){
     spans[m] = { x:c - w / 2, x1:c + w / 2, y };
   }
   const yL = Math.min(...got.map(s => s.y));
-  const ticks = (page.items || []).filter(i => lxQ_isTick(i.str) && i.y >= P.y - 8 && i.y < yL - 3 && i.x > P.x1 + 2);
-  if(!ticks.length) return null;
+  const ticks = (page.items || []).filter(i => lxQ_isMark(i.str) && i.y >= P.y - 8 && i.y < yL - 3 && i.x > P.x1 + 2);
+  if(!ticks.length) return ctx.ocr ? { tier:null, note:"no priority mark could be read from the scan; priority left blank, check the paper form." } : null;
   if(ticks.length > 1) return { tier:null, note:"more than one priority mark; priority left blank." };
   const t = ticks[0], cx = t.x + (lxQ_x1(t) - t.x) / 2;
   const ds = spans.map(s => s ? (cx < s.x ? s.x - cx : cx > s.x1 ? cx - s.x1 : 0) : Infinity);
@@ -12429,11 +12579,11 @@ function lxQ_risk(ctx){
   // character
   const prof = [];
   for(const r of rows){
-    const words = r.items.filter(i => !lxQ_isTick(i.str) && lxFold(i.str).length > 2);
+    const words = r.items.filter(i => !lxQ_isMark(i.str) && lxFold(i.str).length > 2);
     if(!words.length) continue;
     const idx = r.items.indexOf(words[0]);
-    const rest = lxQ_index({ items:r.items.slice(idx).filter(i => !lxQ_isTick(i.str)) }).fold;
-    const P = lxQ_RISK.find(([n]) => lxQ_starts(rest, n, ctx.ocr ? Math.min(2, lxQ_k(n.length)) : 0));
+    const rest = lxQ_index({ items:r.items.slice(idx).filter(i => !lxQ_isMark(i.str)) }).fold;
+    const P = lxQ_RISK.find(([n]) => lxQ_starts(rest, n, ctx.ocr ? Math.min(2, lxQ_k(n.length)) : 0, ctx.ocr));
     if(P) prof.push({ page:r.page, y:r.y, lx:words[0].x, P });
   }
   // Each tick goes to the profile row nearest its baseline (rows are 15pt apart, so up to
@@ -12442,7 +12592,7 @@ function lxQ_risk(ctx){
   for(const pr of prof){
     const page = ctx.doc.pages[pr.page];
     for(const t of page.items || []){
-      if(seen.has(t) || !lxQ_isTick(t.str) || t.x >= pr.lx + 4 || t.x <= pr.lx - 48) continue;
+      if(seen.has(t) || !lxQ_isMark(t.str) || t.x >= pr.lx + 4 || t.x <= pr.lx - 48) continue;
       const near = prof.filter(o => o.page === pr.page).sort((a, b) => Math.abs(a.y - t.y) - Math.abs(b.y - t.y))[0];
       if(near !== pr || Math.abs(t.y - pr.y) > 7) continue;
       seen.add(t);
@@ -12472,6 +12622,9 @@ function lxQ_risk(ctx){
     if(u.length === 1) res[n] = { value:u[0] };
     else if(u.length > 1) ctx.notes.push("Client " + n + " has more than one risk profile ticked (" + u.join(", ") + "); left out.");
   }
+  // the profile rows were read but no tick for a client (and none that was unclear): on a
+  // scan the X may have been lost, which the household step reports for a present client
+  res.lost = ctx.ocr && prof.length >= 3 && !unclear ? { 1:!picks[1].length, 2:!picks[2].length } : null;
   return res;
 }
 function lxQ_horizon(ctx){
@@ -12494,7 +12647,7 @@ function lxQ_tax(ctx){
   const inc = lxQ_field(ctx, "income tax current rate", { sec:"L" }), cg = lxQ_field(ctx, "capital gains current rate", { sec:"L" });
   const pct = (fld, key, what) => {
     if(!fld || !fld.val) return;
-    const r = lxQ_num(ctx, fld.val.text);
+    const r = lxQ_num(ctx, fld.val.text, fld.val.items);
     if(r && r.range) ctx.notes.push(what + " '" + fld.val.text + "' is a range, not one rate; left out.");
     else if(r && r.value >= 0 && r.value <= 70){
       tx[key] = r.value; parts.push(fld.lab.text, fld.val.text);
@@ -12517,7 +12670,7 @@ function lxQ_tax(ctx){
   if(yn){ tx.includeTaxes = yn.i === 0; parts.push(...yn.quote); }
   const res = lxQ_field(ctx, "country of tax residence", { sec:"L" });
   if(res && res.val){
-    const cc = lxQ_country(res.val.text);
+    const cc = lxQ_country(res.val.text, ctx.ocr);
     if(cc && cc.code && ctx.c1.fields.country && cc.code !== ctx.c1.fields.country) ctx.notes.push("Tax residence (" + res.val.text + ") differs from Client 1's country of residence; check the tax settings.");
   }
   const cant = lxQ_field(ctx, "state province canton for local tax", { sec:"L" });
@@ -12581,6 +12734,18 @@ function lxQ_freeText(ctx){
 // right-most free-standing amount is the value. Limits, rates, weights, income, cost
 // prices, accrued interest, dates, phone numbers and term lengths ("10 Jahre") can never
 // become the value; a "DR" printed in the next cell makes the amount a debit.
+//
+// Scans (doc.source "ocr", Tesseract): a table row split over baselines a few points apart
+// is read joined (lxS_ocrLines); an ISIN or IBAN with O / 0, I / 1 / l / |, S / 5, B / 8,
+// Z / 2, G / 6 misread is repaired only when exactly ONE reading passes its check (the ISIN
+// check digit plus the CUSIP / SEDOL inside it where there is one, or mod-97), and a token that
+// passes as printed but breaks its country's layout ("IEOOBK5BQT80") is read again the same
+// way; a letter inside an amount ("75'39O.00") is read as its digit only when that reading is
+// the only well-formed one, and the row then stays at 0.7 at most with a note; a number that
+// cannot be read with certainty is not read at all. Every OCR-read row is capped at 0.75, and
+// only a cross-check (the stated total reconciling, or quantity x price) keeps it ticked;
+// otherwise it starts at 0.55. A position line whose code no reading confirms is left out,
+// but its amount still counts when the stated total is checked, and the notes say so.
 // Needs utils.js loaded first. Entry point: lxReadStatement(doc).
 
 // ── Keyword lists ──────────────────────────────────────────────────────────────
@@ -12711,100 +12876,305 @@ const lxS_TERM_AFTER = /^(jahre?n?|jahr|years?|yrs?|ans?|annees?|anni|anno|monat
 const lxS_USD_PER = { USD:1, CHF:1.18, EUR:1.12, GBP:1.30, JPY:0.0068, CAD:0.73, AUD:0.65, NZD:0.59, SEK:0.10, NOK:0.095, DKK:0.15, SGD:0.76, HKD:0.128, CNY:0.14, INR:0.0115, BRL:0.18, MXN:0.053, ZAR:0.055, SAR:0.267, AED:0.272, PLN:0.26, CZK:0.045, HUF:0.0028, ILS:0.27, TRY:0.025 };
 
 // ── Identifiers (with a careful OCR repair) ────────────────────────────────────
-// OCR reads 0 as O, 1 as I / l / |, and I as l or | now and then. A repaired identifier is
-// accepted only when its check digit (ISIN) or mod-97 (IBAN) then validates and exactly one
-// best repair does: the check is what makes the repair safe, and the row is still flagged
-// as OCR-read.
+// OCR confuses a few letters with digits: O / 0, I / 1 (also printed l, | or i), S / 5,
+// B / 8, Z / 2, G / 6. An identifier that validates AS PRINTED is taken as printed. One that
+// does not is repaired only when exactly ONE reading validates among every reading the
+// confusions allow (at most two characters read the other way, besides the ones that cannot
+// be what they print): the check digit (ISIN), the national check digit inside it (SEDOL for
+// GB / IE, CUSIP for US / CA) or mod-97 (IBAN) is what makes the repair safe. Two readings
+// that both validate settle nothing, so neither is taken; the row is left out and the notes
+// say why. A repaired identifier is still flagged as OCR-read.
 // ISIN country prefixes that occur on client statements (ISO countries plus XS / EU).
 const lxS_ISIN_CC = new Set(("AD AE AG AI AN AR AT AU AW AZ BB BE BG BH BM BR BS BW BY BZ CA CH CL CN CO CR CW CY CZ DE DK EE EG ES EU FI FO FR GB GG GI GR HK HR HU ID IE IL IM IN IS IT JE JO JP KR KW KY KZ LB LI LK LT LU LV MA MC MH MO MT MU MX MY NG NL NO NZ OM PA PE PH PK PL PR PT QA RO RS RU SA SE SG SI SK TH TN TR TW UA US UY VE VG VN XA XB XC XD XS ZA").split(" "));
-// Every reading of one printed 12-character token, most plausible first. The letters I and O
-// are not used by the national numbers inside ISINs (CUSIP, SEDOL, WKN, Valor), so on a
-// scan a reading with digits there is preferred over one with the letters.
-function lxS_isinRead(tok){
-  const ch = tok.split("");
-  if(ch.length !== 12) return null;
-  const body = ch.slice(2);
-  // an ISIN body is mostly digits (three real ones at least, five with the O / l / | that
-  // OCR puts for 0 and 1), and at most three characters in the token need reading another way
-  if(body.filter(c => /[0-9]/.test(c)).length < 3 || body.filter(c => /[0-9Oo|l]/.test(c)).length < 5) return null;
-  const amb = ch.filter((c, i) => i < 2 ? /[|1l0]/.test(c) : /[Oo|lI]/.test(c)).length;
-  if(amb > 3) return null;
-  const opts = ch.map((c, i) => {
-    if(i < 2) return /[|1l]/.test(c) ? ["I"] : c === "0" ? ["O"] : c === "L" ? ["L", "I"] : [c.toUpperCase()];
-    if(i === 11) return /[Oo]/.test(c) ? ["0"] : /[Il|]/.test(c) ? ["1"] : [c.toUpperCase()];
-    return /[Oo]/.test(c) ? ["O", "0"] : c === "I" ? ["I", "1"] : /[l|]/.test(c) ? ["1", "I"] : [c.toUpperCase()];
-  });
-  let vars = [""];
-  opts.forEach(o => { vars = vars.flatMap(v => o.map(x => v + x)); });
-  const ok = vars.filter(v => lxS_ISIN_CC.has(v.slice(0, 2)) && lxIsinValid(v));
-  if(!ok.length) return null;
-  const letters = v => (v.slice(2, 11).match(/[OI]/g) || []).length;
-  const best = Math.min(...ok.map(letters)), top = ok.filter(v => letters(v) === best);
-  return top.length === 1 ? top[0] : null;
+// The confusable glyphs: each reads as [letter, digit].
+const lxS_CONF = { O:"O0", o:"O0", "0":"O0", I:"I1", i:"I1", l:"I1", "|":"I1", "1":"I1", S:"S5", s:"S5", "5":"S5", B:"B8", "8":"B8", Z:"Z2", z:"Z2", "2":"Z2", G:"G6", "6":"G6" };
+// Every reading of a printed identifier that validates. kinds[i] is what position i must
+// hold: "a" a letter, "n" a digit (a confusable glyph there has one reading only, so it is
+// read that way), "c" either (a confusable glyph there can be read both ways: the other way
+// counts as one flip), "x" either but never I or O (a German WKN: O / I / l / | there are
+// 0 / 1, while S B Z G stay two-way). digitFlip: whether a DIGIT printed at a "c" / "x"
+// position may be read as its letter (yes for ISINs, whose bodies carry letters; no for IBAN
+// account numbers, which are nearly all digits and where it would multiply the readings).
+// Every reading at most two flips from the base is tried. Returns { hits, forced }.
+function lxS_repairId(ch, kinds, valid, opt){
+  const base = [], flips = []; let forced = 0;
+  for(let i = 0; i < ch.length; i++){
+    const c = ch[i], k = kinds[i], pair = lxS_CONF[c], up = c.toUpperCase();
+    let v;
+    if(k === "a") v = pair ? pair[0] : /^[A-Z]$/.test(up) ? up : null;
+    else if(k === "n" || (k === "x" && pair && /[OoIil|01]/.test(c))) v = pair ? pair[1] : /^\d$/.test(c) ? c : null;
+    else if(!pair) v = /^[A-Z0-9]$/.test(up) && !(k === "x" && /[IO]/.test(up)) ? up : null;
+    else if(/\d/.test(c)){ v = c; if(opt.digitFlip) flips.push([i, pair[0]]); }
+    // a printed letter: O / I (l | i o) read as the digit first (national numbers do not use
+    // them), S B Z G as printed first; the other reading is the flip
+    else { v = /[OoIil|]/.test(c) ? pair[1] : pair[0]; flips.push([i, v === pair[0] ? pair[1] : pair[0]]); }
+    if(v == null) return { hits:[], forced:99 };
+    if(v !== up) forced++;
+    base.push(v);
+  }
+  if(forced > opt.maxForced) return { hits:[], forced };
+  const hits = new Set(), test = arr => { const s = arr.join(""); if(valid(s)) hits.add(s); };
+  test(base);
+  for(let a = 0; a < flips.length; a++){
+    const one = base.slice(); one[flips[a][0]] = flips[a][1]; test(one);
+    if(opt.maxFlip !== 1) for(let b = a + 1; b < flips.length; b++){ const two = one.slice(); two[flips[b][0]] = flips[b][1]; test(two); }
+  }
+  return { hits:[...hits], forced };
 }
-// ISINs on a line (or in the given cells). On a scan, a token that is not an ISIN as printed
-// is repaired only where an ISIN is expected: standing alone in its cell (an ISIN column) or
-// right after the word "ISIN". Words on the page are never read as one.
-function lxS_isins(text, ocr, cells){
-  const out = lxFindIsins(text).map(h => ({ isin:h.isin, fixed:false }));
-  if(!ocr) return out;
-  const res = [];
-  (cells ? cells.map(c => c.text) : [text]).forEach(ct => {
-    // IBANs are masked first so their groups can never be taken for an ISIN
-    let t = lxClean(ct);
-    lxFindIbans(t).concat(lxFindIbans(lxS_ibanRepair(t))).forEach(h => { t = t.slice(0, h.index) + "~".repeat(h.end - h.index) + t.slice(h.end); });
-    let m;
-    const re = /(?:^|[^A-Za-z0-9|])((?:[A-Za-z0-9|] ?){11}[A-Za-z0-9|])(?![A-Za-z0-9|])/g;
-    while((m = re.exec(t))){
+// SEDOL (7 characters, no vowels, the last a check digit) and CUSIP (9, the last a check
+// digit): the national numbers inside GB / IE and US / CA ISINs carry their own check.
+function lxS_sedolValid(s){
+  if(!/^[B-DF-HJ-NP-TV-Z0-9]{6}\d$/.test(s)) return false;
+  const w = [1, 3, 1, 7, 3, 9]; let sum = 0;
+  for(let i = 0; i < 6; i++) sum += w[i] * (/\d/.test(s[i]) ? +s[i] : s.charCodeAt(i) - 55);
+  return (10 - sum % 10) % 10 === +s[6];
+}
+function lxS_cusipValid(s){
+  if(!/^[A-Z0-9]{8}\d$/.test(s)) return false;
+  let sum = 0;
+  for(let i = 0; i < 8; i++){ let v = /\d/.test(s[i]) ? +s[i] : s.charCodeAt(i) - 55; if(i % 2) v *= 2; sum += Math.floor(v / 10) + v % 10; }
+  return (10 - sum % 10) % 10 === +s[8];
+}
+// A REPAIRED ISIN must also carry a valid national number where the country has a checked
+// one: US / CA wrap a CUSIP; GB / IE / JE / GG / IM "..00" + a SEDOL (no vowels, its own check
+// digit; the newer Irish numbers start IE000 and are not SEDOLs, so they get the ISIN check
+// only).
+function lxS_isinOk(v){
+  if(!lxS_ISIN_CC.has(v.slice(0, 2)) || !lxIsinValid(v)) return false;
+  const cc = v.slice(0, 2);
+  if(cc === "US" || cc === "CA") return lxS_cusipValid(v.slice(2, 11));
+  if(/^(GB|IE|JE|GG|IM)$/.test(cc)) return v.slice(2, 4) === "00" && ((cc === "IE" && v[4] === "0") || lxS_sedolValid(v.slice(4, 11)));
+  return true;
+}
+// What each position of a country's ISIN may hold (see lxS_repairId): the national number
+// inside is digits only for CH / LI (Valor), LU and XS (Common Code); "000" + a WKN (no I, no
+// O) for DE; "00" + a SEDOL for GB / IE / JE / GG / IM (the SEDOL check then rules out
+// vowels). Elsewhere either.
+function lxS_isinKinds(cc){
+  return Array.from({ length:12 }, (_, i) => i < 2 ? "a" : i === 11 ? "n"
+    : /^(CH|LI|LU|XS)$/.test(cc) ? "n"
+    : /^(GB|IE|JE|GG|IM)$/.test(cc) ? (i < 4 ? "n" : "c")
+    : cc === "DE" ? (i < 5 ? "n" : "x") : "c");
+}
+// Every validating reading of one printed 12-character token ({ hits, shaped }; shaped says
+// the token looks like an ISIN at all, so an unread one is worth a note).
+function lxS_isinRepair(tok){
+  const ch = tok.split("");
+  if(ch.length !== 12) return { hits:[], shaped:false };
+  // an ISIN body is mostly digits (three real ones at least, five with the look-alikes OCR
+  // puts for them: O l | I S B Z G)
+  const body = ch.slice(2);
+  if(body.filter(c => /[0-9]/.test(c)).length < 3 || body.filter(c => /[0-9Oo|lISBZG]/.test(c)).length < 5 || !/[0-9Oo|lISBZG]/.test(ch[11])) return { hits:[], shaped:false };
+  const cc = ch.slice(0, 2).map(c => lxS_CONF[c] ? lxS_CONF[c][0] : c.toUpperCase()).join("");
+  if(!lxS_ISIN_CC.has(cc)) return { hits:[], shaped:false };
+  // a printed digit may be a misread letter only inside a SEDOL (GB / IE...), whose letters are
+  // common and whose own check digit stands behind the ISIN's: elsewhere letters are rare in
+  // the body and each extra reading is one more chance for a wrong one to pass the checks
+  const digitFlip = /^(GB|IE|JE|GG|IM)$/.test(cc);
+  return { hits:lxS_repairId(ch, lxS_isinKinds(cc), lxS_isinOk, { digitFlip, maxForced:4, maxFlip:1 }).hits, shaped:true };
+}
+// A 13-character token where OCR read one zero twice, as a letter O beside a digit 0
+// ("CHO0038863350"): each of the two is dropped in turn and the rest read as above. Only
+// that mixed pair is tried (a doubled "00" or any other extra character is not guessed at).
+function lxS_isinRepair13(tok){
+  const hits = new Set(); let shaped = false;
+  for(let i = 0; i + 1 < tok.length; i++){
+    if(!((/[Oo]/.test(tok[i]) && tok[i + 1] === "0") || (tok[i] === "0" && /[Oo]/.test(tok[i + 1])))) continue;
+    for(const j of [i, i + 1]){ const r = lxS_isinRepair(tok.slice(0, j) + tok.slice(j + 1)); if(r.shaped) shaped = true; r.hits.forEach(h => hits.add(h)); }
+  }
+  // shaped like an ISIN with one character too many (worth a note even when not repaired)
+  if(!shaped) shaped = lxS_isinRepair(tok.slice(0, 11) + tok.slice(12)).shaped;
+  return { hits:[...hits], shaped };
+}
+// ISIN-shaped tokens of one text: { hits:[{ isin, fixed, doubled, index, end, printed }],
+// unsure:[{ printed, n }] } (n = how many readings validated: 0 none, 2+ ambiguous). On a
+// scan, a token that is not an ISIN as printed is repaired only where an ISIN is expected:
+// standing alone in its text (a cell of an ISIN column) or right after the word "ISIN".
+// Words on the page are never read as one.
+// On a scan, a token that passes the ISIN check digit as printed is still not taken as
+// printed when it breaks what its country's ISINs look like (lxS_isinKinds), holds a letter O
+// or I in the body (national numbers use them almost nowhere; the newer IE000 numbers may),
+// or carries a CUSIP / SEDOL that fails its own check. "IEOOBK5BQT80" passes the ISIN check
+// digit with the letters, yet it is IE00BK5BQT80: such a token goes through the repair.
+function lxS_isinSound(v){
+  const k = lxS_isinKinds(v.slice(0, 2));
+  if(v.split("").some((c, i) => (k[i] === "n" && !/\d/.test(c)) || (k[i] === "x" && /[IO]/.test(c)))) return false;
+  if(/[OI]/.test(v.slice(2, 11)) && !/^IE000/.test(v)) return false;
+  if(!lxS_isinOk(v)) return false;
+  // an S B Z G in the body may be a misread 5 8 2 6: taken as printed only when no such
+  // reading validates too ("FR00123456B8" and FR0012345688 both pass the check digit)
+  if(/[SBZG]/.test(v.slice(2, 11))){ const r = lxS_isinRepair(v); return r.hits.length === 1 && r.hits[0] === v; }
+  return true;
+}
+function lxS_isinScan(text, ocr){
+  const t = lxClean(text), hits = [], unsure = [];
+  let m;
+  const re0 = /(^|[^A-Za-z0-9])([A-Z]{2}[A-Z0-9]{9}\d)(?![A-Za-z0-9])/g;
+  while((m = re0.exec(t))){
+    if(!lxIsinValid(m[2])) continue;
+    const at = m.index + m[1].length;
+    if(!ocr || lxS_isinSound(m[2])){ hits.push({ isin:m[2], fixed:false, index:at, end:at + 12, printed:m[2] }); continue; }
+    const r = lxS_isinRepair(m[2]);
+    if(r.hits.length === 1) hits.push({ isin:r.hits[0], fixed:r.hits[0] !== m[2], index:at, end:at + 12, printed:m[2] });
+    else unsure.push({ printed:m[2], n:r.hits.length, index:at, end:at + 12 });
+  }
+  if(!ocr) return { hits, unsure };
+  // IBANs are masked first so their groups can never be taken for an ISIN
+  let u = t;
+  lxS_ibanScan(t, true).forEach(h => { u = u.slice(0, h.index) + "~".repeat(h.end - h.index) + u.slice(h.end); });
+  for(const n of [12, 13]){
+    const re = new RegExp("(?:^|[^A-Za-z0-9|])((?:[A-Za-z0-9|] ?){" + (n - 1) + "}[A-Za-z0-9|])(?![A-Za-z0-9|])", "g");
+    while((m = re.exec(u))){
       const end = m.index + m[0].length, start = end - m[1].length;
       re.lastIndex = end;
+      if(hits.concat(unsure).some(h => h.index < end && start < h.end)) continue;
       // an ISIN split by OCR breaks into pieces of a code (mostly digits), never into words
-      // ("IE00B4 L5Y983" yes, "Lilo Kurs 2O26" no); a first piece may be the country code
+      // ("IE00B4 L5Y983" yes, "Lilo Kurs 2O26" no); a first piece may be the country code. An
+      // unsplit token is judged by its body (lxS_isinRepair), since a SEDOL is letter-heavy.
       const parts = m[1].split(" ");
-      if(parts.length > 3 || parts.some((p, i) => !(i === 0 && /^[A-Za-z|l1]{2}([0-9Oo|lI][A-Za-z0-9|]{0,3})?$/.test(p)) && (!/[0-9]/.test(p) || (p.match(/[0-9Oo|lI]/g) || []).length * 2 < p.length))) continue;
+      if(parts.length > 3 || (parts.length > 1 && parts.some((p, i) => !(i === 0 && /^[A-Za-z|l1]{2}([0-9Oo|lI][A-Za-z0-9|]{0,3})?$/.test(p)) && (!/[0-9]/.test(p) || (p.match(/[0-9Oo|lISBZG]/g) || []).length * 2 < p.length)))) continue;
       const printed = m[1].replace(/ /g, "");
-      const asPrinted = /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(printed) && lxIsinValid(printed);
-      const alone = !t.slice(0, start).replace(/[~\s]/g, "") && !t.slice(end).replace(/[~\s]/g, "");
-      if(!asPrinted && !alone && !/\bISIN\s*:?\s*$/i.test(t.slice(0, start))) continue;
-      const isin = lxS_isinRead(printed);
-      if(isin && !res.some(r => r.isin === isin)) res.push({ isin, fixed:isin !== printed, printed:printed.toUpperCase() });
+      const alone = !u.slice(0, start).replace(/[~\s]/g, "") && !u.slice(end).replace(/[~\s]/g, "");
+      if(!alone && !/\bISIN\s*:?\s*$/i.test(u.slice(0, start))) continue;
+      const r = n === 12 ? lxS_isinRepair(printed) : lxS_isinRepair13(printed);
+      if(r.hits.length === 1) hits.push({ isin:r.hits[0], fixed:true, doubled:n === 13, index:start, end, printed });
+      else if(r.shaped) unsure.push({ printed, n:r.hits.length });
     }
-  });
-  // a valid-as-printed ISIN the reading above did not settle stays as printed
-  out.forEach(o => { if(!res.some(r => r.isin === o.isin || r.printed === o.isin)) res.push(o); });
-  return res.map(r => ({ isin:r.isin, fixed:r.fixed }));
+  }
+  hits.sort((a, b) => a.index - b.index);
+  return { hits, unsure };
 }
-// The same text with the OCR confusions inside IBAN-shaped runs undone (same length, so
-// positions still match). GB, IE and NL IBANs carry a 4-letter bank code at positions 5-8:
-// letters there are real.
-function lxS_ibanRepair(text){
-  return lxClean(text).replace(/[A-Z]{2}[0-9OIl]{2}(?: ?[A-Z0-9Il]{4}){2,7}(?: ?[A-Z0-9Il]{1,3})?/g, s => {
-    const keep = /^(GB|IE|NL)/.test(s) ? 8 : 2; let n = 0;
-    return s.replace(/[^ ]/g, ch => (n++ < keep) ? ch : ch.replace("O", "0").replace(/[Il]/, "1"));
+// ISINs on a line (per cell on a scan, so "alone in its cell" means an ISIN column). The
+// array carries .unsure: ISIN-shaped tokens that could not be confirmed.
+function lxS_isins(text, ocr, cells){
+  const res = [], unsure = [];
+  (ocr && cells ? cells.map(c => c.text) : [text]).forEach(ct => {
+    const s = lxS_isinScan(ct, ocr);
+    s.hits.forEach(h => { if(!res.some(r => r.isin === h.isin)) res.push({ isin:h.isin, fixed:h.fixed, doubled:!!h.doubled, printed:h.printed }); });
+    unsure.push(...s.unsure);
   });
+  res.unsure = unsure;
+  return res;
+}
+// IBAN layout per country after the check digits (the IBAN registry): n digits, a letters,
+// c either. Countries not listed are treated as "c" throughout (the length still applies).
+const lxS_BBAN = { CH:"5n12c", LI:"5n12c", DE:"18n", AT:"16n", GB:"4a14n", IE:"4a14n", FR:"10n11c2n", MC:"10n11c2n", IT:"1a10n12c", SM:"1a10n12c", ES:"20n", NL:"4a10n", BE:"12n", LU:"3n13c", PT:"21n", SE:"20n", DK:"14n", FI:"14n", NO:"11n", PL:"24n", CZ:"20n", SK:"20n", HU:"24n", GR:"7n16c", CY:"8n16c", MT:"4a5n18c", SI:"15n", HR:"17n", EE:"16n", LV:"4a13c", LT:"16n", AE:"19n", SA:"2n18c", TR:"6n16c", IL:"19n" };
+function lxS_ibanKinds(cc){
+  const L = LX_IBAN_LEN[cc]; if(!L) return null;
+  const k = ["a", "a", "n", "n"]; let m; const re = /(\d+)([anc])/g;
+  while((m = re.exec(lxS_BBAN[cc] || ""))) for(let i = 0; i < +m[1]; i++) k.push(m[2]);
+  while(k.length < L) k.push("c");
+  return k.length === L ? k : null;
+}
+function lxS_ibanSound(printed, iban){
+  const k = lxS_ibanKinds(iban.slice(0, 2));
+  if(!k) return true;
+  if(!iban.split("").every((c, i) => k[i] === "c" || (k[i] === "n" ? /\d/.test(c) : /[A-Z]/.test(c)))) return false;
+  const ch = printed.replace(/\s+/g, "").split("");
+  if(ch.length !== k.length) return false;
+  if(!ch.some((c, i) => k[i] === "c" && (/[a-z|]/.test(c) || (lxS_CONF[c] && /[A-Z]/.test(c))))) return true;
+  const r = lxS_repairId(ch, k, lxIbanValid, { digitFlip:false, maxForced:4 });
+  return r.hits.length === 1 && r.hits[0] === iban;
+}
+// IBANs in a text: as printed, and on a scan also repaired, [{ iban, printed, index, end,
+// fixed }] (index / end in lxClean(text)). A repaired IBAN is read over exactly the length
+// its country prescribes and must end at a word boundary, so it never swallows the next word.
+function lxS_ibanScan(text, ocr){
+  const t = lxClean(text);
+  let out = lxFindIbans(t).map(h => ({ iban:h.iban, printed:h.printed, index:h.index, end:h.end, fixed:false }));
+  if(!ocr) return out;
+  // on a scan, an IBAN valid as printed must also fit its country's layout (a letter in a
+  // numeric part passed mod-97 by chance, 1 in 97), and a look-alike letter where the layout
+  // allows letters ("390S", "3l66") must be the only reading that validates; otherwise it is
+  // read again below
+  out = out.filter(h => lxS_ibanSound(t.slice(h.index, h.end), h.iban));
+  const W = c => /[A-Za-z0-9|]/.test(c || "");
+  for(let i = 0; i < t.length; i++){
+    if(!W(t[i]) || W(t[i - 1]) || out.some(h => i >= h.index && i < h.end)) continue;
+    const cc = t.slice(i, i + 2).split("").map(c => lxS_CONF[c] ? lxS_CONF[c][0] : c.toUpperCase()).join("");
+    const kinds = /^[A-Z]{2}$/.test(cc) && lxS_ibanKinds(cc);
+    if(!kinds) continue;
+    const ch = []; let j = i;
+    while(j < t.length && ch.length < kinds.length){
+      if(W(t[j])){ ch.push(t[j]); j++; }
+      else if(t[j] === " " && W(t[j + 1])) j++;
+      else break;
+    }
+    if(ch.length !== kinds.length || W(t[j])) continue;
+    // an account number is mostly digits as printed (a run of words is not one)
+    if(ch.slice(2).filter(c => /\d/.test(c)).length < 0.6 * (ch.length - 2)) continue;
+    const r = lxS_repairId(ch, kinds, lxIbanValid, { digitFlip:false, maxForced:4 });
+    if(r.hits.length === 1) out.push({ iban:r.hits[0], printed:t.slice(i, j), index:i, end:j, fixed:true });
+  }
+  return out.sort((a, b) => a.index - b.index);
 }
 function lxS_ibans(text, ocr){
-  const out = lxFindIbans(text).map(h => ({ iban:h.iban, printed:h.printed, fixed:false }));
-  if(out.length || !ocr) return out;
-  return lxFindIbans(lxS_ibanRepair(text)).map(h => ({ iban:h.iban, printed:h.printed, fixed:true }));
+  return lxS_ibanScan(text, ocr).map(h => ({ iban:h.iban, printed:h.printed, fixed:h.fixed }));
 }
 
 // ── Amounts with roles ─────────────────────────────────────────────────────────
 // Things that look like numbers but are not money, masked with "~" (same length, so
 // positions still match): "30.06." dates without a year (transaction lists), US-style
-// "June 30, 2026", Valor numbers, and "Nr. 1234-567.890" references. On OCR input, O/o
-// inside a number becomes 0 and l/I/| becomes 1 ("1O3'45O.00"), but only in a token that
-// is otherwise digits and separators, so words are never touched.
-function lxS_mask(text, ocr){
+// "June 30, 2026", Valor numbers, and "Nr. 1234-567.890" references. On OCR input the
+// identifiers (repaired ISINs and IBANs) are masked too, and a number with an OCR letter in
+// it is repaired when that is unambiguous (lxS_numRepair).
+function lxS_mask(text, ocr){ return lxS_maskInfo(text, ocr).t; }
+// What a digit string is: "date" (30.06.2026, 30.06.), "num" (a well-formed number: 2026,
+// 044, 96.40, 103'450.00, 1.234,50, 90 000,00; never a leading 0 before a group, "0'000"),
+// or "".
+function lxS_numShape(s){
+  if(/^\d{1,2}\.\d{1,2}\.(\d{2}|\d{4})?$/.test(s)) return "date";
+  if(/^\d+$/.test(s)) return "num";
+  if(/^(0|[1-9]\d*)([.,]\d+)?$/.test(s) || /^[1-9]\d{0,2}(['., ])\d{3}(\1\d{3})*([.,]\d{1,2})?$/.test(s)) return lxParseAmount(s) ? "num" : "";
+  return "";
+}
+// One OCR token of digits, separators and look-alike letters: { t } the text to read (same
+// length), with fixed:true when a letter was read as a digit, or bad:true when it cannot be
+// read at all (then it is blanked, so no fragment of it becomes money). The rules:
+// - O / I / l / | become 0 / 1 anywhere; S / B / Z / G become 5 / 8 / 2 / 6 only INSIDE a
+//   grouped amount ("3S'248.00"), where the digits around them leave no other reading;
+// - at most two letters in the token, and the result must be a well-formed number or date;
+// - a "|" at either end may be a table rule rather than a 1 (not beside a sign or bracket,
+//   where no rule stands): when the number is well formed both ways ("|75'390.00"), it is
+//   read without it and the other reading is kept as amb, for the arithmetic to settle.
+function lxS_numRepair(s, before, after){
+  const bad = (s.match(/[OoIl|SBZG]/g) || []).length;
+  if(!bad) return { t:s };
+  const digits = (s.match(/\d/g) || []).length;
+  if(digits < 2) return { t:s };
+  if(bad > 2 || (/[SBZG]/.test(s) && !/\d[SBZG0-9]*['.,]\d/.test(s))) return { t:"~".repeat(s.length), bad:true };
+  const map = x => x.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1").replace(/S/g, "5").replace(/B/g, "8").replace(/Z/g, "2").replace(/G/g, "6");
+  const r = map(s), shape = lxS_numShape(r);
+  const lead = s[0] === "|" && !/[(\-]/.test(before || ""), trail = !lead && s[s.length - 1] === "|" && !/[)\-]/.test(after || "");
+  const drop = lead ? " " + map(s.slice(1)) : trail ? map(s.slice(0, -1)) + " " : null;
+  const dropOk = drop != null && lxS_numShape(drop.trim()) === "num";
+  // both readings well formed: ambiguous (the arithmetic may settle it); only one: that one
+  if(shape === "num" && dropOk) return { t:drop, fixed:true, amb:lxParseAmount(r).value };
+  if(!shape && dropOk) return { t:drop, fixed:true };
+  if(!shape) return { t:"~".repeat(s.length), bad:true };
+  return { t:r, fixed:true };
+}
+// The mask with what it did: { t, fixed:[{ index, end, printed, amb }], bad:[printed] }.
+function lxS_maskInfo(text, ocr){
   let t = lxClean(text);
-  // S / B / Z read for 5 / 8 / 2 are repaired only INSIDE a grouped amount ("3S'248.00"),
-  // where the digits around them leave no other reading; the value then still has to pass
-  // the quantity x price or totals check to be ticked (OCR values are capped otherwise)
-  if(ocr) t = t.replace(/(?<![A-Za-z0-9])[0-9OoIl|][0-9OoIl|SBZ'.,]*[0-9OoIl|](?![A-Za-z0-9])/g, s => {
-    const digits = (s.match(/\d/g) || []).length, bad = (s.match(/[OoIl|SBZ]/g) || []).length;
-    if(/[SBZ]/.test(s) && !/\d[SBZ0-9]*['’.,]\d/.test(s)) return s;
-    return digits >= 2 && bad <= 2 ? s.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1").replace(/S/g, "5").replace(/B/g, "8").replace(/Z/g, "2") : s;
-  });
+  const fixed = [], bad = [];
+  if(ocr){
+    // identifiers first: the characters of an ISIN or an IBAN are never read as money
+    lxS_ibanScan(t, true).concat(lxS_isinScan(t, true).hits).forEach(h => { t = t.slice(0, h.index) + t.slice(h.index, h.end).replace(/[^ ]/g, "~") + t.slice(h.end); });
+    // a space OCR put inside a grouped amount ("103' 450.00", "103 '450.00") moves to its end
+    t = t.replace(/(\d)(')? (')?(\d{3}(?:'\d{3})*(?:[.,]\d{1,2})?)(?![\d'.,])/g, (s, a, q1, q2, rest) => (q1 || q2) && !(q1 && q2) ? a + "'" + rest + " " : s);
+    // (a token runs on over a single space before a group of three: "9O 000,00")
+    // (a token runs on over a single space before a group of three: "9O 000,00"; when that
+    // does not make a number, "O44 123" of a phone number, each piece is taken on its own)
+    const one = (s, at, all) => {
+      const r = lxS_numRepair(s, all[at - 1], all[at + s.length]);
+      if(r.bad && / /.test(s)){ let k = at; return s.split(" ").map(p => { const q = /^[0-9OoIl|](.*[0-9OoIl|])?$/.test(p) && p.length > 1 ? one(p, k, all) : p; k += p.length + 1; return q; }).join(" "); }
+      if(r.fixed) fixed.push({ index:at, end:at + s.length, printed:s, amb:r.amb });
+      if(r.bad) bad.push(s);
+      return r.t;
+    };
+    t = t.replace(/(?<![A-Za-z0-9~])[0-9OoIl|](?:[0-9OoIl|SBZG'.,]| (?=[0-9OoIl|]{3}(?![0-9OoIl|SBZG])))*[0-9OoIl|](?![A-Za-z0-9~])/g, one);
+  }
   const hide = re => { t = t.replace(re, s => s.replace(/[^ ]/g, "~")); };
   hide(/(?<![\d.])\d{1,2}\.\d{1,2}\.(?!\d)/g);
   hide(/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.? \d{1,2}, \d{4}\b/g);
@@ -12817,7 +13187,7 @@ function lxS_mask(text, ocr){
   // (not inside an IBAN or another code: a group right after letters or digits is left alone)
   hide(/(?<![\w'.,]|[A-Za-z0-9] )(?:\+|00)\d{2,3}(?:[ ./-]?\(0\))?(?:[ ./-]\d{1,4}){2,5}(?![\d'.,]*\d)/g);
   hide(/(?<![\w'.,]|[A-Za-z0-9] )0\d{1,4}(?:[ /-]\d{2,4}){2,4}(?![\d'.,]*\d)/g);
-  return t;
+  return { t, fixed, bad };
 }
 // A cell holding only a date: "15.06.2026", "2026-06-15", "30 June 2026", or a booking
 // date without a year ("30.06." / "30.06"). "1.200" or "12.345" (a quantity) is not one.
@@ -12835,10 +13205,13 @@ function lxS_yearLike(tok){ return !tok.neg && tok.dec === 0 && /^\d{4}$/.test(t
 function lxS_formatted(tok){ return tok.dec === 2 || /\d['’ .,]\d{3}/.test(tok.raw) || (Math.abs(tok.v) >= 1000 && !lxS_yearLike(tok)); }
 
 // Every amount of a line with its role (see the file header). hdr may be null.
+// On a scan each amount also says whether a letter in it was read as a digit (fixed, with
+// the printed text), and the list carries .bad: numbers that could not be read at all.
 function lxS_tokens(ctx, line, hdr){
-  const out = [];
+  const out = [], bad = [];
   line.cells.forEach((c, ci) => {
-    const text = lxS_mask(c.text, ctx.ocr), L = text.length || 1;
+    const info = lxS_maskInfo(c.text, ctx.ocr), text = info.t, L = text.length || 1;
+    bad.push(...info.bad);
     const ams = lxAmounts(text);
     // a TEXT cell has words besides amounts and currency codes ("Govt Bond 3-7")
     let rest = text; ams.forEach(a => { rest = rest.slice(0, a.index) + " ".repeat(a.end - a.index) + rest.slice(a.end); });
@@ -12882,10 +13255,12 @@ function lxS_tokens(ctx, line, hdr){
       // "1.200" / "12.345": one separator before three digits reads as thousands, but it can
       // be a decimal (fund units); the alternative is kept for the quantity x price check
       const alt = /^\d{1,3}[.,]\d{3}$/.test(a.raw) ? a.value / 1000 : null;
-      out.push({ v, raw:a.raw, dec:a.decimals, neg, alt, ci, idx:a.index, end:a.end, x0, x1, role, col, cellText:c.text });
+      const fx = info.fixed.find(f => f.index < a.end && a.index < f.end);
+      out.push({ v, raw:a.raw, dec:a.decimals, neg, alt, ci, idx:a.index, end:a.end, x0, x1, role, col, cellText:c.text, fixed:!!fx, printed:fx ? fx.printed : undefined, amb:fx && fx.amb != null ? (neg ? -fx.amb : fx.amb) : undefined });
       prevEnd = a.end;
     });
   });
+  out.bad = bad;
   return out;
 }
 // The one amount that is the line's value (or balance). Returns { tok, how } or null.
@@ -13007,6 +13382,11 @@ function lxS_usDates(text){
   }
   return out;
 }
+// (scan) Dates with an O read for 0 or an l / I / | read for 1 ("3O.O6.2O26"): only a token
+// shaped like a date is touched (same length, so positions still match).
+function lxS_ocrDates(text){
+  return lxClean(text).replace(/(?<![A-Za-z0-9])[0-9OoIl|]{1,2}\.[0-9OoIl|]{1,2}\.[0-9OoIl|]{4}(?![A-Za-z0-9])/g, s => (s.match(/\d/g) || []).length >= 4 ? s.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1") : s);
+}
 function lxS_context(doc){
   const ocr = doc.source === "ocr", p0 = doc.lines.filter(l => l.page === 0);
   const H = (doc.pages[0] && doc.pages[0].height) || 842;
@@ -13027,14 +13407,15 @@ function lxS_context(doc){
   // am 02.07.2026"), on the title line first; otherwise a period ("01.06.2026 - 30.06.2026")
   // gives its END. A birth date is not it, and a print date ("Erstellt am 03.07.2026",
   // "Printed on ...") is used only when nothing else is dated.
-  const dated = l => { const d = lxDates(l.text).concat(lxS_usDates(l.text)); return d.length ? d : null; };
+  const txt = l => ocr ? lxS_ocrDates(l.text) : l.text;
+  const dated = l => { const d = lxDates(txt(l)).concat(lxS_usDates(txt(l))); return d.length ? d : null; };
   const PRINT = /\b(erstellt|gedruckt|druckdatum|ausgestellt|printed|print date|created|produced|generated|date of issue|issued|edite|edité|imprime|imprimé|stampato|creato|emesso)\b/i;
   const firstLines = p0.slice(0, 24);
   let best = null;
   firstLines.forEach(l => {
     const ds0 = dated(l);
     if(!ds0 || lxS_has(lxFold(l.text), lxS_DOB, ocr)) return;
-    const t = lxClean(l.text), ds = ds0.slice().sort((a, b) => a.iso < b.iso ? -1 : 1);
+    const t = lxClean(txt(l)), ds = ds0.slice().sort((a, b) => a.iso < b.iso ? -1 : 1);
     const after = ds.find(d => { const at = t.indexOf(d.raw); return at > 0 && /\b(per|zum|au|al|as at|as of|stichtag|stand|valuation date|bewertungsdatum|date)\s*:?\s*$/i.test(t.slice(Math.max(0, at - 16), at)) && !PRINT.test(t.slice(Math.max(0, at - 24), at)); });
     const title = isTitle(l), kw = lxS_has(lxFold(l.text), lxS_DATEKW, ocr), print = PRINT.test(t);
     const score = after ? (title ? 4 : 3) : title ? 2 : (kw && !print) ? 1 : print ? 0 : -1;
@@ -13085,7 +13466,7 @@ function lxS_classify(ctx){
     if(hdr && lastHdrLine && lines[i - 1] === lastHdrLine && lxS_headerMore(ctx, hdr, l)){ rec.cls = "header"; continue; }
     const isins = lxS_isins(l.text, ctx.ocr, l.cells), ibans = lxS_ibans(l.text, ctx.ocr);
     rec.isins = isins; rec.ibans = ibans;
-    const dateFirst = lxS_isDateCell(l.cells[0].text);
+    const dateFirst = lxS_isDateCell(ctx.ocr ? lxS_ocrDates(l.cells[0].text) : l.cells[0].text);
     if(isins.length || ibans.length){
       // a movement naming a security or an account: a booking date first, a trade / transfer
       // word, or (for a security) a movements section, or a table whose event-date column
@@ -13104,16 +13485,22 @@ function lxS_classify(ctx){
       if(ibans.length > 1){ rec.parts = lxS_splitParts(ctx, l); if(!rec.parts) rec.cls = "ibanMulti"; }
       continue;
     }
+    // (scan) a code shaped like an ISIN that no single reading confirms: not a position, but
+    // its amount is kept aside, because a stated total may account for it
+    if(isins.unsure.length && !dateFirst && !lxS_has(f, lxS_TXN, ctx.ocr) && section !== "activity"){
+      rec.cls = "isinUnread"; rec.toks = lxS_tokens(ctx, l, hdr); rec.badNums = rec.toks.bad; continue;
+    }
     let toks = lxS_tokens(ctx, l, hdr);
     if(hdr && hdr.section !== section && !toks.some(t => /^(bare|trail|value|balance)$/.test(t.role))){
       const bare = lxS_tokens(ctx, l, null);
       if(bare.some(t => /^(bare|trail|value|balance)$/.test(t.role))){ toks = bare; rec.hdr = null; }
     }
     rec.toks = toks;
+    rec.badNums = toks.bad;
     const money = toks.filter(t => /^(bare|trail|value|balance)$/.test(t.role));
     const hasPct = lxPercents(l.text).length > 0;
-    // a section title: short, no amount
-    if(!money.length && l.cells.length <= 2 && first.split(" ").length <= 5){
+    // a section title: short, no amount (a line whose amount the scan made unreadable is not one)
+    if(!money.length && l.cells.length <= 2 && first.split(" ").length <= 5 && !rec.badNums.length){
       const ns = lxS_has(first, lxS_SEC_ACT, ctx.ocr) ? "activity" : lxS_has(first, lxS_SEC_LIAB, ctx.ocr) ? "liabilities" : lxS_has(first, lxS_SEC_POS, ctx.ocr) ? "positions" : lxS_has(first, lxS_SEC_ACC, ctx.ocr) ? "accounts" : "";
       if(ns){ section = ns; rec.secTitle = true; actHdr = false; }
       rec.section = section; rec.cls = "title"; continue;
@@ -13246,7 +13633,8 @@ function lxS_amountCcy(line, hdr, tok){
   const next = line.cells[tok.ci + 1]; if(next && lxS_isCcyCode(next.text)) return next.text;
   return lxS_lineCcy(line, hdr);
 }
-function lxS_quote(lines){ return lines.map(l => l.text.length > 160 ? l.text.slice(0, 160) : l.text).join(" · "); }
+// A row joined from pieces on a scan (lxS_ocrLines) is quoted piece by piece, as printed.
+function lxS_quote(lines){ return lines.flatMap(l => l.src || [l]).map(l => l.text.length > 160 ? l.text.slice(0, 160) : l.text).join(" · "); }
 // Plain text of a line with identifiers, amounts, currency codes and dates taken out.
 function lxS_words(ctx, cells){
   // blanked with "~", not spaces: lxAmounts cleans its input (runs of spaces collapse), so
@@ -13270,8 +13658,9 @@ function lxS_secName(ctx, cells){
     let t = lxClean(c.text).replace(/\b[A-Z]{2}(?: ?[A-Z0-9]){9} ?\d\b/g, m => lxS_isins(m, ctx.ocr).length ? " " : m)
       .replace(/\b(ISIN|IBAN)\b:?/g, " ").replace(/\b(?:Valor|Val\.)\s*:?\s*\d{4,9}\b/gi, " ")
       .replace(/\b[A-Z]{3}\b/g, m => lxS_isCcyCode(m) ? " " : m).replace(/\s+/g, " ").trim();
-    // on a scan, an ISIN misread past the check above ("|E00B4L5Y983") is not part of the name
-    let w = t.split(" ").filter(x => !(ctx.ocr && x.length === 12 && lxS_isinRead(x)));
+    // on a scan, an ISIN misread past the check above ("|E00B4L5Y983", "CHO0038863350"), or
+    // an ISIN-shaped code that could not be confirmed, is not part of the name
+    let w = t.split(" ").filter(x => { if(!ctx.ocr || (x.length !== 12 && x.length !== 13)) return true; const s = lxS_isinScan(x, true); return !s.hits.length && !s.unsure.length; });
     while(w.length && money(w[0])) w.shift();
     while(w.length && money(w[w.length - 1])) w.pop();
     return w.join(" ").replace(/^[\s,;:/\-]+|[\s,;:/\-]+$/g, "");
@@ -13291,18 +13680,50 @@ function lxS_neighbour(ctx, recs, k, claimed, want){
   return cands[0] || null;
 }
 
+// (scan) A value printed "|75'390.00" reads as 75'390.00 or as 175'390.00: the one reading
+// that quantity x price gives (a quantity and a price in their columns, else any two other
+// amounts on the line), or null when neither or both do.
+function lxS_settleAmb(toks, tok){
+  const R = t => [t.v, t.alt, t.amb].filter(x => x != null && x > 0);
+  const q = toks.filter(t => t.role === "qty"), p = toks.filter(t => t.role === "price");
+  const free = toks.filter(t => t !== tok && t.role === "bare" && !lxS_yearLike(t) && t.v > 0);
+  const pairs = q.length && p.length ? q.flatMap(a => p.map(b => [a, b])) : free.flatMap((a, i) => free.slice(i + 1).map(b => [a, b]));
+  const fits = V => pairs.some(([a, b]) => R(a).some(x => R(b).some(y => lxS_close(x * y, V) || lxS_close(x * y / 100, V))));
+  const c = [tok.v, tok.amb].filter(fits);
+  return c.length === 1 ? c[0] : null;
+}
+// Numbers on a scan that could not be read, for a note ("the scan shows ...").
+function lxS_badText(toks){ const b = [...new Set((toks && toks.bad) || [])]; return b.length ? " (the scan shows \"" + b.join("\", \"") + "\", which cannot be read with certainty)" : ""; }
 function lxS_holdings(ctx, recs, out){
   const claimed = new Set(), seen = new Map();
   recs.forEach((r, k) => {
+    // (scan) an ISIN-shaped code no single reading confirms: no row, but its amount is kept
+    // aside for the totals check, and the adviser is told
+    if(r.cls === "isinUnread"){
+      const u = r.isins.unsure[0], p = lxS_pick(ctx, r.toks || [], ["value", "balance"]);
+      const why = u.n > 1 ? "it fits more than one ISIN" : "no reading of it passes the ISIN check digit";
+      ctx.notes.push("A position line shows the code \"" + u.printed + "\", which could not be confirmed as an ISIN (" + why + "); it was not read as a position: " + r.line.text.slice(0, 90));
+      if(p && p.tok.v > 0 && p.tok.amb == null) out.push({ kind:"unread", i:k, amount:p.tok.v, ccy:lxS_amountCcy(r.line, r.hdr, p.tok) || ctx.ref, raw:p.tok.raw, printed:u.printed });
+      return;
+    }
     if(r.cls !== "isin") return;
     const hit = r.isins[0], isin = hit.isin, l = r.line, hdr = r.hdr;
     if(r.isins.length > 1) ctx.notes.push("A line carries more than one ISIN; only the first (" + isin + ") was read: " + l.text.slice(0, 80));
     let toks = lxS_tokens(ctx, l, hdr), pick = lxS_pick(ctx, toks, ["value", "balance"]), lines = [l], valLine = l, block = false;
+    const bad0 = lxS_badText(toks);
     if(!pick){
       const nb = lxS_neighbour(ctx, recs, k, claimed, ["value", "balance"]);
       if(nb){ claimed.add(nb.j); pick = nb.pick; valLine = nb.rec.line; toks = toks.concat(nb.rec.toks); lines = nb.j < k ? [nb.rec.line, l] : [l, nb.rec.line]; block = true; }
     }
-    if(!pick){ ctx.notes.push("Position " + isin + " has no readable market value; it was left out."); return; }
+    if(!pick){ ctx.notes.push("Position " + isin + " has no readable market value" + bad0 + "; it was left out."); return; }
+    // (scan) "|75'390.00" reads as 75'390.00 or 175'390.00: quantity x price settles it, or
+    // the position is left out
+    const amb = pick.tok.amb != null;
+    if(amb){
+      const V = lxS_settleAmb(toks, pick.tok);
+      if(V == null){ ctx.notes.push("Position " + isin + ": the scan shows \"" + pick.tok.printed + "\", which reads as " + pick.tok.raw + " or " + lxS_fmt(pick.tok.amb, pick.tok.raw) + ", and nothing on the line settles which; it was left out."); return; }
+      if(V !== pick.tok.v){ pick.tok.v = V; pick.tok.raw = lxS_fmt(V, pick.tok.raw); }
+    }
     const val = pick.tok.v;
     if(!(val > 0)){ ctx.notes.push("Position " + isin + " shows " + pick.tok.raw + " (zero or negative, e.g. a short or a derivative); it was left out."); return; }
     // name: the name column, else the words on the line(s)
@@ -13327,7 +13748,16 @@ function lxS_holdings(ctx, recs, out){
     // "12.345" units or a "1.250" price can be read either way: both readings are tried and
     // only the arithmetic decides (the note keeps the printed text unchanged)
     const readings = t => t.alt != null ? [t.v, t.alt] : [t.v];
-    const fits = (q, pr) => readings(q).some(a => (typeof pr === "number" ? [pr] : readings(pr)).some(b => { const x = Math.abs(a) * b; return lxS_close(x, val) || lxS_close(x / 100, val); }));
+    // on a scan the arithmetic vouches for the OCR digits, so only an EXACT product (to the
+    // cent) is a check: "35'243.00" or "35'248.80" for 400 x 88.12 = 35'248.00 is within
+    // 0.5% (and "116,700.80" for 3,000 x 38.90 within the price's rounding), yet misread. A
+    // product off by more than the printed price's rounding explains (half a unit of its last
+    // decimal per unit held) is a mismatch; in between it is neither.
+    const exact = (x, q, pd) => Math.abs(x - val) <= 0.0051, loose = x => lxS_close(x, val);
+    const rounded = (x, q, pd) => Math.abs(x - val) <= Math.abs(q) * 0.5 * Math.pow(10, -pd) + 0.011;
+    const prices = pr => typeof pr === "number" ? [[pr, 2]] : readings(pr).map((b, k) => [b, k ? 3 : pr.dec]);
+    const fitsBy = test => (q, pr) => readings(q).some(a => prices(pr).some(([b, pd]) => test(Math.abs(a) * b, a, pd) || test(Math.abs(a) * b / 100, a / 100, pd)));
+    const fits = fitsBy(ctx.ocr ? exact : loose), fitsLoose = fitsBy(ctx.ocr ? rounded : loose);
     if(!qtyTok && priceVal == null){
       const free = toks.filter(t => t !== pick.tok && t.role === "bare" && !lxS_yearLike(t) && t.v > 0), pairs = [];
       for(let a = 0; a < free.length; a++) for(let b = a + 1; b < free.length; b++) if(fits(free[a], free[b])) pairs.push([free[a], free[b]]);
@@ -13335,7 +13765,7 @@ function lxS_holdings(ctx, recs, out){
     } else if(qtyTok && priceVal != null){
       const same = !lineCcy || lineCcy === valCcy0;
       if(fits(qtyTok, priceTok || priceVal)) checked = true;
-      else if(same && lineCcy) mismatch = true;
+      else if(same && lineCcy && !fitsLoose(qtyTok, priceTok || priceVal)) mismatch = true;
     }
     // valuation currency and confidence
     let valCcy = valCcy0, assumed = false;
@@ -13357,9 +13787,14 @@ function lxS_holdings(ctx, recs, out){
     const valor = lines.map(x => x.text).join(" ").match(/\b(?:Valor|Val\.)\s*:?\s*(\d{4,9})\b/i);
     if(valor) note += ", Valor " + valor[1];
     if(foreign){ conf = Math.min(conf, 0.5); note += "; value in " + valCcy + ", not converted"; ctx.notes.push(name + " is valued in " + valCcy + " (" + pick.tok.raw + "), not in the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
-    if(mismatch){ conf = Math.min(conf, 0.6); ctx.notes.push(name + ": " + qtyTok.raw + " x " + priceRaw + " does not give the stated value " + pick.tok.raw + "; check the position."); }
+    // (on a scan the disagreement may be a misread digit in the value: it starts unticked)
+    if(mismatch){ conf = Math.min(conf, ctx.ocr ? 0.55 : 0.6); ctx.notes.push(name + ": " + qtyTok.raw + " x " + priceRaw + " does not give the stated value " + pick.tok.raw + "; check the position."); }
     if(pick.how === "weight?") ctx.notes.push(name + ": the last number on the line looked like a weight in %, so " + pick.tok.raw + " was read as the value; check it.");
-    if(hit.fixed) ctx.notes.push("ISIN " + isin + " was repaired from an OCR misreading (its check digit confirms it).");
+    if(hit.doubled) ctx.notes.push("ISIN " + isin + " was read from \"" + hit.printed + "\", which has one character too many (a zero read twice); only that reading passes the check digit, but check it.");
+    else if(hit.fixed) ctx.notes.push("ISIN " + isin + " was repaired from an OCR misreading (" + hit.printed + "; its check digit confirms it and no other reading does).");
+    // a letter the scan put inside the value, quantity or price and read as a digit
+    const numFixed = [...new Set([pick.tok, qtyTok, priceTok])].filter(t => t && t.fixed);
+    if(numFixed.length) ctx.notes.push(name + ": the scan shows " + numFixed.map(t => "\"" + t.printed + "\"").join(", ") + ", read as " + numFixed.map(t => t.raw).join(", ") + (amb ? " (a mark beside the number; quantity x price settles the reading)" : " (an OCR letter inside a number)") + "; check it before applying.");
     const vcol = pick.tok.col;
     if(vcol && /\b(inkl|incl|including|inklusive|y compris|compris|compreso|incluso|inclusi)\b/.test(lxFold(vcol.text)) && lxS_has(lxFold(vcol.text), lxS_ACCRUED, ctx.ocr)) ctx.notes.push("The value column (" + vcol.text + ") includes accrued interest; the positions were read with it.");
     // the same position twice. A "largest positions" summary and the detail: count it once,
@@ -13373,7 +13808,7 @@ function lxS_holdings(ctx, recs, out){
     else if(prev){ out.splice(out.indexOf(prev.meta), 1); ctx.notes.push("ISIN " + isin + " appears twice with the same value " + pick.tok.raw + "; it was counted once."); }
     const tkrCell = lxS_cellsOf(l, hdr, "ticker")[0], tkr = tkrCell && /^[A-Z][A-Z0-9.\-]{0,11}$/.test(tkrCell.text) ? tkrCell.text : undefined;
     const row = lxRow(conf, lxS_quote(lines), { name, tkr, val, type:cls.type, cls:cls.cls, region:cls.region, note });
-    const meta = { row, kind:"holding", i:Math.max(...lines.map(x => ctx.doc.lines.indexOf(x))), ccy:valCcy, amount:val, checked, fixed:hit.fixed, isin, raw:pick.tok.raw };
+    const meta = { row, kind:"holding", i:Math.max(...lines.map(x => ctx.doc.lines.indexOf(x))), ccy:valCcy, amount:val, checked, mismatch, fixed:hit.fixed, isin, raw:pick.tok.raw, numFixed:numFixed.length > 0 || !!hit.doubled };
     if(dupOf){ meta.dupOf = dupOf; meta.baseConf = row.confidence; row.confidence = Math.min(row.confidence, 0.5); }
     out.push(meta);
     if(!dupOf) seen.set(key, { meta, detailed:!!qtyTok });
@@ -13480,7 +13915,7 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
     for(let j = k + 1; j < recs.length; j++){
       const n = recs[j];
       if(n.cls === "iban" || n.cls === "ibanMulti"){ if(counterparty(n)) continue; break; }
-      if(n.secTitle || /^(loan|isin|depot|noiban|collateral)$/.test(n.cls)) break;
+      if(n.secTitle || /^(loan|isin|isinUnread|depot|noiban|collateral)$/.test(n.cls)) break;
       if(n.cls === "closing"){ const p = lxS_pick(ctx, n.toks, ["balance", "value"]); if(p){ pick = p; how = "closing"; valLine = n.line; lines = [l, n.line]; break; } }
       if(n.cls === "txn"){ const b = (n.toks || []).filter(t => t.role === "balance"); if(b.length) lastRun = { tok:b[b.length - 1], line:n.line }; }
     }
@@ -13491,8 +13926,11 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
     if(p && (p.cls === "other" || p.cls === "title") && p.line.page === l.page && l.y - p.line.y <= 2.2 * l.h && !(p.toks || []).some(t => /^(bare|value|balance|trail)$/.test(t.role))){ desc = lxS_words(ctx, p.line.cells).replace(/^(konto|account|compte|conto|kontobezeichnung)\s*:\s*/i, ""); if(desc) lines = [p.line].concat(lines); }
   }
   if(!pick && how === "counterparty") return;
-  if(!pick){ ctx.notes.push("IBAN " + printed + " was found without a balance next to it; no account was created for it."); return; }
+  if(!pick){ ctx.notes.push("IBAN " + printed + " was found without a balance next to it" + lxS_badText(toks) + "; no account was created for it."); return; }
+  // (scan) the IBAN's groups can fall into cells of their own; none of them is description
+  if(ctx.ocr && desc){ const own = new Set(String(printed).split(/\s+/)); desc = desc.split(" ").filter(w => !own.has(w)).join(" "); }
   if(pick.tok.v === 0){ ctx.notes.push("IBAN " + printed + " shows a zero balance; no account was created for it."); return; }
+  if(pick.tok.amb != null){ ctx.notes.push("IBAN " + printed + ": the scan shows \"" + pick.tok.printed + "\", which reads as " + pick.tok.raw + " or " + lxS_fmt(pick.tok.amb, pick.tok.raw) + ", and nothing settles which; no account was created for it."); return; }
   const f = lxFold(desc), inst = ctx.institution;
   const label = (inst ? inst + ", " : "") + (desc || "account " + printed);
   // a securities account's total when its positions are listed: counting both would count
@@ -13508,7 +13946,8 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
   if(split) conf = Math.min(conf, 0.7);
   if(how === "running") ctx.notes.push(label + ": no closing balance is printed; the last running balance " + pick.tok.raw + " was taken.");
   if(assumedCcy){ conf = Math.min(conf, 0.7); ctx.notes.push(label + ": no currency on the line; taken as the reference currency " + ctx.ref + "."); }
-  if(ib.fixed) ctx.notes.push("IBAN " + ib.iban + " was repaired from an OCR misreading (its check digits confirm it).");
+  if(ib.fixed) ctx.notes.push("IBAN " + ib.iban + " was repaired from an OCR misreading (" + printed + "; its check digits confirm it and no other reading does).");
+  if(pick.tok.fixed) ctx.notes.push(label + ": the scan shows \"" + pick.tok.printed + "\", read as " + pick.tok.raw + " (an OCR letter inside a number); check it before applying.");
   const quote = lxS_quote(lines);
   // a loan, card or overdraft booked on an account number is a debt, not an asset
   if(lxS_has(f, lxS_LOAN, ctx.ocr) || pick.tok.v < 0){
@@ -13516,7 +13955,7 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
     let lconf = Math.min(conf, 0.8);
     if(ccy && ctx.ref && ccy !== ctx.ref){ lconf = Math.min(lconf, 0.5); ctx.notes.push(label + ": the debt is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
     const row = lxRow(lconf, quote, { type, label:label + (pick.tok.v < 0 && !lxS_has(f, lxS_LOAN, ctx.ocr) ? " (overdrawn)" : ""), balance:Math.abs(pick.tok.v) });
-    out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v), fixed:ib.fixed });
+    out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v), fixed:ib.fixed, numFixed:!!pick.tok.fixed });
     return;
   }
   const cc = ib.iban.slice(0, 2);
@@ -13529,7 +13968,7 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
   const foreign = !!(ccy && ctx.ref && ccy !== ctx.ref);
   if(foreign){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
   const row = lxRow(conf, quote, { label, accountType, accountTypeHint:desc || undefined, taxType, value:pick.tok.v, country, ccy });
-  out.push({ row, kind:"account", i:k, ccy, amount:pick.tok.v, fixed:ib.fixed });
+  out.push({ row, kind:"account", i:k, ccy, amount:pick.tok.v, fixed:ib.fixed, numFixed:!!pick.tok.fixed });
 }
 
 // ── Loans ──────────────────────────────────────────────────────────────────────
@@ -13554,9 +13993,10 @@ function lxS_loanType(f, overdrawn){
 // ("SARON 0.45% + Marge 0.80% = 1.25%"), else the percentage after a rate word; never a
 // reference fixing (SARON, LIBOR...) nor a margin over one ("SARON + 0.80%" is not the rate,
 // and it is left out rather than guessed).
-function lxS_rate(line, hdr){
+function lxS_rate(line, hdr, ocr){
   const cells = lxS_cellsOf(line, hdr, "rate");
-  const text = lxClean(cells.length ? cells.map(c => c.text).join(" ") : line.text);
+  // (scan) "3,1O%" is read as 3,10% when that is its only reading (lxS_numRepair)
+  const text = ocr ? lxS_mask(cells.length ? cells.map(c => c.text).join(" ") : line.text, true) : lxClean(cells.length ? cells.map(c => c.text).join(" ") : line.text);
   const ps = lxPercents(text).filter(p => p.value > 0 && p.value <= 25);
   const before = (p, n) => text.slice(Math.max(0, p.index - (n || 16)), p.index);
   const eq = ps.filter(p => /=\s*$/.test(before(p)));
@@ -13573,7 +14013,8 @@ function lxS_rate(line, hdr){
 // says WHEN the balance applies ("Saldo per 30.06.2026", "balance as at 30 June 2026") or
 // when something started ("vom", "since") is not a maturity.
 function lxS_years(ctx, line, hdr){
-  const cells = lxS_cellsOf(line, hdr, "maturity"), text = lxClean(cells.length ? cells.map(c => c.text).join(" ") : line.text);
+  const cells = lxS_cellsOf(line, hdr, "maturity"), raw = lxClean(cells.length ? cells.map(c => c.text).join(" ") : line.text);
+  const text = ctx.ocr ? lxS_ocrDates(raw) : raw;
   const MAT = /(?:^|[^A-Za-zÀ-ÿ])(fallig\w*|faellig\w*|fällig\w*|verfall\w*|maturity|matures?|due|echeance|échéance|scadenza|laufzeit|bis|until|to|expiry|expires?|ende|end|fin|jusqu\w*|termine)\W*(per|am|au|al|on|le|il|le|el)?\s*:?\s*$/i;
   const NOT = /((?:^|[^A-Za-zÀ-ÿ])(saldo|solde|balance|kontostand|stand|stichtag|bestand|valuta|value date|schatzung|schätzung|schaetzung|estimation|seit|since|from|ab|depuis|dal|vom)\W*(per|am|au|al|as at|as of|at|du|del|vom|zum|on)?|(^|[\s,(])(per|as at|as of))\s*:?\s*$/i;
   const all = lxDates(text).map(d => ({ iso:d.iso, at:d.index })).concat(lxS_usDates(text).map(d => ({ iso:d.iso, at:text.indexOf(d.raw) })));
@@ -13603,20 +14044,22 @@ function lxS_loans(ctx, recs, out){
   recs.forEach((r, k) => {
     if(r.cls !== "loan") return;
     const l = r.line, hdr = r.hdr, pick = lxS_pick(ctx, r.toks, ["balance", "value"]);
-    if(!pick || !lxS_formatted(pick.tok) || lxS_yearLike(pick.tok)){ ctx.notes.push("A loan line without a readable balance was left out: " + l.text.slice(0, 90)); return; }
+    if(!pick || !lxS_formatted(pick.tok) || lxS_yearLike(pick.tok)){ ctx.notes.push("A loan line without a readable balance" + lxS_badText(r.toks) + " was left out: " + l.text.slice(0, 90)); return; }
+    if(pick.tok.amb != null){ ctx.notes.push("A loan line whose balance the scan shows as \"" + pick.tok.printed + "\" (" + pick.tok.raw + " or " + lxS_fmt(pick.tok.amb, pick.tok.raw) + ", nothing settles which) was left out: " + l.text.slice(0, 90)); return; }
     const f = r.f, type = r.section === "liabilities" && !lxS_has(f, lxS_LOAN, ctx.ocr) ? "other" : lxS_loanType(f, false);
     const descCell = lxS_cellsOf(l, hdr, "name")[0] || l.cells.find(c => /[A-Za-zÀ-ÿ]{3}/.test(c.text));
     const desc = lxS_loanDesc(descCell ? descCell.text : "") || lxS_words(ctx, l.cells) || "Loan";
     const label = (ctx.institution ? ctx.institution + ", " : "") + desc;
-    const rate = lxS_rate(l, hdr), yrs = lxS_years(ctx, l, hdr);
+    const rate = lxS_rate(l, hdr, ctx.ocr), yrs = lxS_years(ctx, l, hdr);
     if(rate.margin) ctx.notes.push(label + ": only a margin (" + rate.margin + ") over a reference rate is printed; the interest rate was left blank.");
     if(yrs.maturity && yrs.years == null) ctx.notes.push(label + ": maturity " + yrs.maturity + (yrs.past ? " is before the statement date" : " read, but no statement date to count from") + "; years left not set.");
     let conf = { col:0.8, bare:0.8, trail:0.7, "weight?":0.55 }[pick.how] || 0.7;
     if(r.doubt){ conf = Math.min(conf, 0.5); ctx.notes.push(label + ": the line names both the loan and its collateral, so " + pick.tok.raw + " may be the property's value rather than the debt; check before applying."); }
     const ccy = lxS_amountCcy(l, hdr, pick.tok) || ctx.ref;
     if(ccy && ctx.ref && ccy !== ctx.ref){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
+    if(pick.tok.fixed) ctx.notes.push(label + ": the scan shows \"" + pick.tok.printed + "\", read as " + pick.tok.raw + " (an OCR letter inside a number); check it before applying.");
     const row = lxRow(conf, lxS_quote([l]), { type, label, balance:Math.abs(pick.tok.v), ratePct:rate.rate == null ? undefined : rate.rate, years:yrs.years == null ? undefined : yrs.years });
-    out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v) });
+    out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v), numFixed:!!pick.tok.fixed });
   });
 }
 
@@ -13663,10 +14106,15 @@ function lxS_fmt(n, like){
   return (n < 0 ? "-" : "") + i.replace(/\B(?=(\d{3})+(?!\d))/g, th) + dec + d;
 }
 function lxS_totals(ctx, recs, meta){
-  const rows = meta.filter(m => m.row);
+  const rows = meta.filter(m => m.row), unreadAll = meta.filter(m => m.kind === "unread");
   const totals = [];
   recs.forEach(r => {
-    if(r.cls === "total" || r.cls === "depot"){ const p = lxS_pick(ctx, r.toks, ["value", "balance"]); if(p) totals.push({ i:r.i, rec:r, tok:p.tok, line:r.line, depot:r.cls === "depot" }); }
+    if(r.cls === "total" || r.cls === "depot"){
+      const p = lxS_pick(ctx, r.toks, ["value", "balance"]);
+      // (scan) a total read two ways checks nothing
+      if(p && p.tok.amb != null) ctx.notes.push("The total on this line reads as " + p.tok.raw + " or " + lxS_fmt(p.tok.amb, p.tok.raw) + " (the scan shows \"" + p.tok.printed + "\"), so it was not used to check the rows: " + r.line.text.slice(0, 90));
+      else if(p) totals.push({ i:r.i, rec:r, tok:p.tok, line:r.line, depot:r.cls === "depot" });
+    }
   });
   meta.filter(m => m.kind === "depotTotal").forEach(m => totals.push({ i:m.i, rec:recs[m.i], tok:m.tok, line:m.line, depot:true }));
   totals.sort((a, b) => a.i - b.i);
@@ -13696,8 +14144,9 @@ function lxS_totals(ctx, recs, meta){
     else if(scope === "liabilities") tries.push(["L"]);
     const overall = net ? [["A", "P", "-L"], ["A", "P", "AI", "-L"], ["A", "P"], ["A", "P", "AI"]] : [["A", "P"], ["A", "P", "AI"], ["A", "P", "-L"], ["A", "P", "AI", "-L"]];
     if(!scope || generic) tries.push(...overall, ["P"], ["A"]);
-    const sumOf = (combo, pool) => {
-      let s = 0; const used = [], foreign = [];
+    // uPool: position lines whose identifier could not be confirmed (scan), tried with "P"
+    const sumOf = (combo, pool, uPool) => {
+      let s = 0; const used = [], foreign = [], unread = [];
       for(const part of combo){
         if(part === "AI"){ s += AI; continue; }
         const neg = part[0] === "-", k = KIND[part.replace("-", "")];
@@ -13705,10 +14154,18 @@ function lxS_totals(ctx, recs, meta){
           if(m.ccy && ccy && m.ccy !== ccy){ foreign.push({ m, neg }); return; }
           s += neg ? -m.amount : m.amount; used.push(m);
         });
+        if(part === "P") (uPool || []).forEach(m => { if(!m.ccy || !ccy || m.ccy === ccy){ s += m.amount; unread.push(m); } });
       }
-      return { s, used, foreign };
+      return { s, used, foreign, unread };
     };
-    const cmp = (combo, s) => combo.length === 1 && combo[0] === "L" ? Math.abs(Math.abs(stated) - s) <= 1 : Math.abs(stated - s) <= 1;
+    const blockU = scope ? unreadAll.filter(m => m.i > prevI && m.i < T.i) : [];
+    // within 1 unit (rows are rounded to cents); on a scan to the cent, half a cent of
+    // rounding per row, since the total is what vouches for every OCR digit it covers (a
+    // misread "116,700.80" would pass within 1)
+    const cmp = (combo, r) => {
+      const tol = ctx.ocr ? 0.005 * (r.used.length + r.unread.length) + 0.0051 : 1;
+      return combo.length === 1 && combo[0] === "L" ? Math.abs(Math.abs(stated) - r.s) <= tol : Math.abs(stated - r.s) <= tol;
+    };
     // name only the kinds that actually have rows ("Accounts and positions" on a statement
     // with no accounts would describe a sum that was never made)
     const describe = (combo, r) => {
@@ -13726,25 +14183,39 @@ function lxS_totals(ctx, recs, meta){
     const pools = block.length && block.length < rows.length ? [[block, true], [rows, false]] : [[rows, false]];
     // a position printed twice (lxS_holdings keeps both, the second pending) is tried in the
     // sum and, failing that, left out: the total then says which reading is right
-    outer: for(const [pool, isBlock] of pools) for(const combo of tries) for(const noDup of [false, true]){
+    // with the unread lines only when the rows alone do not add up: then the total confirms
+    // every digit read in the rows, and says the missing amount is that line's
+    outer: for(const withU of unreadAll.length ? [false, true] : [false]) for(const [pool, isBlock] of pools) for(const combo of tries) for(const noDup of [false, true]){
       const pool2 = noDup ? pool.filter(m => !m.dupOf) : pool;
       if(noDup && pool2.length === pool.length) continue;
-      const r = sumOf(combo, pool2);
+      const uPool = withU ? (isBlock ? blockU : unreadAll) : [];
+      if(withU && !(combo.includes("P") && uPool.length)) continue;
+      const r = sumOf(combo, pool2, uPool);
       if(!r.used.length && !combo.includes("AI")) continue;
-      if(!cmp(combo, r.s)) continue;
+      if(!cmp(combo, r)) continue;
       // a "subtotal" only when the heading's rows really are fewer than all such rows
-      const all = sumOf(combo, noDup ? rows.filter(m => !m.dupOf) : rows);
-      matched = { combo, r, isBlock:isBlock && all.used.length !== r.used.length, left:noDup ? pool.filter(m => m.dupOf && combo.includes("P")) : [] };
+      const all = sumOf(combo, noDup ? rows.filter(m => !m.dupOf) : rows, withU ? unreadAll : []);
+      matched = { combo, r, isBlock:isBlock && all.used.length + all.unread.length !== r.used.length + r.unread.length, left:noDup ? pool.filter(m => m.dupOf && combo.includes("P")) : [] };
       break outer;
+    }
+    const readAs = T.tok.fixed ? ", read from the scan's \"" + T.tok.printed + "\"" : "";
+    // (scan) a sum that holds while one of its rows fails its own quantity x price check may be
+    // two misread digits cancelling out: it vouches for none of them
+    const suspect = ctx.ocr && matched ? matched.r.used.filter(m => m.mismatch) : [];
+    if(suspect.length){
+      ctx.notes.push("The stated total " + T.tok.raw + " (" + label + ") matches the rows read, but " + suspect.map(m => m.row.name).join(", ") + " does not agree with its own quantity x price, so two misread digits may cancel out; the total was not used to confirm the rows.");
+      matched = null; prevI = T.i; continue;
     }
     if(matched){
       const { combo, r, isBlock } = matched;
       r.used.forEach(m => { m.reconciled = true; m.checked = true; });
       matched.left.forEach(m => { m.dupLeft = true; });
-      let note = describe(combo, r) + (isBlock ? " under this heading add up to the stated subtotal of " : " add up to the stated total of ") + T.tok.raw + (ccy ? " " + ccy : "") + " (" + label + ")";
+      const withLines = r.unread.length ? " together with the line" + (r.unread.length > 1 ? "s" : "") + " not read (" + r.unread.map(m => m.raw + " beside \"" + m.printed + "\"").join(", ") + ")" : "";
+      let note = describe(combo, r) + withLines + (isBlock ? " under this heading add up to the stated subtotal of " : " add up to the stated total of ") + T.tok.raw + (ccy ? " " + ccy : "") + " (" + label + readAs + ")";
       const L = rows.filter(m => m.kind === "liability" && m.ccy === ccy).reduce((s, m) => s + m.amount, 0);
       if(!combo.includes("-L") && combo.includes("A") && combo.includes("P") && L) note += "; the loans (" + lxS_fmt(L, T.tok.raw) + ") are not deducted in it";
       if(r.foreign.length) note += "; " + [...new Set(r.foreign.map(x => x.m.ccy))].join(", ") + " rows are not included in it";
+      if(r.unread.length) note += "; that line is not among the rows because its identifier could not be confirmed, add it by hand if it belongs";
       ctx.notes.push(note + ".");
     } else {
       // with foreign-currency rows the stated total cannot be checked exactly: say what the
@@ -13761,7 +14232,7 @@ function lxS_totals(ctx, recs, meta){
       } else {
         let facePart = lxS_fmt(r.s, T.tok.raw) + " " + ccy;
         if(r.foreign.length) facePart += " plus " + fx + " (not converted); the " + Object.keys(face).join(" and ") + " would have to be worth " + lxS_fmt(implied, T.tok.raw) + " " + ccy + ", which no exchange rate explains";
-        ctx.notes.push("The stated total " + T.tok.raw + " (" + label + ") does not match the rows read: " + describe(combo, r).toLowerCase() + " give " + facePart + ". Check before applying; the rows it covers start unticked.");
+        ctx.notes.push("The stated total " + T.tok.raw + " (" + label + readAs + ") does not match the rows read: " + describe(combo, r).toLowerCase() + " give " + facePart + ". Check before applying; the rows it covers start unticked.");
         mismatches.push(combo);
       }
     }
@@ -13785,6 +14256,40 @@ function lxS_settleDups(ctx, meta){
   });
 }
 
+// ── Scan layout ────────────────────────────────────────────────────────────────
+// Tesseract gives each run of words its own baseline, so one table row can come out as two
+// or three lines a few points apart (the value column a little lower than the name), and the
+// row's value then sits on a line of its own. Lines of one page whose baselines are that close
+// and whose words do not overlap across the page are one row: they are read joined. "That
+// close" is three quarters of the taller word height, or 30% of the page's usual row pitch
+// (OCR word heights run small), never more than 45% of the pitch, so two real rows are never
+// joined. doc.lines and doc.text are left as they are, and a joined row is quoted piece by
+// piece (.src), as printed.
+function lxS_ocrLines(doc){
+  const out = [];
+  (doc.pages || []).forEach((p, pi) => {
+    const src = doc.lines.filter(l => l.page === pi), used = new Set();
+    const gaps = src.slice(1).map((l, k) => l.y - src[k].y).filter(g => g >= 8).sort((a, b) => a - b);
+    const pitch = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 14;
+    for(let a = 0; a < src.length; a++){
+      if(used.has(a)) continue;
+      const group = [src[a]];
+      for(let b = a + 1; b < src.length; b++){
+        if(used.has(b)) continue;
+        const B = src[b];
+        if(B.y - src[a].y > Math.min(0.45 * pitch, Math.max(2.5, 0.75 * Math.max(src[a].h, B.h), 0.3 * pitch))) break;
+        if(group.some(G => G.cells.some(c => B.cells.some(d => Math.min(c.x1, d.x1) - Math.max(c.x, d.x) > -2)))) continue;
+        group.push(B); used.add(b);
+      }
+      if(group.length === 1){ out.push(src[a]); continue; }
+      const y = group[0].y, L = lxLines({ items:group.flatMap(g => g.items).map(it => Object.assign({}, it, { y })) })[0];
+      L.page = pi; L.src = group;
+      out.push(L);
+    }
+  });
+  return out;
+}
+
 // ── Entry point ────────────────────────────────────────────────────────────────
 // Returns the raw extraction (_kind "statement"), or null when the document has no valid
 // ISIN, no valid IBAN and no recognisable loan table, or is plainly another kind of
@@ -13793,8 +14298,10 @@ function lxReadStatement(doc){
   if(!doc || !Array.isArray(doc.pages)) return null;
   if(!Array.isArray(doc.lines) || typeof doc.text !== "string") lxPrepare(doc);
   if(!doc.lines.length) return null;
-  const ctx = lxS_context(doc);
-  const topText = lxFold(doc.lines.filter(l => l.page === 0).slice(0, 12).map(l => l.text).join(" "));
+  // on a scan the rows split across baselines are read joined (the document is not changed)
+  const view = doc.source === "ocr" ? Object.assign({}, doc, { lines:lxS_ocrLines(doc) }) : doc;
+  const ctx = lxS_context(view);
+  const topText = lxFold(view.lines.filter(l => l.page === 0).slice(0, 12).map(l => l.text).join(" "));
   if(lxS_has(topText, lxS_NOT_STATEMENT, ctx.ocr)) return null;
   const recs = lxS_classify(ctx);
   const anchors = recs.some(r => r.cls === "isin" || r.cls === "iban" || r.cls === "ibanMulti");
@@ -13824,6 +14331,11 @@ function lxReadStatement(doc){
   else head.push("no reference currency found, so foreign-currency rows could not be flagged");
   res._notes.push(head.join(", ").replace(/^./, c => c.toUpperCase()) + ".");
   if(ctx.ocr) res._notes.push("Read from a scan (OCR): amounts not confirmed by a total or by quantity x price start unticked.");
+  // (scan) a number the reader would not guess at, on a line it would otherwise have used
+  recs.filter(r => r.badNums && r.badNums.length && /^(other|total|loan|closing|noiban|depot)$/.test(r.cls)).forEach(r => {
+    const b = [...new Set(r.badNums)].filter(s => lxS_numShape(s.replace(/[Oo]/g, "0").replace(/[Il|]/g, "1")) !== "date");
+    if(b.length) ctx.notes.push("On this line the scan shows \"" + b.join("\", \"") + "\", which cannot be read as a number with certainty, so it was not used: " + r.line.text.slice(0, 90));
+  });
   recs.filter(r => r.cls === "collateral").forEach(r => ctx.notes.push("A line in the financing section describes collateral or a property value, not a debt; it was not read as a loan: " + r.line.text.slice(0, 90)));
   recs.filter(r => r.cls === "noiban").forEach(r => ctx.notes.push("An account line without an IBAN was not read (no identifier to anchor it; add it by hand if it belongs): " + r.line.text.slice(0, 90)));
   const moves = recs.filter(r => r.idTxn).length;
@@ -13831,7 +14343,11 @@ function lxReadStatement(doc){
   for(const m of meta){
     if(!m.row) continue;
     let c = m.row.confidence;
+    // on a scan only a cross-check (a total that reconciles, quantity x price) earns a tick;
+    // a letter read as a digit in the row's numbers (or an ISIN read with a character too
+    // many) keeps it at 0.7 even then
     if(ctx.ocr) c = Math.min(c, m.checked ? 0.75 : 0.55);
+    if(m.numFixed) c = Math.min(c, 0.7);
     m.row.confidence = Math.round(c * 100) / 100;
     // no long dashes in anything the reader hands over (a description may print one)
     Object.keys(m.row).forEach(k => { if(typeof m.row[k] === "string") m.row[k] = m.row[k].replace(/[–—]/g, "-"); });
@@ -14012,10 +14528,13 @@ function lxP_approx(p, t){
 // Does folded text `f` contain keyword `kw` (rules in the Vocabulary comment)? On OCR input a
 // long keyword may be off by one letter (two for 14+ letters): Tesseract misreads single
 // characters, and a label is long enough that one wrong letter does not change what it says.
-function lxP_has(f, kw, ocr){
+function lxP_has(f, kw, ocr, glyphs){
   const hay = " " + f + " ";
   if(kw.endsWith(" ")){ if(hay.includes(" " + kw)) return true; }
   else if(kw.length >= 7 ? hay.includes(kw) : hay.includes(" " + kw)) return true;
+  // Tesseract reads "m" as "rn" and "w" as "vv" (two letters for one: two edits, more than a
+  // long keyword's tolerance). Compared once more with both folded back.
+  if(ocr && !glyphs && /rn|vv/.test(f) && lxP_has(lxP_glyphs(f), lxP_glyphs(kw), ocr, true)) return true;
   const k = kw.trim();
   if(!(ocr && k.length >= 8)) return false;
   // Pigeonhole: with at most `tol` edits, one of tol + 1 disjoint pieces of the keyword is
@@ -14030,6 +14549,7 @@ function lxP_has(f, kw, ocr){
   return k.split(" ").every(w => w.length > 4 || hay.includes(" " + w));
 }
 function lxP_hasAny(f, list, ocr){ return list.some(k => lxP_has(f, k, ocr)); }
+function lxP_glyphs(s){ return String(s).replace(/rn/g, "m").replace(/vv/g, "w"); }
 
 // OCR reads 0 as O and 1 as l / I / |. Inside a run that is otherwise a number ("48O'000.00")
 // the letter can only be the digit; outside one ("Il capitale") it is left alone. At most two
@@ -14044,7 +14564,64 @@ function lxP_ocrDigits(t){
   });
   return { text, repaired };
 }
-function lxP_ocrFix(text, ocr){ return ocr ? lxP_ocrDigits(lxClean(text)).text : lxClean(text); }
+// A date whose point OCR read as a comma ("14,05.1978"): never money (a year sits where the
+// decimals would), so the comma is put back to a point. Same length, so indexes still match.
+function lxP_ocrDates(t){
+  return t.replace(/(^|[^\d.,'])(\d{1,2})([.,])(\d{1,2})([.,])((?:19|20)\d\d)(?!\d|[.,']\d)/g, (all, pre, d, s1, m, s2, y) => s1 === "," || s2 === "," ? pre + d + "." + m + "." + y : all);
+}
+// A per-cent sign read as "°/o", "o/o" or "%o" is still a per-cent sign (no digit changes).
+// Padded with spaces to the same length, so indexes into the text still match.
+function lxP_ocrPct(t){ return t.replace(/(\d)(\s?(?:[°º][\/|][o0]|o[\/|]o|%[o0°]))(?=\s|\)|$)/g, (all, d, sign) => d + "%" + " ".repeat(sign.length - 1)); }
+function lxP_ocrFix(text, ocr){ return ocr ? lxP_ocrDates(lxP_ocrDigits(lxP_ocrPct(lxClean(text))).text) : lxClean(text); }
+// Tesseract gives every word a confidence (0 to 100). A figure with a word below this was read
+// with visible doubt (the misread ISINs and umlauts of the sample scans sit at 29 to 60, the
+// figures it read right at 81 and above): it starts unticked, whatever this reader made of it.
+const lxP_OCR_LOW = 70;
+// The lowest confidence of the items that carry digits (null when OCR gave none: a text-layer
+// PDF, or an OCR engine that reports no confidence). `digits` narrows it to the items whose
+// digits are part of that figure.
+function lxP_digitConf(items, digits){
+  let min = null;
+  (items || []).forEach(it => {
+    // digits as this reader reads them ("14.O5.1978" carries 14051978)
+    const s = String(it && it.str != null ? it.str : ""), d = lxP_ocrDigits(lxClean(s)).text.replace(/\D/g, "");
+    if(!d || typeof it.conf !== "number" || !isFinite(it.conf)) return;
+    if(digits && !(digits.includes(d) || d.includes(digits))) return;
+    if(min == null || it.conf < min) min = it.conf;
+  });
+  return min;
+}
+function lxP_lowConf(items, digits){ const c = lxP_digitConf(items, digits); return c != null && c < lxP_OCR_LOW ? c : 0; }
+// The weakest thing about a set of value cells: a repaired digit, a word OCR was unsure of, a
+// figure that sits as close to another label, spaces joined inside the number, or nothing.
+function lxP_vcFlag(vcs){
+  return vcs.some(v => v.v.repaired) ? "repaired" : vcs.some(v => v.v.lowConf) ? "lowconf" : vcs.some(v => v.ambiguous) ? "ambiguous" : vcs.some(v => v.v.spaced) ? "spaced" : "";
+}
+// The OCR facts of a rate read from inside a line of text ("... (Zins 1.25%)"): a letter
+// repaired anywhere on the line, and the confidence of the words carrying its digits.
+function lxP_inTextOcr(line, p, ocr){
+  if(!ocr) return { repaired:false };
+  return { repaired:lxP_ocrDigits(lxClean(line.text)).repaired, lowConf:lxP_lowConf(line.items, String(p.raw).replace(/\D/g, "")), raw:p.raw };
+}
+// Flag and note text for a chosen rate candidate (a value cell, or a rate inside a line).
+function lxP_candOcr(x){
+  const v = x.vc && x.vc.v, why = [];
+  const w = lxP_ocrWhy(v); if(w) why.push(w);
+  if(x.inText && x.repaired) why.push("a letter was taken for a digit on the line \"" + x.quote + "\"");
+  if(x.inText && x.lowConf) why.push("\"" + lxP_nodash(x.raw) + "\": OCR was unsure of it (word confidence " + x.lowConf + " of 100)");
+  return { flag:x.repaired || (v && v.repaired) ? "repaired" : x.lowConf || (v && v.lowConf) ? "lowconf" : "", why };
+}
+// What OCR made doubtful about one parsed figure, in words for a note ("" when nothing).
+function lxP_ocrWhy(v){
+  if(!v) return "";
+  const shown = v.kind === "percent" ? v.value + "%" : lxP_fmt(v.value), raw = lxP_nodash(v.raw || v.num || "");
+  const why = [];
+  if(v.pct96) why.push("\"" + raw + "\" read as " + shown + ", taking the last two digits for a per-cent sign");
+  else if(v.sepRepaired) why.push("\"" + raw + "\" read as " + shown + ", taking its points for thousands separators");
+  else if(v.repaired) why.push("\"" + raw + "\" read as " + shown + ", a letter taken for a digit");
+  if(v.lowConf) why.push((why.length ? "OCR" : "\"" + raw + "\": OCR") + " was unsure of it (word confidence " + v.lowConf + " of 100)");
+  return why.join("; ");
+}
 
 // Ages written into a label ("mit 65", "à 65 ans", "Alter 58"): standalone numbers 58 to 70
 // that are not the decimals of a figure ("1.65%" folds to "1 65%", so a number right after
@@ -14062,7 +14639,9 @@ function lxP_isProj(f, ocr){ return lxP_hasAny(f, lxP_K.proj, ocr) || lxP_ages(f
 // null when the cell says anything else (then it is a label).
 function lxP_parseValue(text, ocr, allowSpaceFix){
   let t = lxClean(text), repaired = false;
-  if(ocr){ const r = lxP_ocrDigits(t); t = r.text; repaired = r.repaired; }
+  if(ocr){
+    const r = lxP_ocrDigits(lxP_ocrPct(t)); t = lxP_ocrDates(r.text); repaired = r.repaired;
+  }
   if(!/\d/.test(t)) return null;
   // A footnote marker after the figure ("480'000.00 1)", "480'000.00 (2)", "480'000.00*") is
   // not part of it. Whitespace is required before a bracketed marker, so the accounting
@@ -14108,6 +14687,16 @@ function lxP_parseValue(text, ocr, allowSpaceFix){
     // is a cleanly grouped amount, and say so (confidence goes down a little).
     const joined = num.replace(/\s+/g, "");
     if(/^\(?-?\d{1,3}(?:(?:'\d{3})+|(?:,\d{3})+|(?:\.\d{3})+)(?:[.,]\d{1,2})?\)?-?$/.test(joined)){ p = lxParseAmount(joined); spaced = !!p; }
+  }
+  if(!p && ocr){
+    // OCR read the apostrophes of "480'000.00" as points (or commas): "480.000.00". Each
+    // separator but the last is followed by three digits and the last by two, so there is one
+    // reading only; it is a repair all the same, and said so.
+    const g = num.match(/^(\(?-?\d{1,3}(?:(?:\.\d{3})+|(?:,\d{3})+))[.,](\d{2})(\)?-?)$/);
+    if(g){
+      p = lxParseAmount(g[1].replace(/[.,]/g, "") + "." + g[2] + g[3]);
+      if(p){ flags.repaired = true; flags.sepRepaired = true; }
+    }
   }
   if(!p) return null;
   // Francs have two decimals at most: "480000.001" is a figure with a footnote digit glued on.
@@ -14228,6 +14817,17 @@ function lxP_side(f, ocr){
   if(lxP_hasAny(f, lxP_K.total, ocr)) return "total";
   return "";
 }
+// Two labels that are the same words except that the first has a side word (employee /
+// employer) where the second has some other word: "sparbeitrag arbeitnehmer pro jahr" and
+// "sparbeitrag arbxitgxber pro jahr" are two rows of one table, the second's side unreadable.
+function lxP_parallel(fa, fb){
+  const a = fa.split(" "), b = fb.split(" ");
+  if(a.length !== b.length || a.length < 2) return false;
+  const d = a.map((w, i) => i).filter(i => a[i] !== b[i]);
+  if(d.length !== 1) return false;
+  const s = lxP_side(a[d[0]], false);
+  return (s === "ee" || s === "er") && !lxP_side(b[d[0]], false) && /[a-z]{4}/.test(b[d[0]]);
+}
 // Which part of the retirement assets a label names: the whole ("total", "reglementarisch"),
 // the legal-minimum part ("obligatorisch", "BVG-Minimum") or the part above it
 // ("überobligatorisch", checked first because it contains "obligatorisch").
@@ -14265,7 +14865,14 @@ function lxP_fields(doc, ocr){
   doc.pages.forEach((page, pi) => (page.lines || []).forEach(line => {
     let cur = null;
     line.cells.forEach((cell, ci) => {
-      const vt = lxP_cellText(cell), v = lxP_parseValue(vt, ocr, true);
+      const vt = lxP_cellText(cell);
+      let v = lxP_parseValue(vt, ocr, true);
+      // OCR reads a per-cent sign as "96": "5.4096" beside a label is "5.40%" when the figure has
+      // exactly two decimals before the "96" (a rate never has four). Kept only for a rate
+      // label (below), and flagged as a repair.
+      const p96 = ocr && !v && cur && lxClean(vt).match(/^(\d{1,2})[.,](\d{2})\s?96$/);
+      if(p96) v = { kind:"percent", value:parseFloat(p96[1] + "." + p96[2]), repaired:true, pct96:true, raw:lxClean(vt), num:p96[1] + "." + p96[2] };
+      if(v && ocr && v.kind !== "date"){ const lc = lxP_lowConf(cell.items); if(lc) v.lowConf = lc; }
       if(v){
         if(v.kind === "date"){
           // a date column is never money; a date that STARTS a row ("per 01.01.2026 | 480'000")
@@ -14296,7 +14903,10 @@ function lxP_fields(doc, ocr){
       }
       const sp = lxP_splitTrailing(cell.text, ocr);
       cur = mkField(sp ? sp.label : lxClean(cell.text), cell, ci, line, pi);
-      if(sp) cur.values.push({ v:sp.v, cell, ci, line, page:pi, x:cell.x, x1:cell.x1, y:line.y, inline:true });
+      if(sp){
+        if(ocr){ const lc = lxP_lowConf(cell.items, String(sp.v.num || "").replace(/\D/g, "")); if(lc) sp.v.lowConf = lc; }
+        cur.values.push({ v:sp.v, cell, ci, line, page:pi, x:cell.x, x1:cell.x1, y:line.y, inline:true });
+      }
       else {
         // the same refusal for a figure printed inside the label's cell ("... CHF 480'00000")
         const tail = lxClean(cell.text).split(" ").pop();
@@ -14314,6 +14924,11 @@ function lxP_fields(doc, ocr){
     f.fold = lxFold(f.label);
     f.cat = lxP_classify(f.fold, ocr);
     f.dates = f.dates.concat(lxDates(lxP_ocrFix(f.label, ocr)).map(d => d.iso));
+    // a "96" read as a per-cent sign only means that beside a conversion or interest rate
+    if(f.cat !== "conv" && f.cat !== "rate") f.values = f.values.filter(vc => {
+      if(vc.v.pct96){ f.unread.push(vc.v.raw); return false; }
+      return true;
+    });
   });
   const synth = lxP_ageTables(doc, fields, orphans, ocr);
   lxP_inherit(doc, fields, orphans, ocr);
@@ -14712,7 +15327,7 @@ function lxP_nameLabel(text, ocr){
 // right of it on a line a few points off, or the first cell of the line just below.
 function lxP_neighbour(page, line, ci){
   const cell = line.cells[ci];
-  if(ci + 1 < line.cells.length) return { text:line.cells[ci + 1].text, quote:line.cells.slice(ci, ci + 2).map(c => c.text).join("  ") };
+  if(ci + 1 < line.cells.length) return { text:line.cells[ci + 1].text, quote:line.cells.slice(ci, ci + 2).map(c => c.text).join("  "), items:line.cells[ci + 1].items };
   const h = line.h || 9;
   let best = null;
   (page.lines || []).forEach(L => {
@@ -14722,10 +15337,10 @@ function lxP_neighbour(page, line, ci){
       let s = null;
       if(Math.abs(dy) <= 0.8 * h && c.x > cell.x1) s = Math.abs(dy);
       else if(dy > 0 && dy <= 2.4 * h && Math.abs(c.x - cell.x) <= 40) s = 10 + dy;
-      if(s != null && (!best || s < best.s)) best = { s, text:c.text };
+      if(s != null && (!best || s < best.s)) best = { s, text:c.text, items:c.items };
     });
   });
-  return best ? { text:best.text, quote:lxClean(cell.text) + " · " + best.text } : null;
+  return best ? { text:best.text, quote:lxClean(cell.text) + " · " + best.text, items:best.items } : null;
 }
 // A person's name from the text after its label: cut at the date of birth or any digit, drop
 // titles, split into first/last. Returns null for anything that does not look like a name.
@@ -14739,6 +15354,11 @@ function lxP_parseName(text, order, ocr){
   const g = t.search(/\d|(?:^|[^A-Za-z])(?:AHV|AVS|SV-?Nr|N°)(?![A-Za-z])/); if(g >= 0) t = t.slice(0, g);
   t = t.replace(/[\s,;:(]+$/, "").trim();
   while(/^(?:herr|frau|hr\.|fr\.|monsieur|madame|mme\.?|mlle|m\.|signora|signor|sig\.ra|sig\.|mrs\.?|mr\.?|ms\.?|dr\.?|prof\.?)\s+/i.test(t)) t = t.replace(/^\S+\s+/, "");
+  // A point after the last word ends a sentence ("... Béatrice Keller. Geboren ..."). On OCR a
+  // point after a whole word inside the name is a misread comma: "Keller. Béatrice" is
+  // "Keller, Béatrice" (an initial "J." keeps its point: one letter).
+  t = t.replace(/([A-Za-zÀ-ÿ]{3})\.$/, "$1");
+  if(ocr) t = t.replace(/([A-Za-zÀ-ÿ]{3})\.(?=\s)/g, "$1,");
   if(!t || lxP_classify(lxFold(t), ocr) || lxP_hasAny(lxFold(t), lxP_K.fund, false) || lxP_hasAny(lxFold(t), lxP_K.title, false)) return null;
   let first = [], last = [], sure = true;
   const nice = w => /^[A-ZÀ-ÖØ-Þ]{2,}(?:-[A-ZÀ-ÖØ-Þ]{2,})*$/.test(w) ? w.toLowerCase().replace(/(^|-)(\S)/g, (a, b, c) => b + c.toUpperCase()) : w;
@@ -14774,10 +15394,16 @@ function lxP_person(doc, ocr){
     const cell = line.cells[ci], m = lxP_nameLabel(cell.text, ocr);
     if(!m) continue;
     if(m.generic && !m.colon && m.rest) continue;
-    let text = m.rest, quote = cell.text;
-    if(!text){ const nb = lxP_neighbour(page, line, ci); if(!nb) continue; text = nb.text; quote = nb.quote; }
+    let text = m.rest, quote = cell.text, items = cell.items;
+    if(!text){ const nb = lxP_neighbour(page, line, ci); if(!nb) continue; text = nb.text; quote = nb.quote; items = nb.items; }
     const nm = lxP_parseName(text, m.order, ocr);
-    if(nm) return Object.assign(nm, { quote });
+    if(nm){
+      // the lowest OCR confidence among the words that make up the name
+      const parts = new Set(lxFold(nm.first + " " + nm.last).split(" "));
+      const cs = (items || []).filter(it => typeof it.conf === "number" && lxFold(it.str).split(" ").some(w => parts.has(w))).map(it => it.conf);
+      const low = ocr && cs.length && Math.min(...cs) < lxP_OCR_LOW ? Math.min(...cs) : 0;
+      return Object.assign(nm, { quote, lowConf:low });
+    }
   }
   return null;
 }
@@ -14812,10 +15438,17 @@ function lxP_dob(doc, ocr, maxYear){
       if(!m) continue;
       const before = line.cells.slice(0, ci).map(c => c.text).join(" ") + " " + t.slice(0, m.index);
       if(lxP_hasAny(lxFold(before), lxP_K.rel, ocr)) continue;
-      let d = lxDates(t.slice(m.index + m[0].length)).find(okd);
-      if(d) return { iso:d.iso, quote:cell.text };
+      // (on OCR: whether a digit or separator had to be repaired, and how sure OCR was of it)
+      const found = (txt, items) => {
+        const fixed = lxP_ocrFix(txt, ocr), dd = lxDates(fixed).find(okd);
+        if(!dd) return null;
+        const repaired = ocr && !lxDates(lxClean(txt)).some(x => x.iso === dd.iso);
+        return { iso:dd.iso, repaired, raw:lxClean(txt).slice(dd.index, dd.end), lowConf:ocr ? lxP_lowConf(items, dd.raw.replace(/\D/g, "")) : 0 };
+      };
+      let d = found(lxClean(cell.text).slice(m.index + m[0].length), cell.items);
+      if(d) return Object.assign(d, { quote:cell.text });
       const nb = lxP_neighbour(page, line, ci);
-      if(nb){ d = lxDates(lxP_ocrFix(nb.text, ocr)).find(okd); if(d) return { iso:d.iso, quote:nb.quote }; }
+      if(nb){ d = found(nb.text, nb.items); if(d) return Object.assign(d, { quote:nb.quote }); }
     }
   } }
   return null;
@@ -14923,20 +15556,21 @@ function lxP_contrib(doc, fields, ocr){
     const pctCtx = /%/.test(f.fold) || lxP_hasAny(f.fold, lxP_K.pct, ocr) || !!f.sectionPct;
     const vs = all.filter(vc => !(vc.v.value <= 30 && (pctCtx || hs.get(vc).pct)));
     if(!vs.length){ if(all.length) asRate.push(f); else if(f.values.some(v => v.v.kind === "percent")) pctOnly.push(f); return; }
-    const side = lxP_side(f.fold, ocr) || "total";
+    // "implicit": the row names no side and no total, so "total" is only this reader's default
+    const own = lxP_side(f.fold, ocr), side = own || "total";
     if(vs.length === 1){
       const h = hs.get(vs[0]);
       if(h.projected) return;
-      ents.push({ f, vc:vs[0], side:lxP_side(f.fold, ocr) || h.side || "total", period:lxP_period(f, vs[0], h, ocr), col:h.monthly || h.yearly || h.side ? h.text : "" });
+      ents.push({ f, vc:vs[0], side:own || h.side || "total", implicit:!own && !h.side, period:lxP_period(f, vs[0], h, ocr), col:h.monthly || h.yearly || h.side ? h.text : "" });
       return;
     }
     const cols = vs.map(vc => ({ vc, h:hs.get(vc) })).filter(o => !o.h.projected);
-    if(cols.some(o => o.h.side)){ cols.forEach(o => ents.push({ f, vc:o.vc, side:o.h.side || side, period:lxP_period(f, o.vc, o.h, ocr), col:o.h.text })); return; }
+    if(cols.some(o => o.h.side)){ cols.forEach(o => ents.push({ f, vc:o.vc, side:o.h.side || side, implicit:!o.h.side && !own, period:lxP_period(f, o.vc, o.h, ocr), col:o.h.text })); return; }
     const yr = cols.filter(o => o.h.yearly && !o.h.monthly);
-    if(yr.length === 1){ ents.push({ f, vc:yr[0].vc, side, period:"y", col:yr[0].h.text }); return; }
+    if(yr.length === 1){ ents.push({ f, vc:yr[0].vc, side, implicit:!own, period:"y", col:yr[0].h.text }); return; }
     const v = cols.map(o => o.vc.v.value);
     // no headers: "monthly  yearly" (the second is twelve times the first) ...
-    if(v.length === 2 && Math.abs(v[1] - 12 * v[0]) <= 0.005 * v[1] + 1){ ents.push({ f, vc:cols[1].vc, side, period:"y" }); return; }
+    if(v.length === 2 && Math.abs(v[1] - 12 * v[0]) <= 0.005 * v[1] + 1){ ents.push({ f, vc:cols[1].vc, side, implicit:!own, period:"y" }); return; }
     // ... or "share  share  total" (the third is the sum of the first two)
     if(v.length === 3 && Math.abs(v[0] + v[1] - v[2]) <= 1){
       ents.push({ f, vc:cols[0].vc, side:"ee", period:lxP_period(f, cols[0].vc, null, ocr), guessed:true }, { f, vc:cols[1].vc, side:"er", period:lxP_period(f, cols[1].vc, null, ocr), guessed:true }, { f, vc:cols[2].vc, side:"total", period:lxP_period(f, cols[2].vc, null, ocr) });
@@ -14954,10 +15588,12 @@ function lxP_contrib(doc, fields, ocr){
   const pick = s => { const l = ents.filter(e => e.side === s); return l.find(e => e.period === "y") || l[0] || null; };
   const ee = pick("ee"), er = pick("er"), tot = pick("total");
   const desc = e => lxP_lv(e.f, e.vc, e.col) + (e.period === "m" ? " x 12" : "");
-  const flag = es => { es = es.filter(Boolean); return es.some(e => e.vc.v.repaired) ? "repaired" : es.some(e => e.vc.ambiguous) ? "ambiguous" : es.some(e => e.vc.v.spaced) ? "spaced" : ""; };
+  // the value cells behind the figure returned (for the OCR note on doubtful digits)
+  let used = [];
+  const flag = es => { used = es.filter(Boolean).map(e => e.vc); return lxP_vcFlag(used); };
   // A year's savings contribution below CHF 100 is not plausible (the legal minimum credit on
   // the smallest insured salary is several hundred francs): more likely a rate read as money.
-  const small = r => { if(r.value != null && r.value < 100){ r.conf = Math.min(r.conf, 0.5); r.notes.push("The savings contributions read (" + lxP_fmt(r.value) + " per year) are implausibly small; they may be rates, not francs. Check before applying."); } return r; };
+  const small = r => { r.why = used.map(vc => lxP_ocrWhy(vc.v)).filter(Boolean); if(r.value != null && r.value < 100){ r.conf = Math.min(r.conf, 0.5); r.notes.push("The savings contributions read (" + lxP_fmt(r.value) + " per year) are implausibly small; they may be rates, not francs. Check before applying."); } return r; };
   if(ee && er){
     const sum = lxP_round2(yearly(ee) + yearly(er));
     let conf = ee.guessed ? 0.75 : 0.85;
@@ -14966,6 +15602,31 @@ function lxP_contrib(doc, fields, ocr){
     return small({ value:sum, conf, notes, flag:flag([ee, er]) });
   }
   if(tot){
+    const share = ee || er, sName = share === ee ? "employee" : "employer", oName = share === ee ? "employer" : "employee";
+    // A total is at least each of its parts. A "total" SMALLER than a share printed beside it
+    // is not a total: when its label names no side at all it is the other share, whose
+    // "Arbeitnehmer / Arbeitgeber" was lost (OCR misread it, or the layout split it off). The
+    // same when the two labels are the same words but for the share's side word ("Sparbeitrag
+    // Arbeitnehmer pro Jahr" / "Sparbeitrag Arbxitgxber pro Jahr"), whichever figure is larger.
+    const smaller = share && yearly(share) > yearly(tot) + 1;
+    if(share && tot.implicit && (smaller || lxP_parallel(share.f.fold, tot.f.fold))){
+      const sum = lxP_round2(yearly(share) + yearly(tot));
+      notes.push("Savings contributions per year (pfContrib): " + desc(share) + " + " + desc(tot) + " = " + lxP_fmt(sum) + ". The second line does not say whose contribution it is" +
+        (smaller ? " and is smaller than the " + sName + " share, so it cannot be the total" : " where the first says " + sName + " (the same words otherwise), so it is not a total") +
+        ": it was taken as the " + oName + " share. Check before applying.");
+      return small({ value:sum, conf:0.55, notes, flag:flag([share, tot]) });
+    }
+    if(smaller){
+      notes.push("Savings contributions per year (pfContrib): the printed total " + desc(tot) + " is smaller than the " + sName + " share " + desc(share) + ": one of them is misread. Check before applying.");
+      return small({ value:yearly(tot), conf:0.55, notes, flag:flag([tot]) });
+    }
+    // Several yearly figures that name no side and disagree: which one is the total (or whether
+    // they are the two shares with their side words lost) cannot be told.
+    const rivals = ents.filter(e => e !== tot && e.side === "total" && e.implicit && tot.implicit && Math.abs(yearly(e) - yearly(tot)) > 1);
+    if(rivals.length){
+      notes.push("Savings contributions per year (pfContrib): several contribution lines say neither employee, employer nor total (" + [tot].concat(rivals).map(desc).join("; ") + "); used the first. Check before applying.");
+      return small({ value:yearly(tot), conf:0.55, notes, flag:flag([tot]) });
+    }
     notes.push("Savings contributions per year (pfContrib): only a total is printed, " + desc(tot) + (tot.period === "m" ? " = " + lxP_fmt(yearly(tot)) : "") + ".");
     return small({ value:yearly(tot), conf:0.75, notes, flag:flag([tot]) });
   }
@@ -15005,7 +15666,7 @@ function lxP_conv(doc, fields, ocr){
     if(c.some(x => x.line === line)) return;
     const fl = lxFold(line.text);
     if(!lxP_hasAny(fl, lxP_K.conv, ocr)) return;
-    lxPercents(lxP_ocrFix(line.text, ocr)).forEach(p => c.push({ value:p.value, age:lxP_ages(fl)[0] || 0, ordinary:lxP_hasAny(fl, lxP_K.ordinary, ocr), prank:lxP_convRank(fl, ocr), quote:lxP_nodash(line.text).slice(0, 160), line, inText:true, repaired:ocr && lxP_ocrDigits(lxClean(line.text)).repaired }));
+    lxPercents(lxP_ocrFix(line.text, ocr)).forEach(p => c.push(Object.assign({ value:p.value, age:lxP_ages(fl)[0] || 0, ordinary:lxP_hasAny(fl, lxP_K.ordinary, ocr), prank:lxP_convRank(fl, ocr), quote:lxP_nodash(line.text).slice(0, 160), line, inText:true }, lxP_inTextOcr(line, p, ocr))));
   });
   const ok = c.filter(x => x.value >= 3 && x.value <= 8), notes = [];
   c.filter(x => !ok.includes(x)).forEach(x => notes.push("A conversion rate of " + x.value + "% is outside the plausible range and was not used: " + lxP_nodash(x.quote) + "."));
@@ -15024,11 +15685,34 @@ function lxP_conv(doc, fields, ocr){
     if(parts.length) notes.push("Other conversion rates for parts of the balance, not used: " + parts.map(x => x.value + "% (" + lxP_nodash(x.quote) + ")").join("; ") + ".");
     if(pick.noPct){ conf = Math.min(conf, 0.7); notes.push("The conversion rate " + pick.value + " is printed without a % sign; read as " + pick.value + "%."); }
     notes.unshift("Conversion rate" + (pick.age === 65 ? " at 65" : "") + " (pfConv): " + pick.value + "%, from " + lxP_nodash(pick.quote) + ".");
-    return { value:pick.value, conf, notes, flag:(pick.vc && pick.vc.v.repaired) || pick.repaired ? "repaired" : "" };
+    return Object.assign({ value:pick.value, conf, notes }, lxP_candOcr(pick));
   }
   const other = ok.filter(x => x.age && x.age !== 65);
   if(other.length) notes.push("Conversion rates are printed only for other ages, not applied: " + other.map(x => "age " + x.age + " " + x.value + "%").join(", ") + ".");
   return { value:null, notes };
+}
+// OCR cross-check of the conversion rate: a certificate prints the projected capital at 65 AND
+// the pension at 65, and the pension is that capital times the conversion rate. Three figures
+// read separately that agree (within what a rate printed to two decimals can explain) confirm
+// each other's digits; when the only capital and the only pension at 65 disagree, one of the
+// three is misread (or the fund computes its pension another way), and the rate is doubtful.
+// Returns null when the certificate does not print both.
+function lxP_convCheck(fields, A, rate, ocr){
+  const age65 = (fold, age) => (age || lxP_ages(fold)[0] || 0) === 65;
+  const caps = A.proj.filter(e => age65(e.f.fold + " " + lxFold(lxP_hkText(e.hk)), e.f.age)).map(e => ({ value:e.value, s:lxP_lv(e.f, e.vc) }));
+  const pens = [];
+  fields.filter(f => f.cat === "pension" && age65(f.fold, f.age)).forEach(f => lxP_amounts(f).filter(vc => vc.v.value > 0).forEach(vc => {
+    const m = lxP_period(f, vc, null, ocr) === "m";
+    pens.push({ value:m ? vc.v.value * 12 : vc.v.value, s:lxP_lv(f, vc) + (m ? " x 12" : "") });
+  }));
+  if(!caps.length || !pens.length) return null;
+  for(const c of caps) for(const p of pens){
+    const want = c.value * rate / 100;
+    // a rate printed to two decimals may be rounded by up to 0.005 points
+    if(Math.abs(want - p.value) <= c.value * 0.00005 + 1) return { ok:true, text:c.s + " x " + rate + "% = " + lxP_fmt(want) + ", printed " + p.s };
+  }
+  if(caps.length === 1 && pens.length === 1) return { ok:false, text:caps[0].s + " x " + rate + "% = " + lxP_fmt(caps[0].value * rate / 100) + ", but printed " + pens[0].s };
+  return null;
 }
 // The interest credited on the retirement assets. An actual rate ("Verzinsung 2026 1.25%")
 // wins; the legal minimum rate ("BVG-Mindestzinssatz") is weaker; a rate that only appears as
@@ -15049,7 +15733,7 @@ function lxP_rate(doc, fields, ocr){
   const assumed = fl => lxP_isProj(fl, ocr) || lxP_hasAny(fl, lxP_K.rateAssumed, ocr);
   fields.filter(f => f.cat === "rate" && !lxP_hasAny(f.fold, lxP_K.rateNot, ocr)).forEach(f => f.values.forEach(vc => {
     const pct = vc.v.kind === "percent" || (vc.v.kind === "amount" && !vc.v.bare && /%/.test(f.fold) && vc.v.value <= 6);
-    if(pct) c.push({ value:vc.v.value, assumed:assumed(f.fold), min:lxP_hasAny(f.fold, lxP_K.rateMin, ocr), part:lxP_ratePart(f.fold, ocr), quote:f.quote, line:f.line, field:true, year:Math.max(0, ...(f.label.match(/\b20\d\d\b/g) || []).map(Number)), repaired:vc.v.repaired || vc.ambiguous });
+    if(pct) c.push({ value:vc.v.value, assumed:assumed(f.fold), min:lxP_hasAny(f.fold, lxP_K.rateMin, ocr), part:lxP_ratePart(f.fold, ocr), quote:f.quote, line:f.line, field:true, year:Math.max(0, ...(f.label.match(/\b20\d\d\b/g) || []).map(Number)), repaired:vc.v.repaired || vc.ambiguous, vc });
   }));
   doc.lines.forEach(line => {
     if(c.some(x => x.line === line)) return;
@@ -15058,7 +15742,7 @@ function lxP_rate(doc, fields, ocr){
     const rateWord = lxP_hasAny(fl, lxP_K.rate, ocr), projAssets = lxP_isProj(fl, ocr) && lxP_hasAny(fl, lxP_K.assets, ocr);
     if(!rateWord && !projAssets) return;
     const t = lxP_ocrFix(line.text, ocr);
-    lxPercents(t).forEach(p => c.push({ value:p.value, assumed:assumed(fl), min:lxP_hasAny(fl, lxP_K.rateMin, ocr), part:lxP_ratePart(fl, ocr), quote:lxP_nodash(line.text).slice(0, 160), line, inText:true, year:0, repaired:ocr && lxP_ocrDigits(lxClean(line.text)).repaired }));
+    lxPercents(t).forEach(p => c.push(Object.assign({ value:p.value, assumed:assumed(fl), min:lxP_hasAny(fl, lxP_K.rateMin, ocr), part:lxP_ratePart(fl, ocr), quote:lxP_nodash(line.text).slice(0, 160), line, inText:true, year:0 }, lxP_inTextOcr(line, p, ocr))));
   });
   const ok = c.filter(x => x.value >= -1 && x.value <= 6), notes = [];
   const partName = p => p === "super" ? "extra-mandatory" : p === "mand" ? "mandatory (BVG)" : "of-which";
@@ -15079,15 +15763,15 @@ function lxP_rate(doc, fields, ocr){
     notes.push("Interest credited (pfRate): " + pick.value + "%, from " + lxP_nodash(pick.quote) + ".");
     if(rivals.length){ conf = pick.year && rivals.every(r => r.year && r.year < pick.year) ? 0.75 : 0.55; notes.push("Other interest rates printed: " + rivals.map(r => r.value + "% (" + lxP_nodash(r.quote) + ")").join("; ") + "; used the " + (pick.year ? "most recent" : "first") + "."); }
     conf = partsOnly(pick, conf);
-    return { value:pick.value, conf, notes, flag:pick.repaired ? "repaired" : "" };
+    return Object.assign({ value:pick.value, conf, notes }, lxP_candOcr(pick));
   }
   if(mins.length){
     notes.push("Interest rate (pfRate) " + mins[0].value + "% is the legal MINIMUM rate printed on the certificate (" + lxP_nodash(mins[0].quote) + "); the fund may credit more on the extra-mandatory part. Check before applying.");
-    return { value:mins[0].value, conf:0.55, notes, flag:mins[0].repaired ? "repaired" : "" };
+    return Object.assign({ value:mins[0].value, conf:0.55, notes }, lxP_candOcr(mins[0]));
   }
   if(ass.length){
     notes.push("Interest rate (pfRate) " + ass[0].value + "% is only the rate the fund ASSUMED for its projection (" + lxP_nodash(ass[0].quote) + "), not a declared credited rate: lower confidence, check before applying.");
-    return { value:ass[0].value, conf:0.55, notes, flag:ass[0].repaired ? "repaired" : "" };
+    return Object.assign({ value:ass[0].value, conf:0.55, notes }, lxP_candOcr(ass[0]));
   }
   return { value:null, notes };
 }
@@ -15131,8 +15815,10 @@ function lxReadPensionCertificate(doc){
   // OCR can misread any digit, so nothing it read may start above 0.75; a digit this reader
   // had to repair (O read for 0), or a figure paired with a label that another label sits as
   // close to, starts unticked.
-  const cap = (c, flag) => { if(flag === "repaired" || flag === "ambiguous") c = Math.min(c, 0.55); else if(flag === "spaced") c = Math.min(c, 0.7); return lxP_round2(ocr ? Math.min(c, 0.75) : c); };
-  const vcFlag = vcs => vcs.some(v => v.v.repaired) ? "repaired" : vcs.some(v => v.ambiguous) ? "ambiguous" : vcs.some(v => v.v.spaced) ? "spaced" : "";
+  const cap = (c, flag) => { if(flag === "repaired" || flag === "lowconf" || flag === "ambiguous") c = Math.min(c, 0.55); else if(flag === "spaced") c = Math.min(c, 0.7); return lxP_round2(ocr ? Math.min(c, 0.75) : c); };
+  const vcFlag = lxP_vcFlag;
+  // one note per figure OCR left in doubt, saying exactly what was read and why it is doubtful
+  const ocrNote = (what, why) => { if(why && why.length) notes.push("OCR, " + what + ": " + why.join("; ") + ". It starts unticked: compare it with the certificate."); };
   const fields = lxP_fields(doc, ocr);
   // on a vested-benefits statement the "Freizügigkeitsguthaben" IS the balance
   if(vested) fields.forEach(f => { if(f.cat === "vested") f.cat = "assets"; });
@@ -15148,9 +15834,16 @@ function lxReadPensionCertificate(doc){
   if(who || dob){
     const q = who && dob && dob.quote !== who.quote ? who.quote + " · " + dob.quote : (who || dob).quote;
     const sure = !who || who.sure !== false;
-    out.household.push(lxRow(sure ? 0.6 : 0.55, lxP_nodash(q), { role:"client1", first:who && who.first, last:who && who.last, dob:dob && dob.iso }));
+    // OCR: a date of birth whose digits or points had to be repaired, or a name or date OCR
+    // was unsure of, starts unticked
+    const why = [];
+    if(dob && dob.repaired) why.push("the date of birth was printed as \"" + lxP_nodash(dob.raw) + "\" and read as " + lxP_dmy(dob.iso));
+    if(dob && dob.lowConf) why.push("the date of birth was read with low certainty (word confidence " + dob.lowConf + " of 100)");
+    if(who && who.lowConf) why.push("the name was read with low certainty (word confidence " + who.lowConf + " of 100)");
+    out.household.push(lxRow(sure && !why.length ? 0.6 : 0.55, lxP_nodash(q), { role:"client1", first:who && who.first, last:who && who.last, dob:dob && dob.iso }));
     notes.push("Insured person " + (who ? who.first + " " + who.last : "(name not found)") + (dob ? ", born " + lxP_dmy(dob.iso) : "") + " is set as client 1: the adviser should set whether this is client 1 or client 2 (the pension assets and salary below belong to the same person).");
     if(!sure) notes.push("The name is printed without a comma or capitals, so which part is the first name is not certain (read as first name " + who.first + ", surname " + who.last + "): check before applying.");
+    ocrNote("insured person", why);
   }
 
   // Retirement assets: one row, the current value only.
@@ -15169,6 +15862,16 @@ function lxReadPensionCertificate(doc){
     const ccy = ccys.find(c => c !== "CHF") || "CHF";
     if(ccy !== "CHF"){ conf = Math.min(conf, 0.5); notes.push("The retirement assets are printed in " + ccy + ", not converted to CHF. Check before applying."); }
     const fc = {};
+    // OCR only: the conversion rate checked against the projection printed beside it
+    const X = ocr && !vested && V.value != null ? lxP_convCheck(fields, A, V.value, ocr) : null;
+    if(X && X.ok){
+      const fixedWhy = V.why && V.why.length ? ". That confirms the rate OCR was in doubt about: " + V.why.join("; ") : "";
+      if(V.flag === "repaired" || V.flag === "lowconf"){ V.flag = ""; V.why = []; }
+      V.notes.push("Cross-check: the conversion rate agrees with the projection printed: " + X.text + fixedWhy + ".");
+    } else if(X){
+      V.conf = Math.min(V.conf, 0.55);
+      V.notes.push("Cross-check failed: " + X.text + ". One of these three OCR-read figures may be misread (or the fund computes its pension another way): the conversion rate starts unticked, compare it with the certificate.");
+    }
     const row = vested
       ? { label:(fund ? fund.name : "Vested benefits account") + ", vested benefits (Freizügigkeit)", accountType:"vested_benefits", accountTypeHint:"Freizügigkeitskonto", taxType:"tax_deferred", owner:"client1", country:"CH", ccy, value:pickA.value }
       : { label:(fund ? fund.name : "Pension fund") + ", 2nd pillar (BVG)", accountType:"bvg_lpp", accountTypeHint:"Pensionskasse", taxType:"tax_deferred", owner:"client1", country:"CH", ccy, value:pickA.value };
@@ -15182,11 +15885,18 @@ function lxReadPensionCertificate(doc){
     // an assumed interest rate can start unticked without dimming the balance.
     if(Object.keys(fc).length) r._fieldConfidence = fc;
     out.assets.push(r);
-    if(vflag === "repaired") notes.push("OCR: a letter was read in place of a digit in the retirement assets (" + lxP_nodash(pickA.vcs[0].v.raw) + "); check the figure.");
+    const letter = pickA.vcs.find(v => v.v.repaired && !v.v.sepRepaired && !v.v.pct96);
+    if(letter) notes.push("OCR: a letter was read in place of a digit in the retirement assets (" + lxP_nodash(letter.v.raw) + "); check the figure.");
+    else ocrNote("retirement assets", pickA.vcs.map(v => lxP_ocrWhy(v.v)).filter(Boolean));
     if(vflag === "ambiguous") notes.push("The retirement assets figure is printed on its own line and sits as close to another label as to its own (a skewed scan or an uneven layout), so which label it belongs to is not certain: check before applying.");
     pickA.notes.forEach(n => notes.push(n));
     if(vested){ if(R.value != null) notes.push("Interest rate printed: " + R.value + "%, information only."); }
-    else C.notes.concat(V.notes, R.notes).forEach(n => notes.push(n));
+    else {
+      C.notes.concat(V.notes, R.notes).forEach(n => notes.push(n));
+      if(C.value != null) ocrNote("savings contributions (pfContrib)", C.why);
+      if(V.value != null) ocrNote("conversion rate (pfConv)", V.why);
+      if(R.value != null) ocrNote("interest rate (pfRate)", R.why);
+    }
   } else {
     const unread = fields.filter(f => f.cat === "assets" && !f.values.length && f.unread.length);
     unread.forEach(f => notes.push("The figure printed for " + lxP_nodash(f.label) + " (" + lxP_nodash(f.unread[0]) + ") could not be read as a clean amount (its digit grouping or decimals are broken, as when OCR drops a decimal point or a footnote mark is glued on); it was not used. Check the certificate."));
@@ -15196,6 +15906,10 @@ function lxReadPensionCertificate(doc){
     if(lost.length && !vested) notes.push("Also read but not applied (they belong on the pension account): " + lost.join(", ") + ".");
   }
   if(A.hist.length) notes.push("Figures for earlier years, for information only (not applied): " + A.hist.slice(0, 4).map(e => lxP_lv(e.f, e.vc)).join("; ") + ".");
+  // A contribution or rate whose figure could not be read (OCR broke its grouping or decimals):
+  // said, so a missing share or rate is not mistaken for one the certificate does not print.
+  if(!vested) fields.filter(f => (f.cat === "contrib" || f.cat === "conv" || f.cat === "rate") && f.unread.length && !f.values.some(v => v.v.kind === "percent" || !v.v.bare)).forEach(f =>
+    notes.push("The figure printed for " + lxP_nodash(f.label) + " (" + lxP_nodash(f.unread[0]) + ") could not be read as a clean " + (f.cat === "contrib" ? "amount" : "percentage") + " and was not used" + (f.cat === "contrib" && C.value != null ? ": the savings contributions above may be missing it" : "") + ". Check the certificate."));
 
   // Salary: starts unticked. What the fund was told can differ from total pay (bonus, 13th
   // month salary, other employers), and a pension certificate is not a payslip.
@@ -15204,6 +15918,7 @@ function lxReadPensionCertificate(doc){
     const conf = cap(sal.period === "m" ? 0.5 : 0.55, vcFlag([sal.vc]));
     out.income.push(lxRow(conf, sal.f.quote, { who:"client1", primary:sal.value }));
     notes.push("Salary " + lxP_fmt(sal.value) + " per year from " + lxP_lv(sal.f, sal.vc) + (sal.period === "m" ? " x 12 (a monthly figure; if the employer pays 13 salaries the year is higher)" : "") + ": starts unticked, the salary reported to the pension fund can differ from total pay.");
+    ocrNote("salary", [lxP_ocrWhy(sal.vc.v)].filter(Boolean));
     const other = S.filter(s => s !== sal && !s.amb);
     if(other.length) notes.push("Other salary figures on the certificate, not used: " + other.map(s => lxP_lv(s.f, s.vc)).join("; ") + ".");
   }
