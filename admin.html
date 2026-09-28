@@ -2,6 +2,115 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Local mode and network guard (2026-09-28). Runs first, before anything on this page can
+     make a request. AI features stay off unless the firm turns them on (localStorage
+     "wa_ai_enabled" = "1", set in Settings or the Admin console), and the page may only
+     connect to the addresses listed here: a Content-Security-Policy the BROWSER enforces,
+     plus a log of every request for the Privacy panel. The AI service is on the list only
+     when AI was on as the page loaded, so in local mode no code on this page, ours or a
+     library's, can reach it. Keep this block identical in wealth-analyzer.html and admin.html. -->
+<script>
+(function(){
+  "use strict";
+  function get(k){ try{ return window.localStorage.getItem(k); }catch(_){ return null; } }
+  var AI_ON = get("wa_ai_enabled") === "1";
+  var AI_HOSTS = ["api.anthropic.com"];
+  // Public services the app can call. None receives client documents or plan figures: at
+  // most ticker symbols, identifiers or a key test. Plus the code libraries it downloads.
+  var DATA = ["query1.finance.yahoo.com","query2.finance.yahoo.com","api.openfigi.com","finnhub.io","www.alphavantage.co",
+    "api.polygon.io","api.twelvedata.com","financialmodelingprep.com","api.tiingo.com","eodhd.com","eodhistoricaldata.com",
+    "data.alpaca.markets","api-v2.intrinio.com","data.nasdaq.com","api.tradier.com","yh-finance.p.rapidapi.com",
+    "api.marketstack.com","api.stockdata.org","api.finazon.io","www.sec.gov","data.sec.gov","home.treasury.gov",
+    "api.coingecko.com","pro-api.coinmarketcap.com","data.messari.io","min-api.cryptocompare.com","api.coinbase.com",
+    "api.frankfurter.dev","api.frankfurter.app","openexchangerates.org","api.currencyapi.com","api.currencylayer.com",
+    "api.exchangerate.host","open.er-api.com","api.stlouisfed.org","api.marketaux.com","api.benzinga.com","newsapi.org"];
+  var HTTP_ONLY = ["api.marketstack.com","api.currencylayer.com"];          // two providers still offer plain http
+  var LIBS = ["cdnjs.cloudflare.com","cdn.jsdelivr.net","fonts.googleapis.com","fonts.gstatic.com"];
+  // Addresses the firm set up (data proxy, custodian feeds, order route, enterprise data
+  // proxies), allowed as they were when the page loaded.
+  var CONF = [];
+  var DEFAULT_PROXY = "";   // keep equal to DEFAULT_DATA_PROXY further down the page
+  function addUrl(u, kind){ if(!u) return; try{ var x = new URL(u, location.href); if(/^https?:$/.test(x.protocol)) CONF.push({ origin:x.origin, host:x.host, kind:kind }); }catch(_){} }
+  addUrl(get("wa_cors_proxy") || DEFAULT_PROXY, "proxy");
+  try{ (JSON.parse(get("wa_feeds") || "[]") || []).forEach(function(f){ if(f && f.url) addUrl(f.url, "feed"); }); }catch(_){}
+  try{ var r = JSON.parse(get("wa_order_route") || "null"); if(r && r.url) addUrl(r.url, "order"); }catch(_){}
+  ["wa_bloomberg_proxy","wa_factset_proxy","wa_refinitiv_proxy","wa_capiq_proxy","wa_morningstar_proxy","wa_ibkr_proxy"].forEach(function(k){ addUrl(get(k), "data-proxy"); });
+
+  var src = ["'self'", "blob:", "data:"];
+  DATA.concat(LIBS).forEach(function(h){ src.push("https://" + h); });
+  HTTP_ONLY.forEach(function(h){ src.push("http://" + h); });
+  CONF.forEach(function(c){ if(src.indexOf(c.origin) < 0) src.push(c.origin); });
+  if(AI_ON) AI_HOSTS.forEach(function(h){ src.push("https://" + h); });
+  // connect-src governs every connection a script opens (fetch, XHR, WebSocket, EventSource,
+  // beacons); form-action 'none' closes form submissions (the app has no forms).
+  var policy = "connect-src " + src.join(" ") + "; form-action 'none'";
+  try{ var m = document.createElement("meta"); m.httpEquiv = "Content-Security-Policy"; m.content = policy; document.head.appendChild(m); }catch(_){}
+
+  function kindOf(u){
+    if(AI_HOSTS.indexOf(u.host) >= 0) return "ai";
+    if(u.protocol === "blob:" || u.protocol === "data:" || u.origin === location.origin) return "self";
+    for(var i = 0; i < CONF.length; i++) if(CONF[i].origin === u.origin) return CONF[i].kind;
+    if(LIBS.indexOf(u.host) >= 0) return "library";
+    if(DATA.indexOf(u.host) >= 0) return "data";
+    return "other";
+  }
+  function allowedAtLoad(u){
+    if(u.protocol === "blob:" || u.protocol === "data:" || u.origin === location.origin) return true;
+    // An address the firm set up is allowed as configured, http included (an internal proxy
+    // or order system may not use TLS); the policy above lists its exact origin.
+    for(var i = 0; i < CONF.length; i++) if(CONF[i].origin === u.origin) return true;
+    var k = kindOf(u);
+    if(k === "ai") return AI_ON && u.protocol === "https:";
+    if(k === "other") return false;
+    if(u.protocol === "http:") return HTTP_ONLY.indexOf(u.host) >= 0;
+    return true;
+  }
+  var log = [], listeners = [];
+  function record(u, kind, status, method){
+    var e = { at:Date.now(), host:u.host || u.protocol, kind:kind, status:status, method:(method || "GET").toUpperCase() };
+    log.push(e); if(log.length > 500) log.shift();
+    listeners.forEach(function(f){ try{ f(e); }catch(_){} });
+  }
+  function blocked(msg){ var e = new Error(msg); e.waBlocked = true; return e; }
+  // Loads the fetch wrapper cannot see (scripts, stylesheets, fonts, images, XHR) come from
+  // the browser's resource timing, so the activity list shows everything that left the page.
+  try{
+    new PerformanceObserver(function(list){ list.getEntries().forEach(function(en){
+      if(en.initiatorType === "fetch") return;                     // already recorded by the wrapper
+      try{ var u = new URL(en.name, location.href); if(u.origin === location.origin || !/^https?:$/.test(u.protocol)) return;
+        record(u, kindOf(u), "loaded", en.initiatorType === "xmlhttprequest" ? "XHR" : (en.initiatorType || "load")); }catch(_){}
+    }); }).observe({ type:"resource", buffered:true });
+  }catch(_){}
+  var nativeFetch = window.fetch;
+  if(nativeFetch){
+    window.fetch = function(input, init){
+      var u;
+      try{ u = new URL(typeof input === "string" ? input : (input && input.url) || String(input), location.href); }
+      catch(_){ return nativeFetch.apply(this, arguments); }
+      var kind = kindOf(u), method = (init && init.method) || (input && input.method) || "GET";
+      if(kind === "ai" && get("wa_ai_enabled") !== "1"){
+        record(u, kind, "blocked", method);
+        return Promise.reject(blocked("Local mode: AI features are off, so nothing was sent. An administrator can turn them on in Settings, Privacy and AI."));
+      }
+      if(!allowedAtLoad(u)){
+        record(u, kind, "blocked", method);
+        return Promise.reject(blocked(kind === "ai"
+          ? "AI features were turned on after this page loaded. Reload the page to use them."
+          : "This page may only connect to the addresses it was loaded with. " + u.host + " was added later or is not on the list: reload the page to allow a newly configured address."));
+      }
+      record(u, kind, "sent", method);
+      return nativeFetch.apply(this, arguments);
+    };
+  }
+  document.addEventListener("securitypolicyviolation", function(ev){
+    try{ var u = new URL(ev.blockedURI, location.href); record(u, kindOf(u), "blocked by the browser"); }catch(_){}
+  });
+  window.WA_NET = { aiOnAtLoad:AI_ON, policy:policy, configured:CONF, log:log, kindOf:function(url){ try{ return kindOf(new URL(url, location.href)); }catch(_){ return "other"; } },
+    allowedAtLoad:function(url){ try{ return allowedAtLoad(new URL(url, location.href)); }catch(_){ return false; } },
+    note:function(url, status){ try{ var u = new URL(url, location.href); record(u, kindOf(u), status || "loaded"); }catch(_){} },
+    onRequest:function(f){ listeners.push(f); } };
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Wealth Analyzer | Admin Console</title>
@@ -417,6 +526,17 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
     <h1 class="wh-title"><i data-lucide="bot" class="icon" aria-hidden="true"></i><span class="wh-title-text">Portfolio Construction</span></h1>
     <p class="wh-sub">Builds a portfolio recommendation from the client brief, the research cached from <span class="js-prov-count">19</span> sources (a curated baseline of house views, plus live feeds when the data proxy is set) and the curated fund universe, in one of two ways: the deterministic Research Engine (no AI), or the AI Agent (Claude, needs an AI key).</p>
   </div></div>
+
+  <!-- Firm switch: AI features (off = local mode). The same flag as Settings, Privacy and AI in the client app. -->
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <div class="ptitle" style="margin:0 0 4px">Firm setting · AI features</div>
+        <div class="pdesc" style="margin:0">Off by default (local mode): documents are read on the device, the Portfolio Builder and this console use their rules engines, and the browser refuses any connection either page tries to open to an AI service. On: the AI Agent here, and Claude for uploads the adviser chooses it for, send data to Anthropic. Current state: <strong class="aiFirmState">…</strong></div>
+      </div>
+      <button class="wa-switch aiFirmSwitch" id="aiFirmSwitch" role="switch" aria-checked="false" data-action="toggleAiFirm" title="Allow AI features (Claude by Anthropic)"><span class="wa-on">ON</span><span class="wa-off">OFF</span><span class="wa-knob"></span></button>
+    </div>
+  </div>
 
   <!-- Master switch: show / hide the AI Portfolio Builder in the client-facing app -->
   <div class="panel">
@@ -1104,14 +1224,25 @@ Citations:<br>
 <div class="tab" id="tab-keys">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="key" class="icon" aria-hidden="true"></i><span class="wh-title-text">API Keys & Endpoints</span></h1>
-    <p class="wh-sub">All credentials stored in browser localStorage and shared with the main app. <strong>Keys are auto-tested every 2 minutes</strong> to ensure they're working (see the Health column).</p>
+    <p class="wh-sub">All credentials stored in browser localStorage and shared with the main app. The AI key is tested only when you press Test, and only while AI features are on: each test is a small billed request to Anthropic.</p>
   </div></div>
+  <!-- Firm switch: AI features (off = local mode). The same flag as Settings, Privacy and AI in the client app. -->
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <div class="ptitle" style="margin:0 0 4px">Firm setting · AI features</div>
+        <div class="pdesc" style="margin:0">Off by default (local mode): documents are read on the device, the Portfolio Builder and this console use their rules engines, and the browser refuses any connection either page tries to open to an AI service. On: the AI Agent here, and Claude for uploads the adviser chooses it for, send data to Anthropic. Current state: <strong class="aiFirmState">…</strong></div>
+      </div>
+      <button class="wa-switch aiFirmSwitch" id="aiFirmSwitch2" role="switch" aria-checked="false" data-action="toggleAiFirm" title="Allow AI features (Claude by Anthropic)"><span class="wa-on">ON</span><span class="wa-off">OFF</span><span class="wa-knob"></span></button>
+    </div>
+  </div>
+
   <div class="panel" style="padding:12px 16px">
-    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed, but both only work through your data proxy, set on the Market Data tab). <strong>API keys for enhanced data are managed here</strong> and auto-checked every 2 minutes.</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed, but both only work through your data proxy, set on the Market Data tab). <strong>API keys for enhanced data are managed here</strong>; market-data keys are auto-checked every 2 minutes, the AI key only when you press Test.</div>
   </div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px">
-      <div class="ptitle" style="margin:0">Free Providers <span style="color:var(--color-success);font-weight:600">(health-checked every 2 minutes)</span></div>
+      <div class="ptitle" style="margin:0">Keys <span style="color:var(--color-text-muted);font-weight:600">(the AI key is tested only when you press Test)</span></div>
       <div style="display:flex;gap:8px;align-items:center">
         <span id="keyHealthSummary" style="font-size:11px;color:var(--color-text-muted)"></span>
         <button class="btn-ghost" data-action="quickLoadKeys" title="Load keys from dev-api.key (gitignored) next to this page" style="font-size:12px;padding:8px 14px"><i data-lucide="file-key" class="icon" aria-hidden="true"></i> Quick Load</button>
@@ -1263,7 +1394,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260928-1154";
+const APP_VERSION = "20260928-1652";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3705,6 +3836,8 @@ function curatedItems(id){
 // build time so it works on any device; the Market Data tab's URL (localStorage
 // wa_cors_proxy, shared with the client app) overrides it. `var`, not const:
 // read from functions that can run before this line is evaluated.
+// Setting it? Also set DEFAULT_PROXY in the network guard at the top of the page, or
+// the browser will refuse requests to it (the page may only reach listed addresses).
 var DEFAULT_DATA_PROXY = "";
 var NO_DATA_PROXY_MSG = "needs the data proxy (set its URL on the Market Data tab)";
 function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
@@ -3801,7 +3934,9 @@ function renderDashboard(){
   let h = '';
   h += kpiCard("Admin Version",APP_VERSION,"v"+v+" main");
   h += kpiCard("localStorage",lsKeys.length+" keys",fmtBytes(lsSize)+" used");
-  h += kpiCard("AI Assistant",aiKey?"Connected":"Not set",aiKey?"":"Set in API Keys tab","tone-"+(aiKey?"green":"red"));
+  // A stored key is not "connected" while AI features are off: the page cannot reach the service.
+  h += kpiCard("AI Assistant", !aiFirmOn() ? "Off (local mode)" : aiKey ? (aiFirmUsable() ? "Key set" : "Reload to use") : "No key",
+    !aiFirmOn() ? "Turn on in Portfolio Agent or API Keys" : (aiKey ? "" : "Set in API Keys tab"), "tone-"+(!aiFirmOn() ? "green" : aiKey ? "green" : "red"));
   const _live = researchLiveSummary();
   h += kpiCard("Research Sources",
     _live.measured ? _live.liveProviders+" / "+RESEARCH_PROVIDERS.length+" live" : RESEARCH_PROVIDERS.length+" configured",
@@ -3834,7 +3969,7 @@ function renderDashboard(){
       {n:"Open ER API",       k:"always"}
     ]},
     {label:"AI / LLM", items:[
-      {n:"AI Assistant", k:aiKey}
+      {n:"AI Assistant", k:aiFirmUsable() ? aiKey : ""}
     ]}
   ];
   // Group categories into collapsible dropdowns: primary (Equities/News/Crypto/FX/…)
@@ -3972,7 +4107,38 @@ function toggleAIBuilderFeature(){
 }
 window.toggleAIBuilderFeature = toggleAIBuilderFeature;
 
+// ── Firm AI switch (2026-09-28): "wa_ai_enabled" = "1" allows AI features; missing = local mode.
+// The network guard at the top of this page reads it too, and lists the AI service as an
+// allowed address only when it was on as the page loaded.
+function aiFirmOn(){ try{ return localStorage.getItem("wa_ai_enabled")==="1"; }catch(_){ return false; } }
+function aiFirmUsable(){ return aiFirmOn() && !(window.WA_NET && !WA_NET.aiOnAtLoad); }
+function renderAiFirmSwitch(){
+  const on=aiFirmOn(), stale=on && window.WA_NET && !WA_NET.aiOnAtLoad;
+  document.querySelectorAll(".aiFirmSwitch").forEach(sw=>{ sw.classList.toggle("on", on); sw.setAttribute("aria-checked", on?"true":"false"); });
+  document.querySelectorAll(".aiFirmState").forEach(l=>{ l.textContent = stale ? "ON (reload this page to use it here)" : on ? "ON (AI features allowed)" : "OFF (local mode)";
+    l.style.color = on ? "var(--color-warning, #b45309)" : "var(--color-success)"; });
+  const b=document.querySelector("[data-action='runAgent']"); if(b){ b.disabled=!aiFirmUsable(); b.title=aiFirmUsable()?"":"AI features are off (local mode). Turn them on above, or use the Research Engine (no AI)."; }
+}
+function toggleAiFirm(){
+  if(!aiFirmOn()){
+    if(!confirm("Turn on AI features for this firm?\n\nThe AI Agent here, the client app's Portfolio Builder (on every build, with the plan's figures), and Claude for uploads an adviser chooses it for will send data to Anthropic's API. This page reloads to apply it.")) return;
+    try{ localStorage.setItem("wa_ai_enabled","1"); }catch(_){}
+    try{ addLog("warn","AI features turned ON (firm setting)"); }catch(_){}
+    location.reload();
+  } else {
+    try{ localStorage.removeItem("wa_ai_enabled"); }catch(_){}
+    try{ addLog("info","AI features turned OFF: local mode"); }catch(_){}
+    renderAiFirmSwitch();
+    try{ toast("AI features are off. Nothing is sent to an AI service from now on.","ok"); }catch(_){}
+  }
+}
+window.toggleAiFirm = toggleAiFirm;
+
+// The switch can change in the client app or another console window: keep this one true.
+window.addEventListener("storage", e=>{ if(e.key==="wa_ai_enabled" || e.key==="wa_ai_key"){ try{ renderAiFirmSwitch(); }catch(_){} } });
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible"){ try{ renderAiFirmSwitch(); }catch(_){} } });
 function renderAgent(){
+  renderAiFirmSwitch();
   // 0. Reflect the AI Builder feature-flag state on the master switch
   renderAIBuilderSwitch();
   // 1. Render the picker with every source TICKED
@@ -4028,6 +4194,8 @@ async function runAgent(){
   // another client's portfolio, in place to be exported or saved as this one.
   lastAgentRec = null;
   $("agExportBtn").disabled = true;
+  if(!aiFirmOn()){ toast("AI features are off (local mode). Turn them on at the top of this tab, or use the Research Engine (no AI).","err"); return; }
+  if(!aiFirmUsable()){ toast("AI features were turned on after this page loaded. Reload the page to use them.","err"); return; }
   const key = localStorage.getItem("wa_ai_key")||"";
   if(!key){ toast("No AI key. Set one in API Keys tab.","err"); return; }
   setIconLabel($("agStatus"), "bot", "Thinking…");
@@ -5716,7 +5884,7 @@ const API_KEY_DEFS = [
   // CoinGecko / Coinbase / CryptoCompare (crypto) and Frankfurter (FX) — routed through
   // the app's data proxy. None need an API key, so none are listed here. The only key the
   // app uses is the AI Assistant key, which reads uploaded documents (not market data).
-  {id:"wa_ai_key", n:"AI Assistant", url:"", note:"Powers the AI document reader & narrative agent (not a market-data provider)"}
+  {id:"wa_ai_key", n:"AI Assistant", url:"", note:"Used only while AI features are on: Claude for uploads an adviser chooses it for, the Portfolio Builder, and the AI Agent here (not a market-data provider)"}
 ];
 // Health status persisted per-key — updated by the 2-minute auto-check loop
 function getKeyHealth(){ try { return JSON.parse(localStorage.getItem("wa_key_health")||"{}"); } catch(_){return {};} }
@@ -5781,8 +5949,9 @@ function saveKey(el){
   toast("Saved "+id,"ok");
   addLog("ok","Saved key "+id);
   renderKeys();
-  // Immediately health-check the new key
-  if(v) testKeyHealth(id);
+  // Immediately health-check the new key (not the AI key: its test is a billed request
+  // to Anthropic, so it runs only when someone presses Test, and only while AI is on).
+  if(v && id !== "wa_ai_key") testKeyHealth(id);
 }
 
 // ─── CORS-resilient fetch ───────────────────────────────────────────
@@ -5814,6 +5983,10 @@ async function corsFetch(url, opts){
 async function testKeyHealth(keyId){
   const v = localStorage.getItem(keyId);
   if(!v) return;
+  // Local mode: never contact the AI service, not even to test a key. Not a failure:
+  // nothing is recorded, so a good key never shows as failing.
+  if(keyId === "wa_ai_key" && !aiFirmUsable())
+    return { ok:false, skipped:true, latencyMs:0, error: aiFirmOn() ? "Not tested: reload this page first" : "Not tested: AI features are off (local mode)" };
   const t0 = performance.now();
   let ok = false, error = null;
   try {
@@ -5980,7 +6153,8 @@ async function testKeyHealth(keyId){
       if(!j.observations?.length) throw new Error("No data");
       ok = true;
     } else if(keyId === "wa_ai_key"){
-      // Light-touch validity check — just a ping that requires valid key
+      // Light-touch validity check — just a ping that requires valid key (billed, so only on request;
+      // never in local mode, see the top of this function)
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST",
         headers:{"Content-Type":"application/json","x-api-key":v,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -6010,7 +6184,7 @@ async function testKeyHealthNow(el){
   el.disabled = false;
   el.textContent = "Test now";
   renderKeys();
-  toast(r.ok ? `${id} working (${r.latencyMs}ms)` : `${id} failed: ${r.error}`, r.ok ? "ok" : "err");
+  toast(r.skipped ? r.error : (r.ok ? `${id} working (${r.latencyMs}ms)` : `${id} failed: ${r.error}`), r.skipped ? "warn" : (r.ok ? "ok" : "err"));
   addLog(r.ok ? "ok" : "err", `Key check ${id}: ${r.ok ? `OK ${r.latencyMs}ms` : "FAILED: "+r.error}`);
 }
 
@@ -6080,7 +6254,7 @@ async function testAllKeysNow(el){
     if(el) el.textContent = `Testing ${idx}/${configured.length}: ${k.n}…`;
     if(summary) summary.textContent = `Testing ${idx}/${configured.length} · ${ok} ok · ${fail} failing`;
     const r = await testKeyHealth(k.id);
-    if(r.ok) ok++; else fail++;
+    if(r.skipped){} else if(r.ok) ok++; else fail++;   // a key skipped in local mode is not a failure
     // Live-update the table as we go
     if(document.getElementById("tab-keys")?.classList.contains("active")) renderKeys();
     await new Promise(r => setTimeout(r, 500));
@@ -6099,7 +6273,9 @@ let _keyCheckTimer = null;
 function startKeyHealthAutoCheck(){
   if(_keyCheckTimer) clearInterval(_keyCheckTimer);
   async function runOnce(){
-    const configured = API_KEY_DEFS.filter(k => !!localStorage.getItem(k.id));
+    // Never the AI key: its test is a billed request to Anthropic, so it runs only when
+    // someone presses Test (and only while AI features are on).
+    const configured = API_KEY_DEFS.filter(k => k.id !== "wa_ai_key" && !!localStorage.getItem(k.id));
     if(configured.length === 0) return;
     addLog("info", `Auto-checking ${configured.length} API key(s)…`);
     let ok = 0, fail = 0;
@@ -8205,6 +8381,7 @@ function init(){
   safe("providerCounts", syncProviderCounts);
   safe("dashboard", renderDashboard);
   safe("aiBuilderSwitch", renderAIBuilderSwitch);
+  safe("aiFirmSwitch", renderAiFirmSwitch);
   safe("startLivePoll", startLivePoll);
   // Self-test
   const requiredEls = ["tab-dashboard","tab-agent","tab-research","tab-testbench","tab-keys","tab-logs"];
