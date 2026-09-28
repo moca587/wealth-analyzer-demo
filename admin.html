@@ -338,8 +338,8 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
   <div class="nav" data-tab="users"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 8a3 3 0 100-6 3 3 0 000 6zm-5 7c0-2.5 2.5-4 5-4s5 1.5 5 4v1H1zm10-5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm-1.5 1c1.8 0 5.5 1 5.5 3.5V16h-4v-1c0-1.5-.7-2.7-1.8-3.5z"/></svg>User Management<span class="nav-new">NEW</span></div>
   <div class="nav" data-tab="profiles"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 100-6 3 3 0 000 6zm0 1c-3 0-6 1.5-6 4v2h12v-2c0-2.5-3-4-6-4z"/></svg>Profile Manager</div>
 
-  <div class="grp">AI &amp; Research</div>
-  <div class="nav" data-tab="agent"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 00-3 3v1.5L3 7v5l2 1.5V15h6v-1.5L13 12V7l-2-1.5V4a3 3 0 00-3-3zm-1 7a1 1 0 110 2 1 1 0 010-2zm2 0a1 1 0 110 2 1 1 0 010-2z"/></svg>AI Portfolio Agent</div>
+  <div class="grp">Portfolio &amp; Research</div>
+  <div class="nav" data-tab="agent"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3 3 0 00-3 3v1.5L3 7v5l2 1.5V15h6v-1.5L13 12V7l-2-1.5V4a3 3 0 00-3-3zm-1 7a1 1 0 110 2 1 1 0 010-2zm2 0a1 1 0 110 2 1 1 0 010-2z"/></svg>Portfolio Agent</div>
   <div class="nav" data-tab="research"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 1h7l3 3v11H3zm5 0v3h3M5 6h6v1H5V6zm0 2h6v1H5V8zm0 2h4v1H5v-1z"/></svg>Research Library</div>
 
   <div class="grp">Testing &amp; QA</div>
@@ -385,7 +385,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 <div class="tab" id="tab-users">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="users" class="icon" aria-hidden="true"></i><span class="wh-title-text">User Management</span></h1>
-    <p class="wh-sub">Track every user who creates a financial plan. When a user saves their plan in the main app, it appears here automatically. Click <strong>Build Portfolio</strong> on any user to send their plan to the AI Agent and generate an institutional-grade recommendation.</p>
+    <p class="wh-sub">Track every user who creates a financial plan. When a user saves their plan in the main app, it appears here automatically. Click <strong>Build Portfolio</strong> on any user to send their plan to the AI Agent (Claude, needs an AI key) and draft a recommendation for advisor review.</p>
   </div></div>
 
   <div class="kpi-grid" id="userStats"></div>
@@ -414,8 +414,8 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 <!-- ─── AI AGENT ─── -->
 <div class="tab" id="tab-agent">
   <div class="wealth-hero"><div class="wh-left">
-    <h1 class="wh-title"><i data-lucide="bot" class="icon" aria-hidden="true"></i><span class="wh-title-text">AI Portfolio Construction Agent</span></h1>
-    <p class="wh-sub">Synthesizes research from <span class="js-prov-count">16</span> institutional sources, the client's financial plan, and a curated fund universe to produce a complete portfolio recommendation. Powered by AI.</p>
+    <h1 class="wh-title"><i data-lucide="bot" class="icon" aria-hidden="true"></i><span class="wh-title-text">Portfolio Construction</span></h1>
+    <p class="wh-sub">Builds a portfolio recommendation from the client brief, the research cached from <span class="js-prov-count">19</span> sources (a curated baseline of house views, plus live feeds when the data proxy is set) and the curated fund universe, in one of two ways: the deterministic Research Engine (no AI), or the AI Agent (Claude, needs an AI key).</p>
   </div></div>
 
   <!-- Master switch: show / hide the AI Portfolio Builder in the client-facing app -->
@@ -505,7 +505,7 @@ Down payment | 2028 | 150000</textarea>
 
   <div class="panel">
     <div class="ptitle">② Research Sources <span style="color:var(--color-success);font-weight:600">(all <span class="js-prov-count">16</span> enabled by default)</span></div>
-    <div class="pdesc">All institutional sources are automatically pulled when you open this tab. <strong style="color:var(--color-success)">Auto-refresh runs every 5 minutes</strong>. Uncheck any you want to exclude from the agent's reasoning.</div>
+    <div class="pdesc">Sources refresh when you open this tab and <strong style="color:var(--color-success)">every 5 minutes</strong>. Live items need the data proxy (Market Data tab); without it each source shows only the curated baseline catalogue (as of <span class="js-curated-asof">2026-07-31</span>). Uncheck any you want to exclude.</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <button class="btn-ghost" data-action="manualResearchRefresh"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Pull latest now</button>
       <button class="btn-ghost" data-action="tickAllResearch"><i data-lucide="check" class="icon" aria-hidden="true"></i> Tick all</button>
@@ -518,7 +518,7 @@ Down payment | 2028 | 150000</textarea>
   <div class="panel" style="background:linear-gradient(135deg,#fff,#f0fdf4);border-color:rgba(0,135,90,.25)">
     <div class="ptitle" style="color:var(--color-success)">③ Build Portfolio: Deterministic Research Engine</div>
     <div class="pdesc">
-      The <strong>Research Engine</strong> scans every cached research item across all <span class="js-prov-count">16</span> institutions, extracts <strong>asset-class signals</strong>, <strong>theme votes</strong>, <strong>sector calls</strong>, and <strong>regional positioning</strong> via keyword matching. It then picks funds from the universe based on consensus strength and your constraints. <strong>Every decision is explained with full citations to the underlying research.</strong> No LLM call required. It runs instantly and is fully deterministic + auditable.
+      The <strong>Research Engine</strong> scans every cached research item from the ticked sources (up to <span class="js-prov-count">19</span>), extracts <strong>asset-class signals</strong>, <strong>theme votes</strong>, <strong>sector calls</strong>, and <strong>regional positioning</strong> via keyword matching. It then picks funds from the universe based on consensus strength and your constraints. <strong>Each position cites the cached research items behind its asset-class call (the curated baseline unless live feeds are configured).</strong> No LLM call required. It runs instantly and is fully deterministic + auditable.
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
       <button class="btn" data-action="runResearchEngine" style="font-size:14px;padding:11px 24px"><i data-lucide="microscope" class="icon" aria-hidden="true"></i> Build with Research Engine</button>
@@ -552,11 +552,11 @@ Down payment | 2028 | 150000</textarea>
   <!-- Methodology — How the Agent Selects Funds -->
   <div class="panel" style="background:linear-gradient(135deg,#fff,#f0f9ff);border:1px solid rgba(0,87,184,.20)">
     <div class="ptitle" style="color:var(--color-primary);display:flex;align-items:center;justify-content:space-between">
-      <span><i data-lucide="microscope" class="icon" aria-hidden="true"></i> How the Agent Selects Funds: Full Decision Logic</span>
+      <span><i data-lucide="microscope" class="icon" aria-hidden="true"></i> How the Research Engine Selects Funds: Full Decision Logic</span>
       <button class="btn-ghost" onclick="document.getElementById('methodBody').style.display = document.getElementById('methodBody').style.display==='none'?'block':'none'" style="font-size:11px;padding:4px 12px">Show / Hide</button>
     </div>
     <div id="methodBody">
-      <div class="pdesc">Every fund selection is fully traceable. The engine follows a deterministic 5-stage pipeline with explicit scoring, constraints, and rationale. Below is the complete decision logic, the same logic used by both the Research Engine and the AI agent.</div>
+      <div class="pdesc">Every Research Engine pick is traceable: a deterministic 5-stage pipeline with explicit scoring, constraints and rationale. The AI Agent (③b) does not run this pipeline: it is given the same brief, research excerpts and fund list and chooses weights itself. Its output is then only checked (eligible tickers, weights sum to 100, position cap).</div>
 
       <!-- Stage 1 — Signal extraction -->
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #0057b8;border-radius:8px;padding:16px 20px;margin-bottom:12px">
@@ -581,9 +581,9 @@ Down payment | 2028 | 150000</textarea>
           Net votes summed across all <span class="js-prov-count">16</span> providers. For each signal (e.g. "overweight Equity"), the engine tracks:
           <ul style="margin:8px 0 0 20px">
             <li><strong>Total net votes</strong>: sum of all signed sentiments across all items mentioning this signal</li>
-            <li><strong>Provider count</strong>: number of unique institutions endorsing the position</li>
+            <li><strong>Provider count</strong>: number of sources that mention the signal, and how many of them lean the net direction (the figure the rationale cites)</li>
             <li><strong>Top 8 supporting research items</strong>: kept for citation in the position's rationale</li>
-            <li><strong>Ticker conviction</strong>: tickers mentioned by 3+ providers get a +1 score bonus per additional provider</li>
+            <li><strong>Ticker mentions</strong>: every cached item that names a fund's ticker is counted, with the provider; in Stage 4 a named fund gets +2 plus 0.3 per mention</li>
           </ul>
           <div style="margin-top:8px;padding:8px 12px;background:rgba(0,135,90,.05);border-radius:5px;font-family:var(--font-mono);font-size:11px">
             <strong>Example:</strong> If BofA, JPM, Morgan Stanley, Goldman, BlackRock, and Pictet all express "overweight equities" with weight 3 each → Equity gets +18 net votes from 6 providers
@@ -628,27 +628,38 @@ Down payment | 2028 | 150000</textarea>
             <li><strong>Filter candidates by class:</strong> only funds where <code>fund.cls === targetClass</code></li>
             <li><strong>Apply hard constraints:</strong>
               <ul style="margin-top:4px">
+                <li>Domicile: only funds eligible for the client's country (e.g. UCITS-passportable funds for EU/CH/UK residents)</li>
                 <li>If <code>ESG = strict</code> → keep only funds with <code>esg: true</code> flag</li>
-                <li>If <code>liquidity = high</code> → exclude mutual funds and alternatives; ETFs + cash only</li>
-                <li>If <code>tax sensitivity = high</code> → sort ETFs before mutual funds</li>
+                <li>If <code>liquidity = high</code> → keep only ETFs, money-market funds and exchange-traded commodity vehicles (unless that would leave the sleeve empty)</li>
               </ul>
             </li>
-            <li><strong>Score each candidate:</strong>
+            <li><strong>Score each candidate</strong> (the formula in <code>pickFundsForClass</code>):
               <div style="padding:10px 14px;background:var(--color-primary-tint-1);border-radius:5px;font-family:var(--font-mono);font-size:11px;margin-top:6px;line-height:1.8">
-                score = <strong>(1 − expense_ratio)</strong>        ← low cost preferred<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>2 + (mentions × 0.3)</strong> if fund's ticker explicitly cited in research<br>
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <strong>0.2</strong> if sponsor already used for another position
+                score = <strong>(1 − ER)</strong>                              ← cost (ER in %, capped at 1)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>1.8 × min(2, max(0, 1.5 × Sharpe))</strong><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>clamp(5y return / 10, −1, +2)</strong><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>0.6 × min(1.5, log10(AUM in $B) / 2)</strong><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>0.4 × min(1, log10(holdings) / 4)</strong><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <strong>0.8 × max(0, (|maxDD| − 25) / 50)</strong><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(each quality figure is the fund's curated value; where none is on file, the median of the curated values in that sleeve, so a missing figure neither helps nor hurts)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>2 + 0.3 × mentions</strong> if the fund's ticker is named in the cached research<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>research alignment</strong>: region (×0.8), sector (×0.6) and theme (×0.5) stance, summed and clamped to ±2<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>currency</strong>: cash sleeve +3 client currency, +1 same currency bloc, −2 otherwise; other sleeves +0.5 client currency, −3 a share class hedged to another currency, +0.15 same bloc<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <strong>0.3</strong> if the sponsor is already used for another position<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <strong>0.5</strong> for an ETF when tax sensitivity is high<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;− <strong>0.3 to 0.5</strong> risk-fit penalty when the fund's own volatility on file does not suit the risk profile (σ &gt; 10% very conservative, σ &gt; 14% conservative, σ &lt; 8% aggressive or very aggressive)
               </div>
             </li>
-            <li><strong>Sort by score</strong> and pick top N funds where:
+            <li><strong>Sort by score</strong> and pick top N funds (never two share classes of the same fund) where:
               <ul style="margin-top:4px">
                 <li>N = 1 if class weight < 12%</li>
                 <li>N = 2 if class weight between 12% and 25%</li>
                 <li>N = 3 if class weight ≥ 25%</li>
               </ul>
             </li>
-            <li><strong>Apply max-position cap:</strong> if user set <code>maxPosition = 20%</code>, no single position exceeds 20%</li>
-            <li><strong>Renormalize:</strong> all weights scaled to sum to exactly 100%</li>
+            <li><strong>Equal weight within the sleeve:</strong> each pick gets the sleeve weight / N</li>
+            <li><strong>Renormalize:</strong> all weights scaled to sum to 100%</li>
+            <li><strong>Apply max-position cap:</strong> if user set <code>maxPosition = 20%</code>, no single position exceeds 20%; the excess goes to positions with headroom (if the cap cannot be met with the positions chosen, it is not applied and the risks list says so)</li>
           </ol>
         </div>
       </div>
@@ -670,7 +681,8 @@ Down payment | 2028 | 150000</textarea>
 
       <!-- Worked example -->
       <div style="background:linear-gradient(135deg,#fff,#fef3c7);border:1px solid rgba(245,158,11,.30);border-radius:8px;padding:16px 20px">
-        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:8px"><i data-lucide="notebook-pen" class="icon" aria-hidden="true"></i> WORKED EXAMPLE: Moderate Profile, Sample Walkthrough</div>
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:10px;display:flex;align-items:center;gap:8px"><i data-lucide="notebook-pen" class="icon" aria-hidden="true"></i> WORKED EXAMPLE: Moderate Profile, Sample Walkthrough (illustrative)</div>
+        <div style="font-size:11.5px;line-height:1.6;color:#92400e;margin-bottom:10px">Illustrative only: the research counts are invented, and the fund scores below use an older, simplified formula (cost + ticker mentions − sponsor repeat). They do not reproduce the full Stage 4 score, so a real run can rank funds differently.</div>
         <div style="font-size:11.5px;line-height:1.8;color:var(--color-text-secondary);font-family:var(--font-mono)">
 <strong>Brief:</strong> risk = moderate · NW = $500k · ESG = none · tax = medium · liquidity = medium · max pos = 20%<br>
 <strong>Research scanned:</strong> 1,420 items across 16 providers<br><br>
@@ -713,7 +725,7 @@ Citations:<br>
 
       <!-- Differences from AI agent version -->
       <div style="margin-top:10px;padding:12px 16px;background:var(--color-primary-tint-1);border-radius:6px;font-size:12px;color:var(--color-text-secondary);line-height:1.6">
-        <strong style="color:var(--color-primary)"><i data-lucide="bot" class="icon" aria-hidden="true"></i> How the AI agent differs:</strong> the AI version receives the same client brief + research items + fund universe as the deterministic engine, but uses an LLM to reason narratively over the inputs. It may suggest weights that deviate from the deterministic baseline (e.g. tactical overweights based on theme strength), and can produce richer prose rationale. Both produce the same JSON shape and feed the same Export-to-Proposal button. Pick deterministic for auditability, AI for narrative reasoning.
+        <strong style="color:var(--color-primary)"><i data-lucide="bot" class="icon" aria-hidden="true"></i> How the AI agent differs:</strong> the AI version receives the same client brief + research items + fund universe as the deterministic engine, but uses an LLM to reason narratively over the inputs. It may suggest weights that deviate from the deterministic baseline (e.g. tactical overweights based on theme strength), and can produce richer prose rationale. Both produce the same JSON shape and feed the same Export-to-Proposal button, and the export records which one built it. Pick deterministic for auditability, AI for narrative reasoning.
       </div>
     </div>
   </div>
@@ -729,10 +741,10 @@ Citations:<br>
 <div class="tab" id="tab-research">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="library" class="icon" aria-hidden="true"></i><span class="wh-title-text">Research Library</span></h1>
-    <p class="wh-sub"><span class="js-prov-count">16</span> institutional sources from the world's largest wealth managers, investment banks, private banks, and analyst platforms. Refresh feeds and the AI Agent uses them when building portfolios.</p>
+    <p class="wh-sub"><span class="js-prov-count">19</span> sources: each firm's own RSS feed where it publishes one and Google News headlines about the firm (both need the data proxy), plus a curated baseline of house-view themes (as of <span class="js-curated-asof">2026-07-31</span>) that is always included. The Research Engine and the AI Agent build from whatever is cached here.</p>
   </div></div>
   <div class="panel">
-    <div class="ptitle">Sources <span style="color:var(--color-success);font-weight:600">(auto-refresh every 5 minutes)</span></div>
+    <div class="ptitle">Sources <span style="color:var(--color-success);font-weight:600">(re-checked every 5 minutes; live only with the data proxy)</span></div>
     <div id="researchCorpusSummary" style="font-size:11.5px;margin:-2px 0 12px;line-height:1.5"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
       <button class="btn" data-action="refreshAll"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh ALL</button>
@@ -785,14 +797,14 @@ Citations:<br>
 <!-- ─── ENGINE STRESS TEST ─── -->
 <div class="tab" id="tab-enginestress">
   <div class="wealth-hero"><div class="wh-left">
-    <h1 class="wh-title"><i data-lucide="flask-conical" class="icon" aria-hidden="true"></i><span class="wh-title-text">AI Portfolio Engine Stress Test</span></h1>
+    <h1 class="wh-title"><i data-lucide="flask-conical" class="icon" aria-hidden="true"></i><span class="wh-title-text">Research Engine Stress Test</span></h1>
     <p class="wh-sub">Daily sensitivity & robustness testing for the deterministic Research Engine. Sweep across risk profiles, net worth levels, ESG settings, and research provider counts, then verify the engine reacts coherently to every input change. Daily benchmark snapshots track engine drift over time.</p>
   </div></div>
 
   <!-- Daily Benchmark — record today's engine output for a standard client -->
   <div class="panel">
     <div class="ptitle"><i data-lucide="calendar" class="icon" aria-hidden="true"></i> Daily Benchmark Snapshot</div>
-    <div class="pdesc">Records today's engine output for a <strong>standard benchmark client</strong> (Moderate risk · $500k NW · $150k income · 15+ year horizon · Medium tax sensitivity · No ESG preference). Run daily to track how engine recommendations drift as institutional research evolves.</div>
+    <div class="pdesc">Records today's engine output for a <strong>standard benchmark client</strong> (Moderate risk · $500k NW · $150k income · 15+ year horizon · Medium tax sensitivity · No ESG preference). Run daily to track how engine recommendations drift as the cached research changes (only with live feeds, or when the curated baseline is updated).</div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
       <button class="btn" data-action="runDailyBenchmark"><i data-lucide="calendar" class="icon" aria-hidden="true"></i> Run Today's Benchmark</button>
       <button class="btn-ghost" data-action="clearBenchmarkHistory">↺ Clear history</button>
@@ -1095,7 +1107,7 @@ Citations:<br>
     <p class="wh-sub">All credentials stored in browser localStorage and shared with the main app. <strong>Keys are auto-tested every 2 minutes</strong> to ensure they're working (see the Health column).</p>
   </div></div>
   <div class="panel" style="padding:12px 16px">
-    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed). <strong>API keys for enhanced data are managed here</strong> and auto-checked every 2 minutes.</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed, but both only work through your data proxy, set on the Market Data tab). <strong>API keys for enhanced data are managed here</strong> and auto-checked every 2 minutes.</div>
   </div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px">
@@ -1145,8 +1157,9 @@ Citations:<br>
       <a href="https://fred.stlouisfed.org/docs/api/api_key.html" target="_blank" style="color:var(--color-primary)">FRED</a> ·
       <span style="color:var(--color-text-secondary)">AI Assistant</span>
       <br><br>
-      <strong style="color:var(--color-success)">No key needed (verified working 2026-08-02):</strong>
-      Yahoo Finance · CoinGecko · Coinbase Spot · Frankfurter (ECB) · Open ER API · Treasury.gov
+      <strong style="color:var(--color-success)">No key needed (verified 2026-09-25):</strong>
+      CoinGecko · Coinbase Spot · Frankfurter (ECB) · Open ER API · Treasury.gov.
+      Yahoo Finance needs no key but only works through your data proxy (Market Data tab).
       <br>
       <strong style="color:var(--color-warning)">No longer usable from the browser:</strong>
       Stooq (CSV endpoint retired) · CryptoCompare (now key-required) · ExchangeRate.host (now key-required) ·
@@ -1190,7 +1203,7 @@ Citations:<br>
       <tbody>
         <tr><td><code>wa_app_version</code></td><td>shared</td><td>Current app version stamp</td></tr>
         <tr><td><code>wa_pending_profile</code></td><td>admin → main</td><td>Profile injected by Profile Manager</td></tr>
-        <tr><td><code>wa_pending_proposal</code></td><td>admin → main</td><td>Recommendation exported by AI Agent</td></tr>
+        <tr><td><code>wa_pending_proposal</code></td><td>admin → main</td><td>Recommendation exported from the Portfolio Agent tab (Research Engine or AI Agent; the payload's <code>engine</code> field says which)</td></tr>
         <tr><td><code>wa_ai_key</code></td><td>shared</td><td>AI assistant key</td></tr>
         <tr><td><code>fhKey</code>, <code>avKey</code>, <code>wa_polygon_key</code>, etc.</td><td>shared</td><td>Market data provider API keys</td></tr>
         <tr><td><code>wa_research_config</code></td><td>admin only</td><td>Provider feed URLs, enabled state, cached items</td></tr>
@@ -1201,7 +1214,7 @@ Citations:<br>
     <h2 style="font-size:17px;margin:18px 0 10px">Tab guide</h2>
     <ul style="margin-left:20px;line-height:1.85;color:var(--color-text-secondary)">
       <li><strong>Dashboard</strong>: KPI grid + provider status + recent activity</li>
-      <li><strong>AI Portfolio Agent</strong>: AI-powered portfolio construction with 16 research sources</li>
+      <li><strong>Portfolio Agent</strong>: deterministic Research Engine, or the AI Agent (Claude, needs a key), over the cached research</li>
       <li><strong>Research Library</strong>: Configure RSS feeds for each institutional source</li>
       <li><strong>Calc Test Bench</strong>: Verify every internal financial calculation</li>
       <li><strong>Constants Editor</strong>: Live-edit RISK_PROFILES, REGIONS, LOAN_DEFAULTS</li>
@@ -1250,7 +1263,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260928-1024";
+const APP_VERSION = "20260928-1154";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -2649,9 +2662,11 @@ const FUND_UNIVERSE = [
 ];
 
 // FUND METRICS ENRICHMENT — populate performance & risk stats on every
-// fund so the AI Portfolio Agent can score them. Real values are used
-// for ~80 flagship funds; class-typical defaults with deterministic
-// per-ticker jitter for the rest.
+// fund. Curated figures (FUND_OVERRIDES) are used where they exist. Every
+// other figure is the plain asset-class assumption (CLASS_DEFAULTS) and is
+// listed in f.est, so it is never shown as the fund's own number, fed to
+// the model as one, or used to rank funds. Trailing returns have no
+// assumption: without a curated figure they are null ("n/a").
 // ════════════════════════════════════════════════════════════════════
 const CLASS_DEFAULTS = {
   equity:       {mu:9.5,  sigma:15.0, holdings:500,  aum:50,  beta:1.00, r1y:13.0, r3y:9.5,  r5y:11.0, r10y:10.5},
@@ -2989,14 +3004,11 @@ const FUND_OVERRIDES = {
 
 };
 
-// Deterministic per-ticker hash for stable jitter
-function _fundHash(tkr){
-  let h = 0;
-  for(let i = 0; i < tkr.length; i++){ h = ((h<<5) - h) + tkr.charCodeAt(i); h |= 0; }
-  return Math.abs(h);
-}
-
-// Enrich every fund in-place with full metric set
+// Enrich every fund in-place with full metric set.
+// These used to be the class default jittered ±15% by a hash of the TICKER
+// STRING for every fund without an override: invented per-fund AUM, holdings,
+// Sharpe, drawdown and trailing returns for 707 of 973 funds, which also drove
+// fund selection. f.est now records which figures are assumptions instead.
 // Risk-free rate by currency, anchored to the same 2024-12-31 as FUND_DATA_AS_OF.
 // Sharpe has to be measured against the risk-free of the fund's OWN currency: a
 // CHF-hedged share class earns the (negative) CHF-vs-USD rate differential, so
@@ -3013,30 +3025,23 @@ const RISK_FREE_BY_CCY = {
   FUND_UNIVERSE.forEach(f => {
     const d = CLASS_DEFAULTS[f.cls] || CLASS_DEFAULTS.equity;
     const ov = FUND_OVERRIDES[f.tkr] || {};
-    const h = _fundHash(f.tkr);
-    const j = [
-      ((h        % 100) / 100 - 0.5) * 0.30,
-      (((h >> 4) % 100) / 100 - 0.5) * 0.30,
-      (((h >> 8) % 100) / 100 - 0.5) * 0.30,
-      (((h >> 12)% 100) / 100 - 0.5) * 0.30,
-      (((h >> 16)% 100) / 100 - 0.5) * 0.30
-    ];
-    f.mu       = ov.mu       ?? +(d.mu       * (1 + j[0])).toFixed(2);
-    f.sigma    = ov.sigma    ?? +(d.sigma    * (1 + j[1])).toFixed(2);
-    f.holdings = ov.holdings ?? Math.max(1, Math.round(d.holdings * (1 + j[2])));
-    f.aum      = ov.aum      ?? +Math.max(0.1, d.aum * (1 + j[3])).toFixed(1);
-    f.beta     = ov.beta     ?? +(Math.max(-0.5, d.beta + j[0]*0.4)).toFixed(2);
-    f.r1y      = ov.r1y      ?? +(d.r1y  + j[0]*10).toFixed(2);
-    f.r3y      = ov.r3y      ?? +(d.r3y  + j[1]*5).toFixed(2);
-    f.r5y      = ov.r5y      ?? +(d.r5y  + j[2]*4).toFixed(2);
-    f.r10y     = ov.r10y     ?? +(d.r10y + j[3]*3).toFixed(2);
+    const est = [];   // fields that are asset-class assumptions for THIS fund
+    const take = (k, assumed) => { if(ov[k] != null) return ov[k]; est.push(k); return assumed; };
+    f.mu       = take("mu",       d.mu);
+    f.sigma    = take("sigma",    d.sigma);
+    f.holdings = take("holdings", d.holdings);
+    f.aum      = take("aum",      d.aum);
+    f.beta     = take("beta",     d.beta);
+    // Trailing returns: curated or null. FUND_OVERRIDES uses 0 as a "fund is
+    // younger than this window" sentinel, which is null (no track record) too.
+    ["r1y","r3y","r5y","r10y"].forEach(k => { f[k] = (ov[k] == null || ov[k] === 0) ? null : ov[k]; });
     // A long-only, unlevered fund cannot draw down more than 100%. The
     // sigma-derived fallback is unbounded and crypto's sigma of 65 pushed 19
     // funds past -100% (worst -145.7), a figure that then reached the LLM
     // prompt and the client-facing "Max DD" chip as though it were historical.
     // Levered and inverse products are exempt — they genuinely can exceed it.
     const _levered = /\b(2x|3x|ultra|leveraged|inverse|short|bull|bear)\b/i.test(f.name || "");
-    const _rawDD   = ov.maxDD ?? -(+(f.sigma * 2.0 * (1 + Math.abs(j[4])*0.5)).toFixed(1));
+    const _rawDD   = take("maxDD", -(+(f.sigma * 2.0).toFixed(1)));
     f.maxDD    = _levered ? _rawDD : Math.max(-100, _rawDD);
     const rf   = RISK_FREE_BY_CCY[(f.ccy || "USD").toUpperCase()] ?? RISK_FREE_BY_CCY.USD;
     // The Math.max(0.5, sigma) floor binds only on cash (most cash funds sit
@@ -3054,17 +3059,11 @@ const RISK_FREE_BY_CCY = {
     } else {
       f.sharpe = +((f.mu - rf) / Math.max(0.5, f.sigma)).toFixed(2);
     }
-    // Tracking error: active mutual funds 1.5-4%, ETFs <0.3%
-    f.te = ov.te ?? (f.vehicle === "mutual_fund"
-      ? +(1.5 + (h % 25) / 10).toFixed(2)
-      : +(0.05 + (h % 25) / 100).toFixed(2));
-    // Trailing returns: FUND_OVERRIDES uses 0.0 as a "fund is younger than this
-    // period" sentinel. Left as 0.0 it renders as a real 0.0% annualized return
-    // (e.g. a 2024-launched fund showing "10y: 0.0%") and drags portfolio
-    // aggregates toward zero. Normalize the sentinel to null = no track record.
-    ["r1y","r3y","r5y","r10y"].forEach(k => {
-      if(ov[k] === 0) f[k] = null;
-    });
+    // A Sharpe computed from an assumed return or volatility is an assumption too.
+    if(ov.sharpe == null && (est.includes("mu") || est.includes("sigma"))) est.push("sharpe");
+    // Tracking error: no curated figures; a typical value for the vehicle
+    // (active mutual funds ~2.5%, ETFs ~0.15%), as an assumption.
+    f.te = take("te", f.vehicle === "mutual_fund" ? 2.5 : 0.15);
     // Inception year — only when actually curated. It used to be fabricated
     // (every override fund got 2005, everything else 2010+hash), which stated a
     // false launch year for funds that launched in 2024 and fed an "inception
@@ -3072,6 +3071,7 @@ const RISK_FREE_BY_CCY = {
     f.inception = ov.inception ?? null;
     // Income type — derive from yield
     f.income = f.yld >= 4 ? "high" : (f.yld >= 2 ? "moderate" : "low");
+    f.est = est.join(",");
   });
 })();
 
@@ -3090,6 +3090,25 @@ const RISK_FREE_BY_CCY = {
 
 // Fund metrics are a point-in-time snapshot, not live market data. These let
 // the UI say so in the same breath as the numbers.
+// Fund metric provenance: f.est lists the metrics that are asset-class ASSUMPTIONS for
+// that fund (no curated figure). fundVal() returns null for those, so they show as
+// "n/a", reach the model as "n/a", and count as unknown when funds are ranked.
+function fundKnown(f, k){ return !!f && f[k] != null && !((","+(f.est||"")+",").includes(","+k+",")); }
+function fundVal(f, k){ return fundKnown(f, k) ? f[k] : null; }
+function fundMetricsFor(f){
+  if(!f) return null;
+  const o = { src:"universe", name:f.name, sponsor:f.sponsor, vehicle:f.vehicle, dom:f.dom||"US", ucits:!!f.ucits, esg:!!f.esg,
+    er:f.er, yld:f.yld, inception:f.inception, cls:f.cls, est:f.est||"" };
+  ["mu","sigma","sharpe","beta","maxDD","r1y","r3y","r5y","r10y","holdings","aum","te"].forEach(k => { o[k] = fundVal(f, k); });
+  return o;
+}
+function fundWeighted(positions, key, weightField, lookup){
+  let s = 0, w = 0, W = 0;
+  (positions || []).forEach(p => { const pw = +p[weightField] || 0; if(pw <= 0) return; W += pw;
+    const v = fundVal(lookup(p.ticker || p.tkr), key); if(v != null){ s += v * pw; w += pw; } });
+  return { value: w > 0 ? s / w : null, coverage: W > 0 ? w / W : 0 };
+}
+
 function fundDataAgeMonths(){
   const d = new Date(FUND_DATA_AS_OF);
   if(isNaN(d)) return 0;
@@ -3918,7 +3937,7 @@ async function autoRefreshAllResearch(silent){
   });
   await Promise.all(workers);
   _agentRefreshInProgress = false;
-  if(status && !silent) setIconLabel(status, "check", `${ok}/${RESEARCH_PROVIDERS.length} sources ready. Open AI Agent to build`);
+  if(status && !silent) setIconLabel(status, "check", `${ok}/${RESEARCH_PROVIDERS.length} sources ready. Open Portfolio Agent to build`);
   addLog("ok", `Auto-refreshed research: ${ok}/${RESEARCH_PROVIDERS.length} sources have items`);
   // If the Research Library tab is currently active, re-render it live
   if(document.getElementById("tab-research")?.classList.contains("active")){
@@ -4004,6 +4023,11 @@ $("profileFile")?.addEventListener("change", function(ev){
 let lastAgentRec = null;
 
 async function runAgent(){
+  // Forget the previous result first. A run that stops early (no key) or fails
+  // must not leave an older recommendation, possibly a Research Engine run or
+  // another client's portfolio, in place to be exported or saved as this one.
+  lastAgentRec = null;
+  $("agExportBtn").disabled = true;
   const key = localStorage.getItem("wa_ai_key")||"";
   if(!key){ toast("No AI key. Set one in API Keys tab.","err"); return; }
   setIconLabel($("agStatus"), "bot", "Thinking…");
@@ -4037,14 +4061,17 @@ async function runAgent(){
   // Trailing returns are null for funds younger than the window — render "n/a"
   // so the model is not told a 2024-launched fund returned 0.0% over 10 years.
   const _uPct = v => (v == null ? "n/a" : v.toFixed(1) + "%");
+  // Only curated figures reach the model; asset-class assumptions are marked (class) or sent as n/a.
+  const _uNum = (v, d, suf) => (v == null ? "n/a" : v.toFixed(d) + (suf || ""));
+  const _cls = (f, k) => (fundKnown(f, k) ? "" : "(class)");
   const universe = eligibleUniverse.map(f =>
-    `${f.tkr.padEnd(7)} | ${f.cls.padEnd(13)} | ${f.vehicle.padEnd(12)} | ER ${f.er.toFixed(2)}% Yld ${f.yld.toFixed(1)}% | μ${f.mu.toFixed(1)}% σ${f.sigma.toFixed(1)}% Sharpe ${f.sharpe.toFixed(2)} β${f.beta.toFixed(2)} maxDD ${f.maxDD.toFixed(0)}% | 1y ${_uPct(f.r1y)} 3y ${_uPct(f.r3y)} 5y ${_uPct(f.r5y)} 10y ${_uPct(f.r10y)} | holdings ${f.holdings} AUM $${f.aum}B inc ${f.inception ?? "n/a"} TE ${f.te}% | ${f.dom||"US"}${f.ucits?'/UCITS':''}${f.esg?'/ESG':''} | ${f.sponsor} | ${f.name}`
+    `${f.tkr.padEnd(7)} | ${f.cls.padEnd(13)} | ${f.vehicle.padEnd(12)} | ER ${f.er.toFixed(2)}% Yld ${f.yld.toFixed(1)}% | μ${f.mu.toFixed(1)}%${_cls(f,"mu")} σ${f.sigma.toFixed(1)}%${_cls(f,"sigma")} Sharpe ${_uNum(fundVal(f,"sharpe"),2)} β${_uNum(fundVal(f,"beta"),2)} maxDD ${_uNum(fundVal(f,"maxDD"),0,"%")} | 1y ${_uPct(f.r1y)} 3y ${_uPct(f.r3y)} 5y ${_uPct(f.r5y)} 10y ${_uPct(f.r10y)} | holdings ${_uNum(fundVal(f,"holdings"),0)} AUM ${fundVal(f,"aum")!=null?"$"+fundVal(f,"aum")+"B":"n/a"} inc ${f.inception ?? "n/a"} TE ${_uNum(fundVal(f,"te"),2,"%")} | ${f.dom||"US"}${f.ucits?'/UCITS':''}${f.esg?'/ESG':''} | ${f.sponsor} | ${f.name}`
   ).join("\n");
 
   const prompt = `You are a sophisticated portfolio construction AI working at a major wealth management firm. Synthesize research from ${checked.length} institutional sources to build evidence-backed portfolios.
 
 # DATA VINTAGE
-Fund metrics (trailing returns, AUM, Sharpe, maxDD) are as of ${FUND_DATA_AS_OF}. "n/a" means the fund has no track record for that period. Do not describe these figures as current-day values, and do not infer a launch date when inception reads "n/a".
+Fund metrics (trailing returns, AUM, Sharpe, maxDD) are as of ${FUND_DATA_AS_OF}. "n/a" means no verified figure is on file for that fund: never estimate, infer or quote one. μ/σ marked (class) are asset-class assumptions, not the fund's own figures. Do not describe these figures as current-day values, and do not infer a launch date when inception reads "n/a".
 
 # CLIENT BRIEF
 - Risk: ${brief.risk}, Horizon: ${brief.horizon}, Country: ${brief.country}, Currency: ${brief.currency}
@@ -4073,7 +4100,7 @@ ${universe}
   "positions":[{
     "ticker":"VTI",
     "weight":25.0,
-    "rationale":"why, citing at least one quantitative metric (Sharpe, 5y/10y return, β, ER, AUM, holdings count, maxDD) AND one research source"
+    "rationale":"why, citing at least one quantitative metric that is present in the table (never an n/a one; ER is always present) AND one research source"
   }],
   "expectedReturn":0.07,
   "expectedVolatility":0.12,
@@ -4084,7 +4111,7 @@ ${universe}
 }
 
 Selection criteria (use ALL the metrics provided above):
-1. **Quality screen**: prefer funds with Sharpe > 0.4, AUM > $1B, an established track record (a 5y/10y figure is present rather than "n/a"), low tracking error for index trackers (<0.3%)
+1. **Quality screen**: where the figures are present, prefer funds with Sharpe > 0.4, AUM > $1B, low tracking error for index trackers (<0.3%); a fund with n/a figures is neither better nor worse for it
 2. **Cost discipline**: prefer ETFs with ER < 0.20% over higher-ER mutual funds unless active mgmt is clearly worth it (e.g., DODGX, PIMIX, PRWCX have proven alpha)
 3. **Diversification**: ensure broad-holdings funds (1000+ positions) for core exposure; thematic concentrated funds (50-200 holdings) only for satellite allocations
 4. **Risk/return fit**: match each fund's μ/σ profile to the client's risk tolerance: aggressive clients can absorb σ > 18%, conservative clients capped at σ ≤ 10% per position
@@ -4101,13 +4128,14 @@ Constraints:
 - Tickers MUST come from the eligible universe (no fabrication)
 - No single position above ${brief.maxPosition}%
 - 6-15 positions
-- Each rationale cites ≥1 quantitative metric from the universe table`;
+- Each rationale cites ≥1 quantitative metric that is present in the universe table; never quote an n/a figure or a (class) assumption as the fund's own`;
 
+  const model = $("agModel").value;   // captured once, so the record names the model that actually ran
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body: JSON.stringify({model:$("agModel").value, max_tokens:4000, messages:[{role:"user",content:prompt}]})
+      body: JSON.stringify({model, max_tokens:4000, messages:[{role:"user",content:prompt}]})
     });
     if(!r.ok){ const t = await r.text(); throw new Error("HTTP "+r.status+": "+t.slice(0,200)); }
     const j = await r.json();
@@ -4115,6 +4143,9 @@ Constraints:
     const m = text.match(/\{[\s\S]*\}/);
     if(!m) throw new Error("No JSON in response");
     const rec = validateAgentRec(plainDashesDeep(JSON.parse(m[0])), eligibleUniverse, brief);   // the model's prose is shown to clients
+    // Which engine built this: carried into the export and the user's saved history.
+    rec.engine = "claude";
+    rec.model = model;
     lastAgentRec = rec;
     renderAgentResult(rec);
     $("agExportBtn").disabled = false;
@@ -4276,8 +4307,12 @@ function exportToProposal(){
   if(!lastAgentRec) return;
   // Export full payload — main app's banner imports it via wa_pending_proposal
   const payload = {
-    title: lastAgentRec.summary ? lastAgentRec.summary.slice(0,90) : "AI Agent Recommendation",
+    title: lastAgentRec.summary ? lastAgentRec.summary.slice(0,90) : "Portfolio recommendation",
     builtAt: new Date().toISOString(),
+    // Which engine built it: "rules" (deterministic Research Engine, no AI) or
+    // "claude" (AI Agent). The client app reads this to label the import honestly.
+    engine: lastAgentRec.engine || "rules",
+    model: lastAgentRec.model,
     positions: lastAgentRec.positions || [],
     allocationByClass: lastAgentRec.allocation || lastAgentRec.allocationByClass || {},
     expectedReturn: lastAgentRec.expectedReturn,
@@ -4358,6 +4393,8 @@ function syncProviderCounts(){
   // Same treatment for the fund-universe size — the docs claimed "38-fund
   // universe" long after it grew to 792.
   document.querySelectorAll(".js-fund-count").forEach(el => { el.textContent = FUND_UNIVERSE.length; });
+  // And the curated research vintage, so the "as of" date in the copy is the one in the code.
+  document.querySelectorAll(".js-curated-asof").forEach(el => { el.textContent = CURATED_RESEARCH_AS_OF; });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -6757,7 +6794,9 @@ function pickFundsForClass(targetClass, targetWeight, brief, signals, used){
   if(brief.esg === "strict"){
     candidates = candidates.filter(f => f.esg);
   }
-  // Apply tax sensitivity → prefer ETFs over mutual funds for taxable
+  // Tax sensitivity → prefer ETFs over mutual funds for taxable. This sort only
+  // breaks exact score ties (the sort is stable); the preference itself is the
+  // +0.5 ETF bonus in the scoring loop below.
   if(brief.taxSensitivity === "high"){
     candidates.sort((a,b) => (a.vehicle === "etf" ? -1 : 1) - (b.vehicle === "etf" ? -1 : 1));
   }
@@ -6787,13 +6826,21 @@ function pickFundsForClass(targetClass, targetWeight, brief, signals, used){
   //   • Diversification (holdings count, log-scaled)
   //   • Research conviction (explicit ticker mentions)
   //   • Sponsor concentration penalty
+  // Quality factors count only where the fund has a CURATED figure; an unknown one takes
+  // the sleeve's median of the known ones (neutral), so no assumed number moves the ranking.
+  const _mid = {};
+  ["sharpe","r5y","aum","holdings","maxDD"].forEach(k => {
+    const a = candidates.map(c => fundVal(c, k)).filter(v => v != null).sort((x, y) => x - y);
+    _mid[k] = a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : null;
+  });
+  const _q = (f, k) => { const v = fundVal(f, k); return v != null ? v : _mid[k]; };
   candidates.forEach(f => {
     const erScore       = (1 - Math.min(f.er, 1));                                  // 0..1
-    const sharpeScore   = Math.max(0, Math.min(2, (f.sharpe || 0) * 1.5));          // 0..3 typically
-    const longReturn    = Math.max(-1, Math.min(2, (f.r5y || 0) / 10));             // -1..+2
-    const aumScore      = Math.min(1.5, Math.log10(Math.max(0.1, f.aum || 0.1)) / 2); // log-scaled
-    const divScore      = Math.min(1, Math.log10(Math.max(1, f.holdings || 1)) / 4); // log-scaled
-    const drawdownPenalty = Math.max(0, (Math.abs(f.maxDD || 0) - 25) / 50);        // penalty for deep DDs
+    const sharpeScore   = Math.max(0, Math.min(2, (_q(f,"sharpe") || 0) * 1.5));    // 0..3 typically
+    const longReturn    = Math.max(-1, Math.min(2, (_q(f,"r5y") || 0) / 10));       // -1..+2
+    const aumScore      = Math.min(1.5, Math.log10(Math.max(0.1, _q(f,"aum") || 0.1)) / 2); // log-scaled
+    const divScore      = Math.min(1, Math.log10(Math.max(1, _q(f,"holdings") || 1)) / 4); // log-scaled
+    const drawdownPenalty = Math.max(0, (Math.abs(_q(f,"maxDD") || 0) - 25) / 50);  // penalty for deep DDs
     let score = erScore * 1.0
               + sharpeScore * 1.8
               + longReturn * 1.0
@@ -6851,10 +6898,19 @@ function pickFundsForClass(targetClass, targetWeight, brief, signals, used){
     }
     // Diversity penalty
     if(used.sponsors.has(f.sponsor)) score -= 0.3;
-    // Risk-profile fit: penalize if fund vol incompatible
-    if(brief.risk === "very_conservative" && f.sigma > 10) score -= 0.5;
-    if(brief.risk === "conservative" && f.sigma > 14) score -= 0.3;
-    if((brief.risk === "very_aggressive" || brief.risk === "aggressive") && f.sigma < 8) score -= 0.4;
+    // Risk-profile fit: penalize if fund vol incompatible, on a volatility on file for THIS
+    // fund only (an asset-class assumption would hit every uncurated fund in the sleeve alike).
+    const _sgK = fundVal(f, "sigma");
+    if(_sgK != null){
+      if(brief.risk === "very_conservative" && _sgK > 10) score -= 0.5;
+      if(brief.risk === "conservative" && _sgK > 14) score -= 0.3;
+      if((brief.risk === "very_aggressive" || brief.risk === "aggressive") && _sgK < 8) score -= 0.4;
+    }
+    // Tax sensitivity: an ETF wrapper is preferred for a high-tax-sensitivity
+    // client. This has to live in the score: the ETF-first pre-sort above is
+    // undone by the score sort below and only ever broke exact ties, while the
+    // rationale and summary said the preference had been applied.
+    if(brief.taxSensitivity === "high" && f.vehicle === "etf") score += 0.5;
     f._score = +score.toFixed(3);
   });
   candidates.sort((a,b) => b._score - a._score);
@@ -6946,9 +7002,13 @@ function buildPortfolioFromEngine(brief, signals){
       // Quantitative metrics ("n/a" where the fund has no track record for the
       // period — these fields are null, not 0, for funds younger than the window)
       const _pc = v => (v == null ? "n/a" : v.toFixed(1) + "%");
-      rationaleParts.push(`Sharpe ${fund.sharpe.toFixed(2)} · 5y ${_pc(fund.r5y)} · 10y ${_pc(fund.r10y)}`);
-      rationaleParts.push(`ER ${fund.er.toFixed(2)}% · σ ${fund.sigma.toFixed(1)}% · maxDD ${fund.maxDD.toFixed(0)}%`);
-      rationaleParts.push(`AUM $${fund.aum}B · ${fund.holdings.toLocaleString()} holdings`);
+      // Only figures on file for THIS fund are quoted (never an asset-class assumption).
+      { const _v = k => fundVal(fund, k), _j = a => a.filter(Boolean).join(" · ");
+        const q1 = _j([_v("sharpe") != null ? "Sharpe " + _v("sharpe").toFixed(2) : "", _v("r5y") != null ? "5y " + _pc(_v("r5y")) : "", _v("r10y") != null ? "10y " + _pc(_v("r10y")) : ""]);
+        if(q1) rationaleParts.push(q1);
+        rationaleParts.push(_j(["ER " + fund.er.toFixed(2) + "%", _v("sigma") != null ? "σ " + _v("sigma").toFixed(1) + "%" : "", _v("maxDD") != null ? "maxDD " + _v("maxDD").toFixed(0) + "%" : ""]));
+        const q3 = _j([_v("aum") != null ? "AUM $" + _v("aum") + "B" : "", _v("holdings") != null ? _v("holdings").toLocaleString() + " holdings" : ""]);
+        if(q3) rationaleParts.push(q3); }
       // ESG / tax / liquidity matches
       if(fund.esg && brief.esg !== "none") rationaleParts.push("ESG-flagged matches preference");
       if(brief.taxSensitivity === "high" && fund.vehicle === "etf") rationaleParts.push("ETF wrapper preferred for high tax sensitivity");
@@ -7060,27 +7120,23 @@ function buildPortfolioFromEngine(brief, signals){
   const expectedReturn      = wsum("mu",     7) / 100;       // decimal
   const expectedVolatility  = wsum("sigma", 12) / 100;       // decimal
   const expectedBeta        = wsum("beta", 0.7);
-  const portfolioR1y        = wsum("r1y",  10);
-  const portfolioR3y        = wsum("r3y",   6);
-  const portfolioR5y        = wsum("r5y",   8);
-  const portfolioR10y       = wsum("r10y",  9);
-  const portfolioMaxDD      = wsum("maxDD",-25);
+  // Trailing returns, drawdown, AUM and holdings: curated figures only, with the share of
+  // weight covered (unknowns used to be filled with defaults on top of ticker-hash values).
+  const _fw = k => fundWeighted(positions, k, "weight", fundLookup);
+  const _fr1 = _fw("r1y"), _fr3 = _fw("r3y"), _fr5 = _fw("r5y"), _fr10 = _fw("r10y"), _fdd = _fw("maxDD"), _faum = _fw("aum");
+  // Shown only when every position has a figure on file: a partial average is not the
+  // portfolio's return, drawdown or fund size (the client app fills gaps with a labelled proxy).
+  const _show = r => (r.coverage >= 0.999 ? r.value : null);
   const portfolioER         = wsum("er",  0.20);
   const portfolioYield      = wsum("yld",   2);
   const portfolioSharpe     = expectedVolatility > 0 ? (expectedReturn - 0.045) / expectedVolatility : 0;
-  const totalHoldings       = positions.reduce((s,p) => { const f=fundLookup(p.ticker); return s + (f?.holdings || 0); }, 0);
-  const totalAUM            = positions.reduce((s,p) => { const f=fundLookup(p.ticker); return s + (f?.aum || 0); }, 0);
-  // Tag each position with its full metric snapshot for the result panel
+  const _hk = positions.filter(p => fundVal(fundLookup(p.ticker), "holdings") != null);
+  const totalHoldings       = _hk.length ? _hk.reduce((s,p) => s + fundVal(fundLookup(p.ticker), "holdings"), 0) : null;
+  const _hkCov              = positions.length ? _hk.reduce((s,p) => s + p.weight, 0) / (positions.reduce((s,p) => s + p.weight, 0) || 1) : 0;
+  // Tag each position with its metric snapshot for the result panel: curated figures only
   positions.forEach(p => {
     const f = fundLookup(p.ticker);
-    if(f){
-      p.metrics = {
-        name: f.name, sponsor: f.sponsor, vehicle: f.vehicle, dom: f.dom||"US", ucits: !!f.ucits, esg: !!f.esg,
-        er: f.er, yld: f.yld, mu: f.mu, sigma: f.sigma, sharpe: f.sharpe, beta: f.beta,
-        maxDD: f.maxDD, r1y: f.r1y, r3y: f.r3y, r5y: f.r5y, r10y: f.r10y,
-        holdings: f.holdings, aum: f.aum, inception: f.inception, te: f.te
-      };
-    }
+    if(f) p.metrics = fundMetricsFor(f);
   });
 
   // Risks — derive from signals (underweight votes = warning sign)
@@ -7157,15 +7213,16 @@ function buildPortfolioFromEngine(brief, signals){
     portfolioMetrics: {
       beta: +expectedBeta.toFixed(2),
       sharpe: +portfolioSharpe.toFixed(2),
-      r1y: +portfolioR1y.toFixed(2),
-      r3y: +portfolioR3y.toFixed(2),
-      r5y: +portfolioR5y.toFixed(2),
-      r10y: +portfolioR10y.toFixed(2),
-      maxDD: +portfolioMaxDD.toFixed(1),
+      r1y: _show(_fr1) == null ? null : +_show(_fr1).toFixed(2),
+      r3y: _show(_fr3) == null ? null : +_show(_fr3).toFixed(2),
+      r5y: _show(_fr5) == null ? null : +_show(_fr5).toFixed(2),
+      r10y: _show(_fr10) == null ? null : +_show(_fr10).toFixed(2),
+      maxDD: _show(_fdd) == null ? null : +_show(_fdd).toFixed(1),
       blendedER: +portfolioER.toFixed(3),
       blendedYield: +portfolioYield.toFixed(2),
-      totalHoldings,
-      totalAUM: +totalAUM.toFixed(1)
+      totalHoldings: _hkCov >= 0.999 ? totalHoldings : null,
+      totalAUM: _show(_faum) == null ? null : +_show(_faum).toFixed(1),
+      coverage: { r1y:_fr1.coverage, r3y:_fr3.coverage, r5y:_fr5.coverage, r10y:_fr10.coverage, maxDD:_fdd.coverage, aum:_faum.coverage, holdings:_hkCov }
     },
     summary: buildSummaryNarrative(brief, allocation, signals, eligibleUniverse)
   };
@@ -7180,12 +7237,15 @@ function buildSummaryNarrative(brief, allocation, signals, eligibleCount){
   const topClass = Object.entries(allocation).sort((a,b) => b[1] - a[1])[0];
   const topTheme = Object.entries(signals.themes).sort((a,b) => b[1].votes - a[1].votes)[0];
   const providerCount = signals.providerCount;
-  const totalItems = signals.totalItems;
-  return `Based on ${totalItems} research items across ${providerCount} institutional sources, the engine recommends a ${brief.risk.replace(/_/g," ")} portfolio with ${topClass[1].toFixed(0)}% in ${prettyClass(topClass[0])}. ${topTheme ? "Dominant theme: " + prettyTheme(topTheme[0]) + " cited by " + topTheme[1].providerCount + " providers." : ""} All positions chosen from the ${FUND_UNIVERSE.length}-fund universe (${eligibleCount || FUND_UNIVERSE.filter(f => isFundEligibleForCountry(f, brief.country)).length} eligible for ${brief.country||"US"}) matching your ${brief.esg} ESG preference, ${brief.taxSensitivity} tax sensitivity, and ${brief.liquidity} liquidity needs.`;
+  const scored = signals.scoredItems != null ? signals.scoredItems : signals.totalItems;   // distinct items that scored (shared duplicates skipped)
+  return `Rules-engine recommendation from ${scored} distinct research items cached from ${providerCount} sources (a curated baseline unless live feeds are configured): the engine recommends a ${brief.risk.replace(/_/g," ")} portfolio with ${topClass[1].toFixed(0)}% in ${prettyClass(topClass[0])}. ${topTheme ? "Dominant theme: " + prettyTheme(topTheme[0]) + " cited by " + topTheme[1].providerCount + " providers." : ""} All positions chosen from the ${FUND_UNIVERSE.length}-fund universe (${eligibleCount || FUND_UNIVERSE.filter(f => isFundEligibleForCountry(f, brief.country)).length} eligible for ${brief.country||"US"}) matching your ${brief.esg} ESG preference, ${brief.taxSensitivity} tax sensitivity, and ${brief.liquidity} liquidity needs.`;
 }
 
 // ── ENGINE BUTTON HANDLER ─────────────────────────────────────
 async function runResearchEngine(){
+  // As in runAgent: a run that stops early must not leave the previous result exportable.
+  lastAgentRec = null;
+  $("agExportBtn").disabled = true;
   setIconLabel($("engineStatus"), "microscope", "Extracting signals from all research…");
   $("agResultPanel").style.display = "block";
   $("agResult").innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-muted)">' + icon("microscope","icon-lg") + '<div style="margin-top:8px">Scanning all research items, extracting signals, computing consensus…</div></div>'; refreshIcons();
@@ -7220,6 +7280,7 @@ async function runResearchEngine(){
 
   // Save as lastAgentRec (so Export to Proposal works)
   lastAgentRec = {
+    engine: "rules",   // deterministic Research Engine, no AI involved
     summary: result.summary,
     allocationByClass: result.allocation,
     positions: result.positions,
@@ -7227,7 +7288,7 @@ async function runResearchEngine(){
     expectedVolatility: result.expectedVolatility,
     researchCitations: Object.values(signals.classes).slice(0,5).flatMap(d => d.items.slice(0,2).map(i => `${i.provider}: ${i.title}`)),
     risks: result.risks,
-    rebalancingGuidance: "Re-run engine quarterly or whenever institutional consensus shifts materially. Engine auto-adjusts allocation tilts based on net research votes."
+    rebalancingGuidance: "Re-run quarterly: the engine re-tilts from whatever research is cached at the time."
   };
 
   renderEngineResult(result);
@@ -7257,27 +7318,30 @@ function renderEngineResult(r){
 
   // KPIs — primary portfolio metrics
   const pm = r.portfolioMetrics || {};
+  // A figure built from only part of the portfolio says how much of the weight it covers.
+  const _cov = k => { const c = pm.coverage && pm.coverage[k], v = pm[k === "holdings" ? "totalHoldings" : k === "aum" ? "totalAUM" : k];
+    return (c != null && c < 0.999 && v == null) ? '<div style="font-size:9px;font-weight:400;color:var(--color-text-muted)">on file for ' + Math.round(c * 100) + '% of weight</div>' : ''; };
   h += `<div class="kpi-grid">
     <div class="kpi tone-green"><div class="kpi-l">Expected Return (μ)</div><div class="kpi-v">${(r.expectedReturn*100).toFixed(2)}%</div></div>
     <div class="kpi tone-amber"><div class="kpi-l">Volatility (σ)</div><div class="kpi-v">${(r.expectedVolatility*100).toFixed(2)}%</div></div>
-    <div class="kpi tone-blue"><div class="kpi-l">Sharpe Ratio</div><div class="kpi-v">${(pm.sharpe||0).toFixed(2)}</div></div>
+    <div class="kpi tone-blue"><div class="kpi-l">Expected Sharpe</div><div class="kpi-v">${pm.sharpe==null?'n/a':(+pm.sharpe).toFixed(2)}</div></div>
     <div class="kpi"><div class="kpi-l">Portfolio Beta</div><div class="kpi-v">${(pm.beta||0).toFixed(2)}</div></div>
-    <div class="kpi"><div class="kpi-l">Max Drawdown</div><div class="kpi-v" style="color:var(--color-error)">${(pm.maxDD||0).toFixed(0)}%</div></div>
+    <div class="kpi"><div class="kpi-l">Max Drawdown</div><div class="kpi-v" style="color:var(--color-error)">${pm.maxDD==null?'n/a':(+pm.maxDD).toFixed(0)+'%'}${_cov('maxDD')}</div></div>
     <div class="kpi"><div class="kpi-l">Positions</div><div class="kpi-v">${r.positions.length}</div></div>
   </div>`;
   // Secondary KPI row — trailing performance & cost
   h += `<div class="kpi-grid" style="margin-top:8px">
-    <div class="kpi"><div class="kpi-l">1-Year Return</div><div class="kpi-v" style="color:${(pm.r1y||0)>=0?'var(--color-success)':'var(--color-error)'}">${(pm.r1y||0).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="kpi-l">3-Year Annualized</div><div class="kpi-v" style="color:${(pm.r3y||0)>=0?'var(--color-success)':'var(--color-error)'}">${(pm.r3y||0).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="kpi-l">5-Year Annualized</div><div class="kpi-v" style="color:${(pm.r5y||0)>=0?'var(--color-success)':'var(--color-error)'}">${(pm.r5y||0).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="kpi-l">10-Year Annualized</div><div class="kpi-v" style="color:${(pm.r10y||0)>=0?'var(--color-success)':'var(--color-error)'}">${pm.r10y==null?'n/a':pm.r10y.toFixed(1)+'%'}</div></div>
+    <div class="kpi"><div class="kpi-l">1-Year Return</div><div class="kpi-v" style="color:${(pm.r1y||0)>=0?'var(--color-success)':'var(--color-error)'}">${pm.r1y==null?'n/a':(+pm.r1y).toFixed(1)+'%'}${_cov('r1y')}</div></div>
+    <div class="kpi"><div class="kpi-l">3-Year Annualized</div><div class="kpi-v" style="color:${(pm.r3y||0)>=0?'var(--color-success)':'var(--color-error)'}">${pm.r3y==null?'n/a':(+pm.r3y).toFixed(1)+'%'}${_cov('r3y')}</div></div>
+    <div class="kpi"><div class="kpi-l">5-Year Annualized</div><div class="kpi-v" style="color:${(pm.r5y||0)>=0?'var(--color-success)':'var(--color-error)'}">${pm.r5y==null?'n/a':(+pm.r5y).toFixed(1)+'%'}${_cov('r5y')}</div></div>
+    <div class="kpi"><div class="kpi-l">10-Year Annualized</div><div class="kpi-v" style="color:${(pm.r10y||0)>=0?'var(--color-success)':'var(--color-error)'}">${pm.r10y==null?'n/a':(+pm.r10y).toFixed(1)+'%'}${_cov('r10y')}</div></div>
     <div class="kpi"><div class="kpi-l">Blended ER</div><div class="kpi-v">${(pm.blendedER||0).toFixed(2)}%</div></div>
     <div class="kpi"><div class="kpi-l">Blended Yield</div><div class="kpi-v">${(pm.blendedYield||0).toFixed(2)}%</div></div>
   </div>`;
   // Tertiary KPI row — diversification + research
   h += `<div class="kpi-grid" style="margin-top:8px">
-    <div class="kpi"><div class="kpi-l">Underlying Holdings</div><div class="kpi-v">${(pm.totalHoldings||0).toLocaleString()}</div></div>
-    <div class="kpi"><div class="kpi-l">Total AUM (weighted)</div><div class="kpi-v">$${(pm.totalAUM||0).toFixed(0)}B</div></div>
+    <div class="kpi"><div class="kpi-l">Underlying Holdings</div><div class="kpi-v">${pm.totalHoldings==null?'n/a':(+pm.totalHoldings).toLocaleString()}${_cov('holdings')}</div></div>
+    <div class="kpi"><div class="kpi-l">AUM (weighted average)</div><div class="kpi-v">${pm.totalAUM==null?'n/a':'$'+(+pm.totalAUM).toFixed(0)+'B'}${_cov('aum')}</div></div>
     <div class="kpi"><div class="kpi-l">Research Items</div><div class="kpi-v">${r.signals.totalItems}</div></div>
     <div class="kpi"><div class="kpi-l">Sources Used</div><div class="kpi-v">${r.signals.providerCount}</div></div>
     <div class="kpi"><div class="kpi-l">Eligible Universe</div><div class="kpi-v">${r.universeFiltered?.eligible || 0}</div></div>
@@ -7373,6 +7437,9 @@ function renderEngineResult(r){
   h += `<div class="ablock"><h3>${icon("briefcase")} Recommended Positions (${r.positions.length}): Full Rationale & Metrics</h3>`;
   r.positions.forEach(p => {
     const m = p.metrics || {};
+    const _fu = (typeof FUND_UNIVERSE!=="undefined") ? FUND_UNIVERSE.find(x => x.tkr === p.ticker) : null;
+    const _na = (v, d, suf) => (v == null ? '<span style="color:var(--color-text-muted)">n/a</span>' : (+v).toFixed(d) + (suf || ""));
+    const _asm = k => (m[k] != null ? (+m[k]).toFixed(1) + '%' : (_fu && _fu[k] != null ? (+_fu[k]).toFixed(1) + '% <span style="color:var(--color-text-muted);font-weight:400">class</span>' : 'n/a'));
     const flags = [m.ucits?'UCITS':'', m.esg?'ESG':'', (m.dom && m.dom!=='US')?m.dom:''].filter(Boolean).join(' · ');
     h += `<div style="border-left:3px solid var(--color-success);padding:12px 14px;margin-bottom:12px;background:rgba(0,135,90,.03);border-radius:0 6px 6px 0">
       <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
@@ -7383,15 +7450,15 @@ function renderEngineResult(r){
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;margin:8px 0;padding:8px;background:rgba(0,0,0,.025);border-radius:5px;font-size:11px">
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">ER</div><strong>${(m.er||0).toFixed(2)}%</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Yield</div><strong>${(m.yld||0).toFixed(1)}%</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Sharpe</div><strong>${(m.sharpe||0).toFixed(2)}</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">μ</div><strong>${(m.mu||0).toFixed(1)}%</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">σ</div><strong>${(m.sigma||0).toFixed(1)}%</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">β</div><strong>${(m.beta||0).toFixed(2)}</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Max DD</div><strong style="color:var(--color-error)">${(m.maxDD||0).toFixed(0)}%</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Sharpe</div><strong>${_na(m.sharpe,2)}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">μ</div><strong>${_asm("mu")}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">σ</div><strong>${_asm("sigma")}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">β</div><strong>${_na(m.beta,2)}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Max DD</div><strong style="color:var(--color-error)">${_na(m.maxDD,0,"%")}</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">5y</div><strong style="color:${m.r5y==null?'var(--color-text-muted)':(m.r5y>=0?'var(--color-success)':'var(--color-error)')}">${m.r5y==null?'n/a':m.r5y.toFixed(1)+'%'}</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">10y</div><strong style="color:${m.r10y==null?'var(--color-text-muted)':(m.r10y>=0?'var(--color-success)':'var(--color-error)')}">${m.r10y==null?'n/a':m.r10y.toFixed(1)+'%'}</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Holdings</div><strong>${(m.holdings||0).toLocaleString()}</strong></div>
-        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">AUM</div><strong>$${m.aum||0}B</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Holdings</div><strong>${m.holdings==null?_na(null):(+m.holdings).toLocaleString()}</strong></div>
+        <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">AUM</div><strong>${m.aum==null?_na(null):'$'+m.aum+'B'}</strong></div>
         <div><div style="color:var(--color-text-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em">Inception</div><strong>${m.inception||'-'}</strong></div>
       </div>
       <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:8px"><strong>Why selected:</strong> ${escapeHtml(p.rationale)}</div>
@@ -7412,9 +7479,9 @@ function renderEngineResult(r){
     <h3 style="color:var(--color-primary)">${icon("microscope")} Methodology: How This Was Built</h3>
     <ol style="margin-left:20px;color:var(--color-text-secondary)">
       <li><strong>Signal extraction:</strong> Scanned ${r.signals.totalItems} research items via keyword lexicons across asset classes, sectors, regions, themes, and ticker mentions. Each item parsed for sentiment direction (overweight/underweight phrases).</li>
-      <li><strong>Aggregation:</strong> Net votes computed per signal, with provider count and total votes tracked. Tickers explicitly mentioned by multiple providers get conviction bonus.</li>
+      <li><strong>Aggregation:</strong> Net votes computed per signal, with provider count and total votes tracked. A fund whose ticker is named in the research gets a conviction bonus (+2, plus 0.3 per mention).</li>
       <li><strong>Allocation:</strong> Started with your ${prettyRisk(r.signals.providerCount ? '' : '')}<strong>${$("agRisk").value.replace(/_/g," ")}</strong> baseline (${Object.entries(RISK_TO_ALLOCATION[$("agRisk").value]||{}).map(([k,v]) => `${k}:${v}%`).slice(0,4).join(", ")}). Tilted ±8% based on net research votes.</li>
-      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">942</span>-fund universe is scored and ranked; the top 1-3 are taken. Scoring: lowest expense ratio + ticker conviction bonus − sponsor concentration penalty. Filtered for ESG-strict, ETF-preference (high tax sensitivity), liquidity needs.</li>
+      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">942</span>-fund universe is scored and ranked; the top 1-3 are taken and split equally (sleeve weight / N). Scoring: cost (1 − ER); the fund's curated Sharpe, 5-year return, AUM, holdings and drawdown (the sleeve median where none is on file); a bonus for a ticker named in the research; region, sector and theme alignment with the research; currency fit; a sponsor-repeat penalty; a risk-fit penalty; and +0.5 for ETFs when tax sensitivity is high. Filtered for domicile, ESG-strict and liquidity needs. Full formula: "How the Research Engine Selects Funds", further down this tab.</li>
       <li><strong>Rationale:</strong> Each position's "Why selected" cites the specific consensus vote count + matched research items. Fully deterministic: same inputs always produce same output.</li>
     </ol>
   </div>`;
@@ -7949,7 +8016,7 @@ function viewUser(el){
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
   if(u.plan){
     h += '<button class="btn" data-action="buildPortfolioForUser" data-uid="'+u.id+'">' + icon("bot") + ' Build Portfolio with AI</button>';
-    h += '<button class="btn-ghost" data-action="loadUserIntoAgent" data-uid="'+u.id+'">↗ Load into AI Agent</button>';
+    h += '<button class="btn-ghost" data-action="loadUserIntoAgent" data-uid="'+u.id+'">↗ Load into Portfolio Agent</button>';
   }
   h += '<button class="btn-danger" data-action="deleteUser" data-uid="'+u.id+'">Delete user</button>';
   h += '</div>';
@@ -7980,7 +8047,7 @@ function loadUserIntoAgent(el){
   localStorage.setItem("wa_pending_profile", JSON.stringify(u.plan));
   // Switch to agent tab and populate
   showTab("agent");
-  setTimeout(() => { try { loadProfile(); } catch(_){}; toast("Loaded "+u.name+"'s plan into AI Agent","ok"); }, 100);
+  setTimeout(() => { try { loadProfile(); } catch(_){}; toast("Loaded "+u.name+"'s plan into the Portfolio Agent tab","ok"); }, 100);
 }
 
 async function buildPortfolioForUser(el){
@@ -7995,11 +8062,14 @@ async function buildPortfolioForUser(el){
   await new Promise(r => setTimeout(r, 200));
   // Run the agent
   await runAgent();
-  // If agent succeeded, attach the result to the user
-  if(lastAgentRec){
+  // Attach the result only if THIS AI run produced it. runAgent clears
+  // lastAgentRec first, so anything else here (no key, API error) means the AI
+  // build did not run and nothing may be filed under this user.
+  if(lastAgentRec && lastAgentRec.engine === "claude"){
     const portfolio = {
       builtAt: new Date().toISOString(),
-      model: $("agModel").value,
+      engine: lastAgentRec.engine,
+      model: lastAgentRec.model || $("agModel").value,
       summary: lastAgentRec.summary,
       allocationByClass: lastAgentRec.allocationByClass,
       positions: lastAgentRec.positions,
@@ -8011,6 +8081,9 @@ async function buildPortfolioForUser(el){
     updateUser(u.id, {portfolios: u.portfolios});
     addLog("ok","Built portfolio for user "+u.id);
     toast("Portfolio saved to "+u.name+"'s history","ok");
+  } else {
+    addLog("warn","Portfolio for user "+u.id+" not saved: the AI build did not run");
+    toast("Not saved: the AI build did not run for "+u.name+" (check the AI key and the agent status)","err");
   }
 }
 
