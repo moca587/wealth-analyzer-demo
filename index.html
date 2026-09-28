@@ -3374,10 +3374,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
 </div>
 
-<!-- Mean-Variance Optimization / Efficient Frontier -->
+<!-- Risk & return positioning: the seven model risk profiles and a trend line (no optimiser) -->
 <div class="panel" id="mvoPanel">
   <div class="ptitle section-dropdown" onclick="toggleDropdown('mvoWrap')" style="margin:0">
-    Mean-Variance Optimization: Efficient Frontier <span class="dropdown-hint">click to expand</span>
+    Risk &amp; Return: Where Your Profile Sits <span class="dropdown-hint">click to expand</span>
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body" id="mvoWrap">
@@ -3388,17 +3388,17 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div style="font-weight:600;color:var(--text2);margin-bottom:6px">How to read it</div>
     <div style="margin:4px 0"><strong style="color:var(--text2)">→ Left-to-right = risk.</strong> How much your investments swing up and down from year to year. Further right means bigger swings.</div>
     <div style="margin:4px 0"><strong style="color:var(--text2)">↑ Bottom-to-top = reward.</strong> The average yearly return you’d expect over the long run. Higher up means more growth.</div>
-    <div style="margin:4px 0"><strong style="color:var(--text2)">Each dot is one investing style,</strong> ranging from very cautious (bottom-left) to very aggressive (top-right).</div>
-    <div style="margin:4px 0"><strong style="color:var(--text2)">The curved line is the “best deals.”</strong> It links the styles that give the most reward for each level of risk. That line is the <em>efficient frontier</em>.</div>
-    <div style="margin:4px 0"><strong style="color:var(--gold)">The big dot is you</strong>, marking where your household’s current risk profile sits today.</div>
+    <div style="margin:4px 0"><strong style="color:var(--text2)">Each dot is one of the seven model risk profiles,</strong> ranging from very cautious (bottom-left) to very aggressive (top-right).</div>
+    <div style="margin:4px 0"><strong style="color:var(--text2)">The dashed line is the trend through those profiles.</strong> It shows how the expected return rises with risk across them. It is a straight-line fit, not an optimised portfolio.</div>
+    <div style="margin:4px 0"><strong style="color:var(--gold)">The big dot is you</strong>, marking where your household’s risk profile sits (the average of both clients’ profiles when there are two).</div>
   </div>
-  <div class="mvo-wrap"><canvas id="mvoChart" role="img" aria-label="Efficient Frontier scatter chart: horizontal axis is risk (volatility), vertical axis is expected return; each dot is an investing style and the curve is the efficient frontier; your household profile is the largest dot."></canvas></div>
+  <div class="mvo-wrap"><canvas id="mvoChart" role="img" aria-label="Risk and return chart: horizontal axis is risk (volatility), vertical axis is expected return; each dot is a model risk profile, the dashed line is a trend line through them, and your household profile is the largest dot."></canvas></div>
   <div class="ef-legend" id="efLegend"></div>
   <div style="font-size:12px;color:var(--text2);margin-top:12px;line-height:1.6;padding:10px 14px;background:rgba(0,105,217,.045);border-radius:var(--rs);border:1px solid var(--border)">
-    <strong style="color:var(--text)">The takeaway:</strong> you generally can’t earn more without accepting more ups and downs. That’s why the line slopes upward. A dot sitting <em>on</em> the line is an efficient choice. A dot <em>below</em> the line means you’re taking on risk without getting the extra reward you could, so aim for the line. To reach for more growth you move right (a bumpier ride), so pick the spot that matches how much bumpiness you can comfortably live with.
+    <strong style="color:var(--text)">The takeaway:</strong> across the model profiles, more expected return comes with bigger ups and downs, which is why the line slopes upward. Moving right buys more expected growth at the price of a bumpier ride, so pick the spot that matches how much bumpiness you can comfortably live with.
   </div>
   <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
-    <strong style="color:var(--text2)">For the technically minded:</strong> this is Harry Markowitz’s Mean-Variance Optimization (Modern Portfolio Theory). Each dot’s position is its expected arithmetic mean return (μ, vertical axis) and annualised standard deviation of returns (σ, horizontal axis), sourced from long-run institutional capital market assumptions. The dashed curve is the efficient frontier fitted through those points; your household profile is the larger dot.
+    <strong style="color:var(--text2)">For the technically minded:</strong> each dot is a model risk profile plotted at the app’s long-run return assumption for that profile: arithmetic mean return (μ, vertical axis) and annualised volatility (σ, horizontal axis). The dashed line is a least-squares trend line through the seven profiles. It is not a Markowitz efficient frontier: no portfolio optimisation is run here, and your dot is placed from your risk profile, not from your actual holdings.
   </div>
   </div>
 </div>
@@ -4712,7 +4712,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260926-1655";
+const APP_VERSION = "20260928-1024";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -24568,7 +24568,7 @@ function drawFanChart(){
       y=Math.max(chartY+chartH, py2+pieR*2+8)+6; doc.setTextColor(40); doc.setFont("helvetica","normal");
     }
 
-    // ── Efficient frontier (risk/return scatter) — mirrors the app's mvoChart ──
+    // ── Risk/return positioning (model profiles + trend line), mirrors the app's mvoChart ──
     function drawEfficientFrontier(x, by0, w, h){
       const allProfiles=[
         {label:"Very Conservative", mu:3.5, sig:4,  rgb:[91,155,213]},
@@ -24594,7 +24594,7 @@ function drawFanChart(){
       doc.setDrawColor(170); doc.setLineWidth(0.3); doc.line(px,by0,px,baseY); doc.line(px,baseY,px+pw2,baseY);
       doc.setFontSize(7); doc.setTextColor(110,118,130);
       doc.text("Volatility / Risk (σ %)", px+pw2/2, baseY+8.5, {align:"center"});
-      // frontier (dashed) — fit line through the profiles
+      // trend line (dashed): least-squares fit through the profiles
       doc.setDrawColor(176,200,232); doc.setLineWidth(0.6); doc.setLineDashPattern([1.2,1],0);
       for(let i=1;i<curve.length;i++) doc.line(mx(curve[i-1].x),my(curve[i-1].y),mx(curve[i].x),my(curve[i].y));
       doc.setLineDashPattern([],0);
@@ -25282,9 +25282,9 @@ function drawFanChart(){
             y += 40;
           }
         } catch(e){ console.warn("allocation donut failed:", e); }
-        sub("Risk / return positioning (efficient frontier)");
-        para("Each dot is a model risk profile plotted by its expected return and volatility; the dashed line is the efficient-frontier fit. The highlighted dot is this household's policy positioning.", [110,118,130]);
-        try { checkY(82); drawEfficientFrontier(M, y, CW, 64); y += 64 + 6; } catch(e){ console.warn("efficient frontier failed:", e); }
+        sub("Risk / return positioning");
+        para("Each dot is a model risk profile plotted by its assumed expected return and volatility; the dashed line is a straight trend line through them, not an optimised efficient frontier. The highlighted dot is this household's risk-profile positioning.", [110,118,130]);
+        try { checkY(82); drawEfficientFrontier(M, y, CW, 64); y += 64 + 6; } catch(e){ console.warn("risk/return chart failed:", e); }
         newPage();   // current allocation, rebalancing & monitoring start on a clean page
         sub("5. Current allocation & rebalancing");
         if(d.driftRows){
@@ -27211,7 +27211,9 @@ function renderWithdrawalOrder(){
 window.computeWithdrawalOrder=computeWithdrawalOrder;
 
 // ═══════════════════════════════════════════════════════════
-// MEAN-VARIANCE OPTIMIZATION — EFFICIENT FRONTIER
+// RISK & RETURN POSITIONING: the seven model risk profiles, a least-squares trend line
+// through them and the household's dot. Not an optimiser (no covariance matrix, no
+// asset-mix search), and the copy must not call it an efficient frontier.
 // ═══════════════════════════════════════════════════════════
 let mvoChart=null;
 function renderEfficientFrontier(){
@@ -27235,7 +27237,7 @@ function renderEfficientFrontier(){
   const userMu=rawParams.mu*100;
   const userSig=rawParams.sig*100;
 
-  // Frontier curve: linear fit through profile points
+  // Trend line: least-squares fit through the profile points
   const sorted=[...allProfiles].sort((a,b)=>a.sig-b.sig);
   const frontierPts=sorted.map(p=>({x:p.sig,y:p.mu}));
   const n=frontierPts.length;
@@ -27255,8 +27257,8 @@ function renderEfficientFrontier(){
     type:"scatter",
     data:{
       datasets:[
-        // Frontier line
-        {type:"line",label:"Efficient frontier",data:curveData,borderColor:"rgba(0,87,184,0.35)",borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,tension:0.4},
+        // Trend line (straight: it is a linear fit, so it is drawn as one)
+        {type:"line",label:"Trend line",data:curveData,borderColor:"rgba(0,87,184,0.35)",borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false,tension:0},
         // Profile dots
         ...allProfiles.map(p=>({
           type:"scatter",label:p.label,
@@ -27282,7 +27284,7 @@ function renderEfficientFrontier(){
         tooltip:{callbacks:{
           label:(c)=>{
             if(c.dataset.label==="Your profile") return "Your profile: μ "+userMu.toFixed(1)+"%, σ "+userSig.toFixed(1)+"%";
-            if(c.dataset.label==="Efficient frontier") return "Frontier: μ "+c.parsed.y.toFixed(1)+"%, σ "+c.parsed.x.toFixed(1)+"%";
+            if(c.dataset.label==="Trend line") return "Trend line: μ "+c.parsed.y.toFixed(1)+"%, σ "+c.parsed.x.toFixed(1)+"%";
             return c.dataset.label+": μ "+c.parsed.y.toFixed(1)+"%, σ "+c.parsed.x.toFixed(1)+"%";
           }
         }}
@@ -27292,7 +27294,7 @@ function renderEfficientFrontier(){
 
   // Build legend
   if(legEl){
-    legEl.innerHTML=allProfiles.map(p=>`<span><span class="ef-dot" style="background:${p.color}"></span>${p.label}<span class="info-ic">i<span class="info-pop">${p.label}: expected return μ ${p.mu.toFixed(1)}%, volatility σ ${p.sig}%. This is a standard institutional capital-market-assumption point on the efficient frontier (not personalized).</span></span></span>`).join("")+
+    legEl.innerHTML=allProfiles.map(p=>`<span><span class="ef-dot" style="background:${p.color}"></span>${p.label}<span class="info-ic">i<span class="info-pop">${p.label}: expected return μ ${p.mu.toFixed(1)}%, volatility σ ${p.sig}%. The app's return assumption for this model profile (not personalised).</span></span></span>`).join("")+
       `<span><span class="ef-dot" style="background:#0057b8;border:2px solid #002776;width:12px;height:12px"></span>Your profile<span class="info-ic">i<span class="info-pop">Your household's blended expected return (μ ${userMu.toFixed(1)}%) and volatility (σ ${userSig.toFixed(1)}%), computed from your risk profile, plotted against the standard profiles above.</span></span></span>`;
   }
 }
