@@ -4963,7 +4963,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260929-1126";
+const APP_VERSION = "20260929-1133";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -7056,7 +7056,9 @@ const TAX_BRACKETS={
 // ─── Child / family tax benefits by country ────────────────────────────────
 // type "credit"    → direct reduction of final tax (possibly income-tested)
 // type "deduction" → reduces taxable income; saving computed as bracket delta
-// type "mixed"     → South Korea: deduction + tiered credit per child
+// type "mixed"     → deduction + a credit per child from `tiers` (1st, 2nd, 3rd and later: South Korea)
+// type "better"    → a cash benefit per child, or the tax a `deduction` per child saves if that is
+//                    more (Germany: Kindergeld or the child allowances, the tax office's own check)
 // perChild amounts are in each country's local currency (same as TAX_BRACKETS sym).
 // phaseStart / phaseRate apply to "credit" countries that means-test the benefit.
 const CHILD_TAX_RULES={
@@ -7071,14 +7073,14 @@ const CHILD_TAX_RULES={
   HK:{type:"deduction",label:"Child Allowance",                           perChild:130000, maxAge:18, note:"HK$130,000 allowance per child; doubled to HK$260,000 in the year of birth."},
   CN:{type:"deduction",label:"子女教育扣除 Child education deduction",      perChild:12000,  maxAge:24, note:"RMB 12,000/yr (RMB 1,000/month) per child from age 3 through undergraduate study."},
   TW:{type:"deduction",label:"扶養親屬免稅額 Dependent exemption",          perChild:92000,  maxAge:20, note:"NTD 92,000 dependent exemption per child."},
-  KR:{type:"mixed",    label:"부양가족공제 + 자녀세액공제",                    perChild:1500000,maxAge:20, note:"KRW 1.5M deduction per child + KRW 150,000 credit (1st), 200,000 (2nd), 300,000+ (3rd+)."},
+  KR:{type:"mixed",    label:"부양가족공제 + 자녀세액공제",                    perChild:1500000,maxAge:20, tiers:[150000,200000,300000], note:"KRW 1.5M deduction per child + KRW 150,000 credit (1st), 200,000 (2nd), 300,000+ (3rd+)."},
   IN:{type:"deduction",label:"Children's education allowance",            perChild:2400,   maxAge:18, maxChild:2, note:"INR 2,400/yr per child (INR 200/month, max 2 children). Very limited."},
   ID:{type:"deduction",label:"PTKP tanggungan (Dependent allowance)",     perChild:4500000,maxAge:25, maxChild:3, note:"IDR 4,500,000 deduction per dependent child (maximum 3 children)."},
   MX:{type:"credit",   label:"No child-specific tax deduction",           perChild:0,      maxAge:0,  note:"Mexico has no child income-tax credit. Medical expenses for children may be deductible."},
   BR:{type:"deduction",label:"Dedução por dependente",                    perChild:2275,   maxAge:21, note:"BRL 2,275.08 deduction per dependent child (up to age 21, or 24 if in full-time education)."},
   SA:{type:"credit",   label:"No personal income tax",                    perChild:0,      maxAge:0,  note:"Saudi Arabia levies no personal income tax, so no child benefit applies."},
   ZA:{type:"credit",   label:"No child tax credit",                       perChild:0,      maxAge:0,  note:"South Africa has no child income-tax credit. The Child Support Grant is a separate welfare payment."},
-  DE:{type:"mixed",    label:"Kindergeld / Kinderfreibetrag",             perChild:3000,   maxAge:25, note:"Kindergeld EUR 250/month (EUR 3,000/yr) per child, or a Kinderfreibetrag deduction (~EUR 6,384/child); the tax office applies whichever is better. To age 18, or 25 if in education."},
+  DE:{type:"better",   label:"Kindergeld / Kinderfreibetrag",             perChild:3000,   deduction:9540, maxAge:25, note:"Kindergeld EUR 250/month (EUR 3,000/yr) per child, or the child allowances (Kinderfreibetrag and BEA, EUR 9,540 per child for a couple in 2024) when they save more tax; the tax office applies whichever is better. To age 18, or 25 if in education."},
   FR:{type:"deduction",label:"Quotient familial",                        perChild:0,      maxAge:25, note:"Not a fixed amount: each child adds 'parts' to the household (0.5 each for first two, 1 from the third), lowering taxable income per part; benefit per half-part capped (~EUR 1,759)."},
   IT:{type:"credit",   label:"Assegno Unico Universale",                  perChild:0,      maxAge:21, note:"Since 2022 most child tax credits were replaced by the means-tested Assegno Unico Universale (~EUR 57-189/child/month by ISEE), paid for children under 21."},
   ES:{type:"deduction",label:"Minimo por descendientes",                  perChild:2400,   maxAge:25, note:"Per-descendant allowance: EUR 2,400 (1st), 2,700 (2nd), 4,000 (3rd), 4,500 (4th+); +EUR 2,800 for a child under 3. Descendants under 25."},
@@ -7086,7 +7088,7 @@ const CHILD_TAX_RULES={
   BE:{type:"deduction",label:"Tax-free allowance per dependent child",    perChild:1850,   maxAge:25, note:"Increase in tax-free sum: ~EUR 1,850 (1 child), 4,760 (2), 10,660 (3), 17,250 (4); +EUR 1,850 per child under 3. Cash family allowances are regional."},
   IE:{type:"credit",   label:"Single Person Child Carer Credit",          perChild:1900,   maxAge:18, note:"EUR 1,900/yr credit for a single primary-carer parent (one credit regardless of number of children). Universal cash Child Benefit (~EUR 140/month) is paid separately."},
   PT:{type:"deduction",label:"Dependants deduction",                      perChild:600,    maxAge:25, note:"EUR 600 tax deduction per dependent child (EUR 726 for a child under 3 in early years), plus childcare/education portions; to age 25 if studying. Mainland only."},
-  AT:{type:"mixed",    label:"Familienbonus Plus",                        perChild:2000,   maxAge:18, note:"Familienbonus Plus credit up to EUR 2,000/yr per child under 18 (EUR 700/yr for 18+ in education); universal cash Familienbeihilfe paid separately."},
+  AT:{type:"credit",   label:"Familienbonus Plus",                        perChild:2000,   maxAge:18, note:"Familienbonus Plus credit up to EUR 2,000/yr per child under 18 (EUR 700/yr for 18+ in education); universal cash Familienbeihilfe paid separately."},
   GR:{type:"credit",   label:"Dependent-child tax reduction",             perChild:1000,   maxAge:18, note:"Employment/pension tax reduction rises with children (~EUR 810 for 1, 900 for 2, 1,120 for 3, +220 each more), effectively lifting the tax-free threshold; phases out above ~EUR 12k."},
   PL:{type:"credit",   label:"Ulga na dzieci (child relief)",             perChild:1112.04,maxAge:18, note:"Refundable: PLN 1,112.04/yr for 1st & 2nd child, 2,000.04 for 3rd, 2,700 for 4th+. Income cap ~PLN 112k for one child, none for 2+. To 18, or 25 if studying."},
   SE:{type:"none",     label:"No income-tax child credit",                perChild:0,      maxAge:16, note:"No child tax credit in income tax. Universal cash barnbidrag (SEK 1,250/month/child) paid by Forsakringskassan, plus a large-family supplement."},
@@ -10082,18 +10084,21 @@ function getChildTaxSaving(grossIncome){
     const taxAfter=computeFederalTax(Math.max(0,grossIncome-deduction));
     return taxBefore-taxAfter;
   }
+  if(rule.type==="better"){
+    // Germany: Kindergeld, or the tax the child allowances save if that is more
+    const benefit=rule.perChild*effectiveN, deduction=(rule.deduction||0)*effectiveN;
+    const saving=computeFederalTax(grossIncome)-computeFederalTax(Math.max(0,grossIncome-deduction));
+    return Math.max(benefit, saving);
+  }
   if(rule.type==="mixed"){
-    // South Korea: deduction part + tiered credit per child
+    // Deduction part + a credit per child from the rule's own tiers (South Korea)
     const deduction=rule.perChild*effectiveN;
     const taxBefore=computeFederalTax(grossIncome);
     const taxAfter=computeFederalTax(Math.max(0,grossIncome-deduction));
     const deductionSaving=taxBefore-taxAfter;
+    const tiers=rule.tiers||[];
     let credit=0;
-    for(let i=0;i<effectiveN;i++){
-      if(i===0) credit+=150000;
-      else if(i===1) credit+=200000;
-      else credit+=300000;
-    }
+    for(let i=0;i<effectiveN && tiers.length;i++) credit+=tiers[Math.min(i, tiers.length-1)];
     return deductionSaving+credit;
   }
   return 0;
@@ -10249,7 +10254,7 @@ function updateTaxPanel(){
       const eligN=rule?getEligibleChildCount(rule.maxAge):0;
       const effectiveN=rule?.maxChild?Math.min(eligN,rule.maxChild):eligN;
       const label=rule?.label||"Child benefit";
-      const benType=rule?.type==="deduction"?"deduction":"credit";
+      const benType=rule?.type==="deduction"?"deduction":rule?.type==="better"?"benefit or allowance":"credit";
       setT("tax-child-saving","− "+fmtMoneyFull(childSaving));
       if(chOn){ const kN=chKidsAt(chIncomeTaxSetup(), 0);
         setT("tax-child-lbl","Child deductions (federal and cantonal): "+kN+" of "+children.length+" child"+(children.length!==1?"ren":"")+" under 18");
@@ -10340,7 +10345,7 @@ function updateTaxPanel(){
   } else if(rule&&rule.perChild>0){
     const tb=getCountryBrackets();
     const sym=tb.sym||"";
-    const typeLabel=rule.type==="deduction"?"deduction from taxable income":rule.type==="mixed"?"deduction + direct credit":"direct credit";
+    const typeLabel=rule.type==="deduction"?"deduction from taxable income":rule.type==="mixed"?"deduction + direct credit":rule.type==="better"?"cash benefit, or the child allowances if they save more tax":"direct credit";
     let ruleHtml=`<div><strong>${sym} ${rule.perChild.toLocaleString()}</strong> per child (${typeLabel}), eligible up to age ${rule.maxAge}</div>`;
     if(rule.phaseStart) ruleHtml+=`<div style="color:var(--text3)">Phases out above ${sym} ${rule.phaseStart.toLocaleString()}, rate: ${(rule.phaseRate*100).toFixed(1)}%${rule.type==="credit"?" of credit lost per 1% income over threshold":""}</div>`;
     if(rule.maxChild) ruleHtml+=`<div style="color:var(--text3)">Maximum ${rule.maxChild} eligible children</div>`;
