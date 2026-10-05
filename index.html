@@ -940,6 +940,30 @@ input[type=date]{color-scheme:light}
 .wi-group-title{font-size:13px;font-weight:700;color:var(--text)}
 .wi-group .info-ic{margin-left:0}
 .opt-badge{margin-left:auto;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:50px;padding:2px 9px}
+.wi-list-block{grid-column:1 / -1;display:flex;flex-direction:column;gap:8px}
+.wi-draft-list{display:flex;flex-direction:column;gap:6px}
+.wi-draft-list:empty{display:none}
+.wi-draft-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);font-size:12px}
+.wi-draft-row .wi-draft-main{flex:1;min-width:160px;color:var(--text2)}
+.wi-draft-row .wi-draft-main strong{color:var(--text);font-weight:600}
+.wi-add-row{display:grid;grid-template-columns:minmax(120px,1.4fr) minmax(90px,0.8fr) minmax(72px,0.6fr) auto;gap:8px;align-items:center}
+.wi-add-row.wi-add-event{grid-template-columns:minmax(100px,1fr) minmax(110px,1.1fr) minmax(72px,0.7fr) minmax(72px,0.7fr) minmax(72px,0.7fr) auto}
+.wi-add-row input,.wi-add-row select{width:100%;min-width:0;box-sizing:border-box}
+.wi-add-row > .btn-secondary{justify-self:start;white-space:nowrap;padding:7px 16px}
+.wi-actions{grid-column:1 / -1;display:flex;gap:8px;align-items:center;margin-top:10px;padding-top:14px;border-top:1px solid var(--border)}
+.wi-actions .btn-primary{flex:1}
+.wi-req{color:var(--red);font-weight:700;margin-left:3px}
+input.fld-invalid,.ccy-field.fld-invalid{
+  border-color:var(--red)!important;
+  background:rgba(224,92,92,.06)!important;
+  box-shadow:0 0 0 4px rgba(224,92,92,.18)!important;
+}
+.wi-hint.fld-err{color:var(--red);font-weight:500}
+#wiStatus:empty{display:none}
+#wiStatus{font-size:12px;color:var(--text3);margin:10px 0 0}
+@media(max-width:700px){
+  .wi-add-row,.wi-add-row.wi-add-event{grid-template-columns:1fr 1fr}
+}
 @media(max-width:700px){
   .wi-grid{grid-template-columns:1fr;row-gap:4px}
   .wi-lbl{margin-top:8px}
@@ -1332,6 +1356,11 @@ input[type=date]{color-scheme:light}
 .wi-stat-val.pos{color:var(--green)}.wi-stat-val.neg{color:var(--red)}.wi-stat-val.gold{color:var(--gold)}
 .wi-delta{font-size:11px;color:var(--text3);margin-top:2px}
 .wi-delta.up{color:var(--green)}.wi-delta.dn{color:var(--red)}
+.wi-impact{margin-top:8px;padding:7px 10px;font-size:11.5px;line-height:1.45;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs)}
+.wi-impact .wi-surp{color:var(--text2)}
+.wi-impact .wi-surp .dn{color:var(--red)}
+.wi-impact .wi-surp .up{color:var(--green)}
+.wi-impact .wi-depwarn{margin-top:5px;padding:0;border:none;background:none;color:#d4956a;border-radius:0}
 .wi-depwarn{margin-top:8px;padding:7px 10px;font-size:11.5px;color:#d4956a;background:rgba(212,149,106,.10);border:1px solid rgba(212,149,106,.35);border-radius:var(--rs)}
 
 /* ── Cash Flow Analysis ── */
@@ -3175,7 +3204,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body" id="whatIfBody">
-  <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Model alternative futures (earlier retirement, a second home, education costs, income changes) and compare each scenario's median wealth and goal success against the baseline plan.</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Model an alternative future in one scenario: stack a permanent income change, earlier retirement, any number of one-time events (unexpected costs or opportunities) and timed income or expense windows (a sabbatical), then compare median wealth and goal success against the baseline plan.</div>
 
   <!-- Scenario list -->
   <div id="whatIfList"><div class="cmp-empty">No scenarios added yet. Define a scenario below and click Run.</div></div>
@@ -3184,9 +3213,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div class="sdiv">
     <div class="slbl">Add Scenario</div>
     <div class="wi-grid">
-      <label class="wi-lbl" for="wiName">Scenario name</label>
-      <input id="wiName" placeholder="e.g. Early retirement at 55">
-      <span class="wi-hint"></span>
+      <label class="wi-lbl" for="wiName">Scenario name<span class="wi-req" title="Required" aria-hidden="true">*</span></label>
+      <input id="wiName" placeholder="e.g. Early retirement at 55" required aria-required="true" aria-describedby="wiNameHint" oninput="wiClearNameError()">
+      <span class="wi-hint" id="wiNameHint"></span>
 
       <label class="wi-lbl" for="wiRetAge">Override retire age</label>
       <span class="ccy-field sfx"><input type="number" id="wiRetAge" placeholder="default" step="1"><span class="ccy-sym">yrs</span></span>
@@ -3198,21 +3227,36 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
       <label class="wi-lbl" for="wiExtraExp">Extra annual expense</label>
       <span class="ccy-field"><span class="ccy-sym ccy-cur">$</span><input type="number" id="wiExtraExp" value="0" step="500"></span>
-      <span class="wi-hint">per year, ongoing</span>
+      <span class="wi-hint">per year, ongoing (all projection years)</span>
 
-      <div class="wi-group"><span class="wi-group-title">One-time goal</span><span class="opt-badge">Optional</span></div>
+      <div class="wi-group"><span class="wi-group-title">One-time events</span><span class="info-ic">i<span class="info-pop">Add any number of one-off cash needs or opportunities inside this scenario, each withdrawn in its calendar year. They stack with the household Goals tab for this run only.</span></span><span class="opt-badge">Optional</span></div>
+      <div class="wi-list-block">
+        <div id="wiGoalsList" class="wi-draft-list"></div>
+        <div class="wi-add-row">
+          <input id="wiGoalName" placeholder="e.g. Unexpected event or opportunity">
+          <span class="ccy-field"><span class="ccy-sym ccy-cur">$</span><input type="number" id="wiGoalAmt" value="0" step="1000" min="0"></span>
+          <input type="number" id="wiGoalYear" placeholder="Year" step="1">
+          <button type="button" class="btn-secondary" onclick="wiAddGoalDraft()">Add</button>
+        </div>
+        <div class="wi-hint" style="margin:0">Amount is paid once in that calendar year (same money as the Goals tab).</div>
+      </div>
 
-      <label class="wi-lbl" for="wiGoalName">Goal name</label>
-      <input id="wiGoalName" placeholder="e.g. Buy beach house">
-      <span class="wi-hint"></span>
-
-      <label class="wi-lbl" for="wiGoalAmt">Goal amount</label>
-      <span class="ccy-field"><span class="ccy-sym ccy-cur">$</span><input type="number" id="wiGoalAmt" value="0" step="1000"></span>
-      <span class="wi-hint">paid once, in the goal year</span>
-
-      <label class="wi-lbl" for="wiGoalYear">Goal year</label>
-      <input type="number" id="wiGoalYear" placeholder="e.g. 2032" step="1">
-      <span class="wi-hint"></span>
+      <div class="wi-group"><span class="wi-group-title">Timed income / expense</span><span class="info-ic">i<span class="info-pop">Time-bounded shocks that only apply between two calendar years, for example a sabbatical (income −100% for one year), a temporary hardship, or a multi-year medical cost. Permanent salary moves stay in <strong>Income change %</strong> above; ongoing forever costs stay in <strong>Extra annual expense</strong>.</span></span><span class="opt-badge">Optional</span></div>
+      <div class="wi-list-block">
+        <div id="wiEventsList" class="wi-draft-list"></div>
+        <div class="wi-add-row wi-add-event">
+          <input id="wiEvLabel" placeholder="e.g. Sabbatical">
+          <select id="wiEvKind">
+            <option value="incomePct">Income change %</option>
+            <option value="expense">Extra expense $/yr</option>
+          </select>
+          <input type="number" id="wiEvValue" value="0" step="1" placeholder="Value">
+          <input type="number" id="wiEvStart" placeholder="From" step="1">
+          <input type="number" id="wiEvEnd" placeholder="To" step="1">
+          <button type="button" class="btn-secondary" onclick="wiAddEventDraft()">Add</button>
+        </div>
+        <div class="wi-hint" style="margin:0">From/To are inclusive calendar years. Leave To blank for a single year. Income % applies to earned income only (pensions unchanged).</div>
+      </div>
 
       <div class="wi-group"><span class="wi-group-title">Early pension withdrawal</span><span class="info-ic">i<span class="info-pop">Models taking money <strong>out of the locked retirement / pension pool</strong> at a chosen age, e.g. a client who retires at 65 but wants part of their pillar 2 out at 58. In that year the amount leaves the pension pool; what's left after the tax &amp; penalty % lands in cash. For Swiss clients, read the effective capital-withdrawal rate from the Swiss lump-sum box (plus any early-withdrawal penalty) and enter the combined %.</span></span><span class="opt-badge">Optional</span></div>
 
@@ -3230,9 +3274,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
       <div id="wiPenCutNote" class="wi-note"></div>
     </div>
-    <div id="wiStatus" style="font-size:12px;color:var(--text3);margin-bottom:6px"></div>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button id="wiAddBtn" class="btn-primary" onclick="addWhatIf()" style="flex:1"><i data-lucide="play" class="icon" aria-hidden="true"></i> Run Scenario</button>
+    <div id="wiStatus"></div>
+    <div class="wi-actions">
+      <button id="wiAddBtn" class="btn-primary" onclick="addWhatIf()"><i data-lucide="play" class="icon" aria-hidden="true"></i> Run Scenario</button>
       <button id="wiCancelBtn" class="btn-secondary" onclick="cancelEditWhatIf()" style="display:none"><i data-lucide="x" class="icon" aria-hidden="true"></i> Cancel</button>
     </div>
   </div>
@@ -4082,7 +4126,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="fld"><label>Expense Ratio %</label><input type="number" id="pfEr" placeholder="0" min="0" max="10" step="0.01"></div>
       <div class="fld"><label>Yield %</label><input type="number" id="pfYld" placeholder="0" min="0" max="50" step="0.01"></div>
       <div class="fld"><label>Notes</label><input id="pfNote" placeholder="optional note"></div>
-      <div style="display:flex;gap:6px;margin-top:2px">
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:14px;border-top:1px solid var(--border)">
         <button id="pfAddBtn" class="btn-secondary" style="flex:1" onclick="addInvestment()">Add</button>
         <button id="pfCancelBtn" class="btn-secondary" onclick="cancelEditInvestment()" style="display:none;color:var(--text3)"><i data-lucide="x" class="icon" aria-hidden="true"></i> Cancel</button>
       </div>
@@ -4119,7 +4163,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="fld"><label>Expense Ratio %</label><input type="number" id="pfAltEr" placeholder="0" min="0" max="10" step="0.01"></div>
       <div class="fld"><label>Yield %</label><input type="number" id="pfAltYld" placeholder="0" min="0" max="50" step="0.01"></div>
       <div class="fld"><label>Notes</label><input id="pfAltNote" placeholder="optional note"></div>
-      <div style="display:flex;gap:6px;margin-top:2px">
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:14px;border-top:1px solid var(--border)">
         <button id="pfAltAddBtn" class="btn-secondary" style="flex:1" onclick="addAltInvestment()">Add alternative</button>
         <button id="pfAltCancelBtn" class="btn-secondary" onclick="cancelEditAltInvestment()" style="display:none;color:var(--text3)"><i data-lucide="x" class="icon" aria-hidden="true"></i> Cancel</button>
       </div>
@@ -4315,7 +4359,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="fld"><label>Expense Ratio %</label><input type="number" id="prAltEr" placeholder="0" min="0" max="10" step="0.01"></div>
       <div class="fld"><label>Yield %</label><input type="number" id="prAltYld" placeholder="0" min="0" max="50" step="0.01"></div>
       <div class="fld"><label>Rationale</label><input id="prAltNote" placeholder="optional note"></div>
-      <div style="display:flex;gap:6px;margin-top:2px">
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:14px;border-top:1px solid var(--border)">
         <button id="prAltAddBtn" class="btn-secondary" style="flex:1" onclick="addAltProposal()">Add alternative</button>
       </div>
     </div>
@@ -4963,7 +5007,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20260929-1205";
+const APP_VERSION = "20261005-1342";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -25843,8 +25887,24 @@ function runMC(years,sims,muOverride,sigOverride){
       const totalPen=pen1+pen2+rmd; // drawdown credited as income
       const c2Retired=!showC2 || c2AgeY>=retAge2;
       const vestY=equityVestIncomeYear(y);
-      const earnedInc=(retired?0:inc1Y)+(c2Retired?0:inc2Y)+vestY; // earned income, per client
-      const curExp=retired?retSpend*Math.pow(1+infY,y):expense; // earned expenses 
+      let curExp=retired?retSpend*Math.pow(1+infY,y):expense; // living expenses
+      // What-If timed events: calendar-year income % and/or extra expense windows.
+      // Applied after permanent patches; pure arithmetic (no RNG) so CRN stays aligned.
+      // The income change is one factor, applied to the earned income and to each
+      // client's salary in the income tax below.
+      let incF=1;
+      if(typeof _wiTimedEvents!=="undefined" && _wiTimedEvents && _wiTimedEvents.length){
+        const calYr=cy0+y;
+        _wiTimedEvents.forEach(ev=>{
+          if(calYr<ev.startYear || calYr>ev.endYear) return;
+          if(ev.kind==="incomePct" && !retired){
+            incF*=(1+(+ev.value||0)/100);
+          } else if(ev.kind==="expense"){
+            curExp+=Math.max(0,+ev.value||0);
+          }
+        });
+      }
+      const earnedInc=((retired?0:inc1Y)+(c2Retired?0:inc2Y)+vestY)*incF; // earned income, per client
       // Debt service
       let debtPaid=0;
       loanState.forEach(l=>{
@@ -25864,9 +25924,9 @@ function runMC(years,sims,muOverride,sigOverride){
       const chEmp=chC?chC.emp:0;
       // Switzerland: the official tables per client (salary net of social and pension contributions,
       // pensions, drawdowns and vesting as other income), children, second earner, in today's money.
-      const chTx=chIT?chIncomeTaxYearCached(chIT, y, {sal:[retired?0:inc1Y, c2Retired?0:inc2Y],
+      const chTx=chIT?chIncomeTaxYearCached(chIT, y, {sal:[(retired?0:inc1Y)*incF, (c2Retired?0:inc2Y)*incF],
           ded:[chC?chC.bvg1*BVG_EMPLOYEE_SHARE+chC.p31:0, chC?chC.bvg2*BVG_EMPLOYEE_SHARE+chC.p32:0],
-          inc:[pen1+rmdC1+vestY, pen2+rmd-rmdC1], age:[age, c2AgeY], kids:chKidsAt(chIT, y), d:Math.pow(1+inf, y)}):null;
+          inc:[pen1+rmdC1+vestY*incF, pen2+rmd-rmdC1], age:[age, c2AgeY], kids:chKidsAt(chIT, y), d:Math.pow(1+inf, y)}):null;
       const tax=!getApplyTax()?0:chTx?chTx.total:computeIncomeTax(Math.max(0,totalInc-chEmp));
       const surplus=totalInc-tax-curExp-debtPaid-chEmp;
 
@@ -28516,27 +28576,183 @@ function wiAutoCutRefresh(){
 // Set only while a what-if scenario with a pension withdrawal is being simulated;
 // runMC() applies it as an age-triggered transfer out of the retirement pool.
 let _wiPensionDraw=null;
+// Timed income/expense windows for the active what-if run (calendar-year ranges).
+let _wiTimedEvents=null;
+// Draft rows while composing / editing a scenario (not yet committed).
+let _wiDraftGoals=[];
+let _wiDraftEvents=[];
+
+function normalizeWhatIfScenario(w){
+  if(!w||typeof w!=="object") return w;
+  let extraGoals=Array.isArray(w.extraGoals)?w.extraGoals.filter(g=>g&&g.name&&+g.amt>0&&+g.year>0)
+    .map(g=>({name:String(g.name),amt:+g.amt,year:+g.year})):[];
+  if(!extraGoals.length && w.extraGoal && w.extraGoal.name && +w.extraGoal.amt>0 && +w.extraGoal.year>0){
+    extraGoals=[{name:String(w.extraGoal.name),amt:+w.extraGoal.amt,year:+w.extraGoal.year}];
+  }
+  const timedEvents=Array.isArray(w.timedEvents)?w.timedEvents.filter(e=>e && (e.kind==="incomePct"||e.kind==="expense") && +e.startYear>0)
+    .map(e=>{
+      const start=+e.startYear, end=Math.max(start, +(e.endYear||e.startYear));
+      return {
+        label:String(e.label||(e.kind==="incomePct"?"Income change":"Extra expense")),
+        kind:e.kind,
+        value:+e.value||0,
+        startYear:start,
+        endYear:end,
+      };
+    }).filter(e=>e.kind==="expense"?e.value!==0:true):[];
+  return Object.assign({}, w, {extraGoals, timedEvents, extraGoal:null});
+}
+function wiWhatIfHorizon(){
+  const cy=currentYear();
+  return {cy, horizon:cy+num("simYrs",20)};
+}
+function wiRenderDraftLists(){
+  const gEl=$("wiGoalsList");
+  if(gEl){
+    gEl.innerHTML=_wiDraftGoals.map((g,i)=>`<div class="wi-draft-row">
+      <div class="wi-draft-main"><strong>${_daEsc(g.name)}</strong> · ${fmtMoney(g.amt)} in ${g.year}</div>
+      <button type="button" class="btn-x" onclick="wiRemoveGoalDraft(${i})" title="Remove">✕</button>
+    </div>`).join("");
+  }
+  const eEl=$("wiEventsList");
+  if(eEl){
+    eEl.innerHTML=_wiDraftEvents.map((e,i)=>{
+      const span=e.startYear===e.endYear?String(e.startYear):`${e.startYear}-${e.endYear}`;
+      const detail=e.kind==="incomePct"
+        ? `Income ${(e.value>0?"+":"")}${e.value}%`
+        : `Expense ${fmtMoney(e.value)}/yr`;
+      return `<div class="wi-draft-row">
+        <div class="wi-draft-main"><strong>${_daEsc(e.label)}</strong> · ${detail} · ${span}</div>
+        <button type="button" class="btn-x" onclick="wiRemoveEventDraft(${i})" title="Remove">✕</button>
+      </div>`;
+    }).join("");
+  }
+}
+function wiAddGoalDraft(){
+  const name=val("wiGoalName").trim();
+  const amt=num("wiGoalAmt",0);
+  const year=parseInt(val("wiGoalYear"),10)||0;
+  if(!name||!(amt>0)||!(year>0)){
+    statusMsg($("wiStatus"),"err","Add an event name, amount, and calendar year.");
+    return false;
+  }
+  const {cy,horizon}=wiWhatIfHorizon();
+  if(year<cy||year>horizon){
+    statusMsg($("wiStatus"),"err",`Event year ${year} is outside the projection window (${cy}-${horizon}), so it would never be simulated. Adjust the year or extend Projection years on the Simulation tab.`);
+    return false;
+  }
+  _wiDraftGoals.push({name,amt,year});
+  $("wiGoalName").value=""; $("wiGoalAmt").value="0"; $("wiGoalYear").value="";
+  setT("wiStatus","");
+  wiRenderDraftLists();
+  return true;
+}
+function wiRemoveGoalDraft(i){
+  _wiDraftGoals.splice(i,1);
+  wiRenderDraftLists();
+}
+function wiAddEventDraft(){
+  const label=val("wiEvLabel").trim()||"Timed event";
+  const kind=val("wiEvKind")||"incomePct";
+  const value=num("wiEvValue",0);
+  const start=parseInt(val("wiEvStart"),10)||0;
+  const endRaw=val("wiEvEnd").trim();
+  const end=endRaw===""?start:(parseInt(endRaw,10)||0);
+  if(!(start>0)){
+    statusMsg($("wiStatus"),"err","Enter a From calendar year for the timed event.");
+    return false;
+  }
+  if(end<start){
+    statusMsg($("wiStatus"),"err","To year must be on or after From year.");
+    return false;
+  }
+  if(kind==="expense" && !(value>0)){
+    statusMsg($("wiStatus"),"err","Extra expense needs an amount greater than zero.");
+    return false;
+  }
+  if(kind==="incomePct" && value===0){
+    statusMsg($("wiStatus"),"err","Income change % cannot be zero.");
+    return false;
+  }
+  const {cy,horizon}=wiWhatIfHorizon();
+  if(start<cy||end>horizon){
+    statusMsg($("wiStatus"),"err",`Timed event years ${start}-${end} must fall inside the projection window (${cy}-${horizon}).`);
+    return false;
+  }
+  _wiDraftEvents.push({label,kind,value,startYear:start,endYear:end});
+  $("wiEvLabel").value=""; $("wiEvValue").value="0"; $("wiEvStart").value=""; $("wiEvEnd").value="";
+  if($("wiEvKind")) $("wiEvKind").value="incomePct";
+  setT("wiStatus","");
+  wiRenderDraftLists();
+  return true;
+}
+function wiRemoveEventDraft(i){
+  _wiDraftEvents.splice(i,1);
+  wiRenderDraftLists();
+}
+function wiDescribeOverrides(w){
+  const n=normalizeWhatIfScenario(w);
+  const overrides=[];
+  if(n.retAgeOvr!=null) overrides.push("Retire at "+n.retAgeOvr);
+  if(n.incChangePct!==0) overrides.push("Income "+(n.incChangePct>0?"+":"")+n.incChangePct+"%");
+  if(n.extraExp!==0) overrides.push("Extra expense "+fmtMoney(n.extraExp)+"/yr");
+  (n.extraGoals||[]).forEach(g=>overrides.push(`Event: ${_daEsc(g.name)} ${fmtMoney(g.amt)} in ${g.year}`));
+  (n.timedEvents||[]).forEach(e=>{
+    const span=e.startYear===e.endYear?String(e.startYear):`${e.startYear}-${e.endYear}`;
+    if(e.kind==="incomePct") overrides.push(`${_daEsc(e.label)}: income ${(e.value>0?"+":"")}${e.value}% (${span})`);
+    else overrides.push(`${_daEsc(e.label)}: ${fmtMoney(e.value)}/yr (${span})`);
+  });
+  if(n.penDraw) overrides.push(`Pension out: ${fmtMoney(n.penDraw.amt)} at age ${n.penDraw.age}${+n.penDraw.cutPct?` (−${(+n.penDraw.cutPct).toFixed(1)}% tax & penalty)`:""}`);
+  return overrides;
+}
 function setWiAddBtn(editing){
   const btn=$("wiAddBtn"); if(!btn) return;
   btn.innerHTML=lucideIcon("play")+(editing?" Re-run Scenario":" Run Scenario");
   refreshIcons();
 }
+function wiClearNameError(){
+  const el=$("wiName"); if(el) el.classList.remove("fld-invalid");
+  const h=$("wiNameHint"); if(h){ h.textContent=""; h.classList.remove("fld-err"); }
+}
+function wiShowNameError(msg){
+  const el=$("wiName");
+  if(el){
+    el.classList.add("fld-invalid");
+    try{ el.focus({preventScroll:false}); el.scrollIntoView({behavior:"smooth",block:"nearest"}); }catch(_){ try{ el.focus(); }catch(__){} }
+  }
+  const h=$("wiNameHint");
+  if(h){
+    h.textContent=msg||"Required: enter a name for this scenario.";
+    h.classList.add("fld-err");
+  }
+}
 function addWhatIf(){
+  // Commit any partially filled goal/event row so users don't lose typed data.
+  const pendingGoal=val("wiGoalName").trim();
+  if(pendingGoal && num("wiGoalAmt",0)>0 && (parseInt(val("wiGoalYear"),10)||0)>0){
+    if(!wiAddGoalDraft()) return;
+  }
+  if(val("wiEvStart").trim()){
+    if(!wiAddEventDraft()) return;
+  }
+
   const name=val("wiName").trim();
-  if(!name){alert("Enter a scenario name"); return;}
+  if(!name){ wiShowNameError(); return; }
+  wiClearNameError();
   const wiRetAge=val("wiRetAge").trim();
   const retAgeOvr=wiRetAge===""?null:parseInt(wiRetAge);
   const incChangePct=num("wiIncChange",0);
   const extraExp=num("wiExtraExp",0);
-  const goalName=val("wiGoalName").trim();
-  const goalAmt=num("wiGoalAmt",0);
-  const goalYear=parseInt(val("wiGoalYear"))||0;
-  // A goal dated outside the projection window would never be simulated (and
-  // used to be silently scored 100% successful) — refuse it with an explanation.
-  if(goalName && goalAmt>0 && goalYear>0){
-    const cy=currentYear(), horizon=cy+num("simYrs",20);
-    if(goalYear<cy || goalYear>horizon){
-      statusMsg($("wiStatus"),"err",`Goal year ${goalYear} is outside the projection window (${cy}-${horizon}), so it would never be simulated. Adjust the year or extend Projection years on the Simulation tab.`);
+  const {cy,horizon}=wiWhatIfHorizon();
+  for(const g of _wiDraftGoals){
+    if(g.year<cy||g.year>horizon){
+      statusMsg($("wiStatus"),"err",`Event "${g.name}" year ${g.year} is outside the projection window (${cy}-${horizon}), so it would never be simulated. Adjust the year or extend Projection years on the Simulation tab.`);
+      return;
+    }
+  }
+  for(const e of _wiDraftEvents){
+    if(e.startYear<cy||e.endYear>horizon){
+      statusMsg($("wiStatus"),"err",`Timed event "${e.label}" (${e.startYear}-${e.endYear}) is outside the projection window (${cy}-${horizon}), so it would never be simulated. Adjust the years or extend Projection years on the Simulation tab.`);
       return;
     }
   }
@@ -28552,12 +28768,13 @@ function addWhatIf(){
       return;
     }
   }
-  const scen={
+  const scen=normalizeWhatIfScenario({
     id:"wi"+(++whatIfSeq), name,
     retAgeOvr, incChangePct, extraExp,
-    extraGoal: goalName&&goalAmt>0&&goalYear>0 ? {name:goalName,amt:goalAmt,year:goalYear} : null,
+    extraGoals:_wiDraftGoals.slice(),
+    timedEvents:_wiDraftEvents.slice(),
     penDraw: penAmt>0&&penAge>0 ? {age:penAge, amt:penAmt, cutPct:penCut} : null,
-  };
+  });
   if(_editingWhatIfId){
     whatIfScenarios=whatIfScenarios.map(w=>w.id===_editingWhatIfId?{...scen,id:_editingWhatIfId}:w);
     _editingWhatIfId=null;
@@ -28570,10 +28787,15 @@ function addWhatIf(){
   runAllWhatIf();
 }
 function clearWhatIfForm(){
-  ["wiName","wiRetAge","wiGoalName","wiGoalAmt","wiGoalYear","wiPenAge"].forEach(id=>{const el=$(id); if(el) el.value="";});
+  ["wiName","wiRetAge","wiGoalName","wiGoalAmt","wiGoalYear","wiPenAge","wiEvLabel","wiEvStart","wiEvEnd"].forEach(id=>{const el=$(id); if(el) el.value="";});
   $("wiIncChange").value="0"; $("wiExtraExp").value="0";
   const _wpa=$("wiPenAmt"); if(_wpa) _wpa.value="0";
   const _wpc=$("wiPenCut"); if(_wpc){ _wpc.value="0"; delete _wpc.dataset.touched; }
+  const _wev=$("wiEvValue"); if(_wev) _wev.value="0";
+  const _wek=$("wiEvKind"); if(_wek) _wek.value="incomePct";
+  _wiDraftGoals=[]; _wiDraftEvents=[];
+  wiRenderDraftLists();
+  wiClearNameError();
   setT("wiPenCutNote","");
   setT("wiStatus","");
 }
@@ -28589,18 +28811,18 @@ function deleteWhatIf(id){
   renderWhatIf();
 }
 function editWhatIf(id){
-  const w=whatIfScenarios.find(x=>x.id===id); if(!w) return;
+  const raw=whatIfScenarios.find(x=>x.id===id); if(!raw) return;
+  const w=normalizeWhatIfScenario(raw);
   $("wiName").value=w.name;
   $("wiRetAge").value=w.retAgeOvr??""
   $("wiIncChange").value=w.incChangePct;
   $("wiExtraExp").value=w.extraExp;
-  if(w.extraGoal){
-    $("wiGoalName").value=w.extraGoal.name;
-    $("wiGoalAmt").value=w.extraGoal.amt;
-    $("wiGoalYear").value=w.extraGoal.year;
-  } else {
-    $("wiGoalName").value=""; $("wiGoalAmt").value=0; $("wiGoalYear").value="";
-  }
+  _wiDraftGoals=(w.extraGoals||[]).map(g=>({name:g.name,amt:g.amt,year:g.year}));
+  _wiDraftEvents=(w.timedEvents||[]).map(e=>({label:e.label,kind:e.kind,value:e.value,startYear:e.startYear,endYear:e.endYear}));
+  $("wiGoalName").value=""; $("wiGoalAmt").value=0; $("wiGoalYear").value="";
+  $("wiEvLabel").value=""; $("wiEvValue").value=0; $("wiEvStart").value=""; $("wiEvEnd").value="";
+  if($("wiEvKind")) $("wiEvKind").value="incomePct";
+  wiRenderDraftLists();
   if(w.penDraw){
     $("wiPenAmt").value=w.penDraw.amt; $("wiPenAge").value=w.penDraw.age; $("wiPenCut").value=w.penDraw.cutPct;
     $("wiPenCut").dataset.touched="1";   // stored value — don't let auto-fill clobber it
@@ -28615,6 +28837,7 @@ function editWhatIf(id){
 }
 
 function runWhatIfScenario(scen){
+  scen=normalizeWhatIfScenario(scen);
   const yrs=num("simYrs",20);
   const sims=parseInt(val("simN")||"200",10);
 
@@ -28631,7 +28854,7 @@ function runWhatIfScenario(scen){
   // 1. Retirement age override (correct field: "retAge")
   if(scen.retAgeOvr!=null) patchField("retAge", scen.retAgeOvr);
 
-  // 2. Income change % — scale all income fields proportionally
+  // 2. Income change % — scale all income fields proportionally (permanent)
   if(scen.incChangePct!==0){
     const factor=1+scen.incChangePct/100;
     ["inc1","inc2","inc1b","inc2b"].forEach(id=>{
@@ -28640,24 +28863,34 @@ function runWhatIfScenario(scen){
     });
   }
 
-  // 3. Extra annual expense — add to "Other expenses" field (expO)
+  // 3. Extra annual expense — add to "Other expenses" field (expO) (permanent)
   if(scen.extraExp!==0){
     const origO=parseFloat(val("expO")||"0");
     patchField("expO",(origO+scen.extraExp).toFixed(2));
   }
 
-  // 4. Extra one-off goal — temporarily joins the real goals array so runMC's
-  //    goalOutMap actually withdraws it (it used to be scored but never simulated).
-  const tempGoal = scen.extraGoal ? {id:"wi-g", name:scen.extraGoal.name, amt:scen.extraGoal.amt,
-    startYear:scen.extraGoal.year, endYear:scen.extraGoal.year, cat:"other", tier:"important"} : null;
-  let paths;
+  // 4. Extra one-off goals — temporarily join the real goals array so runMC's
+  //    goalOutMap withdraws each of them.
+  const tempGoals=(scen.extraGoals||[]).map((g,i)=>({
+    id:"wi-g-"+i, name:g.name, amt:g.amt,
+    startYear:g.year, endYear:g.year, cat:"other", tier:"important"
+  }));
+  let paths, surplus;
   try{
-    if(tempGoal) goals.push(tempGoal);
+    tempGoals.forEach(g=>goals.push(g));
     _wiPensionDraw=scen.penDraw||null;
+    _wiTimedEvents=(scen.timedEvents&&scen.timedEvents.length)?scen.timedEvents:null;
+    // Capture while permanent income/expense patches are live (tax-aware).
+    // Timed events are year-specific and do not change today's surplus readout.
+    surplus=getNetSurplus();
     paths=runMC(yrs,sims);
   } finally {
     _wiPensionDraw=null;
-    if(tempGoal) goals=goals.filter(g=>g!==tempGoal);
+    _wiTimedEvents=null;
+    if(tempGoals.length){
+      const ids=new Set(tempGoals.map(g=>g.id));
+      goals=goals.filter(g=>!ids.has(g.id));
+    }
     restoreAll();   // fields always restored, even if runMC throws
   }
 
@@ -28667,11 +28900,11 @@ function runWhatIfScenario(scen){
   const p10NW=percentileAt(paths,yrs,10);
   const p90NW=percentileAt(paths,yrs,90);
   let goalSucc=null;
-  const allGoals=tempGoal?[...goals,tempGoal]:goals;
+  const allGoals=tempGoals.length?[...goals,...tempGoals]:goals;
   if(allGoals.length>0){
     goalSucc=allGoals.reduce((s,g)=>s+(goalSuccessFromPaths(g,paths,yrs)||0),0)/allGoals.length;
   }
-  return {medNW,p10NW,p90NW,goalSucc,dep:paths.depletion||null};
+  return {medNW,p10NW,p90NW,goalSucc,dep:paths.depletion||null,surplus,sav:num("savAnnual",0)};
 }
 
 // Baseline = current parameters, no overrides
@@ -28683,7 +28916,7 @@ function runBaselineWhatIf(){
   if(goals.length>0){
     goalSucc=goals.reduce((s,g)=>s+(goalSuccessFromPaths(g,paths,yrs)||0),0)/goals.length;
   }
-  return {medNW,goalSucc,dep:paths.depletion||null};
+  return {medNW,goalSucc,dep:paths.depletion||null,surplus:getNetSurplus(),sav:num("savAnnual",0)};
 }
 
 function runAllWhatIf(){
@@ -28691,6 +28924,8 @@ function runAllWhatIf(){
   setT("wiStatus","Running simulations…");
   setTimeout(()=>{
     try {
+      // Migrate any legacy single-goal scenarios before running.
+      whatIfScenarios=whatIfScenarios.map(normalizeWhatIfScenario);
       const base=runBaselineWhatIf();
       whatIfScenarios.forEach(w=>{
         w._result=runWhatIfScenario(w);
@@ -28719,15 +28954,31 @@ function renderWhatIf(){
       const gsDelta=r.goalSucc!=null&&b&&b.goalSucc!=null?r.goalSucc-b.goalSucc:null;
       const gsDeltaFmt=gsDelta!=null?(gsDelta>=0?"+":"")+gsDelta.toFixed(1)+"%pts":"";
       const gsDeltaCls=gsDelta==null?"":gsDelta>=0?"up":"dn";
-      // Liquidity-depletion badge: warn when a meaningful share of simulated
-      // paths run out of liquid assets before the end of the projection.
-      let depHtml="";
+      // Impact strip: annual surplus change (why NW moves — or doesn't) plus
+      // liquidity-depletion when a meaningful share of paths run dry.
+      let impactHtml="";
+      const surpParts=[];
+      if(r.surplus!=null && b && b.surplus!=null && Math.abs(r.surplus-b.surplus)>0.5){
+        const d=r.surplus-b.surplus;
+        const dCls=d>=0?"up":"dn";
+        const dFmt=(d>=0?"+":"")+fmtMoney(d);
+        surpParts.push(`Annual surplus ${fmtMoney(b.surplus)} → ${fmtMoney(r.surplus)} (<span class="${dCls}">${dFmt}/yr</span>)`);
+        const sav=r.sav!=null?r.sav:(b.sav!=null?b.sav:num("savAnnual",0));
+        if(r.surplus<0) surpParts.push("annual deficit: each year draws from cash/investments");
+        else if(sav>0 && r.surplus<sav) surpParts.push(`committed savings ${fmtMoney(sav)}/yr exceeds surplus by ${fmtMoney(sav-r.surplus)}`);
+        else if(sav>0) surpParts.push(`committed savings ${fmtMoney(sav)}/yr still covered (extra spend mainly eats discretionary leftover)`);
+        else surpParts.push("no committed annual savings: surplus leftovers are not invested");
+      }
+      let depLine="";
       if(r.dep && r.dep.prob>0.05){
         const cy=currentYear();
         const baseProb=b&&b.dep?b.dep.prob:null;
         const baseNote=baseProb!=null?` · baseline ${(baseProb*100).toFixed(0)}%`:"";
         const medYr=r.dep.medianYr!=null?` (median: ${cy+r.dep.medianYr}`+ (r.dep.medianUnfunded>0?`, ~${fmtMoney(r.dep.medianUnfunded)} short`:"") + `)`:"";
-        depHtml=`<div class="wi-depwarn">⚠ Liquid assets run out in ${(r.dep.prob*100).toFixed(0)}% of paths${medYr}${baseNote}</div>`;
+        depLine=`⚠ Liquid assets run out in ${(r.dep.prob*100).toFixed(0)}% of paths${medYr}${baseNote}`;
+      }
+      if(surpParts.length || depLine){
+        impactHtml=`<div class="wi-impact">${surpParts.length?`<div class="wi-surp">${surpParts.join(" · ")}</div>`:""}${depLine?`<div class="wi-depwarn">${depLine}</div>`:""}</div>`;
       }
       statsHtml=`<div class="wi-results">
         <div class="wi-stat">
@@ -28745,17 +28996,12 @@ function renderWhatIf(){
           <div class="wi-stat-val ${r.goalSucc!=null&&r.goalSucc>=70?'pos':r.goalSucc!=null&&r.goalSucc<40?'neg':''}">${gsStr}</div>
           <div class="wi-delta ${gsDeltaCls}">${gsDeltaFmt}</div>
         </div>
-      </div>${depHtml}`;
+      </div>${impactHtml}`;
     } else {
       statsHtml=`<div style="font-size:12px;color:var(--text3)">Click Run to compute results.</div>`;
     }
     // Override summary
-    const overrides=[];
-    if(w.retAgeOvr!=null) overrides.push("Retire at "+w.retAgeOvr);
-    if(w.incChangePct!==0) overrides.push("Income "+(w.incChangePct>0?"+":"")+w.incChangePct+"%");
-    if(w.extraExp!==0) overrides.push("Extra expense "+fmtMoney(w.extraExp)+"/yr");
-    if(w.extraGoal) overrides.push(`Goal: ${_daEsc(w.extraGoal.name)} ${fmtMoney(w.extraGoal.amt)} in ${w.extraGoal.year}`);
-    if(w.penDraw) overrides.push(`Pension out: ${fmtMoney(w.penDraw.amt)} at age ${w.penDraw.age}${+w.penDraw.cutPct?` (−${(+w.penDraw.cutPct).toFixed(1)}% tax & penalty)`:""}`);
+    const overrides=wiDescribeOverrides(w);
     return `<div class="wi-item">
       <div class="wi-head">
         <span class="wi-name">${_daEsc(w.name)}</span>
@@ -32838,12 +33084,17 @@ function drawFanChart(){
         newPage();
         sectionH2("What-If Scenarios");
         plainLead("Alternative futures you asked us to test. Each scenario re-runs the full market simulation with only the listed changes, then compares the outcome against your baseline plan.");
-        const chg=w=>{ const p=[];
-          if(w.retAgeOvr!=null && w.retAgeOvr!=="") p.push("retire at "+w.retAgeOvr);
-          if(+w.incChangePct) p.push("income "+(w.incChangePct>0?"+":"")+w.incChangePct+"%");
-          if(+w.extraExp) p.push("+"+fmt(w.extraExp)+"/yr expenses");
-          if(w.extraGoal) p.push(String(w.extraGoal.name)+" "+fmt(w.extraGoal.amt)+" in "+w.extraGoal.year);
-          if(w.penDraw) p.push("withdraw "+fmt(w.penDraw.amt)+" from the pension pool at age "+w.penDraw.age+(+w.penDraw.cutPct?" ("+(+w.penDraw.cutPct).toFixed(1)+"% to tax & penalty)":""));
+        const chg=w=>{ const n=typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):w; const p=[];
+          if(n.retAgeOvr!=null && n.retAgeOvr!=="") p.push("retire at "+n.retAgeOvr);
+          if(+n.incChangePct) p.push("income "+(n.incChangePct>0?"+":"")+n.incChangePct+"%");
+          if(+n.extraExp) p.push("+"+fmt(n.extraExp)+"/yr expenses");
+          (n.extraGoals||[]).forEach(g=>p.push(String(g.name)+" "+fmt(g.amt)+" in "+g.year));
+          (n.timedEvents||[]).forEach(e=>{
+            const span=e.startYear===e.endYear?String(e.startYear):e.startYear+"-"+e.endYear;
+            if(e.kind==="incomePct") p.push(String(e.label||"Income")+" "+(e.value>0?"+":"")+e.value+"% ("+span+")");
+            else p.push(String(e.label||"Expense")+" "+fmt(e.value)+"/yr ("+span+")");
+          });
+          if(n.penDraw) p.push("withdraw "+fmt(n.penDraw.amt)+" from the pension pool at age "+n.penDraw.age+(+n.penDraw.cutPct?" ("+(+n.penDraw.cutPct).toFixed(1)+"% to tax & penalty)":""));
           return p.join("; ")||"no changes"; };
         const rows=[["Baseline (current plan)","-",fmt(base.medNW),"-",base.goalSucc!=null?base.goalSucc.toFixed(0)+"%":"-"]];
         whatIfScenarios.forEach(w=>{
@@ -34889,7 +35140,7 @@ function restoreProfile(p){
   children=p.children||[]; childSeq=p.childSeq||_maxIdSeq(children);
   investments=p.investments||[]; invSeq=p.invSeq||_maxIdSeq(investments);
   proposals=p.proposals||[]; propSeq=p.propSeq||_maxIdSeq(proposals);
-  whatIfScenarios=p.whatIfScenarios||[]; whatIfSeq=p.whatIfSeq||_maxIdSeq(whatIfScenarios);
+  whatIfScenarios=(p.whatIfScenarios||[]).map(w=>typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):w); whatIfSeq=p.whatIfSeq||_maxIdSeq(whatIfScenarios);
   pfLinkedAccountId=p.pfLinkedAccountId||"";
   if(p.c2visible) showC2(); else hideC2();
   renderAssets(); renderLoans(); renderInsurances(); renderEquityGrants(); renderBeneficiaries(); renderGoals(); renderChildren();
