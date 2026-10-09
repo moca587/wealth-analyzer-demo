@@ -981,7 +981,7 @@ input.fld-invalid,.ccy-field.fld-invalid{
 .ccy-field .ccy-sym{font-family:var(--fb);font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0}
 .goal-add .ccy-field input,.ccy-field input{flex:1;min-width:0;width:auto;border:none;background:transparent;padding-left:0;box-shadow:none}
 .ccy-field input:focus,.ccy-field input:focus-visible,.ccy-field input:hover{border:none;background:transparent;box-shadow:none;outline:none}
-@media(max-width:900px){.goal-add{grid-template-columns:1fr 1fr}}
+@media(max-width:1150px){.goal-add{grid-template-columns:1fr 1fr}}
 
 /* ── Goal tags ── */
 .gtag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
@@ -1528,7 +1528,6 @@ html.info-pop-float .info-ic .info-pop{display:none}
   .wh-amount{font-size:30px}
   .clients-wrap{grid-template-columns:1fr}
   .two-col{grid-template-columns:1fr}
-  .sidebar{display:none}
   .main{padding:16px}
   .pf-add{grid-template-columns:1fr 1fr}
   .pf-row{grid-template-columns:1fr;gap:4px;padding:10px}
@@ -1538,6 +1537,17 @@ html.info-pop-float .info-ic .info-pop{display:none}
   .pr-row{grid-template-columns:1fr;gap:4px;padding:10px}
   .cmp-grid{grid-template-columns:1fr 1fr 80px}
   .goal-cmp{grid-template-columns:1fr 60px 70px 70px 70px}
+  .item-row{flex-wrap:wrap;row-gap:6px}
+  .alloc-pies,.alloc-pies.alloc-pies-2{grid-template-columns:repeat(auto-fit,minmax(258px,1fr))}
+}
+/* The section menu stays on tablets: an iPad in portrait is 744-834px wide and
+   has no other way to reach Household, Goals, Assets and the rest. */
+@media(max-width:700px){.sidebar{display:none}}
+/* With the menu showing, the proposal rows need about 1,000px of content width;
+   iPad Pro 13" portrait and iPad mini landscape have less. */
+@media(max-width:1150px){
+  .pr-add{grid-template-columns:1fr 1fr}
+  .pr-row{grid-template-columns:1fr;gap:4px;padding:10px}
 }
 /* ── Modern accents ── */
 .panel{border-left:3px solid transparent}
@@ -5007,7 +5017,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261005-1342";
+const APP_VERSION = "20261009-1644";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
