@@ -1333,6 +1333,20 @@ input.fld-invalid,.ccy-field.fld-invalid{
 .delta-pos{color:#1b6841}
 .delta-neg{color:#a83232}
 .delta-neu{color:var(--text3)}
+/* Compare tab: one row per metric (Return, Risk and Cost) */
+.cmp-tbl{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(108px,1fr));border:1px solid var(--border);border-bottom:none;border-radius:var(--r);overflow:hidden;font-variant-numeric:tabular-nums}
+.ct-h,.ct-l,.ct-v,.ct-d{padding:10px 14px;border-bottom:1px solid var(--border);min-width:0}
+.ct-h{background:var(--bg3);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);text-align:right;white-space:nowrap}
+.ct-h:first-child{text-align:left}
+.ct-h.cur{color:#5b9bd5}
+.ct-h.prop{color:#0057b8}
+.ct-l{font-size:13px;color:var(--text2)}
+.ct-v{font-size:14px;color:var(--text);text-align:right}
+.ct-b{font-weight:700}
+.ct-d{font-size:13px;font-weight:600;color:var(--text3);text-align:right;white-space:nowrap}
+.ct-d.delta-pos{color:#1b6841}
+.ct-d.delta-neg{color:#a83232}
+.ct-star{color:var(--text3);font-size:10px;margin-left:1px}
 .goal-cmp{display:grid;grid-template-columns:1.2fr 80px 90px 90px 90px;gap:8px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px}
 .goal-cmp:last-child{border-bottom:none}
 .goal-cmp .gnm{color:var(--text);font-weight:500}
@@ -3406,7 +3420,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <!-- Capital Market Assumptions -->
     <div class="panel" id="gbCmaPanel" style="display:none">
       <div class="ptitle">Capital Market Assumptions</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">Per-asset-class long-term return/risk assumptions used to derive your portfolio's risk-adjusted return. Geometric mean = arithmetic − ½σ². Core long-term inflation assumption: <strong id="gbInflRef">2.28%</strong>.</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6">Per-asset-class long-term return/risk assumptions used to derive your portfolio's risk-adjusted return. <span id="gbCmaBasis"></span> <strong id="gbInflRef"></strong></div>
       <div id="gbCma"></div>
     </div>
 
@@ -3438,7 +3452,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body" id="drawdownBody">
-  <div style="font-size:12px;color:var(--text3);line-height:1.6;margin:10px 0 10px">A decumulation simulation: from your retirement age, each year withdraws your retirement spending (net of pensions &amp; Social Security), the portfolio earns a random return, and we count how often it lasts to your planning age, capturing <strong style="color:var(--text2)">sequence-of-returns risk</strong> (a poor market early in retirement does lasting damage). The whole investable pool is exposed to market risk here.</div>
+  <div style="font-size:12px;color:var(--text3);line-height:1.6;margin:10px 0 10px">A decumulation simulation: from your retirement age, each year withdraws your retirement spending (net of pensions &amp; Social Security), the portfolio earns a random return, and we count how often it lasts to your planning age, capturing <strong style="color:var(--text2)">sequence-of-returns risk</strong> (a poor market early in retirement does lasting damage). It starts from the simulation's wealth at retirement (from today's figures if no simulation has run); cash earns nothing and is spent first, and only the invested part is exposed to market risk.</div>
   <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
     <label class="flbl" style="min-width:0">Plan through age</label>
     <input type="number" id="rdPlanAge" value="90" min="70" max="110" step="1" class="w120">
@@ -3923,7 +3937,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div style="font-size:11px;color:var(--text3);margin:8px 0 12px">Deducted from gross portfolio return in all simulations and projections.</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Gross expected return<span class="info-ic">i<span class="info-pop">the portfolio's value-weighted expected annual return, derived from each holding's asset-class capital-market assumption (cash excluded).</span></span></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Gross expected return<span class="info-ic">i<span class="info-pop">The whole portfolio's value-weighted expected annual return, from each holding's asset-class capital-market assumption, with cash counted at 0%.</span></span></div>
       <div style="font-size:17px;font-weight:500;color:var(--text)" id="pf-ret-gross">-</div>
     </div>
     <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
@@ -3931,7 +3945,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div style="font-size:17px;font-weight:500;color:#a83232" id="pf-ret-fee">-</div>
     </div>
     <div style="flex:1;min-width:150px;padding:10px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Net expected return (after fee)<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee drag, floored at zero. This is the return actually used to project your portfolio in the market simulation.</span></span></div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:3px">Net expected return (after fee)<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee, floored at zero. The simulation earns this on the whole portfolio: the invested holdings grow and cash stays at 0%.</span></span></div>
       <div style="font-size:17px;font-weight:500;color:#1b6841" id="pf-ret-net">-</div>
     </div>
   </div>
@@ -4233,7 +4247,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
       <div style="padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);flex:1;min-width:120px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Gross return<span class="info-ic">i<span class="info-pop">the proposal's allocation-weighted expected annual return, averaged from each position's own expected-return field (not CMA-derived like the Portfolio tab).</span></span></div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Gross return<span class="info-ic">i<span class="info-pop">The proposal's allocation-weighted expected annual return: each position's own expected return where it has one, otherwise its asset-class capital-market assumption, with cash counted at 0%.</span></span></div>
         <div style="font-size:16px;font-weight:500;color:var(--text)" id="pr-ret-gross">-</div>
       </div>
       <div style="padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);flex:1;min-width:120px">
@@ -4241,7 +4255,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <div style="font-size:16px;font-weight:500;color:#a83232" id="pr-ret-fee">-</div>
       </div>
       <div style="padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);flex:1;min-width:120px">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Net return<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee drag, floored at zero. This is the return actually used to project your portfolio in the market simulation.</span></span></div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px">Net return<span class="info-ic">i<span class="info-pop">Gross expected return minus the advisory fee, floored at zero. When the simulation runs on the proposal it earns this on the whole portfolio: invested positions grow and cash stays at 0%.</span></span></div>
         <div style="font-size:16px;font-weight:500;color:#1b6841" id="pr-ret-net">-</div>
       </div>
     </div>
@@ -4612,22 +4626,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div style="font-size:13px;color:var(--text2);line-height:1.6">Add holdings on the Current Portfolio tab and positions on the Investment Proposal tab to compare them here.</div>
 </div>
 
-<!-- Parameter side-by-side (detailed figures, collapsible) -->
-<div class="panel">
-  <div class="ptitle section-dropdown" onclick="toggleDropdown('rrpBody')">Return &amp; Risk Profile: detailed figures <span class="dropdown-hint">click to expand</span><span class="ptitle-line"></span></div>
-  <div class="dropdown-body" id="rrpBody">
-  <div style="font-size:12px;color:var(--text3);margin:8px 0 12px;line-height:1.6">Gross return, advisory fee, net return and volatility for each portfolio. These are the <strong style="color:var(--text2)">forward-looking expected</strong> figures (the same numbers shown on the right of the chart above), not historical trailing returns.</div>
-  <div class="cmp-grid" id="cmpParams">
-    <div class="cmp-h cur">Current portfolio</div>
-    <div class="cmp-h prop">Proposed portfolio</div>
-    <div class="cmp-h delta">Variance<span class="info-ic">i<span class="info-pop">Simple difference: Proposed portfolio minus Current portfolio for each row (not a statistical variance/squared deviation).</span></span></div>
-    <div class="cmp-c"><span class="lbl">Run comparison to populate</span>-</div>
-    <div class="cmp-c"><span class="lbl">&nbsp;</span>-</div>
-    <div class="cmp-c">-</div>
-  </div>
-  </div>
-</div>
-
 <!-- Asset Class Allocation — twin pies, then past vs future returns -->
 <div class="panel">
   <div class="ptitle">Asset Class Allocation: Side by Side</div>
@@ -4651,12 +4649,14 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
 </div>
 
-<!-- Cost, yield and concentration: Portfolio vs Proposal -->
+<!-- Return, risk and cost: one row per metric (runComparison + renderCostYieldConcentration) -->
 <div class="panel">
-  <div class="ptitle">Cost, Yield and Concentration: Side by Side</div>
-  <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.6">What each portfolio costs to hold, what it pays out, and how concentrated it is. Fund costs (TER) and yield are value-weighted over the positions that have a figure (shown when some do not); concentration uses every position. Advisory fees are in the Return &amp; Risk Profile figures above.</div>
-  <div class="cmp-grid" id="cmpCostYield"><div class="cmp-empty">Run comparison to compare cost, yield and concentration.</div></div>
-  <div id="cmpCostYieldNote" style="font-size:12px;color:var(--text2);margin-top:8px;line-height:1.6"></div>
+  <div class="ptitle">Return, Risk and Cost: Side by Side</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5">Expected return and volatility look forward, as on the right of the returns chart above. Both sides are the whole portfolio, cash counted at 0%.</div>
+  <div class="cmp-tbl" id="cmpSummary">
+    <div class="ct-h"></div><div class="ct-h cur">Current</div><div class="ct-h prop">Proposed</div><div class="ct-h">Difference</div>
+  </div>
+  <div id="cmpCostYieldNote" style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6"></div>
 </div>
 
 <!-- Position overlap — Portfolio vs Proposal -->
@@ -5005,7 +5005,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261013-1556";
+const APP_VERSION = "20261013-2128";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -6862,16 +6862,72 @@ function getAssetBucketsFromHoldings() {
   return buckets;
 }
 
+// The ASSET_CLASS_MC average return and volatility of a bucket mix (weights
+// need not sum to 1). growAssetBuckets scales every class by activeMu / this
+// mean, so the run's starting mix earns exactly activeMu, and by activeSig /
+// this volatility (buckets are drawn independently), so it swings by activeSig.
+function bucketMixBase(buckets) {
+  const keys = Object.keys(buckets || {});
+  const tot = keys.reduce((s,k) => s + Math.max(0, +buckets[k] || 0), 0);
+  if (tot <= 0) return { mu: ASSET_CLASS_MC.mixed.mu, sig: ASSET_CLASS_MC.mixed.sig };
+  const w = keys.map(k => Math.max(0, +buckets[k] || 0) / tot);
+  const s = keys.map(k => (ASSET_CLASS_MC[k] || ASSET_CLASS_MC.other).sig);
+  const mu = keys.reduce((a,k,i) => a + w[i] * (ASSET_CLASS_MC[k] || ASSET_CLASS_MC.other).mu, 0);
+  // Classes move together as the CMA correlations say (cmaCorr). The Cholesky
+  // factor turns the per-class draws into correlated ones; if the matrix is not
+  // positive definite, the classes are drawn independently instead.
+  // Correlated exactly as growAssetBuckets draws them (acmcCholesky), or
+  // independent if that matrix is not positive definite.
+  const L = acmcCholesky(), n = keys.length;
+  const known = k => Object.prototype.hasOwnProperty.call(ASSET_CLASS_MC, k);
+  const rho = (i,j) => (i === j) ? 1 : ((L && known(keys[i]) && known(keys[j])) ? cmaCorr(keys[i], keys[j]) : 0);
+  let v = 0;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) v += w[i] * w[j] * s[i] * s[j] * rho(i,j);
+  return { mu: mu > 0 ? mu : ASSET_CLASS_MC.mixed.mu, sig: v > 0 ? Math.sqrt(v) : ASSET_CLASS_MC.mixed.sig };
+}
+
+// One standard-normal draw per ASSET_CLASS_MC class per year, always all of them
+// and always in this order, so every run uses the seeded stream identically: a
+// class gets the same draw in the Simulation tab, both Compare columns and every
+// sensitivity run (common random numbers), whatever else the portfolio holds.
+const ACMC_KEYS = Object.keys(ASSET_CLASS_MC);
+let _acmcChol;   // Cholesky factor of cmaCorr over ACMC_KEYS; null if not positive definite
+function acmcCholesky() {
+  if (_acmcChol !== undefined) return _acmcChol;
+  const n = ACMC_KEYS.length, L = [];
+  for (let i = 0; i < n; i++) {
+    L.push(new Array(n).fill(0));
+    for (let j = 0; j <= i; j++) {
+      let sum = (i === j) ? 1 : cmaCorr(ACMC_KEYS[i], ACMC_KEYS[j]);
+      for (let k = 0; k < j; k++) sum -= L[i][k] * L[j][k];
+      if (i === j) { if (sum <= 1e-10) { _acmcChol = null; return null; } L[i][i] = Math.sqrt(sum); }
+      else L[i][j] = sum / L[j][j];
+    }
+  }
+  _acmcChol = L;
+  return L;
+}
+
 // Grows the asset buckets for each year. activeMu/activeSig (the household's
 // active mu/sig — risk profile, AI proposal, or a sensitivity override) scale
-// every asset class proportionally around the ASSET_CLASS_MC.mixed baseline,
-// so those knobs still move the simulation now that growth is bucket-based.
-function growAssetBuckets(buckets, cgtDrag, y, activeMu, activeSig) {
+// every asset class proportionally around mixBase, the starting mix's own
+// ASSET_CLASS_MC average (bucketMixBase), so the pool delivers activeMu and
+// activeSig. Without mixBase it falls back to the ASSET_CLASS_MC.mixed class.
+function growAssetBuckets(buckets, cgtDrag, y, activeMu, activeSig, mixBase) {
   const next = {};
-  const muScale = (activeMu != null) ? activeMu / ASSET_CLASS_MC.mixed.mu : 1;
-  const sigScale = (activeSig != null) ? activeSig / ASSET_CLASS_MC.mixed.sig : 1;
+  const base = mixBase || ASSET_CLASS_MC.mixed;
+  const muScale = (activeMu != null) ? activeMu / base.mu : 1;
+  const sigScale = (activeSig != null) ? activeSig / base.sig : 1;
 
-  Object.keys(buckets).forEach(cls => {
+  // A draw for every class (ACMC_KEYS), correlated, then each bucket takes its
+  // own class's draw; classes outside ASSET_CLASS_MC get an independent extra one.
+  const _keys = Object.keys(buckets);
+  const _extra = _keys.filter(k => !Object.prototype.hasOwnProperty.call(ASSET_CLASS_MC, k));
+  const _z = ACMC_KEYS.concat(_extra).map(() => boxMuller());
+  const _L = acmcCholesky(), _e = {};
+  ACMC_KEYS.forEach((k,i) => { let t = 0; if (_L) { for (let j = 0; j <= i; j++) t += _L[i][j] * _z[j]; } else t = _z[i]; _e[k] = t; });
+  _extra.forEach((k,i) => { _e[k] = _z[ACMC_KEYS.length + i]; });
+  _keys.forEach(cls => {
     // get equity assumtions (mu, sig) for this asset class
     const assumption = ASSET_CLASS_MC[cls] || ASSET_CLASS_MC.other;
     // apply tax drag
@@ -6881,7 +6937,7 @@ function growAssetBuckets(buckets, cgtDrag, y, activeMu, activeSig) {
     // adjust return/volatility if glidepath de-risking is on
     const gp = glidepathAdjust(muNet, sig, y);
     // create one random yearly return for that asset class 
-    const r = (gp.mu - 0.5 * gp.sig * gp.sig) + gp.sig * boxMuller();
+    const r = (gp.mu - 0.5 * gp.sig * gp.sig) + gp.sig * _e[cls];
 
     next[cls] = Math.max(0, buckets[cls] * Math.exp(r));
   });
@@ -7859,10 +7915,10 @@ function renderSimSummary(){
     const a1 = (typeof ageFromDOB==="function" ? ageFromDOB(val("c1d")) : 0) || 40;
     const retAge = num("retAge",65);
     const yrsToRet = Math.max(1, retAge - a1), yearsInRet = Math.max(1, 90 - retAge);
-    const inf = num("inf",3.8)/100, P = getActiveSimulationParams();
-    const w = spendableWealthAt(Math.min(yrsToRet, lastSimYrs), 50);
+    const inf = num("inf",3.8)/100, R = retirementSolverInputs(yrsToRet, 50), w = R.w;
     const pens = _retirementPensionSchedule(retAge, yearsInRet, inf);
-    const spendNom = _solveSustainableSpendMC(Math.max(0,w), yearsInRet, P.mu, P.sig, inf, 90, 150, pens);
+    // 1,000 paths for a headline figure: at 150 it moved by ~5% with the draws alone
+    const spendNom = _solveSustainableSpendMC(w, yearsInRet, R.mu, R.sig, inf, 90, 1000, pens, R.split);
     spend = fmtMoney(spendNom / Math.pow(1+inf, yrsToRet));   // nominal-at-retirement → today's money
     // Money-lasts: probability the household's PLANNED retirement spending
     // survives to age 90 from the median wealth at retirement (same survival
@@ -7871,7 +7927,7 @@ function renderSimSummary(){
     const plannedSpend = num("retSpend",0) || (num("expL",0)+num("expI",0)+num("expO",0));
     if(plannedSpend > 0){
       // planned spend is in today's money; the survival model (and the pension schedule) run nominal from the retirement year
-      const pL = Math.round(_survivalProb(Math.max(0,w), plannedSpend*Math.pow(1+inf, yrsToRet), yearsInRet, P.mu, P.sig, inf, 300, pens) * 100);
+      const pL = Math.round(_survivalProb(w, plannedSpend*Math.pow(1+inf, yrsToRet), yearsInRet, R.mu, R.sig, inf, 300, pens, R.split) * 100);
       lasts = pL + "%";
       lastsCls = pL>=80 ? "good" : (pL>=50 ? "warn" : "bad");
     }
@@ -7883,7 +7939,7 @@ function renderSimSummary(){
   el.innerHTML =
     card("Projected wealth", med, "median · today's money", "", "<strong>Projected wealth</strong>: the median (50th percentile) simulated net worth at the end of your simulation horizon, shown in today's money (deflated for inflation). Half of simulated paths end above this figure, half below.") +
     card("Goal success", prob, "across your goals", probCls, "<strong>Goal success</strong>: the average probability, across all your goals, of being fully funded by its target year, read from the same simulated outcomes used throughout the Simulation tab.") +
-    card("Sustainable spend", spend, "per year · today's money", "", "<strong>Sustainable spend</strong>: the highest annual retirement spending, in today's purchasing power, with a 90% chance of lasting to age 90, from the median (50th percentile) simulated wealth at your retirement age. Includes your projected pension / state-benefit income; the portfolio only has to cover spending above what pensions provide.") +
+    card("Sustainable spend", spend, "per year · today's money", "", "<strong>Sustainable spend</strong>: the highest annual retirement spending, in today's purchasing power, with a 90% chance of lasting to age 90, from the median (50th percentile) simulated wealth at your retirement age. Includes your projected pension / state-benefit income; the portfolio only has to cover spending above what pensions provide. Cash in the plan earns nothing and is spent first; only the invested part earns the portfolio return.") +
     card("Money lasts", lasts, "planned spend to age 90", lastsCls, "<strong>Money lasts</strong>: the probability your <em>planned</em> retirement spending lasts to age 90, drawn from the median (50th percentile) simulated wealth at your retirement age and net of your projected pension income. This is the flip side of Sustainable spend: it scores the spending you entered rather than solving for a 90% level. Below 80% suggests trimming planned spending, saving more, or retiring later. Run the drawdown panel below for a full year-by-year view.") +
     card("Retirement funding", gapTxt, gapGood?"ahead of target":"vs. present-value target", gapCls, "<strong>Retirement funding</strong>: your current net worth compared to the present-value cost of funding your planned retirement spending (an actuarial annuity calculation, discounted at 6.8%). Positive means you're ahead of target; negative means additional savings are needed.");
   el.style.display = "grid";
@@ -8888,6 +8944,7 @@ function onCurrencyCountryChange(){
   CURRENT_CCY=cc;
   const sel=$("m-ccy-tag"); if(sel) sel.value=cc;
   syncCcySym();
+  _cmaAfterCcyChange();
   popCcyDropdown("accy");
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
@@ -8899,10 +8956,22 @@ function onCurrencyManualChange(){
   CURRENT_CCY=sel.value||"USD";
   _ccyManual=true;
   syncCcySym();
+  _cmaAfterCcyChange();
   popCcyDropdown("accy");
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
   refreshTopMetrics();
+}
+// The household currency changed: switch the CMA set. A simulation run under the other
+// set no longer matches the figures on screen, so it is cleared as on a profile load.
+function _cmaAfterCcyChange(){
+  if(!applyCmaForCurrency(CURRENT_CCY)) return;
+  lastSimPaths=[]; lastSimYrs=null; setT("m-med","-"); setT("m-prob","-");
+  try{ (whatIfScenarios||[]).forEach(w=>{ delete w._result; delete w._base; }); if(typeof renderWhatIf==="function") renderWhatIf(); }catch(_){}   // results from the other set
+  try{ updatePortfolioFeeDisplay(); updateProposalFeeDisplay(); }catch(_){}
+  try{ if(typeof renderProposalMetrics==="function") renderProposalMetrics(); }catch(_){}
+  try{ if(typeof renderProposalSourceBanner==="function") renderProposalSourceBanner(); }catch(_){}
+  try{ const p=$("gbCmaPanel"); if(p && p.style.display!=="none" && typeof runGoalsBased==="function") runGoalsBased(); }catch(_){}
 }
 function syncCcySym(){
   // Keep the symbol badge in the topbar in sync with CURRENT_CCY
@@ -21610,6 +21679,14 @@ const RISK_FREE_BY_CCY = {
 // "n/a", and count as unknown when funds are ranked.
 function fundKnown(f, k){ return !!f && f[k] != null && !((","+(f.est||"")+",").includes(","+k+",")); }
 function fundVal(f, k){ return fundKnown(f, k) ? f[k] : null; }
+// The household's own risk-free rate (decimal) for portfolio-level and Builder class
+// Sharpe ratios: a CHF portfolio measured against a 4.5% USD rate reads far worse than
+// it is. Kept outside the injected enrichment block, which inject-universe.pl rewrites
+// from fund-universe.js (where this function does not exist).
+function householdRiskFree(){
+  const c = ((typeof CURRENT_CCY !== "undefined" && CURRENT_CCY) || "USD").toUpperCase();
+  return (RISK_FREE_BY_CCY[c] ?? RISK_FREE_BY_CCY.USD) / 100;
+}
 // A position's metric snapshot: descriptive fields plus curated figures only.
 function fundMetricsFor(f){
   if(!f) return null;
@@ -21811,15 +21888,16 @@ Constraints:
     const rec = plainDashesDeep(JSON.parse(m[0]));   // the model's prose is shown to clients
     rec.engine = "claude";   // built by the model (an AI key was set)
     // ─── Recompute portfolio metrics against the actual fund universe ───
-    // The AI engine's expectedReturn / expectedVolatility are advisory — overwrite
-    // with the deterministic weighted-mean against fund.mu / fund.sigma so
-    // AI Builder matches Investment Proposal and Portfolio Comparison exactly.
+    // The model's expectedReturn / expectedVolatility are advisory: overwrite them
+    // with computePortfolioMetrics(), which prices each line by its asset class on
+    // the CMA (exp null, cash at 0%), so the AI Builder matches Investment Proposal
+    // and Portfolio Comparison exactly. fund.mu / fund.sigma only rank funds.
     if(Array.isArray(rec.positions)){
       rec.positions.forEach(p => {
         const f = AI_FUND_UNIVERSE.find(x => x.tkr === (p.ticker || p.tkr));
         if(f){
-          p.exp   = f.mu;
-          p.sigma = f.sigma;
+          p.exp   = null;
+          p.sigma = null;
           p.cls   = f.cls;
           p.er    = p.er ?? f.er;
           p.yld   = p.yld ?? f.yld;
@@ -21842,7 +21920,7 @@ Constraints:
       const _fx = (v, d) => (v == null ? null : +v.toFixed(d));
       rec.portfolioMetrics = {
         beta: _fx(_wa("beta"), 2),
-        sharpe: _u.sigma > 0 ? +((_u.grossMu - 0.045) / _u.sigma).toFixed(2) : null,
+        sharpe: _u.sigma > 0 ? +((_u.grossMu - householdRiskFree()) / _u.sigma).toFixed(2) : null,
         r1y: _tb ? _fx(_tb.r1y, 2) : null, r3y: _tb ? _fx(_tb.r3y, 2) : null, r5y: _tb ? _fx(_tb.r5y, 2) : null, r10y: _tb ? _fx(_tb.r10y, 2) : null,
         maxDD: _fx(_full(_dd), 1),
         blendedER: _fx(_wa("er"), 3), blendedYield: _fx(_wa("yld"), 2),
@@ -21981,7 +22059,7 @@ function renderSimpleAIResult(rec, simpleBrief){
   } else {
     h += '<div style="font-size:32px;font-weight:800;color:var(--green);letter-spacing:-.03em">' + (_aiGross*100).toFixed(2) + '%</div>';
   }
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:4px">Weighted from each fund\'s expected return (its asset-class assumption where the fund has none on file), the same figure as Proposal &amp; Comparison</div>';
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:4px">Weighted from each fund\'s asset class on the plan\'s capital market assumptions (cash at 0%), the same figure as Proposal &amp; Comparison</div>';
   h += '</div>';
   h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.04)">';
   h += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--text3);margin-bottom:6px">Expected volatility</div>';
@@ -22000,7 +22078,7 @@ function renderSimpleAIResult(rec, simpleBrief){
   const mu = rec.expectedReturn || 0.07;
   const projection = [1,3,5,10].map(y => ({y, val: amt * Math.pow(1+mu, y)}));
   h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px">';
-  h += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px" class="aib-h">'+lucideIcon("trending-up")+'What might your $' + amt.toLocaleString() + ' grow into?</div>';
+  h += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px" class="aib-h">'+lucideIcon("trending-up")+'What might your ' + fmtMoneyFull(amt) + ' grow into?</div>';
   h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">';
   projection.forEach(p => {
     h += '<div style="text-align:center;padding:14px 8px;background:rgba(124,58,237,.05);border-radius:8px">';
@@ -22059,7 +22137,7 @@ function renderSimpleAIResult(rec, simpleBrief){
       // Section 2 — metric snapshot
       if(expanded.metrics){
         h += '<div style="margin-bottom:12px">';
-        h += '<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">'+lucideIcon("chart-column")+' Fund metrics (curated, as of '+FUND_DATA_AS_OF+'; blank where none on file)</div>';
+        h += '<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">'+lucideIcon("chart-column")+' Class return, volatility and Sharpe: the plan\'s capital market assumptions. Fund figures: curated, in the fund\'s own currency (mostly USD), as of '+FUND_DATA_AS_OF+'; blank where none on file</div>';
         h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:5px;font-size:10.5px;background:rgba(0,0,0,.025);padding:8px;border-radius:6px">';
         expanded.metrics.forEach(m => {
           h += '<div style="text-align:center"><div style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">' + m.label + '</div><strong style="font-size:11.5px;color:' + (m.color||"var(--text)") + '">' + m.value + '</strong></div>';
@@ -22181,10 +22259,12 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
     whyBits.push("This is a <strong>core building block</strong> for your risk profile. It provides the foundation exposure that most institutional portfolios start with.");
   }
   // Sharpe quality
-  if(m.sharpe != null){
-    if(m.sharpe >= 0.5)      whyBits.push(`Expected <strong>Sharpe ratio of ${m.sharpe.toFixed(2)}</strong>, from the app's return and volatility assumptions for this fund (not a measured track record).`);
-    else if(m.sharpe >= 0.3) whyBits.push(`Expected <strong>Sharpe ratio of ${m.sharpe.toFixed(2)}</strong> (from the app's assumptions): in line with this asset class.`);
-    else if(m.sharpe < 0.2 && m.cls !== "cash") whyBits.push(`Sharpe of ${m.sharpe.toFixed(2)} is modest; this fund earns its place through diversification or specific exposure, not absolute returns.`);
+  // Expected Sharpe of the fund's asset class (plan CMA, household risk-free rate).
+  const _cpw = fund ? builderClassPricing(fund.cls) : null;
+  if(_cpw && _cpw.sharpe != null){
+    if(_cpw.sharpe >= 0.5)      whyBits.push(`Its asset class (${_cpw.label}) has an expected <strong>Sharpe ratio of ${_cpw.sharpe.toFixed(2)}</strong> on the plan's capital market assumptions (a forward estimate, not a track record).`);
+    else if(_cpw.sharpe >= 0.3) whyBits.push(`Expected <strong>Sharpe ratio of ${_cpw.sharpe.toFixed(2)}</strong> for its asset class (${_cpw.label}) on the plan's capital market assumptions.`);
+    else if(_cpw.sharpe < 0.2)  whyBits.push(`${_cpw.label} has a modest expected Sharpe ratio (${_cpw.sharpe.toFixed(2)}) on the plan's assumptions; this fund earns its place through diversification or specific exposure, not absolute returns.`);
   }
   // Track record
   if(m.r10y != null && m.r10y > 8) whyBits.push(`<strong>10-year annualized return of ${m.r10y.toFixed(1)}%</strong> to ${FUND_DATA_AS_OF} (curated figure; past returns do not predict future returns).`);
@@ -22217,12 +22297,12 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
   let metrics = null;
   if(fund){
     metrics = [];
-    // μ / σ: the fund's own figure when curated, else the asset-class assumption, labelled as such
-    if(m.mu != null)       metrics.push({label:"Expected μ",  value:m.mu.toFixed(1)+"%", color:"var(--green)"});
-    else if(fund.mu != null)    metrics.push({label:"Class μ (assumed)", value:fund.mu.toFixed(1)+"%", color:"var(--green)"});
-    if(m.sigma != null)    metrics.push({label:"Volatility σ", value:m.sigma.toFixed(1)+"%", color:"var(--amber)"});
-    else if(fund.sigma != null) metrics.push({label:"Class σ (assumed)", value:fund.sigma.toFixed(1)+"%", color:"var(--amber)"});
-    if(m.sharpe != null)   metrics.push({label:"Sharpe",       value:m.sharpe.toFixed(2)});
+    // Return, volatility and Sharpe of the fund's ASSET CLASS on the plan's CMA:
+    // the figures the proposal, Compare tab and simulation price this line with.
+    const _cp = builderClassPricing(fund.cls);
+    metrics.push({label:"Class return", value:_cp.mu.toFixed(1)+"%"+(fund.cls==="cash"?" (cash at 0%)":""), color:"var(--green)"});
+    if(fund.cls !== "cash") metrics.push({label:"Class volatility", value:_cp.sig.toFixed(1)+"%", color:"var(--amber)"});
+    if(_cp.sharpe != null) metrics.push({label:"Class Sharpe", value:_cp.sharpe.toFixed(2)});
     if(m.beta != null)     metrics.push({label:"Beta",         value:m.beta.toFixed(2)});
     if(m.maxDD != null)    metrics.push({label:"Max DD",       value:m.maxDD.toFixed(0)+"%", color:"var(--red)"});
     if(m.er != null)       metrics.push({label:"Expense",      value:m.er.toFixed(2)+"%"});
@@ -22243,7 +22323,7 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
     const aggressive = /aggressive/.test(risk);
     const conservative = /conservative/.test(risk);
     // The fund's own volatility when on file, else its asset class's (said so).
-    const _sg = m.sigma != null ? m.sigma : ((fund && fund.sigma != null) ? fund.sigma : null);
+    const _sg = m.sigma != null ? m.sigma : (fund ? builderClassPricing(fund.cls).sig : null);
     const _sgWhose = m.sigma != null ? "this fund's volatility" : "its asset class's volatility";
     if(aggressive && _sg != null && _sg >= 12) fitBits.push(`Your <strong>${risk.replace(/_/g," ")}</strong> risk profile can absorb ${_sgWhose} (σ ${_sg.toFixed(0)}%) in exchange for higher long-term return.`);
     else if(conservative && _sg != null && _sg <= 10) fitBits.push(`Low volatility (σ ${_sg.toFixed(0)}%${m.sigma != null ? "" : ", asset-class figure"}) matches your <strong>${risk.replace(/_/g," ")}</strong> stance; drawdowns are bounded.`);
@@ -22912,7 +22992,7 @@ function runDeterministicEngine(brief){
       const _pc = v => (v == null ? "n/a" : v.toFixed(1) + "%");
       // Only figures on file for THIS fund are quoted (never an asset-class assumption).
       { const _v = k => fundVal(f, k), _j = a => a.filter(Boolean).join(" · ");
-        const q1 = _j([_v("sharpe") != null ? "Sharpe " + _v("sharpe").toFixed(2) : "", _v("r5y") != null ? "5y " + _pc(_v("r5y")) : "", _v("r10y") != null ? "10y " + _pc(_v("r10y")) : ""]);
+        const q1 = _j([_v("r5y") != null ? "5y " + _pc(_v("r5y")) : "", _v("r10y") != null ? "10y " + _pc(_v("r10y")) : ""]);
         if(q1) rationaleParts.push(q1);
         rationaleParts.push(_j(["ER " + f.er.toFixed(2) + "%", _v("sigma") != null ? "σ " + _v("sigma").toFixed(1) + "%" : "", _v("maxDD") != null ? "maxDD " + _v("maxDD").toFixed(0) + "%" : ""]));
         const q3 = _j([_v("aum") != null ? "AUM $" + _v("aum") + "B" : "", _v("holdings") != null ? _v("holdings").toLocaleString() + " holdings" : ""]);
@@ -22936,11 +23016,11 @@ function runDeterministicEngine(brief){
       positions.push({
         ticker: f.tkr,
         weight: +each.toFixed(1),
-        // Carry exp/sigma/cls on the position itself so the unified
-        // computePortfolioMetrics() returns the same number as the
-        // Investment Proposal and Portfolio Comparison views.
-        exp:   f.mu,
-        sigma: f.sigma,
+        // cls carries the pricing: computePortfolioMetrics() prices the line by its
+        // asset class on the CMA (exp null, cash at 0%), exactly as the Investment
+        // Proposal and Portfolio Comparison do. f.mu / f.sigma only ranked the fund.
+        exp:   null,
+        sigma: null,
         cls:   f.cls,
         rationale: rationaleParts.join(" · "),
         citations: (clsData?.items || []).slice(0,3).map(i => `[${i.provider}] ${i.title}`),
@@ -22985,7 +23065,7 @@ function runDeterministicEngine(brief){
   const _full = r => (r.coverage >= 0.999 ? r.value : null);
   const portfolioER        = wsum("er",  0.20);
   const portfolioYield     = wsum("yld",   2);
-  const portfolioSharpe    = expectedVolatility > 0 ? (expectedReturn - 0.045) / expectedVolatility : 0;
+  const portfolioSharpe    = expectedVolatility > 0 ? (expectedReturn - householdRiskFree()) / expectedVolatility : 0;
   const _hk = positions.filter(p => fundVal(fundLookup(p.ticker), "holdings") != null);
   const totalHoldings      = _hk.length ? _hk.reduce((s,p) => s + fundVal(fundLookup(p.ticker), "holdings"), 0) : null;
   const _hkCov             = positions.length ? _hk.reduce((s,p) => s + p.weight, 0) / positions.reduce((s,p) => s + p.weight, 0) : 0;
@@ -23165,7 +23245,7 @@ function renderAIGenResult(rec, brief){
         <div class="ai-pos-why">
           <div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(124,58,237,.3)">
             <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:10px"><strong style="color:#7c3aed">💡 Why this fund:</strong><br>${expanded.why}</div>
-            ${expanded.metrics ? '<div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">📊 Fund metrics (curated, as of '+FUND_DATA_AS_OF+'; blank where none on file)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:5px;font-size:10.5px;background:rgba(0,0,0,.025);padding:8px;border-radius:6px">' + expanded.metrics.map(mm => '<div style="text-align:center"><div style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">' + mm.label + '</div><strong style="font-size:11.5px;color:' + (mm.color||"var(--text)") + '">' + mm.value + '</strong></div>').join('') + '</div></div>' : ''}
+            ${expanded.metrics ? '<div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">📊 Class return, volatility and Sharpe: the plan\'s capital market assumptions. Fund figures: curated, in the fund\'s own currency (mostly USD), as of '+FUND_DATA_AS_OF+'; blank where none on file</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:5px;font-size:10.5px;background:rgba(0,0,0,.025);padding:8px;border-radius:6px">' + expanded.metrics.map(mm => '<div style="text-align:center"><div style="color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">' + mm.label + '</div><strong style="font-size:11.5px;color:' + (mm.color||"var(--text)") + '">' + mm.value + '</strong></div>').join('') + '</div></div>' : ''}
             <div style="font-size:12px;color:var(--text2);line-height:1.6;padding:9px 12px;background:rgba(0,135,90,.05);border-left:3px solid var(--green);border-radius:0 6px 6px 0;margin-bottom:8px">
               <strong style="color:#1b6841">✓ Why it fits your profile:</strong><br>${expanded.fit}
             </div>
@@ -23310,10 +23390,10 @@ function applyAIRecommendationToProposal(){
   proposals = [];
   lastAIGenResult.positions.forEach(p => {
     const fund = AI_FUND_UNIVERSE.find(f => f.tkr === p.ticker);
-    // Carry the fund's expected return so getProposalReturnParams uses it
-    // (instead of the asset-class default). Falls back to fund.mu when set,
-    // then to the per-class default inside getProposalReturnParams.
-    const exp = fund && typeof fund.mu === "number" ? fund.mu : null;
+    // No per-fund expected return: the line is priced by its asset class on the
+    // CMA (_posMu), the same as a hand-entered line, and idle cash stays at 0%.
+    // fund.mu is a USD snapshot that only ranks funds inside the Builder.
+    const exp = null;
     // Stash region so the Geographic Region pie has authoritative data
     // (falls back to inferProposalRegion if fund is unknown)
     const region = (function(){
@@ -25247,18 +25327,19 @@ function getProposalAdvisoryFeePct(){
 function updatePortfolioFeeDisplay(){
   const type=val("pfFeeType")||"none";
   setT("pfFeeUnit",type==="flat"?"$/yr":"%/yr");
-  const gross=getEffectiveReturnParamsGross();
+  // Whole portfolio, cash at 0%: the same basis as the Investment Proposal and Compare tabs.
+  const cw=getCurrentPortfolioParams();
   const fee=getPortfolioAdvisoryFeePct();
-  const net=Math.max(0,gross.mu-fee);
-  setT("pf-ret-gross",(gross.mu*100).toFixed(2)+"%");
+  setT("pf-ret-gross",(cw.grossMu*100).toFixed(2)+"%");
   setT("pf-ret-fee",type==="none"?"None (0%)":(fee*100).toFixed(2)+"%");
-  setT("pf-ret-net",(net*100).toFixed(2)+"%");
+  setT("pf-ret-net",(cw.mu*100).toFixed(2)+"%");
 }
 function updateProposalFeeDisplay(){
   const type=val("prFeeType")||"none";
   setT("prFeeUnit",type==="flat"?"$/yr":"%/yr");
-  const totalAlloc=proposals.reduce((s,p)=>s+p.alloc,0);
-  const grossRet=totalAlloc>0?proposals.reduce((s,p)=>s+(p.exp||0)*p.alloc,0)/totalAlloc:0;
+  // Same figures as the proposal metrics and the Compare tab: each position's own
+  // expected return where it has one, else its asset-class assumption, cash at 0%.
+  const grossRet=proposals.length?computePortfolioMetrics(proposals,"alloc").grossMu*100:0;
   const fee=getProposalAdvisoryFeePct()*100;
   const net=Math.max(0,grossRet-fee);
   setT("pr-ret-gross",grossRet.toFixed(2)+"%");
@@ -25276,8 +25357,7 @@ function getEffectiveReturnParamsGross(){
     // geometric drift μ−½σ² internally, so we pass arithmetic μ here).
     const wRet=invested.reduce((s,i)=>{
       const cls=i.cls;
-      const mu = (typeof CMA!=="undefined" && CMA[cls]) ? CMA[cls].arith
-               : ({equity:8.0,fixed_income:4.5,real_estate:6.5,commodity:5.5,mixed:6,alternative:9}[cls]||7);
+      const mu = (CMA[cls] || CMA.mixed).arith;
       return s+mu*i.val;
     },0)/total;
     // Risk — covariance-based σ across the invested asset-class weights
@@ -25300,7 +25380,25 @@ function getEffectiveReturnParamsGross(){
 function getEffectiveReturnParams(){
   const gross=getEffectiveReturnParamsGross();
   const fee=getPortfolioAdvisoryFeePct();
-  return {mu:Math.max(0,gross.mu-fee), sig:gross.sig};
+  // The fee is charged on the whole portfolio, cash included, but this return
+  // is earned on the invested part only (cash stays at 0%), so that part
+  // carries all of it.
+  const c=portfolioCashSeed(), i=portfolioInvestedSeed();
+  const feeOnInvested=(i>0 && c>0) ? fee*(i+c)/i : fee;
+  return {mu:Math.max(0,gross.mu-feeOnInvested), sig:gross.sig};
+}
+// The current holdings priced exactly like the proposal: the whole portfolio,
+// cash included at 0%, through the same computePortfolioMetrics. Use this
+// wherever Current and Proposed are shown side by side. The simulation keeps
+// getEffectiveReturnParams(), because it holds cash in its own pool at 0%.
+function getCurrentPortfolioParams(){
+  const fee=getPortfolioAdvisoryFeePct();
+  if(!investments || !investments.length){
+    const e=getEffectiveReturnParams();
+    return {mu:e.mu, sig:e.sig, grossMu:e.mu+fee};
+  }
+  const m=computePortfolioMetrics(investments,"val");
+  return {mu:Math.max(0,m.grossMu-fee), sig:m.sigma, grossMu:m.grossMu};
 }
 // ─── Retirement-pool growth rate (intentionally fixed) ─────────────
 // The retirement pool (401k/IRA/RRSP/Super/Pillar 3a etc.) is held to
@@ -25325,7 +25423,9 @@ const CMA = {
   fixed_income:  {label:"Fixed Income",      arith:4.01,  sigma:6.28,  geo:3.83, income:3.31},
   cash:          {label:"Cash",              arith:2.54,  sigma:2.47,  geo:2.51, income:2.24},
   real_estate:   {label:"Real Assets/REITs", arith:4.57,  sigma:10.30, geo:4.06, income:3.38},
-  commodity:     {label:"Commodities",       arith:4.57,  sigma:10.30, geo:4.06, income:0},
+  // Return kept; volatility and correlations are gold's (J.P. Morgan AM 2026 LTCMA,
+  // World Gold Council ~17% realised). This row used to be a copy of real_estate.
+  commodity:     {label:"Commodities",       arith:4.57,  sigma:16.70, geo:3.26, income:0},
   alternative:   {label:"Alternatives (other)",arith:7.00, sigma:10.00, geo:6.50, income:0},
   hedge_fund:    {label:"Hedge funds",       arith:6.50,  sigma:7.00,  geo:6.26, income:0},
   private_equity:{label:"Private Equity",    arith:11.03, sigma:23.05, geo:8.71, income:0},
@@ -25333,13 +25433,13 @@ const CMA = {
   mixed:         {label:"Mixed/Balanced",    arith:6.00,  sigma:9.00,  geo:5.60, income:2.0},
   crypto:        {label:"Crypto",            arith:20.0,  sigma:65.0,  geo:5.0,  income:0}
 };
-const CMA_INFLATION = 2.28; // core long-term inflation %
+let CMA_INFLATION = 2.28; // core long-term inflation % (USD set; applyCmaForCurrency switches it)
 const CMA_CORR = {
-  equity:        {equity:1.00, fixed_income:0.019, cash:0.286, real_estate:0.128, commodity:0.128, alternative:0.636, private_equity:0.696, crypto:0.50},
-  fixed_income:  {equity:0.019, fixed_income:1.00, cash:0.281, real_estate:-0.153, commodity:-0.153, alternative:0.038, private_equity:0.001, crypto:0.10},
-  cash:          {equity:0.286, fixed_income:0.281, cash:1.00, real_estate:0.250, commodity:0.250, alternative:0.281, private_equity:0.060, crypto:0.05},
+  equity:        {equity:1.00, fixed_income:0.019, cash:0.286, real_estate:0.128, commodity:-0.03, alternative:0.636, private_equity:0.696, crypto:0.50},
+  fixed_income:  {equity:0.019, fixed_income:1.00, cash:0.281, real_estate:-0.153, commodity:0.13, alternative:0.038, private_equity:0.001, crypto:0.10},
+  cash:          {equity:0.286, fixed_income:0.281, cash:1.00, real_estate:0.250, commodity:0.08, alternative:0.281, private_equity:0.060, crypto:0.05},
   real_estate:   {equity:0.128, fixed_income:-0.153, cash:0.250, real_estate:1.00, commodity:0.60, alternative:0.144, private_equity:0.079, crypto:0.20},
-  commodity:     {equity:0.128, fixed_income:-0.153, cash:0.250, real_estate:0.60, commodity:1.00, alternative:0.144, private_equity:0.079, crypto:0.30},
+  commodity:     {equity:-0.03, fixed_income:0.13, cash:0.08, real_estate:0.60, commodity:1.00, alternative:0.144, private_equity:0.079, crypto:0.30},
   alternative:   {equity:0.636, fixed_income:0.038, cash:0.281, real_estate:0.144, commodity:0.144, alternative:1.00, private_equity:0.613, crypto:0.40},
   private_equity:{equity:0.696, fixed_income:0.001, cash:0.060, real_estate:0.079, commodity:0.079, alternative:0.613, private_equity:1.00, crypto:0.45},
   crypto:        {equity:0.50, fixed_income:0.10, cash:0.05, real_estate:0.20, commodity:0.30, alternative:0.40, private_equity:0.45, crypto:1.00},
@@ -25352,6 +25452,89 @@ function cmaCorr(a, b){
   if(CMA_CORR[b] && CMA_CORR[b][a] != null) return CMA_CORR[b][a];
   return 0.30;
 }
+// ─── Capital market assumption sets by household currency ─────────────
+// CHF households get the Swiss-franc set; every other currency keeps the long-run
+// USD set above, labelled as USD. Applied IN PLACE (Object.assign per class) so
+// every reference to CMA / CMA_CORR / ASSET_CLASS_MC keeps working, and the
+// simulation's class shapes (ASSET_CLASS_MC) always equal the table on screen.
+// Cash is held at 0% in every figure (gbPortfolioRisk, _posMu, runMC's cash pool);
+// CMA.cash keeps the market rate as reference data only.
+const CMA_SETS = {
+  USD: {
+    inflation: 2.28,
+    rows: JSON.parse(JSON.stringify(CMA)),        // the table above, captured before any switch
+    corr: JSON.parse(JSON.stringify(CMA_CORR)),
+    basis: "USD, nominal, before fees, 25-year horizon. A long-run US dollar set (2019 vintage), used for every household not in Swiss francs; it is not a Swiss franc or euro view. Commodities use gold's US dollar volatility (J.P. Morgan AM 2026) and gold's correlations with equity, bonds and cash from J.P. Morgan AM 2026's Swiss franc matrix.",
+    cashRef: "this set's US dollar cash rate is 2.54%",
+    inflRef: "US core inflation"
+  },
+  CHF: {
+    inflation: 1.0,
+    rows: {
+      equity:        {label:"Equity (40% Swiss, 50% global, 10% EM)",   arith:6.8,  sigma:14.2, geo:5.9, income:2.4},
+      fixed_income:  {label:"Fixed income (CHF and global CHF-hedged)", arith:1.6,  sigma:3.9,  geo:1.5, income:1.2},
+      cash:          {label:"Cash (CHF)",                               arith:0.5,  sigma:0.4,  geo:0.5, income:0.5},
+      real_estate:   {label:"Swiss real estate",                        arith:4.0,  sigma:10.0, geo:3.5, income:null},
+      commodity:     {label:"Gold (CHF-hedged) and commodities",        arith:3.3,  sigma:16.7, geo:2.0, income:0},
+      alternative:   {label:"Alternatives (other)",                     arith:2.9,  sigma:5.7,  geo:2.7, income:0},
+      hedge_fund:    {label:"Hedge funds (CHF-hedged)",                 arith:2.9,  sigma:5.7,  geo:2.7, income:0},
+      private_equity:{label:"Private equity",                           arith:10.2, sigma:18.8, geo:8.6, income:0},
+      structured:    {label:"Structured products",                      arith:2.8,  sigma:7.6,  geo:2.5, income:null},
+      mixed:         {label:"Mixed/Balanced",                           arith:4.2,  sigma:7.9,  geo:3.9, income:1.8},
+      crypto:        {label:"Crypto (illustrative)",                    arith:19.0, sigma:65.0, geo:4.4, income:0}
+    },
+    // J.P. Morgan AM 2026 CHF matrix on each row's blend. The three synthetic rows
+    // (mixed, structured, alternative) are shrunk by 10% toward zero: as exact blends of
+    // the other rows they make the matrix singular, and acmcCholesky() would then fall
+    // back to independent draws for every class. Crypto keeps the house values.
+    corr: {
+      equity:        {fixed_income:0.29, cash:-0.17, real_estate:0.56, commodity:-0.03, alternative:0.62, hedge_fund:0.69, private_equity:0.76, structured:0.82, mixed:0.87, crypto:0.50},
+      fixed_income:  {cash:0.17, real_estate:-0.12, commodity:0.13, alternative:0.12, hedge_fund:0.13, private_equity:-0.04, structured:0.48, mixed:0.46, crypto:0.10},
+      cash:          {real_estate:-0.24, commodity:0.08, alternative:-0.15, hedge_fund:-0.17, private_equity:-0.25, structured:-0.10, mixed:-0.10, crypto:0.05},
+      real_estate:   {commodity:0.11, alternative:0.46, hedge_fund:0.51, private_equity:0.62, structured:0.33, mixed:0.42, crypto:0.20},
+      commodity:     {alternative:0.04, hedge_fund:0.04, private_equity:-0.01, structured:-0.04, mixed:0.00, crypto:0.30},
+      alternative:   {hedge_fund:0.81, private_equity:0.66, structured:0.51, mixed:0.59, crypto:0.36},
+      hedge_fund:    {private_equity:0.73, structured:0.51, mixed:0.59, crypto:0.30},
+      private_equity:{structured:0.50, mixed:0.60, crypto:0.45},
+      structured:    {mixed:0.85, crypto:0.14},
+      mixed:         {crypto:0.36}
+    },
+    basis: "CHF, nominal, before fees, 10-15 years. Returns: median of published CHF forecasts (J.P. Morgan AM 2026 LTCMA, BlackRock CMA August 2026, Pictet AM Secular Outlook 2026, Pictet WM Horizon 2025, EFG CMA 2026). Volatility and correlation: J.P. Morgan AM 2026 Swiss franc matrix, applied to each row's blend (equity 40% Swiss, 50% global, 10% emerging markets; fixed income half CHF bonds, half global bonds hedged to CHF). Gold uses J.P. Morgan's US dollar gold volatility, since hedging removes the currency effect; Swiss real estate uses J.P. Morgan's European core real estate correlations, and its volatility is a house assumption; crypto is illustrative. As of 13 October 2026.",
+    cashRef: "the median CHF money-market forecast is 0.5%",
+    inflRef: "median of SNB, Pictet WM and J.P. Morgan forward views"
+  }
+};
+let CMA_ACTIVE = null;   // "USD" | "CHF"
+function cmaSetFor(ccy){ return String(ccy || "").toUpperCase() === "CHF" ? "CHF" : "USD"; }
+function applyCmaForCurrency(ccy){
+  const key = cmaSetFor(ccy), set = CMA_SETS[key];
+  if(CMA_ACTIVE === key) return false;
+  Object.keys(set.rows).forEach(k => { CMA[k] = Object.assign(CMA[k] || {}, set.rows[k]); });
+  Object.keys(CMA_CORR).forEach(k => { delete CMA_CORR[k]; });
+  Object.keys(set.corr).forEach(k => { CMA_CORR[k] = Object.assign({}, set.corr[k]); });
+  CMA_INFLATION = set.inflation;
+  // Simulation class shapes follow the table. Cash takes the market rate: only a cash
+  // line carrying its own expected return ever reaches a bucket (idle cash sits in
+  // runMC's 0% pool). "other" is priced as Mixed/Balanced, as on screen.
+  Object.keys(CMA).forEach(k => { if(ASSET_CLASS_MC[k]){ ASSET_CLASS_MC[k].mu = CMA[k].arith/100; ASSET_CLASS_MC[k].sig = CMA[k].sigma/100; } });
+  ASSET_CLASS_MC.other.mu = CMA.mixed.arith/100; ASSET_CLASS_MC.other.sig = CMA.mixed.sigma/100;
+  _acmcChol = undefined;   // the cached factor belongs to the previous matrix
+  if(!acmcCholesky()) console.warn("[CMA] "+key+" correlation matrix is not positive definite; asset classes will be drawn independently");
+  CMA_ACTIVE = key;
+  return true;
+}
+// Plain-text source lines for the CMA panel and the PDF (no HTML, no long dashes).
+function cmaBasisText(){
+  const set = CMA_SETS[CMA_ACTIVE || "USD"];
+  const own = parseFloat(val("inf"));
+  return {
+    basis: set.basis,
+    cash: "Portfolio cash is held at 0% (no return, no volatility) in these figures and in the main simulation; " + set.cashRef + ".",
+    inflation: "Inflation in this set: " + CMA_INFLATION.toFixed(2) + "% a year (" + set.inflRef + ")." +
+      (isFinite(own) && Math.abs(own - CMA_INFLATION) > 0.005 ? " This plan's projections use the household's own inflation input of " + own.toFixed(2) + "% a year." : "")
+  };
+}
+applyCmaForCurrency(CURRENT_CCY);
 // Inverse normal CDF (Acklam) — confidence-level z-scores
 function normInv(p){
   if(p <= 0) return -Infinity; if(p >= 1) return Infinity;
@@ -25369,12 +25552,16 @@ function normInv(p){
 function gbPortfolioRisk(weights){
   const classes = Object.keys(weights).filter(c => (weights[c]||0) > 0);
   if(classes.length === 0) return {arithMu:0.07, geoMu:0.065, sigma:0.12};
+  // Cash is held at 0% with no volatility, exactly as _posMu/_posSig and runMC's cash
+  // pool hold it; CMA.cash is the market rate, shown for reference only.
+  const mu = c => c === "cash" ? 0 : (CMA[c] || CMA.mixed).arith/100;
+  const sd = c => c === "cash" ? 0 : (CMA[c] || CMA.mixed).sigma/100;
   let variance = 0, arithMu = 0;
   classes.forEach(ci => {
-    const wi = weights[ci], si = (CMA[ci]?.sigma ?? 12)/100;
-    arithMu += wi * (CMA[ci]?.arith ?? 7)/100;
+    const wi = weights[ci], si = sd(ci);
+    arithMu += wi * mu(ci);
     classes.forEach(cj => {
-      const wj = weights[cj], sj = (CMA[cj]?.sigma ?? 12)/100;
+      const wj = weights[cj], sj = sd(cj);
       variance += wi*wj*si*sj*cmaCorr(ci,cj);
     });
   });
@@ -25402,9 +25589,9 @@ function gbReturnAtConfidence(geoMu, sigma, years, confidencePct){
 const PORT_DEF_MU  = {equity:8,  fixed_income:4.5, real_estate:6.5, commodity:5.5, cash:0, mixed:6,  alternative:7,  hedge_fund:6.5, private_equity:11, structured:5.5, crypto:25};
 const PORT_DEF_SIG = {equity:14, fixed_income:5,   real_estate:11,  commodity:16,  cash:0, mixed:9,  alternative:10, hedge_fund:7, private_equity:23, structured:8, crypto:65};
 
-// A position's expected return in percent. Prefers p.exp (set by AI engine
-// to fund.mu, or hand-entered on the Proposal form), then class default,
-// then 7% as the universal fallback.
+// A position's expected return in percent. Prefers p.exp (hand-entered on the
+// Proposal form; the Portfolio Builder no longer sets it), then the CMA class
+// arithmetic return (cash 0%), then 7% as the universal fallback.
 function _posMu(p){
   if(p && p.exp != null && !isNaN(p.exp)) return +p.exp;
   const cls = p && p.cls;
@@ -25412,14 +25599,27 @@ function _posMu(p){
   // Fall back to the SAME CMA table the current-portfolio side uses, so an
   // identical mix prices identically on both sides of Portfolio Comparison.
   if(typeof CMA !== "undefined" && CMA[cls]) return CMA[cls].arith;
-  return PORT_DEF_MU[cls] ?? 7;
+  return PORT_DEF_MU[cls] ?? CMA.mixed.arith;
 }
 function _posSig(p){
   if(p && p.sigma != null && !isNaN(p.sigma)) return +p.sigma;
   const cls = p && p.cls;
   if(cls === "cash") return 0;
   if(typeof CMA !== "undefined" && CMA[cls]) return CMA[cls].sigma;
-  return PORT_DEF_SIG[cls] ?? 12;
+  return PORT_DEF_SIG[cls] ?? CMA.mixed.sigma;
+}
+// How the Portfolio Builder prices a fund: by its asset class on the capital
+// market assumptions, exactly as a hand-entered proposal line with no expected
+// return of its own (cash idle at 0%), with Sharpe against the household's own
+// risk-free rate. A fund's mu/sigma in the fund list is a USD snapshot
+// (FUND_DATA_AS_OF) that only RANKS funds within a sleeve; it is never the
+// figure a proposal is priced with. Call at run time only (CMA is a const
+// declared after the fund list is enriched).
+function builderClassPricing(cls){
+  const c = cls || "mixed", mu = _posMu({cls:c}), sig = _posSig({cls:c});
+  const rf = householdRiskFree() * 100;
+  return { mu, sig, sharpe: (c !== "cash" && sig > 0) ? +((mu - rf) / sig).toFixed(2) : null,
+           label: (typeof CMA !== "undefined" && CMA[c] && CMA[c].label) || c };
 }
 
 // Weighted gross return + COVARIANCE-based sigma for any list of positions.
@@ -25450,6 +25650,38 @@ function getProposalReturnParams(){
   const {grossMu, sigma} = computePortfolioMetrics(proposals, "alloc");
   const fee = getProposalAdvisoryFeePct();
   return {mu: Math.max(0, grossMu - fee), sig: sigma};
+}
+// The proposal the way runMC models a portfolio. Cash lines with no expected
+// return of their own are priced at 0% (_posMu) and go to runMC's 0% cash pool;
+// every line that earns (including a cash fund that carries one) goes to the
+// invested pool. Returns that pool's return and volatility, the 0%-cash share,
+// and its class mix (tpl) for runMC's buckets. Fee deducted the way
+// getEffectiveReturnParams deducts it. Feeding runMC the whole-portfolio
+// figures above on top of a cash pool counted the proposal's cash twice.
+function getProposalSimParams(){
+  const W = (proposals || []).reduce((s,p) => s + (+p.alloc || 0), 0);
+  if(W <= 0) return null;
+  const idle = p => p.cls === "cash" && !(p.exp != null && p.exp !== "" && isFinite(+p.exp));
+  const earning = proposals.filter(p => !idle(p) && (+p.alloc || 0) > 0);
+  const cashW = proposals.filter(idle).reduce((s,p) => s + (+p.alloc || 0), 0);
+  const m = computePortfolioMetrics(earning, "alloc");
+  const tpl = {};
+  earning.forEach(p => { const c = p.cls || "mixed"; tpl[c] = (tpl[c] || 0) + (+p.alloc || 0); });
+  const cashShare = Math.min(1, Math.max(0, cashW / W));
+  const fee = getProposalAdvisoryFeePct();   // on the whole proposal, carried by the part that earns
+  return {mu: Math.max(0, m.grossMu - (cashShare < 1 ? fee / (1 - cashShare) : fee)), sig: m.sigma,
+          cashShare, tpl};
+}
+// What runMC runs when it is given no override: the proposal split when the
+// simulation is set to the proposal and there is a portfolio to re-split;
+// otherwise the active figures on the holdings' own split (cashShare/tpl null).
+function getSimEngineParams(){
+  const held = portfolioCashSeed() + portfolioInvestedSeed();
+  if(held > 0 && getSimUsesProposal() && proposals && proposals.length > 0){
+    const p = getProposalSimParams(); if(p) return p;
+  }
+  const a = getActiveSimulationParams();
+  return {mu: a.mu, sig: a.sig, cashShare: null, tpl: null};
 }
 
 // ─── Proposal-driven simulation source flag ──────────────────────────
@@ -25489,7 +25721,7 @@ function getSimSourceLabel(){
       detail: `μ ${(p.mu*100).toFixed(2)}% · σ ${(p.sig*100).toFixed(2)}% · ${proposals.length} positions`
     };
   }
-  const e = getEffectiveReturnParams();
+  const e = (investments && investments.length) ? getCurrentPortfolioParams() : getEffectiveReturnParams();
   return {
     source: "household",
     label: "Household risk profile",
@@ -25669,11 +25901,15 @@ function buildFanChartData(paths){
 }
 
 // Main Monte Carlo engine for the "what could your wealth look like" chart
-function runMC(years,sims,muOverride,sigOverride){
+function runMC(years,sims,muOverride,sigOverride,splitOverride){
   simSeedReset();
 
-  // Override → proposal-driven (when AI applied) → household effective (default)
-  const {mu,sig} = (muOverride!=null)?{mu:muOverride,sig:sigOverride}:getActiveSimulationParams();
+  // Override → proposal-driven (when AI applied) → household effective (default).
+  // A proposal run carries its own cash share and class mix (getSimEngineParams).
+  const src = (muOverride!=null)
+    ? {mu:muOverride, sig:sigOverride, cashShare:splitOverride?splitOverride.cashShare:null, tpl:splitOverride?splitOverride.tpl:null}
+    : getSimEngineParams();
+  const {mu,sig} = src;
 
   // Core household assumptions
   const inf=num("inf",3.8)/100, raise=num("raise",3)/100;
@@ -25684,9 +25920,12 @@ function runMC(years,sims,muOverride,sigOverride){
   const propVal=num("aProp",0), other=num("aOther",0);
   const totalAcc=totalAccountValue();
 
-  // Portfolio builder values 
-  const pfCash=portfolioCashSeed();      // cash holdings — never compound
-  const pfInvested=portfolioInvestedSeed(); // non-cash holdings — grow at mu
+  // Portfolio builder values (re-split by the proposal's cash share when running it)
+  let pfCash=portfolioCashSeed();      // cash holdings — never compound
+  let pfInvested=portfolioInvestedSeed(); // non-cash holdings — grow at mu
+  if(src.cashShare!=null && isFinite(src.cashShare) && pfCash+pfInvested>0){
+    const pfAll=pfCash+pfInvested; pfCash=pfAll*src.cashShare; pfInvested=pfAll-pfCash;
+  }
 
   // ── Retirement pool (RMD-managed) ──
   const retSeed=retirementAccountSeed();
@@ -25753,8 +25992,10 @@ function runMC(years,sims,muOverride,sigOverride){
   // Holdings→bucket template is invariant across paths — build it once and
   // copy per path (it used to be rebuilt from the investments array on every
   // one of the 1,000 paths).
-  const _bucketTpl = getAssetBucketsFromHoldings(); // returns object, holds percentages
+  const _bucketTpl = (src.tpl && Object.keys(src.tpl).length) ? Object.assign({}, src.tpl)
+                   : getAssetBucketsFromHoldings(); // returns object, holds percentages
   const _tplEmpty = Object.keys(_bucketTpl).length === 0;
+  const _mixBase = _tplEmpty ? null : bucketMixBase(_bucketTpl);   // pool earns exactly mu / sig
 
   for(let s=0;s<sims;s++){
     // let cash=cashSeed, inv=investSeed, prop=propVal;
@@ -25778,6 +26019,7 @@ function runMC(years,sims,muOverride,sigOverride){
     let loanState=loans.map(l=>({bal:l.bal,rate:l.rate/100,yrs:l.yrs}));
     const path=[];
     const spendable=[];   // cash + investments + pillars net of tax - debt: what retirement can actually spend (no home)
+    const spCash=[], spLock=[];   // the parts of it at 0% (cash, net of debt and unfunded needs) and in a locked RET_POOL_MU pool; the rest is invested
     let shortfallYr=-1;   // first year goal spending couldn't be met from liquid wealth (cash+investments)
     // Honest shortfall accounting: money the plan NEEDED but liquid wealth could
     // not provide (spending deficits or goal outflows after cash+inv hit zero).
@@ -25822,7 +26064,13 @@ function runMC(years,sims,muOverride,sigOverride){
       path.push(
         Math.max(0, cash + inv) + prop + other + retPot - debtTotal - unfunded
       );
-      spendable.push(Math.max(0, cash + inv) + (chPay ? chPoolsNet(chPay, retPot1, retPot2, y, inf, c1Age0+y, c2Age0+y, chSt) : retPot) - debtTotal - unfunded);
+      const _pools = chPay ? chPoolsNet(chPay, retPot1, retPot2, y, inf, c1Age0+y, c2Age0+y, chSt) : retPot;
+      spendable.push(Math.max(0, cash + inv) + _pools - debtTotal - unfunded);
+      // Its make-up, for the retirement solvers. Cash earns nothing, and debt and unfunded
+      // needs are settled from it first. A Swiss client's pillars are paid into the invested
+      // pool at retirement, so only another client's locked pool keeps the RET_POOL_MU rate.
+      spCash.push(Math.max(0, Math.max(0, cash) - debtTotal - unfunded));
+      spLock.push((chPay && chPay.on1 ? 0 : retPot1) + (chPay && chPay.on2 ? 0 : retPot2));
 
       if (y === years) break;
 
@@ -25999,6 +26247,7 @@ function runMC(years,sims,muOverride,sigOverride){
       if(returnShock !== null){
         // inv = inv * (1 + returnShock);
         Object.keys(assetBuckets).forEach(cls => {
+          if(cls === "cash") return;   // a money-market fund does not take the equity crash
           assetBuckets[cls] = Math.max(0, assetBuckets[cls] * (1 + returnShock));
         });
         inv = sumBuckets(assetBuckets);
@@ -26008,7 +26257,8 @@ function runMC(years,sims,muOverride,sigOverride){
           cgtDrag,
           y,
           mu,
-          sig
+          sig,
+          _mixBase
         );
 
         inv = sumBuckets(assetBuckets);
@@ -26036,6 +26286,7 @@ function runMC(years,sims,muOverride,sigOverride){
     path._unfunded=unfunded;           // total lifetime unfunded need on this path
     path._goalShortfalls=goalShortfalls; // per-goal marker (goal-relative optimization)
     path._spendable=spendable;         // spendable wealth per year (see spendableWealthAt)
+    path._spCash=spCash; path._spLock=spLock;   // its 0% and locked parts (see spendableSplitAt)
     paths.push(path);
   }
   // Aggregate depletion stats for badges/warnings (non-index property on the
@@ -26054,20 +26305,27 @@ function runMC(years,sims,muOverride,sigOverride){
       };
     }
   }
+  paths._src={mu, sig};   // the invested pool's return and volatility: the retirement solvers use the same
   return paths;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RETIREMENT DRAWDOWN — decumulation Monte Carlo (will the money last?)
-// Self-contained: accumulates to retirement, then withdraws spending net of
-// pensions each year with the WHOLE investable pool exposed to market risk, so
-// sequence-of-returns risk is captured. Reports a plan-success probability and
-// how long funds last in poor markets. Does not touch the main runMC engine.
+// After a simulation run, each path starts from that run's spendable wealth at
+// retirement (_drawdownStart); before one, from today's (_drawdownSeed). It withdraws
+// spending net of pensions each year: cash (0%) first, then a non-Swiss locked pool
+// (RET_POOL_MU), then the invested part, which alone takes market risk, so
+// sequence-of-returns risk is captured. Reads runMC's paths; never changes them.
 // ═══════════════════════════════════════════════════════════════════════════
+// Today's spendable wealth for the drawdown panel before any simulation has run, and
+// what it is made of: cash (0%), a non-Swiss client's locked pool (RET_POOL_MU), the rest
+// invested. The portfolio is re-split the way runMC runs it (getSimEngineParams).
 function _drawdownSeed(){
   const retSeed=retirementAccountSeed();
   const totalAcc=totalAccountValue();
-  const pfCash=portfolioCashSeed(), pfInvested=portfolioInvestedSeed();
+  let pfCash=portfolioCashSeed(), pfInvested=portfolioInvestedSeed();
+  const E=getSimEngineParams();
+  if(E.cashShare!=null && isFinite(E.cashShare) && pfCash+pfInvested>0){ const t=pfCash+pfInvested; pfCash=t*E.cashShare; pfInvested=t-pfCash; }
   const liquidAcc=Math.max(0, totalAcc-retSeed);
   const pfTotal=pfInvested+pfCash;
   let investSeed, cashSeed;
@@ -26083,7 +26341,29 @@ function _drawdownSeed(){
   const chP=(typeof chPayoutSetup==="function")?chPayoutSetup():null;
   const sh=retirementOwnerShares();
   const pool=chP ? chPoolsNet(chP, retSeed*sh.c1, retSeed*sh.c2, 0, 0, _chAgeNow(1), _chAgeNow(2)) : retSeed;
-  return Math.max(0, investSeed+cashSeed+pool);
+  const lock=chP ? (chP.on1?0:retSeed*sh.c1)+(chP.on2?0:retSeed*sh.c2) : retSeed;
+  const total=Math.max(0, investSeed+cashSeed+pool), cash=Math.min(total, cashSeed);
+  return {total, cash, lock:Math.min(total-cash, lock)};
+}
+// Where drawdown path s starts. After a simulation: that run's path s at the retirement
+// year (its spendable wealth and its cash and locked parts), so the drawdown inherits the
+// projection's savings, pillars, mortgage and goals. Before one: today's wealth (D).
+function _drawdownStart(s, retIdx, D){
+  const P=lastSimPaths;
+  if(Array.isArray(P) && P.length && P[0] && Array.isArray(P[0]._spCash) && lastSimYrs>=retIdx){
+    const pp=P[s%P.length], w=Math.max(0, pp._spendable[retIdx]||0);
+    const cash=Math.min(w, Math.max(0, pp._spCash[retIdx]||0)), lock=Math.min(w-cash, Math.max(0, pp._spLock[retIdx]||0));
+    return {y0:retIdx, cash, lock, port:w-cash-lock};
+  }
+  return {y0:0, cash:D.cash, lock:D.lock, port:D.total-D.cash-D.lock};
+}
+// Takes one year's spending: cash first, then the locked pool, then the invested part
+// (the order runMC spends them in). Returns what is left in total.
+function _drawdownTake(st, amt){
+  const fc=Math.min(Math.max(0,st.cash), amt); st.cash-=fc; amt-=fc;
+  const fl=Math.min(Math.max(0,st.lock), amt); st.lock-=fl; amt-=fl;
+  st.port-=amt;
+  return st.cash+st.lock+st.port;
 }
 
 // Simulate N retirement paths starting from `startWealth`, withdrawing `spend`/yr
@@ -26110,22 +26390,31 @@ function _retirementPensionSchedule(retireAge, yearsInRet, inf){
 // Probability the portfolio lasts all of retirement at the given first-year
 // spend. `spend` and the pension schedule are nominal at the retirement date;
 // the portfolio only has to fund spending above pension income each year.
-function _survivalProb(startWealth, spend, yearsInRet, mu, sig, inf, sims=300, pensionByYear=null){
+// `split` (spendableSplitAt) is what startWealth is made of. Spending comes out of its
+// cash first (0%), then a locked pool (RET_POOL_MU), then the invested part, the order
+// runMC spends them in, and only the invested part earns mu / sig. Without a split it is
+// all invested, exactly as before (same draws, same result).
+function _survivalProb(startWealth, spend, yearsInRet, mu, sig, inf, sims=300, pensionByYear=null, split=null){
   simSeedReset();
+  const c0 = split ? Math.min(1, Math.max(0, +split.cash || 0)) : 0;
+  const l0 = split ? Math.min(1 - c0, Math.max(0, +split.lock || 0)) : 0;
 
   let successes = 0;
   for(let s=0; s<sims; s++){
-    let port = startWealth;
+    let cash = startWealth * c0, lock = startWealth * l0, port = startWealth - cash - lock;
     let depleted = false;
 
     for(let y=0; y<yearsInRet; y++){
       const gross = spend * Math.pow(1+inf, y);
       const pen = pensionByYear ? (pensionByYear[y]||0) : 0;
       const wd = Math.max(0, gross - pen);
-      port -= wd;
-      if(port <= 0 && wd > 0){ depleted = true; break; }
+      const fc = Math.min(cash, wd); cash -= fc;
+      const fl = Math.min(lock, wd - fc); lock -= fl;
+      port -= wd - fc - fl;
+      if(cash + lock + port <= 0 && wd > 0){ depleted = true; break; }
       const r = (mu - 0.5*sig*sig) + sig*boxMuller();
       port = port * Math.exp(r);
+      if(lock > 0) lock *= 1 + RET_POOL_MU;
     }
     if(!depleted) successes++;
   }
@@ -26133,7 +26422,7 @@ function _survivalProb(startWealth, spend, yearsInRet, mu, sig, inf, sims=300, p
 }
 
 // Binary-search the spend level that hits `targetSuccessPct` survival probability.
-function _solveSustainableSpendMC(startWealth, yearsInRet, mu, sig, inf, targetSuccessPct, sims=150, pensionByYear=null){
+function _solveSustainableSpendMC(startWealth, yearsInRet, mu, sig, inf, targetSuccessPct, sims=150, pensionByYear=null, split=null){
   const pen0 = pensionByYear ? (pensionByYear[0]||0) : 0;
   if(startWealth <= 0 && pen0 <= 0) return 0;
   // Upper bound includes the first-year pension: total sustainable spend can
@@ -26143,7 +26432,7 @@ function _solveSustainableSpendMC(startWealth, yearsInRet, mu, sig, inf, targetS
   // Monte-Carlo noise band of the survival estimate; 20 steps was pure cost.
   for(let iter=0; iter<12; iter++){
     const mid = (lo+hi)/2;
-    const p = _survivalProb(startWealth, mid, yearsInRet, mu, sig, inf, sims, pensionByYear);
+    const p = _survivalProb(startWealth, mid, yearsInRet, mu, sig, inf, sims, pensionByYear, split);
     if(p >= targetSuccessPct/100) lo = mid; else hi = mid;
   }
   return lo;
@@ -26158,30 +26447,32 @@ function runRetirementDrawdown(){
   const planAge=Math.max(retAge+1, num("rdPlanAge",90));
   const sims=Math.min(2000, Math.max(300, parseInt(val("simN")||"1000",10)));
   const inf=num("inf",3.8)/100, sav=num("savAnnual",0), retSpend=num("retSpend",60000);
-  const P=getActiveSimulationParams(); const mu=P.mu, sig=P.sig;
+  const E=(lastSimPaths && lastSimPaths._src) || getSimEngineParams(); const mu=E.mu, sig=E.sig;   // the invested part's figures, as runMC ran them
   const penSrc=val("penSrc")||"auto", penAnn=num("penAnnual",0), penStart=num("penStartAge",67), penCola=val("penCola")||"full";
   const showC2=$("c2card")&&$("c2card").style.display!=="none";
   const penSrc2=showC2?(val("penSrc2")||"auto"):"none", penAnn2=penSrc2==="none"?0:num("penAnnual2",0), penStart2=num("penStartAge2",67), penCola2=val("penCola2")||"full";
   const c2Age=ageFromDOB(val("c2d"))||c1Age;
   const PS=pensionSetup(c1Age, c2Age);
-  const seed=_drawdownSeed();
+  const D=_drawdownSeed();
   const yrs=planAge-c1Age, retIdx=Math.max(0,retAge-c1Age);
   if(st){ st.textContent="Running "+sims+" paths…"; st.style.color="var(--text3)"; }
+  const starts=[];
   const bands=Array.from({length:yrs+1},()=>[]);
   const lastAges=[]; let successes=0;
   for(let s=0;s<sims;s++){
-    let port=seed, depAge=null;
-    for(let y=0;y<=yrs;y++){
+    const w=_drawdownStart(s, retIdx, D); let depAge=null;
+    starts.push(w.cash+w.lock+w.port);
+    for(let y=w.y0;y<=yrs;y++){
       const age=c1Age+y, c2AgeY=c2Age+y, retired=age>=retAge;
-      if(!retired){ port+=sav; }
+      if(!retired){ w.cash+=sav; }   // savings are held as cash, as runMC holds them
       else {
         const pen=householdPensionAt(PS, age, c2AgeY, inf).total;
-        const wd=Math.max(0, retSpend*Math.pow(1+inf,y)-pen);
-        port-=wd;
-        if(port<=0 && depAge===null){ depAge=age; port=0; }
+        const left=_drawdownTake(w, Math.max(0, retSpend*Math.pow(1+inf,y)-pen));
+        if(left<=0 && depAge===null){ depAge=age; w.cash=0; w.lock=0; w.port=0; }
       }
-      if(port>0){ const r=(mu-0.5*sig*sig)+sig*boxMuller(); port=port*Math.exp(r); if(port<0)port=0; }
-      bands[y].push(port/Math.pow(1+inf,y));   // store in today's money for the chart
+      if(w.port>0){ const r=(mu-0.5*sig*sig)+sig*boxMuller(); w.port=w.port*Math.exp(r); if(w.port<0)w.port=0; }
+      if(w.lock>0) w.lock*=1+RET_POOL_MU;
+      bands[y].push((w.cash+w.lock+w.port)/Math.pow(1+inf,y));   // store in today's money for the chart
     }
     lastAges.push(depAge===null?planAge:depAge);
     if(depAge===null) successes++;
@@ -26192,7 +26483,7 @@ function runRetirementDrawdown(){
   renderRetirementDrawdown({
     successPct:successes/sims*100, sims, retAge, planAge,
     lastAge10:pctl(lastAges,10), lastAge25:pctl(lastAges,25), lastAge50:pctl(lastAges,50),
-    need0, pen0, wd0:Math.max(0,need0-pen0), seed,
+    need0, pen0, wd0:Math.max(0,need0-pen0), seed:pctl(starts,50), fromSim:!!(lastSimPaths && lastSimPaths.length && lastSimPaths[0] && lastSimPaths[0]._spCash && lastSimYrs>=retIdx),
     band:bands.map((c,y)=>({age:c1Age+y, p10:pctl(c,10), p50:pctl(c,50), p90:pctl(c,90)})).filter(b=>b.age>=retAge)
   });
   statusMsg(st,"ok",sims+" paths");
@@ -26235,7 +26526,7 @@ function renderRetirementDrawdown(s){
       <div class="pf-mc"><div class="pf-mc-lbl">Pensions / Social Security</div><div class="pf-mc-val" style="font-size:15px;color:#1b6841">${fmtMoney(s.pen0)}</div></div>
       <div class="pf-mc"><div class="pf-mc-lbl">From portfolio</div><div class="pf-mc-val" style="font-size:15px">${fmtMoney(s.wd0)}</div></div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.5">Decumulation model: the whole investable pool (${fmtMoney(s.seed)} today) is exposed to market risk and drawn down for spending net of pensions. Nominal returns; portfolio values shown in today's money. Educational projection, not advice.</div>`;
+    <div style="font-size:10px;color:var(--text3);margin-top:10px;line-height:1.5">Decumulation model: ${s.fromSim?"each path starts from the simulation's spendable wealth at retirement (median "+fmtMoney(s.seed)+")":"starts from today's spendable wealth ("+fmtMoney(s.seed)+")"}, drawn down for spending net of pensions. Cash earns nothing and is spent first; only the invested part takes market risk. Nominal returns; portfolio values shown in today's money. Educational projection, not advice.</div>`;
 }
 window.runRetirementDrawdown=runRetirementDrawdown;
 
@@ -26250,35 +26541,36 @@ function solveSustainableSpend(){
   const retAge=Math.max(c1Age, num("retAge",65));
   const planAge=Math.max(retAge+1, num("rdPlanAge",90));
   const inf=num("inf",3.8)/100, sav=num("savAnnual",0);
-  const P=getActiveSimulationParams(); const mu=P.mu, sig=P.sig;
+  const E=(lastSimPaths && lastSimPaths._src) || getSimEngineParams(); const mu=E.mu, sig=E.sig;   // the invested part's figures, as runMC ran them
   const penSrc=val("penSrc")||"auto", penAnn=num("penAnnual",0), penStart=num("penStartAge",67), penCola=val("penCola")||"full";
   const showC2=$("c2card")&&$("c2card").style.display!=="none";
   const penSrc2=showC2?(val("penSrc2")||"auto"):"none", penAnn2=penSrc2==="none"?0:num("penAnnual2",0), penStart2=num("penStartAge2",67), penCola2=val("penCola2")||"full";
   const c2Age=ageFromDOB(val("c2d"))||c1Age;
   const PS=pensionSetup(c1Age, c2Age);
-  const seed=_drawdownSeed();
-  const yrs=planAge-c1Age;
+  const D=_drawdownSeed();
+  const yrs=planAge-c1Age, retIdx=Math.max(0,retAge-c1Age);
   const target=Math.max(50,Math.min(99,num("rdTarget",85)));
   if(st){ st.textContent="Solving sustainable spending…"; st.style.color="var(--text3)"; }
   function success(spend,sims){
+    simSeedReset();   // the same draws at every spend level, so the search compares like with like
     let ok=0;
     for(let s=0;s<sims;s++){
-      let port=seed, dead=false;
-      for(let y=0;y<=yrs;y++){
+      const w=_drawdownStart(s, retIdx, D); let dead=false;
+      for(let y=w.y0;y<=yrs;y++){
         const age=c1Age+y, retired=age>=retAge;
-        if(!retired){ port+=sav; }
+        if(!retired){ w.cash+=sav; }   // savings are held as cash, as runMC holds them
         else {
           const pen=householdPensionAt(PS, age, c2Age+y, inf).total;
-          port-=Math.max(0, spend*Math.pow(1+inf,y)-pen);
-          if(port<=0){ dead=true; break; }
+          if(_drawdownTake(w, Math.max(0, spend*Math.pow(1+inf,y)-pen))<=0){ dead=true; break; }
         }
-        if(port>0){ const r=(mu-0.5*sig*sig)+sig*boxMuller(); port=port*Math.exp(r); if(port<0)port=0; }
+        if(w.port>0){ const r=(mu-0.5*sig*sig)+sig*boxMuller(); w.port=w.port*Math.exp(r); if(w.port<0)w.port=0; }
+        if(w.lock>0) w.lock*=1+RET_POOL_MU;
       }
       if(!dead) ok++;
     }
     return ok/sims*100;
   }
-  let lo=0, hi=Math.max(seed*0.2, num("retSpend",60000)*4, 80000);
+  let lo=0, hi=Math.max(D.total*0.2, num("retSpend",60000)*4, 80000);
   for(let g=0; g<7 && success(hi,300)>=target; g++){ hi*=1.6; }   // expand until hi is infeasible
   for(let it=0; it<16; it++){ const mid=(lo+hi)/2; if(success(mid,500)>=target) lo=mid; else hi=mid; }
   renderSustainable({sustain:lo, target, cur:num("retSpend",60000)});
@@ -26318,6 +26610,40 @@ function spendableWealthAt(yearIdx,p){
   return arr[i];
 }
 const _spendColCache=new WeakMap();
+// What spendable wealth at year yearIdx, percentile p, is made of: the shares held as 0%
+// cash and in a locked RET_POOL_MU pool, the rest invested. Averaged over the paths ranked
+// within 2.5% either side of p (the same rank spendableWealthAt reads), so one path's
+// quirks do not move it. Null for results that predate the split.
+const _splitRankCache=new WeakMap();
+function spendableSplitAt(yearIdx,p){
+  const P=lastSimPaths;
+  if(!Array.isArray(P) || !P.length || !P[0] || !Array.isArray(P[0]._spCash)) return null;
+  const at=a=>a[Math.min(yearIdx,a.length-1)];
+  let byYear=_splitRankCache.get(P);
+  if(!byYear){ byYear=Object.create(null); _splitRankCache.set(P,byYear); }
+  let ord=byYear[yearIdx];
+  if(!ord){ ord=P.map((_,i)=>i).sort((a,b)=>at(P[a]._spendable)-at(P[b]._spendable)); byYear[yearIdx]=ord; }
+  const n=ord.length, i=Math.max(0,Math.min(n-1,Math.floor(p/100*n))), h=Math.max(1,Math.round(n*0.025));
+  let S=0,C=0,L=0;
+  for(let j=Math.max(0,i-h); j<=Math.min(n-1,i+h); j++){
+    const pp=P[ord[j]], s=Math.max(0,at(pp._spendable)), c=Math.min(s,Math.max(0,at(pp._spCash)));
+    S+=s; C+=c; L+=Math.min(s-c,Math.max(0,at(pp._spLock)));
+  }
+  return S>0 ? {cash:C/S, lock:L/S} : {cash:0, lock:0};
+}
+// Inputs of a retirement solve at year yearIdx, percentile p, all from the run behind
+// lastSimPaths: its spendable wealth, what that is made of, and the return and volatility
+// its invested pool ran at (holdings or proposal, cash at 0%). Before any run:
+// fallbackWealth, all of it invested at the active figures, as before.
+function retirementSolverInputs(yearIdx, p, fallbackWealth){
+  const P=lastSimPaths;
+  if(Array.isArray(P) && P.length){
+    const y=Math.min(yearIdx, lastSimYrs), src=P._src || getSimEngineParams();
+    return {w:Math.max(0, spendableWealthAt(y,p)), split:spendableSplitAt(y,p), mu:src.mu, sig:src.sig};
+  }
+  const a=getActiveSimulationParams();
+  return {w:Math.max(0, +fallbackWealth||0), split:null, mu:a.mu, sig:a.sig};
+}
 function percentileAt(paths,yearIdx,p){
   let byYear=_pctColCache.get(paths);
   if(!byYear){ byYear=Object.create(null); _pctColCache.set(paths,byYear); }
@@ -26392,9 +26718,10 @@ function buildSimInputsSummary(){
 
   // Return assumptions
   html+=section("Return Assumptions");
-  const returnSrc=investments.length>0?"holdings-weighted":"risk-profile";
-  html+=row("Expected return (gross)",`${(params.mu*100).toFixed(2)}%/yr`,returnSrc);
-  html+=row("Volatility",`${(params.sig*100).toFixed(2)}%/yr`);
+  const returnSrc=investments.length>0?"holdings-weighted, cash at 0%":"risk-profile";
+  const _cw=investments.length>0?getCurrentPortfolioParams():params;
+  html+=row("Expected return (net of fees)",`${(_cw.mu*100).toFixed(2)}%/yr`,returnSrc);
+  html+=row("Volatility",`${(_cw.sig*100).toFixed(2)}%/yr`);
   if(propParams) html+=row("Proposal return",`${(propParams.mu*100).toFixed(2)}%/yr`,`${proposals.length} positions`);
   html+=row("Retirement age",retAge+"",`pool rate → 3.5%/yr in retirement`);
 
@@ -26583,18 +26910,17 @@ function renderSimLifestyle(){
   //   let spend;
   //   if(Math.abs(realRate) < 1e-6) spend = wealth/yearsInRet;
   //   else spend = wealth*realRate/(1 - Math.pow(1+realRate,-yearsInRet));
-  const P = getActiveSimulationParams();
   const pens = _retirementPensionSchedule(retAge, yearsInRet, inflation);
   confs.forEach(cf => {
-  const wealth = (lastSimPaths && lastSimPaths.length) ? spendableWealthAt(yrsToRet, 100 - cf.p) : investable;
-  const spendNom = _solveSustainableSpendMC(wealth, yearsInRet, P.mu, P.sig, inflation, 90, 150, pens); // 90% survival, pension-inclusive
+  const R = retirementSolverInputs(yrsToRet, 100 - cf.p, investable), wealth = R.w;
+  const spendNom = _solveSustainableSpendMC(wealth, yearsInRet, R.mu, R.sig, inflation, 90, 1000, pens, R.split); // 90% survival, pension-inclusive; 1,000 paths for a stable headline
   const spend = spendNom / Math.pow(1+inflation, yrsToRet); // nominal-at-retirement → today's money
 
     h += '<div class="conf-tile" style="border-top:3px solid '+cf.c+'">';
     h += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px">'+cf.lbl+'<span class="info-ic">i<span class="info-pop">'+cf.explain+'</span></span></div>';
     h += '<div style="font-size:28px;font-weight:800;color:'+cf.c+';letter-spacing:-.03em">'+fmtMoney(Math.max(0,spend))+'</div>';
     h += '<div style="font-size:11px;color:var(--text3);margin-top:4px">per year, to age 90 · today\'s money</div>';
-    h += '<div style="font-size:10.5px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">90% survival to 90 · investable wealth at retirement '+fmtMoney(wealth)+' (excl. home)</div>';
+    h += '<div style="font-size:10.5px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">90% survival to 90 · investable wealth at retirement '+fmtMoney(wealth)+' (excl. home)'+(R.split?', '+Math.round(R.split.cash*100)+'% of it cash at 0%':'')+'</div>';
     h += '</div>';
   });
   h += '</div>';
@@ -26786,15 +27112,12 @@ function renderSimLifestyleCandles(){
   //   const realRate = (r - inflation)/(1+inflation);
   //   return Math.max(0, Math.abs(realRate) < 1e-6 ? w/yearsInRet : w*realRate/(1 - Math.pow(1+realRate,-yearsInRet)));
   // };
-  const P = getActiveSimulationParams();
   const spendAt = (retireAge, confP) => {
     const yrsAccum = Math.max(0, retireAge - a1);
     const yearsInRet = Math.max(1, 90 - retireAge);
-    const wealth = (lastSimPaths && lastSimPaths.length)
-      ? spendableWealthAt(Math.min(yrsAccum, lastSimYrs), 100 - confP)
-      : investable;
+    const R = retirementSolverInputs(yrsAccum, 100 - confP, investable);
     const pens = _retirementPensionSchedule(retireAge, yearsInRet, inflation);
-    const spendNom = _solveSustainableSpendMC(wealth, yearsInRet, P.mu, P.sig, inflation, 90, 100, pens);
+    const spendNom = _solveSustainableSpendMC(R.w, yearsInRet, R.mu, R.sig, inflation, 90, 100, pens, R.split);
     return spendNom / Math.pow(1+inflation, yrsAccum); // nominal-at-retirement → today's money
   };
 
@@ -27536,7 +27859,17 @@ function renderCashFlow(){
   // params as the Monte Carlo simulation above (chart, "what could wealth
   // look like", and CF table all stay in sync).
   const params=getActiveSimulationParams();
-  const _geomMu=params.mu - 0.5*params.sig*params.sig; // log-normal geometric mean
+  // The rate and the cash/invested seed come from what runMC runs: with the
+  // simulation on the proposal, the portfolio re-split the way the proposal
+  // holds it, so its cash is not held at 0% on top of a rate that already has it.
+  const cfEng=getSimEngineParams();
+  const cashOutsidePf=Math.max(0,cash-pfCash);   // bank accounts etc., kept as they are in every scenario
+  const curInv=inv, curCash=cash;   // the holdings as they are, for the comparison boxes
+  if(cfEng.cashShare!=null && hasPortfolio){
+    const pfC=pfTotal*cfEng.cashShare; cash=cashOutsidePf+pfC; inv=pfTotal-pfC;
+    cfModeNote+=`<br>Simulated as the Investment Proposal holds it: ${fmtMoney(inv)} invested + ${fmtMoney(pfC)} cash.`;
+  }
+  const _geomMu=cfEng.mu - 0.5*cfEng.sig*cfEng.sig; // log-normal geometric mean
   const cfMu=Math.max(0.01, _geomMu);
   // Property: inflation minus 1 pp real, floored at 1% nominal
   const propGrowth=Math.max(0.01, inf-0.01);
@@ -27772,25 +28105,41 @@ function renderCashFlow(){
 
   // Scenario 2: Current portfolio — existing holdings / risk-profile estimate.
   const curData=runLoop(inv,cash,cfMu);
+  const mainCfComponents=lastCfComponents;   // runLoop overwrites it; the chart shows the main table
 
   // Scenario 3: Investment proposal — different allocation & return, same total value.
   const hasProposal=proposals.length>0;
-  let propData=null, propCfMu=cfMu, propParams=params;
+  let propData=null, propCfMu=cfMu, propParams=params, _psCash=0;
   if(hasProposal){
-    propParams=getProposalReturnParams();
-    propCfMu=Math.max(0.01, propParams.mu - 0.5*propParams.sig*propParams.sig);
+    propParams=getProposalReturnParams();   // whole-portfolio figures, for display
+    // Rate for the invested part only: its 0% cash is held separately below.
+    const _ps=getProposalSimParams() || {mu:propParams.mu, sig:propParams.sig, cashShare:0};
+    _psCash=_ps.cashShare||0;
+    propCfMu=Math.max(0.01, _ps.mu - 0.5*_ps.sig*_ps.sig);
     // Investment seed: use explicit target amount if set, otherwise mirror current portfolio total
     const prTarget=num("prAmount",0);
     const prTotalInv=prTarget>0?prTarget:(pfInvested+pfCash);
-    // Split cash vs invested within the proposal by class weight
-    const totalAlloc=proposals.reduce((s,p)=>s+p.alloc,0);
-    const cashAlloc=totalAlloc>0?proposals.filter(p=>p.cls==="cash").reduce((s,p)=>s+p.alloc,0):0;
-    const cashFrac=totalAlloc>0?cashAlloc/totalAlloc:0;
+    // Split 0% cash vs invested within the proposal, as getProposalSimParams does
+    const cashFrac=_ps.cashShare||0;
     const prInv=prTotalInv*(1-cashFrac);
-    const nonPfCash=Math.max(0,cash-pfCash); // preserve non-portfolio cash buffer
+    const nonPfCash=cashOutsidePf; // preserve non-portfolio cash buffer
     const prCash=prTotalInv*cashFrac+nonPfCash;
     propData=runLoop(prInv,prCash,propCfMu);
   }
+  // Comparison boxes compare the CURRENT holdings with the proposal. With the
+  // simulation on the proposal, the main table above already runs the proposal,
+  // so the current holdings get their own run here.
+  const onProposal = getSimUsesProposal() && proposals.length>0;   // same test as the source label
+  const cmpCurParams = onProposal ? getEffectiveReturnParams() : cfEng;
+  const cmpCurMu = onProposal ? Math.max(0.01, cmpCurParams.mu-0.5*cmpCurParams.sig*cmpCurParams.sig) : cfMu;
+  const cmpCurData = onProposal ? runLoop(curInv,curCash,cmpCurMu) : curData;
+  lastCfComponents = mainCfComponents;
+  // Whole-portfolio rates for the boxes: each runs its rate on the invested
+  // part and holds its own cash at 0%, so compare (1 - cash share) x rate.
+  const curCashShare = hasPortfolio && pfTotal>0 ? pfCash/pfTotal : 0;
+  const cmpCurWhole = cmpCurMu*(1-curCashShare);
+  const propWhole = hasProposal ? propCfMu*(1-(_psCash||0)) : cmpCurWhole;
+  const cmpCurNet = hasPortfolio ? getCurrentPortfolioParams() : getEffectiveReturnParams();
 
   // ── Render main CF table (current-portfolio scenario) ───────────────────────
   let html="";
@@ -27886,7 +28235,7 @@ function renderCashFlow(){
   // proposal-driven simulation flag is set so users see the source clearly
   // in the cash flow caption.
   const __simSrc=getSimSourceLabel();
-  const fullPct=(params.mu*100).toFixed(1);
+  const fullPct=(cfEng.mu*100).toFixed(1);   // the invested-part rate cfMu is derived from
   const propGrowthPct=(propGrowth*100).toFixed(1);
   // Source label honors the proposal-driven flag first, then portfolio holdings, then risk profile
   const returnSrc = __simSrc.source === "proposal"
@@ -27899,11 +28248,11 @@ function renderCashFlow(){
       :` · <strong>Ret. pool (${fmtMoney(retSeed)})</strong>: <strong>3.5%/yr fixed</strong> (decoupled from the household risk profile and the portfolio returns; only the Investments column tracks those; no new contributions). 4% voluntary drawdown from age ${retAge}, mandatory rules from age ${rmdStartAge}.`)
     :"";
   setH("cfHeader",
-    `<strong>Median cash flow projection: Current Portfolio</strong>, age ${a1} to ${a1+horizon} (${horizon+1} years${showC2?" · covers both clients to age 90":""}) &nbsp;`+
+    `<strong>Median cash flow projection: ${__simSrc.source==="proposal"?"Investment Proposal":"Current Portfolio"}</strong>, age ${a1} to ${a1+horizon} (${horizon+1} years${showC2?" · covers both clients to age 90":""}) &nbsp;`+
     `<span style="font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;color:var(--text3)">Mode ${cfMode}</span><br>`+
     `<span style="font-size:12px;color:var(--text2)">${cfModeNote}</span><br>`+
     `<span style="font-size:11px;color:var(--text3)">`+
-    `Investment return: <strong style="color:var(--text2)">${cfPct}%/yr</strong> (geometric mean of ${returnSrc} ${fullPct}%, matching the chart's 60% probability bar) · `+
+    `Investment return: <strong style="color:var(--text2)">${cfPct}%/yr</strong> on the invested part (geometric mean of the ${returnSrc} ${fullPct}% there; cash earns 0%) · `+
     `Property: <strong style="color:var(--text2)">${propGrowthPct}%/yr</strong> (inflation&minus;1pp) · `+
     `Deficits drain cash first, then investments`+
     `${rmdNote}</span>`
@@ -27914,7 +28263,7 @@ function renderCashFlow(){
   if(cmpPanel){
     cmpPanel.style.display="";
     try{
-      renderCFComparison(niData,curData,propData,cfMu,propCfMu,params,propParams,
+      renderCFComparison(niData,cmpCurData,propData,cmpCurWhole,propWhole,cmpCurNet,propParams,
         retAge,penStart,retSeed,rmdStartAge,penSrc,cy,a1);
     }catch(e){ console.warn("cf comparison:", e); }
   }
@@ -27944,13 +28293,13 @@ function renderCFComparison(niData,curData,propData,curMu,propMu,curParams,propP
     <div class="cfc-box" style="border-left:3px solid #5b9bd5">
       <div class="cb-lbl">Current portfolio</div>
       <div class="cb-val" style="color:#5b9bd5">${(curMu*100).toFixed(1)}%<span style="font-size:12px;font-family:var(--fb)">/yr</span></div>
-      <div class="cb-sub">CF rate · net ${(curParams.mu*100).toFixed(2)}%</div>
+      <div class="cb-sub">whole portfolio, cash at 0% · expected ${(curParams.mu*100).toFixed(2)}%</div>
     </div>
     ${hasProp?`
     <div class="cfc-box" style="border-left:3px solid var(--gold)">
       <div class="cb-lbl">Investment proposal</div>
       <div class="cb-val">${(propMu*100).toFixed(1)}%<span style="font-size:12px;font-family:var(--fb)">/yr</span></div>
-      <div class="cb-sub">CF rate · net ${(propParams.mu*100).toFixed(2)}%</div>
+      <div class="cb-sub">whole portfolio, cash at 0% · expected ${(propParams.mu*100).toFixed(2)}%</div>
     </div>
     <div class="cfc-box">
       <div class="cb-lbl">Proposal advantage</div>
@@ -27963,8 +28312,8 @@ function renderCFComparison(niData,curData,propData,curMu,propMu,curParams,propP
     `<strong>Three-scenario comparison</strong>: same household profile, income, expenses, pensions and goals.<br>`+
     `<span style="font-size:11px;color:var(--text3)">`+
     `<strong style="color:var(--text2)">No investments:</strong> 0%/yr (all liquid assets in cash) &nbsp;·&nbsp; `+
-    `<strong style="color:#5b9bd5">Current portfolio:</strong> ${(curMu*100).toFixed(1)}%/yr conservative CF rate`+
-    (hasProp?` &nbsp;·&nbsp; <strong style="color:var(--gold)">Proposal:</strong> ${(propMu*100).toFixed(1)}%/yr conservative CF rate`:"")+
+    `<strong style="color:#5b9bd5">Current portfolio:</strong> ${(curMu*100).toFixed(1)}%/yr on the whole portfolio, cash at 0%`+
+    (hasProp?` &nbsp;·&nbsp; <strong style="color:var(--gold)">Proposal:</strong> ${(propMu*100).toFixed(1)}%/yr on the whole portfolio, cash at 0%`:"")+
     `<br>Δ columns show extra net worth vs the next-lower scenario. Small annual return differences compound into large lifetime wealth gaps.</span>`
   );
 
@@ -28361,36 +28710,65 @@ function portfolioCostProfile(items, wKey){
   return {n:pos.length, W, ter:wavg("er"), yld:wavg("yld"), largest:shares[0]||0, top5:shares.slice(0,5).reduce((s,x)=>s+x,0), hhi,
     grade: hhi<1500?"Well diversified":(hhi<2500?"Moderately diversified":"High concentration")};
 }
+// Fund costs (TER) on the WHOLE portfolio, as a % of its value. Direct holdings
+// (single stocks, bonds, cash, physical metal, futures) carry no fund cost. A
+// FUND with no TER on file is counted as zero and its share of the value is
+// returned as `unknown`, so the figure can be flagged as a lower bound.
+const NO_FUND_COST_TYPES = {stock:1, bond:1, cash:1, precious:1, futures:1};
+function portfolioFundCost(items, wKey){
+  const pos=(items||[]).map(p=>({w:+p[wKey]||0,
+    er:(p.er!=null && p.er!=="" && isFinite(+p.er))?+p.er:null,
+    // idle cash (cash class, no expected return of its own) is cash, not a fund
+    direct:NO_FUND_COST_TYPES[p.type||p.vehicle]===1
+      || (p.cls==="cash" && !(p.exp!=null && p.exp!=="" && isFinite(+p.exp)))})).filter(p=>p.w>0);
+  const W=pos.reduce((s,p)=>s+p.w,0); if(W<=0) return null;
+  let c=0, unk=0;
+  pos.forEach(p=>{ if(p.er!=null) c+=p.er*p.w; else if(!p.direct) unk+=p.w; });
+  return {v:c/W, unknown:unk/W};
+}
+// One row of the "Return, Risk and Cost" table: label, current, proposed, difference.
+function cmpRow(label, cur, prop, diff, strong){
+  const v = strong ? ' ct-b' : '';
+  return '<div class="ct-l">'+label+'</div><div class="ct-v'+v+'">'+cur+'</div><div class="ct-v'+v+'">'+prop+'</div>'+diff;
+}
+// Difference cell, from the figures AS SHOWN (rounded to d places) so a row
+// always adds up. dir: -1 lower is better, +1 higher is better, 0 neutral.
+function cmpDiff(a, b, dir, d, unit){
+  if(a==null || b==null || !isFinite(a) || !isFinite(b)) return '<div class="ct-d">n/a</div>';
+  const shown = x => +(+x).toFixed(d);              // exactly what the cells print
+  const v = +(shown(b) - shown(a)).toFixed(d);
+  if(v === 0) return '<div class="ct-d">same</div>';
+  const cls = dir === 0 ? '' : ((dir < 0 ? v < 0 : v > 0) ? ' delta-pos' : ' delta-neg');
+  return '<div class="ct-d'+cls+'">'+(v > 0 ? '+' : '')+v.toFixed(d)+(unit||'')+'</div>';
+}
+// Cost, yield and concentration rows, written into the slot runComparison leaves
+// at the end of the table, plus the yield footnote when it applies.
 function renderCostYieldConcentration(){
   const host=$("cmpCostYield"); if(!host) return;
   const cur=portfolioCostProfile(investments,"val"), prop=portfolioCostProfile(proposals,"alloc");
-  if(!cur && !prop){ host.innerHTML='<div class="cmp-empty">Add holdings on the Portfolio tab or positions on the Investment Proposal tab to compare cost, yield and concentration.</div>'; setH("cmpCostYieldNote",""); return; }
+  if(!cur && !prop){ host.innerHTML=''; setH("cmpCostYieldNote",""); return; }
   const pct=(x,d)=>x==null?"n/a":(+x).toFixed(d)+"%";
-  const cov=r=>(r && r.v!=null && r.cov<0.999)?'<div style="font-size:10px;color:var(--text3)">on file for '+Math.round(r.cov*100)+'% of the value</div>':'';
-  const cell=(lbl,v,extra)=>'<div class="cmp-c"><span class="lbl">'+lbl+'</span>'+v+(extra||'')+'</div>';
-  // dir: -1 lower is better, +1 higher is better, 0 neutral
-  const delta=(a,b,dir,d,unit)=>{ if(a==null||b==null) return '<div class="cmp-c delta-neu">n/a</div>';
-    const v=b-a, eq=Math.abs(v)<Math.pow(10,-d)/2, cls=eq||dir===0?'delta-neu':((dir<0?v<0:v>0)?'delta-pos':'delta-neg');
-    return '<div class="cmp-c '+cls+'">'+(eq?'0':(v>0?'+':'')+v.toFixed(d))+(unit||'')+'</div>'; };
-  const gr=p=>p?'<div style="font-size:10px;color:var(--text3)">'+p.grade+'</div>':'';
-  let h='<div class="cmp-h cur">Current portfolio</div><div class="cmp-h prop">Proposed portfolio</div><div class="cmp-h delta">Difference</div>';
-  h+=cell("Fund costs (TER)",pct(cur&&cur.ter.v,2),cov(cur&&cur.ter))+cell("Fund costs (TER)",pct(prop&&prop.ter.v,2),cov(prop&&prop.ter))+delta(cur&&cur.ter.v,prop&&prop.ter.v,-1,2," pts");
-  h+=cell("Yield",pct(cur&&cur.yld.v,2),cov(cur&&cur.yld))+cell("Yield",pct(prop&&prop.yld.v,2),cov(prop&&prop.yld))+delta(cur&&cur.yld.v,prop&&prop.yld.v,1,2," pts");
-  h+=cell("Positions",cur?cur.n:"n/a")+cell("Positions",prop?prop.n:"n/a")+delta(cur&&cur.n,prop&&prop.n,0,0,"");
-  h+=cell("Largest position",pct(cur&&cur.largest,1))+cell("Largest position",pct(prop&&prop.largest,1))+delta(cur&&cur.largest,prop&&prop.largest,-1,1," pts");
-  h+=cell("Top 5 positions",pct(cur&&cur.top5,1))+cell("Top 5 positions",pct(prop&&prop.top5,1))+delta(cur&&cur.top5,prop&&prop.top5,-1,1," pts");
-  h+=cell("Concentration (HHI)",cur?Math.round(cur.hhi):"n/a",gr(cur))+cell("Concentration (HHI)",prop?Math.round(prop.hhi):"n/a",gr(prop))+delta(cur&&cur.hhi,prop&&prop.hhi,-1,0,"");
+  const partial=r=>!!(r && r.v!=null && r.cov<0.999);       // figure known for only part of the value
+  const star=r=>partial(r)?'<span class="ct-star">*</span>':'';
+  const yld=p=>p&&p.yld;
+  // Fund costs on the WHOLE portfolio (portfolioFundCost): direct holdings cost
+  // nothing; a fund with no TER on file counts as zero and is starred, and then
+  // the difference is not coloured, since it may only reflect missing data.
+  const fcC=portfolioFundCost(investments,"val"), fcP=portfolioFundCost(proposals,"alloc");
+  const terStar=f=>(f && f.unknown>0.001)?'<span class="ct-star">*</span>':'';
+  const terUnknown=(fcC&&fcC.unknown>0.001)||(fcP&&fcP.unknown>0.001);
+  let h='';
+  h+=cmpRow("Fund costs (TER)", pct(fcC&&fcC.v,2)+terStar(fcC), pct(fcP&&fcP.v,2)+terStar(fcP),
+    cmpDiff(fcC&&fcC.v, fcP&&fcP.v, terUnknown?0:-1, 2, " pts"));
+  h+=cmpRow("Yield", pct(cur&&cur.yld.v,1)+star(yld(cur)), pct(prop&&prop.yld.v,1)+star(yld(prop)), cmpDiff(cur&&cur.yld.v, prop&&prop.yld.v, 1, 1, " pts"));
+  h+=cmpRow("Positions", cur?cur.n:"n/a", prop?prop.n:"n/a", cmpDiff(cur&&cur.n, prop&&prop.n, 0, 0, ""));
+  h+=cmpRow("Largest position", pct(cur&&cur.largest,0), pct(prop&&prop.largest,0), cmpDiff(cur&&cur.largest, prop&&prop.largest, -1, 0, " pts"));
   host.innerHTML=h;
-  // In money: fund costs a year on the current portfolio's value, today and with the proposal's costs.
-  let note="";
-  if(cur && cur.ter.v!=null && prop && prop.ter.v!=null){
-    // Today: each position's own TER on its own value (a position without one, e.g. a single
-    // stock, adds none). With the proposal: its weighted TER on the same total value.
-    const a=cur.W*cur.ter.v*cur.ter.cov/100, b=cur.W*prop.ter.v/100;
-    note="On the current portfolio's "+fmtMoneyFull(cur.W)+", fund costs come to about <strong>"+fmtMoneyFull(a)+"</strong> a year"+(cur.ter.cov<0.999?" (positions without a TER, such as single stocks, add none)":"")
-      +"; invested at the proposal's TER they would be about <strong>"+fmtMoneyFull(b)+"</strong> ("+(b<=a?"saving ":"costing ")+fmtMoneyFull(Math.abs(a-b))+" a year"+(b<=a?"":" more")+"), before any advisory fee"+(prop.ter.cov<0.999?"; the proposal's TER covers "+Math.round(prop.ter.cov*100)+"% of its value":"")+".";
-  }
-  setH("cmpCostYieldNote",note);
+  const yldPartial=[yld(cur),yld(prop)].some(partial);
+  setH("cmpCostYieldNote",
+    terUnknown && yldPartial ? "* Not on file for every position: a missing TER counts as zero, a missing yield is left out of the average."
+    : terUnknown ? "* Some funds have no TER on file; they count as zero."
+    : yldPartial ? "* Averaged over the positions that report a yield." : "");
 }
 
 function runComparison(){
@@ -28400,10 +28778,10 @@ function runComparison(){
     return;
   }
   if(emptyNote) emptyNote.style.display="none";
-  // Current = use weighted from investments (portfolio fee already deducted via getEffectiveReturnParams)
-  const curParams = getEffectiveReturnParams();
+  // Current and Proposed priced the same way: whole portfolio, cash in at 0%.
+  const curParams = getCurrentPortfolioParams();
   const curFee = getPortfolioAdvisoryFeePct();
-  const curGrossMu = curParams.mu + curFee; // gross before fee
+  const curGrossMu = curParams.grossMu; // gross before fee
 
   let propGrossMu=curGrossMu, propMu=curParams.mu, propSig=curParams.sig, propFee=0;
   if(proposals.length>0){
@@ -28416,26 +28794,18 @@ function runComparison(){
   propFee = getProposalAdvisoryFeePct();
   propMu = Math.max(0, propGrossMu - propFee);
 
-  // Render parameters comparison — gross return, fee, net return, volatility
-  const params=$("cmpParams");
-  const d=(a,b,inv=false)=>{const v=a-b; const eq=Math.abs(v)<=0.00001; return `<div class="cmp-c ${eq?'delta-neu':(v>0?'delta-pos':'delta-neg')}">${eq?'0.00%':((v>=0?'+':'')+(v*100).toFixed(2)+'%')}</div>`;};
-  params.innerHTML = `
-    <div class="cmp-h cur">Current portfolio</div>
-    <div class="cmp-h prop">Proposed portfolio</div>
-    <div class="cmp-h delta">Variance<span class="info-ic">i<span class="info-pop">Simple difference: Proposed portfolio minus Current portfolio for each row (not a statistical variance/squared deviation).</span></span></div>
-    <div class="cmp-c"><span class="lbl">Gross return</span>${(curGrossMu*100).toFixed(2)}%</div>
-    <div class="cmp-c"><span class="lbl">Gross return</span>${(propGrossMu*100).toFixed(2)}%</div>
-    ${d(propGrossMu,curGrossMu)}
-    <div class="cmp-c"><span class="lbl">Advisory fee</span>${curFee>0?(curFee*100).toFixed(2)+"%" : "None"}</div>
-    <div class="cmp-c"><span class="lbl">Advisory fee</span>${propFee>0?(propFee*100).toFixed(2)+"%" : "None"}</div>
-    <div class="cmp-c ${propFee<curFee?'delta-pos':propFee>curFee?'delta-neg':'delta-neu'}">${propFee===curFee?"0.00%":((propFee-curFee)*100>=0?'+':'')+((propFee-curFee)*100).toFixed(2)+"%"}</div>
-    <div class="cmp-c"><span class="lbl">Net return</span><strong>${(curParams.mu*100).toFixed(2)}%</strong></div>
-    <div class="cmp-c"><span class="lbl">Net return</span><strong>${(propMu*100).toFixed(2)}%</strong></div>
-    ${d(propMu,curParams.mu)}
-    <div class="cmp-c"><span class="lbl">Volatility</span>${(curParams.sig*100).toFixed(2)}%</div>
-    <div class="cmp-c"><span class="lbl">Volatility</span>${(propSig*100).toFixed(2)}%</div>
-    <div class="cmp-c ${propSig<curParams.sig?'delta-pos':propSig>curParams.sig?'delta-neg':'delta-neu'}">${Math.abs(propSig-curParams.sig)<=0.00001?'0.00%':(((propSig-curParams.sig)*100>=0?'+':'')+((propSig-curParams.sig)*100).toFixed(2)+'%')}</div>
-  `;
+  // Return, Risk and Cost table: expected return and volatility here, cost rows
+  // from renderCostYieldConcentration into the slot at the end.
+  const fees = curFee>0 || propFee>0;
+  let sh='<div class="ct-h"></div><div class="ct-h cur">Current</div><div class="ct-h prop">Proposed</div><div class="ct-h">Difference</div>';
+  sh+=cmpRow(fees?"Expected return, net of fees":"Expected return", (curParams.mu*100).toFixed(1)+"%", (propMu*100).toFixed(1)+"%", cmpDiff(curParams.mu*100, propMu*100, 1, 1, " pts"), true);
+  if(fees){
+    sh+=cmpRow("Return before fees", (curGrossMu*100).toFixed(1)+"%", (propGrossMu*100).toFixed(1)+"%", cmpDiff(curGrossMu*100, propGrossMu*100, 1, 1, " pts"));
+    sh+=cmpRow("Advisory fee", curFee>0?(curFee*100).toFixed(2)+"%":"None", propFee>0?(propFee*100).toFixed(2)+"%":"None", cmpDiff(curFee*100, propFee*100, -1, 2, " pts"));
+  }
+  sh+=cmpRow("Volatility", (curParams.sig*100).toFixed(1)+"%", (propSig*100).toFixed(1)+"%", cmpDiff(curParams.sig*100, propSig*100, -1, 1, " pts"));
+  sh+='<div id="cmpCostYield" style="display:contents"></div>';
+  setH("cmpSummary", sh);
   // ── Cost (TER), yield and concentration, side by side
   try{ renderCostYieldConcentration(); }catch(e){ console.warn("cost/yield/concentration compare", e); }
 
@@ -28451,8 +28821,18 @@ function runComparison(){
   // Run goal MC under both
   const yrs=num("simYrs",20);
   const sims=parseInt(val("simN")||"500",10);
-  const pCur=runMC(yrs,sims,curParams.mu,curParams.sig);
-  const pProp=runMC(yrs,sims,propMu,propSig);
+  // runMC holds a portfolio's 0% cash in its own pool and grows the rest at mu.
+  // Current: what the Simulation tab runs on the holdings. Proposed: the same
+  // money re-split and re-mixed the way the proposal holds it, so its cash is
+  // not counted twice (whole-portfolio figures only with nothing to re-split).
+  const simCur=getEffectiveReturnParams(), propSim=getProposalSimParams();
+  const pfHeld=portfolioCashSeed()+portfolioInvestedSeed();
+  // Both runs draw by asset class from the same seeded stream (growAssetBuckets),
+  // so the difference is the portfolios, not chance; Current is the Simulation tab's run.
+  const pCur=runMC(yrs,sims,simCur.mu,simCur.sig);
+  const pProp=!proposals.length ? pCur
+    : (propSim && pfHeld>0) ? runMC(yrs,sims,propSim.mu,propSim.sig,propSim)
+    : runMC(yrs,sims,propMu,propSig);
   const cy=currentYear();
   const goalsHtml=goals.map(g=>{
     const relYr=Math.min(yrs,Math.max(0,g.endYear-cy));
@@ -29017,7 +29397,7 @@ const IPS_SAA = {
 };
 // IPS bucket → display label, role, and the CMA key used for expected return/risk.
 const IPS_BUCKETS = [
-  {key:"equity",       label:"Global Equity",       cma:"equity",       role:"Long-term growth engine"},
+  {key:"equity",       label:"Equity",              cma:"equity",       role:"Long-term growth engine"},
   {key:"fixed_income", label:"Fixed Income",        cma:"fixed_income", role:"Income & volatility dampener"},
   {key:"real_assets",  label:"Real Assets / REITs", cma:"real_estate",  role:"Inflation hedge & diversification"},
   {key:"alternatives", label:"Alternatives",        cma:"alternative",  role:"Non-correlated return sources"},
@@ -29393,16 +29773,18 @@ function gbRenderCMA(weights, port){
   let h = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
   h += '<thead><tr style="border-bottom:2px solid var(--border);text-align:right">';
   h += '<th style="text-align:left;padding:6px 8px">Asset class</th><th style="padding:6px 8px">Your weight</th><th style="padding:6px 8px">Arith μ</th><th style="padding:6px 8px">σ</th><th style="padding:6px 8px">Geo μ</th><th style="padding:6px 8px">Income</th></tr></thead><tbody>';
+  const pct = v => (v == null ? "-" : v.toFixed(2)+"%");
   Object.entries(CMA).forEach(([k,c]) => {
     const w = (weights[k]||0)*100;
-    if(c.label === "Mixed/Balanced" && w === 0) return; // skip synthetic unless used
+    if(k === "mixed" && w === 0) return; // skip synthetic unless used
+    const cash = (k === "cash");   // held at 0% everywhere; the market rate is in the caption
     h += '<tr style="border-bottom:1px solid var(--border);text-align:right">';
-    h += '<td style="text-align:left;padding:6px 8px;font-weight:600">'+c.label+'</td>';
+    h += '<td style="text-align:left;padding:6px 8px;font-weight:600">'+(cash ? "Cash (held at 0%)" : c.label)+'</td>';
     h += '<td style="padding:6px 8px;'+(w>0?'font-weight:700;color:var(--accent)':'color:var(--text3)')+'">'+w.toFixed(1)+'%</td>';
-    h += '<td style="padding:6px 8px">'+c.arith.toFixed(2)+'%</td>';
-    h += '<td style="padding:6px 8px">'+c.sigma.toFixed(2)+'%</td>';
-    h += '<td style="padding:6px 8px">'+c.geo.toFixed(2)+'%</td>';
-    h += '<td style="padding:6px 8px">'+c.income.toFixed(2)+'%</td>';
+    h += '<td style="padding:6px 8px">'+pct(cash ? 0 : c.arith)+'</td>';
+    h += '<td style="padding:6px 8px">'+pct(cash ? 0 : c.sigma)+'</td>';
+    h += '<td style="padding:6px 8px">'+pct(cash ? 0 : c.geo)+'</td>';
+    h += '<td style="padding:6px 8px">'+pct(cash ? 0 : c.income)+'</td>';
     h += '</tr>';
   });
   h += '<tr style="border-top:2px solid var(--border);text-align:right;font-weight:800;background:rgba(0,87,184,.04)">';
@@ -29410,8 +29792,10 @@ function gbRenderCMA(weights, port){
   h += '<td style="padding:8px">100%</td><td style="padding:8px">'+(port.arithMu*100).toFixed(2)+'%</td>';
   h += '<td style="padding:8px">'+(port.sigma*100).toFixed(2)+'%</td><td style="padding:8px">'+(port.geoMu*100).toFixed(2)+'%</td><td style="padding:8px">-</td></tr>';
   h += '</tbody></table></div>';
-  h += '<div style="font-size:11px;color:var(--text3);margin-top:10px">Portfolio σ uses the full correlation matrix (not a weighted average), so diversification correctly reduces total risk below the naive weighted-σ. Geometric mean = arithmetic − ½σ².</div>';
-  setH("gbInflRef", CMA_INFLATION.toFixed(2)+"%");
+  const B = cmaBasisText();
+  h += '<div style="font-size:11px;color:var(--text3);margin-top:10px">Portfolio σ uses the full correlation matrix (not a weighted average), so diversification correctly reduces total risk below the naive weighted-σ. Geometric return: per class from the set; for the portfolio, approximately the arithmetic return minus half the variance. '+B.cash+'</div>';
+  setT("gbCmaBasis", B.basis);
+  setT("gbInflRef", B.inflation);
   setH("gbCma", h);
 }
 
@@ -30575,14 +30959,13 @@ function drawFanChart(){
       // the retirement year + Monte-Carlo sustainable-spend solver (90% survival);
       // deterministic accumulation only as a no-sim fallback.
       const haveMC = Array.isArray(lastSimPaths) && lastSimPaths.length>0;
-      const P = (typeof getActiveSimulationParams==="function") ? getActiveSimulationParams() : {mu:port.geoMu, sig:port.sigma};
       const spendAt=(rA,cP)=>{ const acc=Math.max(0,rA-a1), inret=Math.max(1,90-rA);
-        let w;
-        if(haveMC){ w = spendableWealthAt(Math.min(acc, lastSimYrs), 100-cP); }
-        else { const r=gbReturnAtConfidence(port.geoMu,port.sigma,Math.max(1,acc),cP);
-          w=investable; for(let i=0;i<acc;i++) w=w*(1+r)+savings; }
+        let w=investable;
+        if(!haveMC){ const r=gbReturnAtConfidence(port.geoMu,port.sigma,Math.max(1,acc),cP);
+          for(let i=0;i<acc;i++) w=w*(1+r)+savings; }
+        const R=retirementSolverInputs(acc, 100-cP, w);   // after a run: its wealth, cash share and invested return
         const pens=_retirementPensionSchedule(rA, inret, inflation);
-        const spendNom=_solveSustainableSpendMC(Math.max(0,w), inret, P.mu, P.sig, inflation, 90, 100, pens);
+        const spendNom=_solveSustainableSpendMC(R.w, inret, R.mu, R.sig, inflation, 90, 100, pens, R.split);
         return Math.max(0, spendNom/Math.pow(1+inflation, acc)); };   // nominal-at-retirement → today's money, pension-inclusive
       const startAge=a1, endAge=Math.max(retAge,a1+1);   // start at current age, never a past retirement age
       const span=endAge-startAge, stepA=span>40?Math.ceil(span/40):1, ages=[];
@@ -31642,17 +32025,13 @@ function drawFanChart(){
             : "Based on the information in this analysis, your current assets and savings may NOT be sufficient for your retirement goals ("+p.toFixed(0)+"% simulated success). Consider the What-If scenarios reviewed with your advisor.");
         }
         try{
-          const port2 = gbPortfolioRisk(gbAssetClassWeights());
-          const P2 = (typeof getActiveSimulationParams==="function")?getActiveSimulationParams():{mu:port2.geoMu,sig:port2.sigma};
           const inf2 = num("inf",3.8)/100;
           const retAge2 = num("retAge",65);
           const yrsToRet2 = Math.max(1, retAge2 - a1age);
           const yearsInRet2 = Math.max(1, 90 - retAge2);
-          const w2 = (Array.isArray(lastSimPaths)&&lastSimPaths.length)
-            ? spendableWealthAt(Math.min(yrsToRet2, lastSimYrs), 50)
-            : investableAssetsValue();
+          const R2 = retirementSolverInputs(yrsToRet2, 50, investableAssetsValue());
           const pens2 = _retirementPensionSchedule(retAge2, yearsInRet2, inf2);
-          const spend2nom = _solveSustainableSpendMC(Math.max(0,w2), yearsInRet2, P2.mu, P2.sig, inf2, 90, 150, pens2);
+          const spend2nom = _solveSustainableSpendMC(R2.w, yearsInRet2, R2.mu, R2.sig, inf2, 90, 1000, pens2, R2.split);
           const spend2 = spend2nom / Math.pow(1+inf2, yrsToRet2);   // nominal-at-retirement → today's money
           bullet("Based on the information in this analysis, a retirement lifestyle of approximately "+fmt(spend2)+" per year (in today's money, including projected pension income) may be attainable.");
         }catch(_){ }
@@ -32198,7 +32577,7 @@ function drawFanChart(){
         kv([["Total portfolio value",fmt(pfTot)]]);
         // Portfolio Returns: Past vs Future Performance (Current vs Proposed)
         try {
-          const curP=getEffectiveReturnParams(); const curMu=+curP.mu||0;
+          const curP=getCurrentPortfolioParams(); const curMu=+curP.mu||0;
           let propGrossMu=curMu+(+getPortfolioAdvisoryFeePct()||0);
           if(proposals.length>0){ const m=computePortfolioMetrics(proposals,"alloc"); propGrossMu=+m.grossMu||propGrossMu; }
           const propMu=Math.max(0, propGrossMu-(+getProposalAdvisoryFeePct()||0));
@@ -32299,19 +32678,21 @@ function drawFanChart(){
             y=rowY+pieR*2+16;
             // key metrics side by side
             try {
-              const curP=getEffectiveReturnParams(); const curMu=+curP.mu||0;
+              const curP=getCurrentPortfolioParams(); const curMu=+curP.mu||0;
               let propGrossMu=curMu+(+getPortfolioAdvisoryFeePct()||0);
               const m=computePortfolioMetrics(proposals,"alloc"); propGrossMu=+m.grossMu||propGrossMu;
               const propMu=Math.max(0, propGrossMu-(+getProposalAdvisoryFeePct()||0));
-              // Value-weighted over the positions that report a figure (the Compare tab's rule),
-              // with the covered share shown, rather than counting a missing figure as zero.
+              // Yield: value-weighted over the positions that report one, with the covered share.
+              // Fund costs: the whole portfolio, exactly as the Compare tab shows them.
               const cP=portfolioCostProfile(investments,"val"), pP=portfolioCostProfile(proposals,"alloc");
               const cf=r=>(r && r.v!=null) ? r.v.toFixed(2)+"%"+(r.cov<0.999?" ("+Math.round(r.cov*100)+"% of value)":"") : "-";
+              const tc=f=>f ? f.v.toFixed(2)+"%"+(f.unknown>0.001?" (excl. funds with no TER on file)":"") : "-";
+              const fcC=portfolioFundCost(investments,"val"), fcP=portfolioFundCost(proposals,"alloc");
               checkY(30);
               tbl(["Metric","Current","Proposed"],[
                 ["Expected return (per year)", (curMu*100).toFixed(1)+"%", (propMu*100).toFixed(1)+"%"],
                 ["Income yield", cf(cP&&cP.yld), cf(pP&&pP.yld)],
-                ["Cost (weighted expense ratio)", cf(cP&&cP.ter), cf(pP&&pP.ter)],
+                ["Fund costs (TER)", tc(fcC), tc(fcP)],
                 ["Largest position", cP?cP.largest.toFixed(1)+"%":"-", pP?pP.largest.toFixed(1)+"%":"-"],
                 ["Number of holdings", String(investments.length), String(proposals.length)],
               ], {columnStyles:{0:{fontStyle:"bold",cellWidth:CW*0.44}}});
@@ -32405,7 +32786,9 @@ function drawFanChart(){
           const df=v=>v/Math.pow(1+inf,yrs);
           // Print the params the simulation ACTUALLY ran with (holdings-weighted /
           // proposal-driven when active), not the raw risk-profile blend.
-          const params=(typeof getActiveSimulationParams==="function")?getActiveSimulationParams():getReturnParams();
+          // Whole portfolio, cash at 0%: the same basis as the Portfolio and Proposal pages.
+          const params=(getSimUsesProposal() && proposals.length) ? getProposalReturnParams()
+                      : (investments.length ? getCurrentPortfolioParams() : getActiveSimulationParams());
           kv([
             ["Simulation count",lastSimPaths.length.toLocaleString()],
             ["Projection horizon",yrs+" years"],
@@ -32619,7 +33002,6 @@ function drawFanChart(){
         // at the (100-p)th percentile + MC sustainable-spend solver (90% survival),
         // falling back to the deterministic projection only when no sim has run.
         const haveMC = Array.isArray(lastSimPaths) && lastSimPaths.length>0;
-        const P = (typeof getActiveSimulationParams==="function") ? getActiveSimulationParams() : {mu:port.geoMu, sig:port.sigma};
         const confs = [
           {p:80, lbl:"Conservative (80% confidence)"},
           {p:50, lbl:"Expected (50% confidence)"},
@@ -32635,14 +33017,16 @@ function drawFanChart(){
             wealth = investable;
             for(let yI=0; yI<yrsToRet; yI++){ wealth = wealth*(1+r) + annualSavings; }
           }
-          const spendNom = _solveSustainableSpendMC(Math.max(0,wealth), yearsInRet, P.mu, P.sig, inflation, 90, 150, pens);
+          const R = retirementSolverInputs(yrsToRet, 100 - c.p, wealth);
+          wealth = R.w;
+          const spendNom = _solveSustainableSpendMC(R.w, yearsInRet, R.mu, R.sig, inflation, 90, 1000, pens, R.split);
           const spend = spendNom / Math.pow(1+inflation, yrsToRet);   // nominal-at-retirement → today's money
           const _pctile = 100 - c.p;
           const basis = _pctile<=35 ? "If markets are weaker" : _pctile>=65 ? "If markets are stronger" : "If markets are typical";
           return [c.lbl, basis, fmt(Math.max(0,wealth)), fmt(Math.max(0,spend))+" / yr"];
         });
         tbl(["Scenario","Market assumption","Investable wealth at retirement","Sustainable spend (today's money)"], rows);
-        para("Sustainable spend is shown in today's money and includes your projected pension / state-benefit income; the portfolio only funds spending above what pensions cover. It targets a 90% probability of the money lasting to age 90 (a simulated drawdown at the portfolio's expected return and volatility). This is the same solver the app's lifestyle panel uses (current age "+a1+" → retirement "+retAge+" → age 90). Wealth at retirement is shown in future (at-retirement) dollars.", MUTED);
+        para("Sustainable spend is shown in today's money and includes your projected pension / state-benefit income; the portfolio only funds spending above what pensions cover. It targets a 90% probability of the money lasting to age 90 (a simulated drawdown: cash earns nothing and is spent first, the invested part earns the portfolio's expected return and volatility). This is the same solver the app's lifestyle panel uses (current age "+a1+" → retirement "+retAge+" → age 90). Wealth at retirement is shown in future (at-retirement) dollars.", MUTED);
       },
       // ─── WEALTH ALLOCATION FRAMEWORK (Personal / Market / Aspirational) ──
       wealthframework: () => {
@@ -32882,9 +33266,9 @@ function drawFanChart(){
         const port=gbPortfolioRisk(gbAssetClassWeights());
         const lines=[
           {lbl:"Your target allocation", p:gbPortfolioRisk(gbAssetClassWeights()), col:[30,34,42]},
-          {lbl:"Global equities",        p:gbPortfolioRisk({equity:1}),            col:[0,87,184]},
+          {lbl:"Equities",               p:gbPortfolioRisk({equity:1}),            col:[0,87,184]},
           {lbl:"Fixed income",           p:gbPortfolioRisk({fixed_income:1}),      col:[178,80,42]},
-          {lbl:"Cash",                   p:gbPortfolioRisk({cash:1}),              col:[110,160,60]},
+          {lbl:"Cash (held at 0%)",      p:gbPortfolioRisk({cash:1}),              col:[110,160,60]},
         ];
         const infP=num("inf",3.8)/100;
         para("Hypothetical growth of "+fmt(startV)+" over "+yrsP+" years under this plan's forward-looking capital market assumptions (NOT historical index returns; see the Capital Market Assumptions section for the inputs). The consumer-price line shows the same amount adjusted only for assumed inflation.");
@@ -33157,14 +33541,17 @@ function drawFanChart(){
         if(val("rptIncCMA") === "no") return;
         newPage();
         sectionH2("Capital Market Assumptions");
-        para("Long-term capital market assumptions underpinning all projections in this report. Arithmetic μ is the expected annual return; σ is annual volatility; geometric μ (= arithmetic − ½σ²) is the compounding return used for multi-year projections. Core inflation assumption: "+CMA_INFLATION.toFixed(2)+"% / yr.");
+        const B = cmaBasisText();
+        para("Long-term capital market assumptions underpinning all projections in this report. "+B.basis);
+        para("Arithmetic mean is the expected annual return; volatility is the annual standard deviation; the geometric mean is the compounding return, per class from the set and for the portfolio approximately the arithmetic mean minus half the variance. "+B.cash+" "+B.inflation);
         const weights = gbAssetClassWeights();
         const port = gbPortfolioRisk(weights);
-        const rows = [];
+        const rows = [], pct = v => (v == null ? "-" : v.toFixed(2)+"%");
         Object.entries(CMA).forEach(([k,c])=>{
           const w = (weights[k]||0)*100;
-          if(c.label === "Mixed/Balanced" && w === 0) return; // skip synthetic unless used
-          rows.push([c.label, w.toFixed(1)+"%", c.arith.toFixed(2)+"%", c.sigma.toFixed(2)+"%", c.geo.toFixed(2)+"%", c.income.toFixed(2)+"%"]);
+          if(k === "mixed" && w === 0) return; // skip synthetic unless used
+          const cash = (k === "cash");   // held at 0% everywhere
+          rows.push([cash ? "Cash (held at 0%)" : c.label, w.toFixed(1)+"%", pct(cash?0:c.arith), pct(cash?0:c.sigma), pct(cash?0:c.geo), pct(cash?0:c.income)]);
         });
         rows.push(["YOUR PORTFOLIO", "100%", (port.arithMu*100).toFixed(2)+"%", (port.sigma*100).toFixed(2)+"%", (port.geoMu*100).toFixed(2)+"%", "-"]);
         tbl(["Asset class","Your weight","Arith μ","σ","Geo μ","Income"], rows);
@@ -35104,6 +35491,7 @@ function restoreProfile(p){
     const cs=$("m-ccy-tag"); if(cs) cs.value=p.ccy;
     try{ syncCcySym(); popCcyDropdown("accy"); }catch(_){}
   }
+  try{ applyCmaForCurrency(CURRENT_CCY); }catch(e){ console.warn("[restore] CMA set",e); }   // before any figure below is rendered
   // A loaded profile invalidates any previous client's simulation results —
   // they must never feed this client's report, metrics or retirement number.
   lastSimPaths=[]; lastSimYrs=null;
@@ -35122,7 +35510,10 @@ function restoreProfile(p){
   goals=p.goals||[]; goalSeq=p.goalSeq||_maxIdSeq(goals);
   children=p.children||[]; childSeq=p.childSeq||_maxIdSeq(children);
   investments=p.investments||[]; invSeq=p.invSeq||_maxIdSeq(investments);
-  proposals=p.proposals||[]; propSeq=p.propSeq||_maxIdSeq(proposals);
+  // Builder lines saved before class pricing carry the fund's USD mu in exp. Notes read
+  // "Built by ..." since 28 Sep 2026 and "AI-generated" before (when mu was also jittered
+  // by a ticker hash, so it no longer equals today's fund.mu): price them by class.
+  proposals=(p.proposals||[]).map(x => (x && x.exp != null && /^(Built by (the rules engine|Claude (AI))|AI-generated) · /.test(x.note||"")) ? {...x, exp:null} : x); propSeq=p.propSeq||_maxIdSeq(proposals);
   whatIfScenarios=(p.whatIfScenarios||[]).map(w=>typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):w); whatIfSeq=p.whatIfSeq||_maxIdSeq(whatIfScenarios);
   pfLinkedAccountId=p.pfLinkedAccountId||"";
   if(p.c2visible) showC2(); else hideC2();
@@ -35385,17 +35776,17 @@ function runSensitivity(){
   // mode (no portfolio) AND holdings-weighted mode (portfolio entered), bypassing
   // the retM DOM field which has no effect when getEffectiveReturnParams() is active.
   (()=>{
-    // Pivot around the params the sim ACTUALLY ran with (proposal-driven when on)
-    const base=getActiveSimulationParams();
-    const mPlus=percentileAt(runMC(yrs,sims,base.mu+0.02,base.sig),yrs,50);
-    const mMinus=percentileAt(runMC(yrs,sims,Math.max(0.005,base.mu-0.02),base.sig),yrs,50);
+    // Pivot around the params the sim ACTUALLY ran with (proposal split when on)
+    const base=getSimEngineParams();
+    const mPlus=percentileAt(runMC(yrs,sims,base.mu+0.02,base.sig,base),yrs,50);
+    const mMinus=percentileAt(runMC(yrs,sims,Math.max(0.005,base.mu-0.02),base.sig,base),yrs,50);
     results.push({label:"Investment return",fmt:"±2 pp",plus:mPlus-baseMedian,minus:mMinus-baseMedian});
   })();
   // Return volatility sensitivity: same approach with sigOverride
   (()=>{
-    const base=getActiveSimulationParams();
-    const mPlus=percentileAt(runMC(yrs,sims,base.mu,base.sig+0.03),yrs,50);
-    const mMinus=percentileAt(runMC(yrs,sims,base.mu,Math.max(0.005,base.sig-0.03)),yrs,50);
+    const base=getSimEngineParams();
+    const mPlus=percentileAt(runMC(yrs,sims,base.mu,base.sig+0.03,base),yrs,50);
+    const mMinus=percentileAt(runMC(yrs,sims,base.mu,Math.max(0.005,base.sig-0.03),base),yrs,50);
     results.push({label:"Return volatility",fmt:"±3 pp",plus:mPlus-baseMedian,minus:mMinus-baseMedian});
   })();
   tests.forEach(t=>{
