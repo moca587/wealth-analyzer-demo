@@ -4614,18 +4614,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <button class="btn-primary" onclick="runComparison()" style="margin-top:12px">Refresh comparison</button>
 </div>
 
-<!-- Unified Past vs Future Performance returns (headline visual) -->
-<div class="panel">
-  <div class="ptitle">Portfolio Returns: Past vs Future Performance</div>
-  <div style="font-size:12px;color:var(--text3);margin-bottom:6px;line-height:1.6">The <strong style="color:#5b9bd5">same two portfolios</strong>, shown two ways. <strong style="color:var(--text2)">Left of “today”</strong> is what the funds returned (annualized) over each past period, using each fund’s own record where one is on file and its asset-class history as a stand-in where not (the table below says which); <strong style="color:var(--text2)">right of “today”</strong> is the long-run return this mix is <em>expected</em> to average, net of fees. They differ because the future isn’t a replay of the past.</div>
-  <div class="chart-wrap" style="height:300px"><canvas id="cmpReturnsChart" role="img" aria-label="Past trailing returns versus long-run expected future return, current versus proposed portfolio"></canvas></div>
-  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:8px;padding:0 4px">
-    <span>◀ looking back · past returns</span>
-    <span style="color:#7c3aed">looking forward · expected future ▶</span>
-  </div>
-  <div id="cmpReturnsSubstats" style="margin-top:12px"></div>
-</div>
-
 <!-- Parameter side-by-side (detailed figures, collapsible) -->
 <div class="panel">
   <div class="ptitle section-dropdown" onclick="toggleDropdown('rrpBody')">Return &amp; Risk Profile: detailed figures <span class="dropdown-hint">click to expand</span><span class="ptitle-line"></span></div>
@@ -4642,7 +4630,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
 </div>
 
-<!-- Asset Class Allocation — twin pies + diff bars -->
+<!-- Asset Class Allocation — twin pies, then past vs future returns -->
 <div class="panel">
   <div class="ptitle">Asset Class Allocation: Side by Side</div>
   <div class="alloc-pies alloc-pies-2">
@@ -4658,8 +4646,10 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     </div>
   </div>
   <div class="sdiv">
-    <div class="slbl">Allocation Diff: Current vs Proposed</div>
-    <div id="cmpAllocBars"><div class="cmp-empty">Run comparison to see allocations.</div></div>
+    <div class="slbl">Portfolio Returns: Past vs Future Performance</div>
+    <div style="font-size:11.5px;color:var(--text3);line-height:1.5;margin:-2px 0 6px">Left of <strong style="color:var(--text2)">today</strong>: what each mix returned a year over each past period. Right: the long-run return it is expected to average, net of fees.</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="cmpReturnsChart" role="img" aria-label="Past trailing returns versus long-run expected future return, current versus proposed portfolio"></canvas></div>
+    <div id="cmpReturnsSubstats" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -5017,7 +5007,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261013-1520";
+const APP_VERSION = "20261013-1544";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -28306,19 +28296,20 @@ function renderReturnHorizon(curMu, curSig, propMu, propSig){
 let cmpReturnsChartObj = null;
 function renderReturnsUnified(cur, prop, curMu, propMu, curSig, propSig){
   const sub = $("cmpReturnsSubstats");
-  const CUR = "#5b9bd5", PROP = "#7c3aed";
+  const CUR = "#5b9bd5", PROP = "#0057b8";   // same blues as the pie titles above
   if(sub){
     const curFee = (typeof getPortfolioAdvisoryFeePct==="function") ? getPortfolioAdvisoryFeePct() : 0;
     const propFee = (typeof getProposalAdvisoryFeePct==="function") ? getProposalAdvisoryFeePct() : 0;
-    const line = (name,col,mu,fee,sig) =>
-      '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin:3px 0">'
-      + '<span style="width:10px;height:10px;border-radius:2px;background:'+col+';flex:0 0 auto"></span>'
-      + '<strong style="color:'+col+'">'+name+'</strong>&nbsp;expected <strong>'+(mu*100).toFixed(1)+'%</strong>/yr net'
-      + (fee>0 ? ' (after '+(fee*100).toFixed(2)+'% fee)' : '')
-      + ' · volatility '+(sig*100).toFixed(0)+'%</div>';
-    sub.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">'
-      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">Expected (long-run), net of fees</div>'
-      + line("Current", CUR, curMu, curFee, curSig) + line("Proposed", PROP, propMu, propFee, propSig) + '</div>';
+    // Two compact key chips; they double as the chart's legend.
+    const chip = (name,col,mu,fee,sig) =>
+      '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);'
+      + 'border-radius:999px;padding:4px 10px;font-size:11.5px;color:var(--text2);white-space:nowrap">'
+      + '<span style="width:9px;height:9px;border-radius:2px;background:'+col+';flex:0 0 auto"></span>'
+      + '<strong style="color:'+col+'">'+name+'</strong> '+(mu*100).toFixed(1)+'%/yr expected'
+      + (fee>0 ? ', after '+(fee*100).toFixed(2)+'% fee' : '')
+      + ' · volatility '+(sig*100).toFixed(0)+'%</span>';
+    sub.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      + chip("Current", CUR, curMu, curFee, curSig) + chip("Proposed", PROP, propMu, propFee, propSig) + '</div>';
   }
   const canvas = $("cmpReturnsChart");
   if(!canvas || typeof Chart === "undefined") return;
@@ -28327,13 +28318,13 @@ function renderReturnsUnified(cur, prop, curMu, propMu, curSig, propSig){
   const propData = [prop.r1y, prop.r3y, prop.r5y, prop.r10y, propMu*100];
   const isExp = i => i===4;                     // last category = forward-looking expected
   const mk = (solid, tint) => ({ bg:(_,i)=> isExp(i) ? tint : solid, bw:(_,i)=> isExp(i) ? 1.5 : 0 });
-  const c = mk(CUR, "rgba(91,155,213,0.22)"), p = mk(PROP, "rgba(124,58,237,0.22)");
+  const c = mk(CUR, "rgba(91,155,213,0.25)"), p = mk(PROP, "rgba(0,87,184,0.22)");
   if(cmpReturnsChartObj){ try{ cmpReturnsChartObj.destroy(); }catch(_){} }
   const todayDivider = { id:"cmpTodayDivider", beforeDatasetsDraw(chart){
     const a = chart.chartArea, x = chart.scales.x; if(!a || !x) return; const ctx = chart.ctx;
     const xp = x.getPixelForValue(3.5);
     ctx.save();
-    ctx.fillStyle = "rgba(124,58,237,0.07)"; ctx.fillRect(xp, a.top, a.right - xp, a.bottom - a.top);
+    ctx.fillStyle = "rgba(0,87,184,0.05)"; ctx.fillRect(xp, a.top, a.right - xp, a.bottom - a.top);
     ctx.strokeStyle = "rgba(15,23,42,0.30)"; ctx.setLineDash([4,3]); ctx.lineWidth = 1;   // dark on light theme (was white-on-white)
     ctx.beginPath(); ctx.moveTo(xp, a.top); ctx.lineTo(xp, a.bottom); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "rgba(15,23,42,0.60)"; ctx.font = "700 9px sans-serif"; ctx.textAlign = "center";
@@ -28343,17 +28334,17 @@ function renderReturnsUnified(cur, prop, curMu, propMu, curSig, propSig){
   cmpReturnsChartObj = new Chart(canvas, {
     type:"bar",
     data:{ labels, datasets:[
-      { label:"Current",  data:curData,  backgroundColor:curData.map(c.bg),  borderColor:CUR,  borderWidth:curData.map(c.bw),  borderRadius:3, maxBarThickness:30 },
-      { label:"Proposed", data:propData, backgroundColor:propData.map(p.bg), borderColor:PROP, borderWidth:propData.map(p.bw), borderRadius:3, maxBarThickness:30 }
+      { label:"Current",  data:curData,  backgroundColor:curData.map(c.bg),  borderColor:CUR,  borderWidth:curData.map(c.bw),  borderRadius:3, maxBarThickness:18, categoryPercentage:0.62, barPercentage:0.9 },
+      { label:"Proposed", data:propData, backgroundColor:propData.map(p.bg), borderColor:PROP, borderWidth:propData.map(p.bw), borderRadius:3, maxBarThickness:18, categoryPercentage:0.62, barPercentage:0.9 }
     ]},
     options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:14}},
       plugins:{
-        legend:{ display:true, labels:{ boxWidth:12, font:{size:11}, color:"#9aa0a6" } },
+        legend:{ display:false },   // the key chips under the chart carry the colours
         tooltip:{ callbacks:{ label:ctx => ctx.dataset.label+": "+(+ctx.parsed.y).toFixed(2)+"%"+(ctx.dataIndex===4?" (expected, long-run)":" (trailing)") } }
       },
       scales:{
-        x:{ grid:{display:false}, ticks:{ color:"#8a8f98", font:{size:11} } },
-        y:{ grid:{color:"rgba(255,255,255,0.06)"}, ticks:{ color:"#8a8f98", callback:v=>v+"%" } }
+        x:{ grid:{display:false}, ticks:{ color:"#6b7280", font:{size:11} } },
+        y:{ border:{display:false}, grid:{color:"rgba(15,23,42,0.06)"}, ticks:{ color:"#8a8f98", font:{size:10}, maxTicksLimit:5, callback:v=>v+"%" } }
       }
     },
     plugins:[todayDivider]
@@ -28445,23 +28436,6 @@ function runComparison(){
     <div class="cmp-c"><span class="lbl">Volatility</span>${(propSig*100).toFixed(2)}%</div>
     <div class="cmp-c ${propSig<curParams.sig?'delta-pos':propSig>curParams.sig?'delta-neg':'delta-neu'}">${Math.abs(propSig-curParams.sig)<=0.00001?'0.00%':(((propSig-curParams.sig)*100>=0?'+':'')+((propSig-curParams.sig)*100).toFixed(2)+'%')}</div>
   `;
-  // Allocation diff bars
-  const aggCur={}, aggProp={};
-  const totalCur=investments.reduce((s,i)=>s+i.val,0);
-  const totalProp=proposals.reduce((s,p)=>s+p.alloc,0);
-  investments.forEach(i=>{const k=effClass(i); aggCur[k]=(aggCur[k]||0)+i.val/totalCur*100;});
-  proposals.forEach(p=>{const k=effClass(p); aggProp[k]=(aggProp[k]||0)+p.alloc/totalProp*100;});
-  const allClasses=Array.from(new Set([...Object.keys(aggCur),...Object.keys(aggProp)]));
-  const allocHtml=allClasses.map(k=>{
-    const c=aggCur[k]||0, pp=aggProp[k]||0, d=pp-c;
-    return `<div class="pf-bar-row" style="grid-template-columns:140px 1fr 1fr 70px">
-      <div class="pf-bar-label">${INV_CLASS_LABELS[k]||k}</div>
-      <div class="pf-bar-track"><div class="pf-bar-fill" style="width:${c}%;background:#5b9bd5"></div></div>
-      <div class="pf-bar-track"><div class="pf-bar-fill" style="width:${pp}%;background:#1e40af"></div></div>
-      <div class="pf-bar-pct ${d>0?'delta-pos':d<0?'delta-neg':'delta-neu'}">${d>=0?'+':''}${d.toFixed(1)}%</div>
-    </div>`;
-  }).join("");
-  setH("cmpAllocBars",allocHtml||'<div class="cmp-empty">No allocations to compare.</div>');
   // ── Cost (TER), yield and concentration, side by side
   try{ renderCostYieldConcentration(); }catch(e){ console.warn("cost/yield/concentration compare", e); }
 
