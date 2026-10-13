@@ -29,7 +29,7 @@
   // Addresses the firm set up (data proxy, custodian feeds, order route, enterprise data
   // proxies), allowed as they were when the page loaded.
   var CONF = [];
-  var DEFAULT_PROXY = "";   // keep equal to DEFAULT_DATA_PROXY further down the page
+  var DEFAULT_PROXY = "https://wa-data-proxy.moca587.workers.dev";   // keep equal to DEFAULT_DATA_PROXY further down the page
   function addUrl(u, kind){ if(!u) return; try{ var x = new URL(u, location.href); if(/^https?:$/.test(x.protocol)) CONF.push({ origin:x.origin, host:x.host, kind:kind }); }catch(_){} }
   addUrl(get("wa_cors_proxy") || DEFAULT_PROXY, "proxy");
   try{ (JSON.parse(get("wa_feeds") || "[]") || []).forEach(function(f){ if(f && f.url) addUrl(f.url, "feed"); }); }catch(_){}
@@ -1394,7 +1394,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261009-1644";
+const APP_VERSION = "20261013-1520";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3838,7 +3838,7 @@ function curatedItems(id){
 // read from functions that can run before this line is evaluated.
 // Setting it? Also set DEFAULT_PROXY in the network guard at the top of the page, or
 // the browser will refuse requests to it (the page may only reach listed addresses).
-var DEFAULT_DATA_PROXY = "";
+var DEFAULT_DATA_PROXY = "https://wa-data-proxy.moca587.workers.dev";
 var NO_DATA_PROXY_MSG = "needs the data proxy (set its URL on the Market Data tab)";
 function dataProxyBase(){ let b=""; try{ b=(localStorage.getItem("wa_cors_proxy")||"").trim(); }catch(_){} return (b||DEFAULT_DATA_PROXY||"").replace(/\/+$/,""); }
 function dataProxyUrl(u){ const b=dataProxyBase(); return b ? (b+"/?url="+encodeURIComponent(u)) : ""; }
