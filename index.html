@@ -4607,11 +4607,9 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 <!-- ═══ PORTFOLIO COMPARISON ═══ -->
 <div class="tab" id="tab-compare">
 
-<!-- Setup / Status -->
-<div class="panel">
-  <div class="ptitle">Portfolio vs Proposal</div>
-  <div id="cmpStatus" style="font-size:13px;color:var(--text2);line-height:1.6">Loading comparison…</div>
-  <button class="btn-primary" onclick="runComparison()" style="margin-top:12px">Refresh comparison</button>
+<!-- Shown only when there is nothing to compare yet (runComparison toggles it) -->
+<div class="panel" id="cmpEmpty" style="display:none">
+  <div style="font-size:13px;color:var(--text2);line-height:1.6">Add holdings on the Current Portfolio tab and positions on the Investment Proposal tab to compare them here.</div>
 </div>
 
 <!-- Parameter side-by-side (detailed figures, collapsible) -->
@@ -5007,7 +5005,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261013-1544";
+const APP_VERSION = "20261013-1556";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -28396,10 +28394,12 @@ function renderCostYieldConcentration(){
 }
 
 function runComparison(){
+  const emptyNote=$("cmpEmpty");
   if(investments.length===0 && proposals.length===0){
-    setH("cmpStatus",'<span style="color:var(--text3)">Add holdings on the Portfolio tab and positions on the Investment Proposal tab, then click Refresh.</span>');
+    if(emptyNote) emptyNote.style.display="";
     return;
   }
+  if(emptyNote) emptyNote.style.display="none";
   // Current = use weighted from investments (portfolio fee already deducted via getEffectiveReturnParams)
   const curParams = getEffectiveReturnParams();
   const curFee = getPortfolioAdvisoryFeePct();
@@ -28471,7 +28471,6 @@ function runComparison(){
   }).join("");
   const goalsHeader='<div class="goal-cmp" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)"><div>Goal</div><div>Target Yr</div><div style="text-align:center">Current<span class="info-ic">i<span class="info-pop">Probability of fully funding this goal using your Current portfolio, from the same simulation used on the Simulation tab.</span></span></div><div style="text-align:center">Proposed<span class="info-ic">i<span class="info-pop">Probability of fully funding this goal if you switch to the Proposed portfolio.</span></span></div><div style="text-align:right">Δ</div></div>';
   setH("cmpGoals",goalsHtml?(goalsHeader+goalsHtml):'<div class="cmp-empty">Add goals to compare success rates.</div>');
-  setH("cmpStatus",`<strong>Comparison ready.</strong> ${sims} paths × ${yrs}y horizon. Current vs Proposed evaluated under the same household, expense, savings, and tax assumptions.`);
   // Simple recommendation
   let rec="Both portfolios are roughly equivalent on these inputs.";
   if(propMu>curParams.mu+0.005) rec=`<strong>Proposed</strong> shows a higher expected return (+${((propMu-curParams.mu)*100).toFixed(2)}%), at the cost of ${propSig>curParams.sig?"more":"comparable"} volatility.`;
