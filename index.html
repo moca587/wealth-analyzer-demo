@@ -981,7 +981,7 @@ input.fld-invalid,.ccy-field.fld-invalid{
 .ccy-field .ccy-sym{font-family:var(--fb);font-size:12px;font-weight:700;color:var(--gold);flex-shrink:0}
 .goal-add .ccy-field input,.ccy-field input{flex:1;min-width:0;width:auto;border:none;background:transparent;padding-left:0;box-shadow:none}
 .ccy-field input:focus,.ccy-field input:focus-visible,.ccy-field input:hover{border:none;background:transparent;box-shadow:none;outline:none}
-@media(max-width:1150px){.goal-add{grid-template-columns:1fr 1fr}}
+@media(max-width:1340px){.goal-add{grid-template-columns:1fr 1fr}}
 
 /* ── Goal tags ── */
 .gtag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;white-space:nowrap}
@@ -1819,6 +1819,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   color:#fff;text-align:center;padding:0 24px 60px;overflow-y:auto;opacity:1;transition:opacity .6s ease}
 .intro-inner{padding-top:max(7vh,44px)}
 #introScreen.intro-hide{opacity:0;pointer-events:none}
+@media (hover:none) and (pointer:coarse){.intro-kbd{display:none}}
 #introScreen::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(560px 380px at 18% 92%,rgba(0,135,255,.20),transparent 60%),
              radial-gradient(420px 300px at 88% 12%,rgba(90,169,255,.14),transparent 60%)}
@@ -1905,7 +1906,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       Launch Wealth Analyzer
       <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M1 8h11M8 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
-    <div class="intro-foot">Press Enter to begin · Beta version</div>
+    <div class="intro-foot"><span class="intro-kbd">Press Enter to begin · </span>Beta version</div>
     <div class="intro-credit">WealthAnalyzer is by <strong>Private Wealth Intelligence</strong></div>
     <div class="intro-scroll-hint">Learn more
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v9M4 8l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2300,7 +2301,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <option value="pension">Pension / retirement statement → pensions, retirement accounts</option>
           <option value="insurance">Insurance policy → protection &amp; insurance</option>
         </select>
-        <div style="font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.5">Tells the reader which fields to prioritise and routes the extracted values there. It still captures anything else it finds, but nothing is written until you review each row.</div>
+        <div style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5">Tells the reader which fields to prioritise and routes the extracted values there. It still captures anything else it finds, but nothing is written until you review each row.</div>
       </div>
 
       <div id="uploadDocDrop" class="drop-zone" style="background:var(--bg3);border:1px dashed var(--border2);border-radius:var(--rs);padding:14px 16px">
@@ -2309,7 +2310,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <input type="file" id="uploadDocFiles" multiple onchange="onUploadDocFilesChange()"
                accept=".pdf,.doc,.docx,.rtf,.odt,.pptx,.xls,.xlsx,.ods,.csv,.tsv,.txt,.json,.md,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif,.tiff,.tif,.bmp,image/*"
                style="font-size:12px;color:var(--text2);width:100%">
-        <div style="font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.5">
+        <div style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5">
           Any number, mixed types. PDF · Word (DOC/DOCX) · RTF · OpenDocument (ODT) · PowerPoint (PPTX) ·
           Excel/OpenDocument sheets (XLS/XLSX/ODS) · CSV/TXT/JSON · JPG/PNG · scans · screenshots.
         </div>
@@ -4525,7 +4526,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 <!-- Simple preferences (just 4 inputs) -->
 <div class="panel">
   <div class="ptitle">Your preferences <span style="color:var(--text3);font-weight:400;letter-spacing:0;text-transform:none">(most clients only adjust these 4)</span></div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px">
     <div>
       <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">How much can you invest?</label>
       <div style="display:flex;align-items:center;gap:6px"><span style="font-size:16px;color:var(--text3)">$</span><input type="number" id="aiSimpleAmount" value="100000" step="10000" style="flex:1;font-size:15px;font-weight:600;padding:9px 12px"></div>
@@ -4744,7 +4745,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div>
       <div class="frow"><label class="flbl">Firm / advisor name</label><input type="text" id="rptFirm" value="" placeholder="Optional (appears on cover)" class="w220"></div>
       <div class="frow"><label class="flbl">Reference / case #</label><input type="text" id="rptRef" value="" placeholder="Optional" class="w220"></div>
-      <div class="frow"><label class="flbl">Cover subtitle line</label><input type="text" id="rptSubtitle" value="" placeholder="e.g. Retirement Readiness Review" class="w220"></div>
+      <div class="frow"><label class="flbl">Cover subtitle line</label><input type="text" id="rptSubtitle" value="" placeholder="e.g. Retirement Review" class="w220"></div>
     </div>
   </div>
   </div>
@@ -4859,10 +4860,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   .rpt-ord-item{position:relative}
   .rpt-ord-prev{display:none;position:absolute;left:0;top:calc(100% + 3px);z-index:60;width:300px;max-width:82vw;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;box-shadow:0 10px 28px rgba(0,0,0,.4)}
   .rpt-ord-item:hover .rpt-ord-prev{display:block}
+  .rpt-ord-item.prev-open .rpt-ord-prev{display:block}
+  @media (hover:none){.rpt-ord-item:hover .rpt-ord-prev{display:none}.rpt-ord-item.prev-open .rpt-ord-prev{display:block}}
+  @media (pointer:coarse){#rptOrderList .rpt-ord-item input[type=checkbox]{width:24px!important;height:24px!important}#rptOrderList .rpt-ord-item button{width:38px!important;height:38px!important}}
   </style>
   <div class="ptitle section-dropdown" onclick="toggleDropdown('rptPageOrderBody')">Page Order <span class="dropdown-hint">click to expand</span><span class="ptitle-line"></span></div>
   <div class="dropdown-body" id="rptPageOrderBody">
-  <div style="font-size:11px;font-weight:500;color:var(--text3);margin-bottom:8px">Drag the ↑↓ buttons to reorder · hover a page name to preview what's on it</div>
+  <div style="font-size:11px;font-weight:500;color:var(--text3);margin-bottom:8px">Use the ↑↓ buttons to reorder · tap or hover a page name to preview what's on it</div>
   <div id="rptOrderList" style="display:flex;flex-direction:column;gap:6px"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
     <button type="button" class="btn-secondary" onclick="resetRptOrder()" style="font-size:11px;padding:6px 12px">↺ Reset to default order</button>
@@ -5014,7 +5018,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261013-2239";
+const APP_VERSION = "20261014-1800";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -8211,11 +8215,16 @@ function initInfoPops(){
   document.addEventListener("mouseover", e => { const ic = e.target.closest && e.target.closest(".info-ic"); if(ic && ic !== cur) show(ic); else if(!ic && cur) hide(); });
   document.addEventListener("focusin", e => { const ic = e.target.closest && e.target.closest(".info-ic"); if(ic) show(ic); });
   document.addEventListener("focusout", e => { if(cur && e.target.closest && e.target.closest(".info-ic") === cur) hide(); });
+  // Touch: a tap opens the note (iOS sends no hover); a tap elsewhere closes it.
+  document.addEventListener("click", e => { const ic = e.target.closest && e.target.closest(".info-ic"); if(!ic){ if(cur) hide(); return; } e.preventDefault(); e.stopPropagation(); show(ic); }, true);
+  document.addEventListener("touchstart", e => { if(cur && !(e.target.closest && e.target.closest(".info-ic"))) hide(); }, {passive:true});
   window.addEventListener("scroll", hide, true);
   window.addEventListener("resize", hide);
   document.addEventListener("keydown", e => { if(e.key === "Escape" && cur) hide(); });
 }
 document.addEventListener("DOMContentLoaded", initInfoPops);
+// Portfolio Builder fund cards: a tap opens / closes the reasoning (touch has no hover).
+document.addEventListener("click", e => { const c = e.target.closest && e.target.closest(".ai-pos-card"); if(c && !e.target.closest("a,button,input,select,textarea,.info-ic")) c.classList.toggle("open"); });
 // Status line with a leading Lucide icon. kind: "ok" | "warn" | "err". text is escaped.
 function statusMsg(el, kind, text){
   if(!el) return;
@@ -8249,7 +8258,7 @@ function renderMdKeysGrid(){
     h += pill;
     h += '</div>';
     h += '<input type="password" id="mdKey-'+k.id+'" placeholder="paste key…" value="'+escapeForHTML(v)+'" onchange="saveMdKey(\''+k.id+'\')" style="width:100%;font-family:var(--fm);font-size:11px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;background:var(--bg2);color:var(--text)">';
-    h += '<div style="font-size:10.5px;color:var(--text3);margin-top:4px">' + k.tip + '</div>';
+    h += '<div style="font-size:11.5px;color:var(--text3);margin-top:4px">' + k.tip + '</div>';
     h += '</div>';
   });
   grid.innerHTML = h;
@@ -8414,11 +8423,10 @@ window.renderMdKeysGrid = renderMdKeysGrid;
 
 // ─── Inputs-feeding panel collapse/expand (state persisted) ─────────────
 function applySimInputsState(){
-  const open = (function(){ try { return localStorage.getItem("wa_sim_inputs_open") === "1"; } catch(_) { return false; } })();
+  // The dropdown's .open class (toggleDropdown, Expand / Collapse all) decides. The old
+  // inline display:none could never be undone, so the panel never opened.
   const body = document.getElementById("simInputsBody");
-  const caret = document.getElementById("simInputsCaret");
-  if(body) body.style.display = open ? "block" : "none";
-  if(caret) caret.style.transform = open ? "rotate(0deg)" : "rotate(-90deg)";
+  if(body) body.style.display = "";
 }
 function toggleSimInputs(){
   const open = (function(){ try { return localStorage.getItem("wa_sim_inputs_open") === "1"; } catch(_) { return false; } })();
@@ -8620,7 +8628,7 @@ function updateHouseRisk(){
   }
   const mu=(profiles.reduce((a,p)=>a+p.retMean,0)/profiles.length).toFixed(1);
   const sig=(profiles.reduce((a,p)=>a+p.retVol,0)/profiles.length).toFixed(1);
-  el.innerHTML=`Blended (${profiles.map(p=>p.label.split(" ")[0]).join(" / ")})<span class="info-ic">i<span class="info-pop">Household risk profile is the average of both clients' selected profiles. Blended expected return μ ${mu}%, volatility σ ${sig}%. These are the assumptions this feeds into the market simulation.</span></span>`;
+  el.innerHTML=`Blended (${profiles.map(p=>p.label).join(" / ")})<span class="info-ic">i<span class="info-pop">Household risk profile is the average of both clients' selected profiles. Blended expected return μ ${mu}%, volatility σ ${sig}%. These are the assumptions this feeds into the market simulation.</span></span>`;
 }
 function getReturnParams(){
   const r1=$("c1r").value, r2=$("c2r").value;
@@ -9266,10 +9274,15 @@ function cancelEditAsset(){
   show("assetCancelBtn",false);
 }
 function delAsset(id){
+  const idx=assets.findIndex(a=>a.id===id); if(idx<0) return;
   if(_editingAssetId===id) cancelEditAsset();
-  assets=assets.filter(a=>a.id!==id);
-  renderAssets();
-  refreshTopMetrics();
+  const item=assets[idx], gen=profileGen;
+  assets=assets.filter(a=>a.id!==id); renderAssets(); refreshTopMetrics();
+  showUndoToast('Removed "'+(item.label||"account")+'"', ()=>{
+    if(profileGen!==gen) return "Can't undo: a different profile has been loaded.";
+    if(assets.some(a=>a.id===item.id)) return;
+    assets.splice(Math.min(idx,assets.length),0,item); renderAssets(); refreshTopMetrics();
+  });
 }
 // Owner of an account: primary client, secondary client, or jointly held.
 function assetOwnerName(o){
@@ -9416,8 +9429,15 @@ function cancelEditLoan(){
   show("loanCancelBtn",false);
 }
 function delLoan(id){
+  const idx=loans.findIndex(l=>l.id===id); if(idx<0) return;
   if(_editingLoanId===id) cancelEditLoan();
+  const item=loans[idx], gen=profileGen;
   loans=loans.filter(l=>l.id!==id); renderLoans(); refreshTopMetrics();
+  showUndoToast('Removed "'+(item.label||"loan")+'"', ()=>{
+    if(profileGen!==gen) return "Can't undo: a different profile has been loaded.";
+    if(loans.some(l=>l.id===item.id)) return;
+    loans.splice(Math.min(idx,loans.length),0,item); renderLoans(); refreshTopMetrics();
+  });
 }
 function loanMonthly(loan){
   const r=loan.rate/100/12, n=loan.yrs*12;
@@ -9497,8 +9517,15 @@ function cancelEditInsurance(){
   show("insCancelBtn",false);
 }
 function delInsurance(id){
+  const idx=insurances.findIndex(p=>p.id===id); if(idx<0) return;
   if(_editingInsId===id) cancelEditInsurance();
+  const item=insurances[idx], gen=profileGen;
   insurances=insurances.filter(p=>p.id!==id); renderInsurances(); refreshTopMetrics();
+  showUndoToast('Removed "'+(item.label||item.name||"policy")+'"', ()=>{
+    if(profileGen!==gen) return "Can't undo: a different profile has been loaded.";
+    if(insurances.some(p=>p.id===item.id)) return;
+    insurances.splice(Math.min(idx,insurances.length),0,item); renderInsurances(); refreshTopMetrics();
+  });
 }
 function renderInsurances(){
   const list=$("insList"); if(!list) return;
@@ -9587,8 +9614,15 @@ function cancelEditEquityGrant(){
   $("eqAddBtn").textContent="+ Add Grant"; show("eqCancelBtn",false);
 }
 function delEquityGrant(id){
+  const idx=equityComp.findIndex(g=>g.id===id); if(idx<0) return;
   if(_editingEqId===id) cancelEditEquityGrant();
+  const item=equityComp[idx], gen=profileGen;
   equityComp=equityComp.filter(g=>g.id!==id); renderEquityGrants(); refreshTopMetrics();
+  showUndoToast('Removed "'+(item.label||item.name||"grant")+'"', ()=>{
+    if(profileGen!==gen) return "Can't undo: a different profile has been loaded.";
+    if(equityComp.some(g=>g.id===item.id)) return;
+    equityComp.splice(Math.min(idx,equityComp.length),0,item); renderEquityGrants(); refreshTopMetrics();
+  });
 }
 function renderEquityGrants(){
   const list=$("eqList"); if(!list) return;
@@ -9989,6 +10023,7 @@ function refreshPensionEstimates(){
     if($("penStartAge") && !_penAgeEdited) $("penStartAge").value=p.age||67;
     setT("penNote", _penNote(c,p,est)+_claimNote(c, num("penStartAge",p.age||67)));
   }
+  else if((val("penSrc")||"auto")!=="auto") setT("penNote","");
   // client 1 — COLA / indexation (auto unless the user changed it)
   if(!_colaEdited && (val("penSrc")||"auto")==="auto" && $("penCola")){
     const p=penDefaultsFor(val("c1co")||"US"); $("penCola").value=p.cola||"full";
@@ -10000,6 +10035,7 @@ function refreshPensionEstimates(){
     if($("penStartAge2") && !_pen2AgeEdited) $("penStartAge2").value=p.age||67;
     setT("penNote2", _penNote(c,p,est)+_claimNote(c, num("penStartAge2",p.age||67)));
   }
+  else if((val("penSrc2")||"auto")!=="auto") setT("penNote2","");
   // client 2 — COLA / indexation
   if($("penCola2") && !_cola2Edited && (val("penSrc2")||"auto")==="auto"){
     const p=penDefaultsFor(val("c2co")||val("c1co")||"US"); $("penCola2").value=p.cola||"full";
@@ -20840,10 +20876,15 @@ const AI_FUND_UNIVERSE = [
   {tkr:"VNAM",name:"Xtrackers FTSE Vietnam UCITS",cls:"equity",vehicle:"etf",er:0.85,yld:1.0,sponsor:"DWS",dom:"LU",ucits:true},
 
   // ─── SWITZERLAND / OTHER SINGLE COUNTRY UCITS ───
-  {tkr:"CSSMI",name:"iShares Core SMI UCITS",cls:"equity",vehicle:"etf",er:0.20,yld:3.0,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CSSMIM",name:"iShares Swiss Domestic Government Bond 1-3 UCITS",cls:"fixed_income",vehicle:"etf",er:0.15,yld:0.7,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CHSPI",name:"iShares Core SPI UCITS",cls:"equity",vehicle:"etf",er:0.10,yld:3.0,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CASH",name:"UBS Solactive Switzerland 30 UCITS",cls:"equity",vehicle:"etf",er:0.15,yld:3.0,sponsor:"UBS",dom:"CH",ucits:true},
+  {tkr:"CSSMI",name:"iShares SMI ETF (CH)",cls:"equity",vehicle:"etf",er:0.35,yld:2.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSSMIM",name:"iShares SMIM ETF (CH)",cls:"equity",vehicle:"etf",er:0.45,yld:1.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHSPI",name:"iShares Core SPI ETF (CH)",cls:"equity",vehicle:"etf",er:0.10,yld:2.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHCORP",name:"iShares Core CHF Corporate Bond ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.2,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSBGC7",name:"iShares Swiss Domestic Government Bond 3-7 ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.2,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSBGC0",name:"iShares Swiss Domestic Government Bond 7-15 ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.3,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"SRECHA",name:"UBS SXI Real Estate Funds ETF CHF dis",cls:"real_estate",vehicle:"etf",er:0.96,yld:2.1,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"SRFCHA",name:"UBS SXI Real Estate ETF CHF dis",cls:"real_estate",vehicle:"etf",er:0.77,yld:2.1,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHFON",name:"UBS SARON SF ETF CHF acc",cls:"cash",vehicle:"etf",er:0.05,yld:0.0,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
   {tkr:"CCAU",name:"iShares Core MSCI Canada UCITS",cls:"equity",vehicle:"etf",er:0.20,yld:2.6,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"AUST",name:"iShares MSCI Australia UCITS",cls:"equity",vehicle:"etf",er:0.50,yld:4.5,sponsor:"BlackRock",dom:"IE",ucits:true},
 
@@ -20913,6 +20954,7 @@ const AI_FUND_UNIVERSE = [
   {tkr:"ITPS",name:"iShares Global Inflation Linked Gov Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.25,yld:3.5,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"IGLO",name:"iShares Global Government Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.20,yld:3.2,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"AGGG",name:"iShares Core Global Aggregate Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.7,sponsor:"BlackRock",dom:"IE",ucits:true},
+  {tkr:"AGGS",name:"iShares Core Global Aggregate Bond UCITS ETF CHF Hedged (Acc)",cls:"fixed_income",vehicle:"etf",er:0.10,yld:0.0,sponsor:"BlackRock",dom:"IE",ucits:true,ccy:"CHF",hedged:true},
   {tkr:"AGGH",name:"iShares Core Global Aggregate Bond UCITS EUR Hedged",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.5,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"VAGP",name:"Vanguard Global Aggregate Bond UCITS GBP Hedged",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.7,sponsor:"Vanguard",dom:"IE",ucits:true},
 
@@ -20936,7 +20978,7 @@ const AI_FUND_UNIVERSE = [
   {tkr:"PHAU",name:"WisdomTree Physical Gold",cls:"commodity",vehicle:"alternative",er:0.39,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
   {tkr:"SGLD",name:"Invesco Physical Gold ETC",cls:"commodity",vehicle:"alternative",er:0.12,yld:0.0,sponsor:"Invesco",dom:"IE",ucits:true},
   {tkr:"XGLD",name:"Xtrackers IE Physical Gold ETC",cls:"commodity",vehicle:"alternative",er:0.12,yld:0.0,sponsor:"DWS",dom:"IE",ucits:true},
-  {tkr:"AUCH",name:"UBS ETF CH Gold (CHF Hedged)",cls:"commodity",vehicle:"alternative",er:0.23,yld:0.0,sponsor:"UBS",dom:"CH",ucits:true},
+  {tkr:"AUCHAH",name:"UBS Gold hCHF ETF CHF acc",cls:"commodity",vehicle:"alternative",er:0.23,yld:0.0,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF",hedged:true},
   {tkr:"PHAG",name:"WisdomTree Physical Silver",cls:"commodity",vehicle:"alternative",er:0.49,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
   {tkr:"SSLV",name:"iShares Physical Silver ETC",cls:"commodity",vehicle:"alternative",er:0.20,yld:0.0,sponsor:"BlackRock",dom:"JE",ucits:true},
   {tkr:"WPLT",name:"WisdomTree Physical Platinum",cls:"commodity",vehicle:"alternative",er:0.49,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
@@ -21025,7 +21067,7 @@ const AI_FUND_UNIVERSE = [
   {tkr:"LTRG",name:"Lindsell Train Global Equity Fund D USD",cls:"equity",vehicle:"mutual_fund",er:0.65,yld:1.5,sponsor:"Lindsell Train",dom:"IE",ucits:true},
   {tkr:"FUNDS",name:"Fundsmith Equity Fund T USD Acc",cls:"equity",vehicle:"mutual_fund",er:1.05,yld:0.0,sponsor:"Fundsmith",dom:"IE",ucits:true},
   {tkr:"UBSGE",name:"UBS Equity Global Sustainable Innovators P USD",cls:"equity",vehicle:"mutual_fund",er:1.80,yld:0.5,sponsor:"UBS",dom:"LU",ucits:true,esg:true},
-  {tkr:"UBSCH",name:"UBS Equity Switzerland Sustainable P CHF",cls:"equity",vehicle:"mutual_fund",er:1.62,yld:2.5,sponsor:"UBS",dom:"CH",ucits:true,esg:true},
+  {tkr:"UBCH",name:"UBS (CH) Equity Fund - Switzerland Sustainable (CHF) P-dist",cls:"equity",vehicle:"mutual_fund",er:0.95,yld:2.5,sponsor:"UBS",dom:"CH",ucits:false,esg:true,ccy:"CHF"},
   {tkr:"JBHEQ",name:"Julius Baer Equity Global Excellence A USD",cls:"equity",vehicle:"mutual_fund",er:1.78,yld:1.0,sponsor:"Julius Baer",dom:"LU",ucits:true},
   {tkr:"JBHFI",name:"Julius Baer Fixed Income Global EUR P EUR",cls:"fixed_income",vehicle:"mutual_fund",er:1.10,yld:3.5,sponsor:"Julius Baer",dom:"LU",ucits:true},
   {tkr:"VONLA",name:"Vontobel Fund US Equity B USD",cls:"equity",vehicle:"mutual_fund",er:1.74,yld:0.5,sponsor:"Vontobel",dom:"LU",ucits:true},
@@ -21673,7 +21715,7 @@ const RISK_FREE_BY_CCY = {
     // >= 5 years ago" quality screen with invented data.
     f.inception = ov.inception ?? null;
     // Income type — derive from yield
-    f.income = f.yld >= 4 ? "high" : (f.yld >= 2 ? "moderate" : "low");
+    f.income = f.yld == null ? null : (f.yld >= 4 ? "high" : (f.yld >= 2 ? "moderate" : "low"));
     f.est = est.join(",");
   });
 })();
@@ -21699,7 +21741,9 @@ function householdRiskFree(){
 // A position's metric snapshot: descriptive fields plus curated figures only.
 function fundMetricsFor(f){
   if(!f) return null;
-  const o = { src:"universe", name:f.name, sponsor:f.sponsor, vehicle:f.vehicle, dom:f.dom||"US", ucits:!!f.ucits, esg:!!f.esg,
+  // A Swiss-domiciled fund is a Swiss fund-law (CISA) fund, never a UCITS, whatever the
+  // fund list's ucits flag says. Display only: eligibility reads f.ucits, not this.
+  const o = { src:"universe", name:f.name, sponsor:f.sponsor, vehicle:f.vehicle, dom:f.dom||"US", ucits:!!f.ucits && f.dom !== "CH", esg:!!f.esg,
     er:f.er, yld:f.yld, inception:f.inception, cls:f.cls, est:f.est||"" };
   ["mu","sigma","sharpe","beta","maxDD","r1y","r3y","r5y","r10y","holdings","aum","te"].forEach(k => { o[k] = fundVal(f, k); });
   return o;
@@ -21797,7 +21841,7 @@ async function runAIPortfolioGenerator(){
   const _uNum = (v, d, suf) => (v == null ? "n/a" : v.toFixed(d) + (suf || ""));
   const _cls = (f, k) => (fundKnown(f, k) ? "" : "(class)");
   const universeStr = eligibleUniverse.map(f =>
-    `${f.tkr.padEnd(7)} | ${f.cls.padEnd(13)} | ${f.vehicle.padEnd(12)} | ER ${f.er.toFixed(2)}% Yld ${f.yld.toFixed(1)}% | μ${f.mu.toFixed(1)}%${_cls(f,"mu")} σ${f.sigma.toFixed(1)}%${_cls(f,"sigma")} Sharpe ${_uNum(fundVal(f,"sharpe"),2)} β${_uNum(fundVal(f,"beta"),2)} maxDD ${_uNum(fundVal(f,"maxDD"),0,"%")} | 1y ${_uPct(f.r1y)} 3y ${_uPct(f.r3y)} 5y ${_uPct(f.r5y)} 10y ${_uPct(f.r10y)} | holdings ${_uNum(fundVal(f,"holdings"),0)} AUM ${fundVal(f,"aum")!=null?"$"+fundVal(f,"aum")+"B":"n/a"} inc ${f.inception ?? "n/a"} TE ${_uNum(fundVal(f,"te"),2,"%")} | ${f.dom||"US"}${f.ucits?'/UCITS':''}${f.esg?'/ESG':''} | ${f.sponsor} | ${f.name}`
+    `${f.tkr.padEnd(7)} | ${f.cls.padEnd(13)} | ${f.vehicle.padEnd(12)} | ER ${f.er.toFixed(2)}% Yld ${f.yld==null?"n/a":f.yld.toFixed(1)+"%"} | μ${f.mu.toFixed(1)}%${_cls(f,"mu")} σ${f.sigma.toFixed(1)}%${_cls(f,"sigma")} Sharpe ${_uNum(fundVal(f,"sharpe"),2)} β${_uNum(fundVal(f,"beta"),2)} maxDD ${_uNum(fundVal(f,"maxDD"),0,"%")} | 1y ${_uPct(f.r1y)} 3y ${_uPct(f.r3y)} 5y ${_uPct(f.r5y)} 10y ${_uPct(f.r10y)} | holdings ${_uNum(fundVal(f,"holdings"),0)} AUM ${fundVal(f,"aum")!=null?"$"+fundVal(f,"aum")+"B":"n/a"} inc ${f.inception ?? "n/a"} TE ${_uNum(fundVal(f,"te"),2,"%")} | ${f.dom||"US"}${f.ucits?'/UCITS':''}${f.esg?'/ESG':''} | ${f.sponsor} | ${f.name}`
   ).join("\n");
 
   const prompt = `You are a sophisticated portfolio construction AI at a major wealth management firm. Analyze the client's complete financial plan + the cached research to construct a suitable portfolio.
@@ -22037,7 +22081,7 @@ function renderSimpleAIResult(rec, simpleBrief){
     const flag = flagMap[cc] || "🌐";
     h += '<div style="font-size:28px;flex-shrink:0">' + flag + '</div>';
     h += '<div style="flex:1">';
-    h += '<div style="font-size:12px;font-weight:700;color:' + (isUcits?'#92400e':'#065f46') + ';margin-bottom:4px">' + (isUcits?'UCITS funds only':'US-listed funds only') + ', picked for your country (' + escapeForHTML(cc) + ')</div>';
+    h += '<div style="font-size:12px;font-weight:700;color:' + (isUcits?'#92400e':'#065f46') + ';margin-bottom:4px">' + (isUcits?(cc === "CH" ? 'UCITS and Swiss funds' : 'UCITS funds only'):'US-listed funds only') + ', picked for your country (' + escapeForHTML(cc) + ')</div>';
     h += '<div style="font-size:12px;line-height:1.55;color:var(--text2)">' + escapeForHTML(rec.domicilePolicy.note) + '</div>';
     h += '<div style="font-size:10.5px;color:var(--text3);margin-top:5px">Filtered to <strong>' + (rec.universeFiltered?.eligible||0) + '</strong> eligible funds out of <strong>' + (rec.universeFiltered?.total||0) + '</strong> in our universe'
       + (rec.universeFiltered?.esgApplied ? ' · restricted to <strong>sustainable (ESG-flagged)</strong> funds per your preference' : '')
@@ -22120,7 +22164,7 @@ function renderSimpleAIResult(rec, simpleBrief){
   if(rec.positions?.length){
     h += '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px">';
     h += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px" class="aib-h">'+lucideIcon("briefcase")+'The funds we picked for you</div>';
-    h += '<div style="font-size:11.5px;color:var(--text3);margin-bottom:14px;font-style:italic">Hover over any fund to see the full reasoning, metrics, and why it fits your profile.</div>';
+    h += '<div style="font-size:11.5px;color:var(--text3);margin-bottom:14px;font-style:italic">' + (matchMedia('(hover:hover)').matches ? 'Hover over' : 'Tap') + ' any fund to see the full reasoning, metrics, and why it fits your profile.</div>';
     rec.positions.forEach((p, i) => {
       const fund = AI_FUND_UNIVERSE.find(f => f.tkr === p.ticker);
       const dollar = (p.weight/100) * amt;
@@ -22134,7 +22178,7 @@ function renderSimpleAIResult(rec, simpleBrief){
       // One-line summary (always visible)
       h += '<div style="font-size:11.5px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:6px">';
       h += '<span style="background:rgba(124,58,237,.1);color:#7c3aed;padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">' + expanded.tagline + '</span>';
-      h += '<span style="font-size:10.5px;color:var(--text3);font-style:italic">'+lucideIcon("chevron-down")+' hover for details</span>';
+      h += '<span style="font-size:10.5px;color:var(--text3);font-style:italic">'+lucideIcon("chevron-down")+' ' + (matchMedia('(hover:hover)').matches ? 'hover' : 'tap') + ' for details</span>';
       h += '</div>';
       // Expanded rationale — hidden by default, revealed on hover/focus
       h += '<div class="ai-pos-why">';
@@ -22254,6 +22298,9 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
   else                                tagline = "Portfolio building block";
   if(m.esg) tagline += " · ESG";
   if(m.ucits) tagline += " · UCITS";
+  else if(m.dom === "CH") tagline += " · Swiss fund";
+  // A Swiss sleeve pick says which part of its asset class it is.
+  if(p && p.sleeve) tagline = escapeForHTML(p.sleeve) + " · " + tagline;
 
   // ─── Plain-language "why" — a long-form explanation ───
   const whyBits = [];
@@ -22291,8 +22338,12 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
     whyBits.push(`Matches your <strong>ESG preference</strong>: sustainability screen applied by the index provider.`);
   }
   // UCITS / domicile
-  if(m.ucits){
+  if(m.ucits && (val("c1co")||"US") === "CH"){
+    whyBits.push(`<strong>UCITS fund</strong> (domiciled in ${m.dom}): offered to Swiss residents under FinSA once approved by FINMA. US 40-Act funds are not offered to Swiss retail clients.`);
+  } else if(m.ucits){
     whyBits.push(`<strong>UCITS-passportable</strong> (domiciled in ${m.dom}), legally tradeable for EU/UK/Swiss/Asian/MENA residents under PRIIPs. US 40-Act funds are not.`);
+  } else if(m.dom === "CH"){
+    whyBits.push(`<strong>Swiss fund</strong> (domiciled in CH, Swiss fund law): not a UCITS, offered to Swiss residents under FinSA.`);
   }
   // Income angle
   if(m.yld != null && m.yld >= 4) whyBits.push(`Distributes <strong>${m.yld.toFixed(1)}% in yield</strong>: meaningful regular cash flow if you reinvest or use it for income.`);
@@ -22342,7 +22393,11 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
     if(horizon === "15_plus") fitBits.push(`Your <strong>15+ year horizon</strong> means short-term volatility matters less than long-run compounding, so this fund has time to recover from any single drawdown.`);
     else if(horizon === "0_5") fitBits.push(`Given your <strong>0-5 year horizon</strong>, capital preservation matters; this fund's role in your portfolio is to balance higher-volatility positions.`);
   }
-  if(m.ucits && country !== "US" && country !== "CA"){
+  if(country === "CH" && (m.ucits || m.dom === "CH")){
+    fitBits.push(m.dom === "CH"
+      ? `A Swiss-domiciled fund priced in CHF.`
+      : `Chosen over a US-listed equivalent, which is not offered to Swiss retail clients.`);
+  } else if(m.ucits && country !== "US" && country !== "CA"){
     fitBits.push(`Required for ${country} residents: direct US-listed equivalents (e.g. VOO for CSPX) are not legally distributable to retail under PRIIPs.`);
   }
   if(fitBits.length === 0) fitBits.push("Fits your overall portfolio construction: diversification, cost, and risk fit are all consistent with your stated preferences.");
@@ -22772,6 +22827,14 @@ function getDomicilePolicy(country){
     label: "US-listed (interlisted on TSX where available)",
     note: "Canadian retail typically buys US-listed ETFs (often interlisted on TSX). UCITS funds are rarely distributed to Canadian investors."
   };
+  // Switzerland is not under PRIIPs: retail distribution follows FinSA and the Swiss
+  // fund law (CISA). Same eligibility as every other UCITS country (type unchanged);
+  // only the wording differs.
+  if(c === "CH") return {
+    type: "UCITS",
+    label: "UCITS and Swiss funds for CH resident",
+    note: "Swiss residents buy under FinSA and the Swiss fund law (CISA): Swiss-domiciled funds, and UCITS funds (Ireland/Luxembourg-domiciled) approved by FINMA for Swiss distribution; confirm each fund's Swiss registration before use. US 40-Act ETFs are not offered to Swiss retail clients."
+  };
   return {
     type: "UCITS",
     label: `UCITS-passportable funds for ${c} resident`,
@@ -22780,6 +22843,8 @@ function getDomicilePolicy(country){
 }
 
 function isFundEligibleForCountry(fund, country){
+  // A Swiss-domiciled fund is a Swiss fund-law fund, not a UCITS: Swiss residents only.
+  if(fund.dom === "CH" && String(country || "").toUpperCase() !== "CH") return false;
   const policy = getDomicilePolicy(country);
   if(policy.type === "US_LISTED"){
     return !fund.ucits && (!fund.dom || fund.dom === "US");
@@ -22800,6 +22865,63 @@ const COUNTRY_CCY = {US:"USD", CA:"CAD", GB:"GBP", AU:"AUD", CH:"CHF", JP:"JPY",
                      AT:"EUR", IE:"EUR", PT:"EUR", FI:"EUR", GR:"EUR", LU:"EUR", EU:"EUR"};
 function clientCurrency(brief){
   return (brief && (brief.currency || COUNTRY_CCY[(brief.country||"US").toUpperCase()])) || "USD";
+}
+
+// ── Swiss sleeves (Portfolio Builder, rules engine) ──────────────────────
+// A Swiss household in CHF is priced on the CHF capital market assumptions, whose
+// rows are blends: equity 40% Swiss, 50% global, 10% emerging; fixed income half
+// CHF bonds, half global bonds; gold hedged to CHF; Swiss real estate. Taking the
+// top funds of a whole asset class instead stacked S&P 500 and Nasdaq-100 trackers
+// and priced them as that blend. For this household only, each class weight is
+// split into the same sleeves and each sleeve takes its single best fund on the
+// engine's own score (same score, same order: only the pool a pick comes from
+// changes). A sleeve with no fund passes its share to the other sleeves of its
+// class; a class with no fillable sleeve, or none defined (cash, alternatives),
+// keeps the generic pick. Both conditions are required: residence decides what
+// may be sold (Swiss funds under FinSA/CISA), the household currency decides the
+// assumptions set the Builder is priced on (cmaSetFor) and what "hedged" means.
+// Every other household never reaches the sleeve code.
+// A share class hedged to a currency other than CHF delivers the wrong exposure.
+const _SLV_HEDGED_ELSEWHERE = f => /hedged/i.test(f.name) && !/\bCHF\b/.test(f.name);
+// Entries that cannot be bought as named, kept out of the sleeves until the fund
+// list is corrected (now fixed at load, swissFundData): CSSMIM is the iShares SMIM ETF (CH), a
+// mid-cap EQUITY fund, filed as a Swiss government bond fund; CASH ("UBS Solactive
+// Switzerland 30") matches no verified product.
+const _SLV_UNVERIFIED = new Set(["CSSMIM", "CASH"]);
+// A name that points outside Switzerland: a CH-domiciled world, regional or global bond
+// fund is not Swiss equity or a CHF bond fund, whatever its domicile.
+const _SLV_NOT_SWISS = /\b(World|Global|International|ACWI|All[- ]World|Europe|Euro|EMU|USA?|America|Japan|Asia|Pacific|EM|Emerging|China|India)\b/i;
+// Index funds only: no sector, factor, size, dividend or regional sub-index.
+const _SLV_NARROW = /small|mid ?cap|value|quality|momentum|min(imum)? vol|dividend|factor|equal weight|sector|health|tech|internet|financ|energy|consumer|industr|utilit|material|communic|islamic|ex[- ]?china|\basia\b|latin|leverag|short/i;
+const BUILDER_SLEEVES_CHF = {
+  equity: [
+    {label: "Swiss equity", share: 0.40, region: "dev_intl",
+     test: f => (f.dom === "CH" || /\b(SPI|SMI|SLI|Switzerland|Swiss)\b/.test(f.name)) && !/ex[- ]?Switz/i.test(f.name)
+       && !_SLV_NOT_SWISS.test(f.name) && !_SLV_NARROW.test(f.name)},
+    {label: "Global developed equity", share: 0.50, region: "global",
+     test: f => /\b(MSCI World|Developed World)\b/.test(f.name) && !_SLV_NARROW.test(f.name)},
+    {label: "Emerging markets equity", share: 0.10, region: "emerging",
+     test: f => /\b(MSCI EM|Emerging Markets)\b/.test(f.name) && !_SLV_NARROW.test(f.name)}
+  ],
+  fixed_income: [
+    {label: "CHF bonds", share: 0.50, region: "dev_intl",
+     test: f => !/hedged/i.test(f.name) && !_SLV_NOT_SWISS.test(f.name) && (f.dom === "CH" || /\b(CHF|Swiss)\b/.test(f.name))},
+    {label: "Global aggregate bonds", share: 0.50, region: "global",
+     test: f => /\bGlobal (Aggregate|Government) Bond\b/.test(f.name) && !/inflation/i.test(f.name)}
+  ],
+  real_estate: [
+    {label: "Swiss real estate", share: 1, region: "dev_intl",
+     test: f => (f.dom === "CH" || /\b(Swiss|Switzerland|SXI)\b/.test(f.name)) && !_SLV_NOT_SWISS.test(f.name)}
+  ],
+  commodity: [
+    {label: "Gold hedged to CHF", share: 1, region: "global",
+     test: f => /\bgold\b/i.test(f.name) && /\bCHF\b/.test(f.name)}
+  ]
+};
+function builderSleevePlan(brief){
+  const c = String((brief && brief.country) || "").toUpperCase();
+  const ccy = String((typeof CURRENT_CCY !== "undefined" && CURRENT_CCY) || "USD").toUpperCase();
+  return (c === "CH" && ccy === "CHF") ? BUILDER_SLEEVES_CHF : null;
 }
 
 function runDeterministicEngine(brief){
@@ -22852,6 +22974,8 @@ function runDeterministicEngine(brief){
     else esgUnmet = true;
   }
   const used = {sponsors: new Set()};
+  const sleevePlan = builderSleevePlan(brief);   // null unless a Swiss household in CHF
+  const sleeveGaps = [];
   const positions = [];
   // Pre-flight: which sleeves can this client actually be sold? Non-US (UCITS)
   // jurisdictions have NO eligible cash or alternative funds, so those sleeves
@@ -22976,7 +23100,26 @@ function runDeterministicEngine(brief){
       picks.push(cand);
     }
     const each = weight / n;
-    picks.forEach(f => {
+    // For a Swiss household a class with fewer eligible funds than n splits its
+    // weight over the funds it has, so the class keeps its weight. Every other
+    // household keeps each = weight / n exactly as before.
+    let picked = picks.map(f => ({f, w: sleevePlan ? weight / picks.length : each, sleeve: null}));
+    // Swiss sleeves (BUILDER_SLEEVES_CHF): same scores and order as above, one fund
+    // per sleeve. null for every other household, so picked stays the generic pick.
+    const _sleeves = sleevePlan && sleevePlan[cls];
+    if(_sleeves){
+      const _ok = c => !_SLV_UNVERIFIED.has(c.tkr) && !_SLV_HEDGED_ELSEWHERE(c);
+      const _taken = new Set();   // one fund never fills two sleeves
+      const _filled = _sleeves.map(s => { const f = candidates.find(c => _ok(c) && !_taken.has(c.tkr) && s.test(c)); if(f) _taken.add(f.tkr); return {s, f}; });
+      const _have = _filled.filter(x => x.f);
+      if(_have.length){
+        const _sh = _have.reduce((t, x) => t + x.s.share, 0);
+        picked = _have.map(x => ({f: x.f, w: weight * x.s.share / _sh, sleeve: x.s}));
+      }
+      _filled.filter(x => !x.f).forEach(x => sleeveGaps.push({cls, label: x.s.label,
+        weight: +(weight * x.s.share).toFixed(1), to: _have.length ? _have.map(y => y.s.label) : null}));
+    }
+    picked.forEach(({f, w, sleeve}) => {
       // Build rich rationale citing research
       const rationaleParts = [];
       const clsData = signals.classes[cls];
@@ -22993,6 +23136,7 @@ function runDeterministicEngine(brief){
       } else {
         rationaleParts.push(`${ENG_PRETTY_CLASS[cls]} baseline for your ${brief.risk.replace(/_/g," ")} risk profile`);
       }
+      if(sleeve) rationaleParts.push(`${sleeve.label} sleeve: ${Math.round(w / weight * 100)}% of the ${ENG_PRETTY_CLASS[cls].toLowerCase()} weight`);
       if(signals.tickers[f.tkr]){
         const tk = signals.tickers[f.tkr];
         rationaleParts.push(`${f.tkr} cited by ${tk.providers.slice(0,3).join(", ").toUpperCase()}${tk.providers.length>3?" + "+(tk.providers.length-3)+" more":""}`);
@@ -23008,7 +23152,11 @@ function runDeterministicEngine(brief){
         if(q3) rationaleParts.push(q3); }
       if(f.esg && brief.esg !== "none") rationaleParts.push("ESG-flagged matches preference");
       // Domicile / regulatory rationale
-      if(f.ucits) rationaleParts.push(`UCITS-passportable (${f.dom}-domiciled), eligible for ${brief.country||"non-US"} resident under PRIIPs`);
+      // A Swiss-domiciled fund is a Swiss (CISA) fund, never a UCITS; a Swiss
+      // resident is under FinSA, not PRIIPs.
+      if(f.dom === "CH") rationaleParts.push(`Swiss fund (CH-domiciled, Swiss fund law), not a UCITS`);
+      else if(f.ucits && String(brief.country||"").toUpperCase() === "CH") rationaleParts.push(`UCITS fund (${f.dom}-domiciled), offered to CH residents under FinSA once approved by FINMA`);
+      else if(f.ucits) rationaleParts.push(`UCITS-passportable (${f.dom}-domiciled), eligible for ${brief.country||"non-US"} resident under PRIIPs`);
       else if(f.dom && f.dom !== "US") rationaleParts.push(`${f.dom}-listed, locally accessible for ${brief.country} resident`);
       // Which overweighted buckets this fund sits in — why this one and not
       // another in the same sleeve
@@ -23024,7 +23172,9 @@ function runDeterministicEngine(brief){
 
       positions.push({
         ticker: f.tkr,
-        weight: +each.toFixed(1),
+        weight: +w.toFixed(1),
+        // Swiss sleeve picks only: the sleeve's name, and its region for the proposal pie.
+        ...(sleeve ? {sleeve: sleeve.label, sleeveRegion: sleeve.region} : {}),
         // cls carries the pricing: computePortfolioMetrics() prices the line by its
         // asset class on the CMA (exp null, cash at 0%), exactly as the Investment
         // Proposal and Portfolio Comparison do. f.mu / f.sigma only ranked the fund.
@@ -23100,7 +23250,8 @@ function runDeterministicEngine(brief){
   }
   // Domicile / regulatory note (appended last so it doesn't suppress the alignment message above)
   if(domicilePolicy.type === "UCITS"){
-    risks.push(`Universe restricted to ${eligibleUniverse.length} UCITS-passportable funds (of ${totalUniverse}), required for ${brief.country} resident under PRIIPs`);
+    if(String(brief.country||"").toUpperCase() === "CH") risks.push(`Universe restricted to ${eligibleUniverse.length} non-US funds (of ${totalUniverse}), mostly UCITS, for a CH resident under FinSA: confirm each fund's Swiss registration before use`);
+    else risks.push(`Universe restricted to ${eligibleUniverse.length} UCITS-passportable funds (of ${totalUniverse}), required for ${brief.country} resident under PRIIPs`);
   }
   // Cash held in a currency other than the client's is an FX exposure in the one
   // sleeve that is supposed to carry none — say so rather than leaving it implied.
@@ -23117,6 +23268,15 @@ function runDeterministicEngine(brief){
   unfillableSleeves.forEach(({cls, weight}) => risks.push(
     `${ENG_PRETTY_CLASS[cls] || cls} sleeve (${weight}% target) has no ${brief.country || "US"}-eligible fund, so it was reallocated to ${cls === "cash" ? "fixed income" : "the remaining sleeves"}`
   ));
+  // Swiss sleeves the fund list cannot fill, and bond lines not hedged to CHF.
+  sleeveGaps.forEach(g => risks.push(g.to
+    ? `${g.label} sleeve (${g.weight}% target): the fund list has no usable fund for it, so its share is held in ${g.to.join(" and ").toLowerCase()}`
+    : `${g.label} sleeve (${g.weight}% target): the fund list has no usable fund for it, so ${ENG_PRETTY_CLASS[g.cls].toLowerCase()} keeps the engine's usual pick`));
+  if(sleevePlan) positions.forEach(p => {
+    const f = AI_FUND_UNIVERSE.find(x => x.tkr === p.ticker);
+    if(f && f.cls === "fixed_income" && f.dom !== "CH" && !/\bCHF\b/.test(f.name))
+      risks.push(`${p.ticker} (${p.weight}% in bonds) is not hedged to CHF, so it carries currency risk that the CHF fixed income assumptions do not include`);
+  });
 
   // ── Step 6: top themes for narrative ──
   const topThemes = Object.entries(signals.themes).sort((a,b) => b[1].votes - a[1].votes).slice(0,3);
@@ -23137,7 +23297,7 @@ function runDeterministicEngine(brief){
 
   const rec = {
     engine: "rules",   // the deterministic rules engine: no model involved
-    summary,
+    summary: summary + (sleevePlan ? " Swiss household in CHF: equity, bonds and gold are filled sleeve by sleeve to match the CHF capital market assumptions; the notes below list any sleeve the fund list cannot fill." : ""),
     allocationByClass: alloc,
     positions,
     expectedReturn,
@@ -23249,7 +23409,7 @@ function renderAIGenResult(rec, brief){
         </div>
         <div style="font-size:11.5px;color:var(--text3);font-style:italic;display:flex;align-items:center;gap:6px">
           <span style="background:rgba(124,58,237,.1);color:#7c3aed;padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700;font-style:normal">${expanded.tagline}</span>
-          <span>↓ hover for full metrics &amp; reasoning</span>
+          <span>↓ ${matchMedia('(hover:hover)').matches ? 'hover' : 'tap'} for full metrics &amp; reasoning</span>
         </div>
         <div class="ai-pos-why">
           <div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(124,58,237,.3)">
@@ -23407,6 +23567,7 @@ function applyAIRecommendationToProposal(){
     // (falls back to inferProposalRegion if fund is unknown)
     const region = (function(){
       if(fund){
+        if(p.sleeveRegion && INV_REGION_LABELS[p.sleeveRegion]) return p.sleeveRegion;   // Swiss sleeve picks name their region
         const tmp = {tkr: p.ticker, name: fund.name, cls: fund.cls};
         return inferProposalRegion(tmp);
       }
@@ -23421,6 +23582,7 @@ function applyAIRecommendationToProposal(){
       isin: "", cusip: "", valor: "",
       vehicle: fund?.vehicle || "etf",
       cls: fund?.cls || "mixed",
+      ...(p.sleeve ? {subcat: p.sleeve} : {}),
       region: region,
       alloc: p.weight,
       exp: exp,
@@ -26513,8 +26675,8 @@ function renderRetirementDrawdown(s){
     svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs)" role="img" aria-label="Retirement portfolio value through drawdown">
       <polygon points="${top} ${bot}" fill="rgba(0,87,184,.14)" stroke="none"/>
       <polyline points="${mid}" fill="none" stroke="#c9a96e" stroke-width="2"/>
-      <text x="${padL}" y="${H-5}" font-size="9" style="fill:#9aa3b2">age ${b[0].age}</text>
-      <text x="${W-padR}" y="${H-5}" font-size="9" text-anchor="end" style="fill:#9aa3b2">age ${b[b.length-1].age}</text>
+      <text x="${padL}" y="${H-5}" font-size="11" style="fill:#9aa3b2">age ${b[0].age}</text>
+      <text x="${W-padR}" y="${H-5}" font-size="11" text-anchor="end" style="fill:#9aa3b2">age ${b[b.length-1].age}</text>
     </svg>`;
   }
   const ageOrPlus=(a)=>a>=s.planAge?(s.planAge+"+"):("age "+a);
@@ -28361,8 +28523,9 @@ function renderCFComparison(niData,curData,propData,curMu,propMu,curParams,propP
   if(goals.length>0){
     // Grid: Goal | Year | Needed | No-Inv | Current | [Proposal] | Δ Cur−NI | [Δ Prop−Cur]
     const gcols=hasProp
-      ?"1fr 68px 120px 108px 108px 115px 95px 95px"
-      :"1fr 68px 120px 108px 115px 95px";
+      ?"minmax(130px,1fr) 52px 104px 100px 100px 104px 88px 88px"
+      :"minmax(130px,1fr) 52px 104px 100px 104px 88px";
+    const gmin=hasProp?830:626;   // the grid scrolls (#cfcGoals) rather than being clipped
     const tag=(nw,amt,color)=>{
       const ok=nw>=amt;
       return `<div><span class="fund-tag ${ok?'fund-ok':'fund-bad'}">${ok?lucideIcon("check")+" Funded":lucideIcon("x")+" Short"}</span>`+
@@ -28375,7 +28538,7 @@ function renderCFComparison(niData,curData,propData,curMu,propMu,curParams,propP
       const curNW=curData[relYr]?.nw||0;
       const propNW=hasProp?propData[relYr]?.nw||0:null;
       const d1=curNW-niNW, d2=hasProp?propNW-curNW:null;
-      return `<div style="display:grid;grid-template-columns:${gcols};gap:5px 8px;align-items:start;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12px">
+      return `<div style="display:grid;grid-template-columns:${gcols};min-width:${gmin}px;gap:5px 8px;align-items:start;padding:7px 4px;border-bottom:1px solid var(--border);font-size:12px">
         <div class="cfc-gn">${_daEsc(g.name)}<div class="cfc-gy" style="font-weight:400;margin-top:1px">${g.endYear}</div></div>
         <div class="cfc-gy">${g.endYear}</div>
         <div class="cfc-ga">${fmtMoney(totalAmt)}</div>
@@ -28388,7 +28551,7 @@ function renderCFComparison(niData,curData,propData,curMu,propMu,curParams,propP
     }).join("");
     setH("cfcGoals",`
       <div class="slbl" style="margin-bottom:6px">Goal Funding at Target Year: deterministic conservative scenario</div>
-      <div style="display:grid;grid-template-columns:${gcols};gap:5px 8px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding:5px 4px;border-bottom:1px solid var(--border2)">
+      <div style="display:grid;grid-template-columns:${gcols};min-width:${gmin}px;gap:5px 8px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding:5px 4px;border-bottom:1px solid var(--border2)">
         <div>Goal</div><div>Yr</div><div>Amount</div>
         <div>No investments</div>
         <div style="color:#5b9bd5">Current</div>
@@ -30261,7 +30424,7 @@ function renderRptOrderList(){
     h += '<div class="rpt-ord-item" data-key="'+key+'" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;'+(on?"":"opacity:.45;")+'">';
     h += '<input type="checkbox" '+(on?"checked":"")+' '+(incId?"":"disabled")+' onchange="rptOrderInc(\''+(incId||"")+'\',this.checked)" title="'+(incId?"Include this page in the report":"Always included")+'" style="width:16px;height:16px;accent-color:var(--gold);flex:0 0 auto;cursor:'+(incId?"pointer":"default")+'">';
     h += '<span style="font-size:11px;color:var(--text3);min-width:18px">' + (idx+1) + '.</span>';
-    h += '<span class="rpt-ord-name" style="flex:1;font-size:13px;color:var(--text);cursor:help">' + label + '</span>';
+    h += '<span class="rpt-ord-name" onclick="this.parentElement.classList.toggle(\'prev-open\')" style="flex:1;font-size:13px;color:var(--text);cursor:pointer">' + label + '</span>';
     h += '<button type="button" onclick="moveRptSection(\''+key+'\',-1)" '+(idx===0?'disabled':'')+' style="background:#fff;border:1px solid var(--border);width:28px;height:28px;border-radius:5px;cursor:pointer;font-size:14px;line-height:1">↑</button>';
     h += '<button type="button" onclick="moveRptSection(\''+key+'\',1)" '+(idx===order.length-1?'disabled':'')+' style="background:#fff;border:1px solid var(--border);width:28px;height:28px;border-radius:5px;cursor:pointer;font-size:14px;line-height:1">↓</button>';
     h += '<div class="rpt-ord-prev"><div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">'+(idx+1)+'. '+label+'</div><div style="font-size:11.5px;color:var(--text2);line-height:1.55">'+desc+'</div></div>';
@@ -34964,7 +35127,7 @@ function renderTaxEfficiency(){
   setT("te-free",fmtMoney(t.taxFree));
   setT("te-deferred",fmtMoney(t.taxDeferred));
   setT("te-taxable",fmtMoney(t.taxable));
-  setT("te-score-val",t.score+"/100");
+  setT("te-score-val",t.score);
   const bar=document.getElementById("te-score-bar");
   if(bar) bar.style.width=t.score+"%";
   setT("te-annual-drag","−"+fmtMoney(t.annualDrag)+"/yr");
@@ -35852,7 +36015,7 @@ function renderTornado(results,base){
   let html=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">
     Base median wealth at year <strong style="color:var(--text)">${currentYear()+lastSimYrs}</strong>: <strong style="color:var(--gold)">${fmtMoney(base)}</strong>
   </div>
-  <div style="display:grid;grid-template-columns:160px 1fr 1fr;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden">
+  <div style="display:grid;grid-template-columns:minmax(110px,160px) minmax(0,1fr) minmax(0,1fr);border:1px solid var(--border);border-radius:var(--rs);overflow:hidden">
     <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border)">Input<span class="info-ic">i<span class="info-pop">Each row re-runs the simulation with one input shifted up/down while all others stay fixed at their current values, then compares the resulting median wealth at the target year to the base case. Most inputs shift by ±20%, but Inflation rate shifts by ±1 percentage point, Investment return by ±2pp, and Return volatility by ±3pp.</span></span></div>
     <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);text-align:center">Lower scenario</div>
     <div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);text-align:center">Higher scenario</div>`;
@@ -35866,12 +36029,12 @@ function renderTornado(results,base){
     html+=`<div style="font-size:12px;font-weight:500;color:var(--text);padding:9px 12px;border-top:1px solid var(--border);${bg}">
         ${r.label}<div style="font-size:10px;color:var(--text3);margin-top:1px">${r.fmt}</div>
       </div>
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--border);${bg}">
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:9px 12px;min-width:0;border-top:1px solid var(--border);${bg}">
         <span style="font-size:11px;color:${minusClr};font-variant-numeric:tabular-nums;white-space:nowrap">${r.minus>=0?"+":""}${fmtMoney(r.minus)}</span>
-        <div style="width:${minusW}px;height:16px;background:${minusClr};border-radius:3px 0 0 3px;flex-shrink:0;opacity:.8"></div>
+        <div style="width:calc((100% - 84px) * ${(Math.abs(r.minus)/maxImpact).toFixed(4)});min-width:3px;height:16px;background:${minusClr};border-radius:3px 0 0 3px;flex-shrink:0;opacity:.8"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid var(--border);${bg}">
-        <div style="width:${plusW}px;height:16px;background:${plusClr};border-radius:0 3px 3px 0;flex-shrink:0;opacity:.8"></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;min-width:0;border-top:1px solid var(--border);${bg}">
+        <div style="width:calc((100% - 84px) * ${(Math.abs(r.plus)/maxImpact).toFixed(4)});min-width:3px;height:16px;background:${plusClr};border-radius:0 3px 3px 0;flex-shrink:0;opacity:.8"></div>
         <span style="font-size:11px;color:${plusClr};font-variant-numeric:tabular-nums;white-space:nowrap">${r.plus>=0?"+":""}${fmtMoney(r.plus)}</span>
       </div>`;
   });
@@ -36463,6 +36626,20 @@ document.addEventListener("DOMContentLoaded",function(){
       box.classList.remove("vis");
       active=false;
     });
+    // Touch: a tap on a cell shows its breakdown next to it; a tap elsewhere or a scroll hides it.
+    document.addEventListener("click",function(e){
+      const td=e.target.closest&&e.target.closest("td.cf-tip-cell,td.inv-cell");
+      if(!td){ if(active){ box.classList.remove("vis"); active=false; } return; }
+      try{
+        const isCF=!!td.dataset.cfTip; const d=JSON.parse(isCF?td.dataset.cfTip:td.dataset.inv);
+        box.innerHTML=isCF?buildCFTip(d):build(d);
+        const r=td.getBoundingClientRect(); let x=r.right+8, y=r.top;
+        if(x+330>innerWidth) x=Math.max(8,r.left-338);
+        if(y+220>innerHeight) y=Math.max(8,innerHeight-230);
+        box.style.left=x+"px"; box.style.top=y+"px"; box.classList.add("vis"); active=true;
+      }catch(_){}
+    });
+    document.addEventListener("scroll",function(){ if(active){ box.classList.remove("vis"); active=false; } },true);
   })();
 });
 
@@ -36922,6 +37099,89 @@ document.addEventListener("DOMContentLoaded",function(){
   applyState();
 })();
 </script>
+<style id="ipad-fixes">
+/* ── iPad: landscape layout and touch (audit 2026-10-14). Last in the page so it wins. ── */
+/* Household cards: the 180px relationship column squeezed both cards at 1024-1279px. */
+@media (min-width:901px) and (max-width:1279px){
+  .clients-wrap{grid-template-columns:1fr 1fr}
+  .clients-wrap>.rel-conn{grid-column:1/-1;grid-row:1;padding-top:0}
+  .clients-wrap>.rel-conn>.rel-line{display:none}
+  .clients-wrap>.rel-conn>#relsel{width:auto!important}
+}
+@media (min-width:901px) and (max-width:1439px){
+  .client-card .ag3{grid-template-columns:1fr 1fr}
+  .client-card .ag3>div:last-child{grid-column:1/-1}
+}
+.c-head .btn-x{white-space:nowrap}
+#tab-goals select.w200,.client-card select.w180{width:auto;min-width:180px;max-width:100%}
+/* Top bar keeps one line while a status message shows. */
+.logo,.topbar .btn-primary,.topbar .btn-secondary,.topbar .priv-chip{white-space:nowrap}
+.topbar .ai-tip,.topbar .btn-primary,.topbar .priv-chip,.topbar .icon-btn{flex-shrink:0}
+.topbar{gap:16px}
+#topbarStatus{min-width:0!important;max-width:200px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow-wrap:anywhere}
+@media (max-width:900px){.logo small{display:none}}
+/* Sidebar fits Safari landscape (toolbars take ~80px). */
+@media (min-width:701px) and (max-height:820px){.sidebar{padding:12px 0}.nav-item{padding-top:6px;padding-bottom:6px}.nav-grp-label{padding-top:10px}}
+/* Account and loan rows: name on line 1 with the buttons, badges below, below 1200px. */
+@media (max-width:1199px){
+  .asset-item>.item-row,.loan-item>.item-row{flex-wrap:wrap;row-gap:6px}
+  .asset-item>.item-row>span[style*="flex:1"],.loan-item>.item-row>span[style*="flex:1"]{order:-2;flex:1 1 calc(100% - 100px)!important;min-width:0}
+  .asset-item>.item-row>.btn-x,.loan-item>.item-row>.btn-x{order:-1}
+}
+.abadge,.lbadge{font-size:11px}
+#tax-child-note,#invParamsBody>div[style*="font-size:10px"]{font-size:11px!important}
+#taxApply{width:auto;min-width:200px;max-width:100%}
+.form-uniform .frow #ltype{width:auto;min-width:var(--fld-w);max-width:100%}
+#atype{width:auto;min-width:200px;max-width:100%}
+#accy{width:auto;max-width:100%;margin-left:auto!important}
+.form-uniform .frow #isben,.form-uniform .frow #isbenef{width:240px;max-width:100%}
+/* Investment Proposal: the 10-track grids need ~1,050px, so wrap them below 1400px. */
+@media(max-width:1400px){
+  .pr-add{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pr-row{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px 10px;padding:10px}
+  .pr-row > *{min-width:0}
+  .pr-row .pv-tag{justify-self:start}
+}
+@media(max-width:1150px){.pr-add{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.pr-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.pr-row{grid-template-columns:1fr}}
+/* Simulation: goal funding grid scrolls instead of being clipped; cash-flow table on one line per year. */
+#cfcGoals{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cf-tbl td{white-space:nowrap}
+.cf-tbl td:last-child{white-space:normal;min-width:84px}
+.cf-tbl th,.cf-tbl td{padding-left:6px;padding-right:6px}
+.cf-tbl td:first-child,.cf-tbl th:first-child{position:sticky;left:0;z-index:1;background:var(--bg2);box-shadow:1px 0 0 var(--border)}
+.cf-tbl th:first-child{z-index:3;background:var(--bg3)}
+.rn-card .rn-val{white-space:nowrap;font-size:clamp(18px,1.9vw,22px)}
+#chBvgC1,#chBvgC2,#chP3aC1,#chP3aC2{width:200px}
+/* Portfolio Builder fund cards: tap to open on touch (hover on desktop). */
+@media (hover:none){
+  .ai-pos-card:hover .ai-pos-why,.ai-pos-card:focus-within .ai-pos-why{max-height:0}
+  .ai-pos-card.open .ai-pos-why{max-height:1200px}
+}
+/* Touch: tappable 'i' notes, 32-40px targets, readable small print. */
+@media (hover:none),(pointer:coarse){
+  .info-ic{cursor:pointer}
+  .info-ic::before{content:"";position:absolute;inset:-9px}
+  .btn-x{min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+  .item-row .btn-x{font-size:14px!important}
+  .row-act{width:36px;height:36px}
+  .pr-row .btn-x,.da-modal-h .btn-x{justify-self:end}
+  #tab-portfolio .ptitle .btn-secondary,.pf-tab{min-height:34px}
+  #relsel label,.coll-toggle{min-height:32px}
+  .set-switch::after{content:"";position:absolute;inset:-6px -4px}
+  .priv-switch,.net-log summary,.band-btn,.topbar .priv-chip{min-height:32px}
+  #mdKeysGrid input{min-height:34px}
+  .section-dropdown{min-height:40px}
+  #insPremExp{width:22px!important;height:22px!important;flex-shrink:0}
+  #insPremExp + label{padding:8px 0}
+  .sim-subnav .band-btn,.sim-toolbar button{min-height:36px;padding:8px 16px}
+  td.cf-tip-cell,td.inv-cell{cursor:pointer}
+  .ai-pos-why [style*="font-size:9px"],#prList [style*="font-size:9px"],#prList [style*="font-size:10px"]{font-size:11px!important}
+  .tax-box .tb-sub{font-size:11px}
+  #cfcGoals .fund-tag + div,.conf-tile div[style*="font-size:10.5px"],#tornadoWrap div[style*="font-size:12px"] > div[style*="font-size:10px"]{font-size:11px!important}
+}
+</style>
 <!-- Sample client for the demo entry link (?client=keller): fictional profile from
      "Sample Client profiles/beatrice-keller-swiss-profile.json". -->
 <script type="application/json" id="demoClient-keller">{"v":"1.1","savedAt":"2026-07-18T16:45:00.000Z","fields":{"c1f":"Béatrice","c1l":"Keller","c1d":"1978-04-12","c1r":"moderate","c1h":"15_plus","c1s1":"","c1s2":"","c1ci":"Zürich","c1st":"ZH","c1zp":"8001","c1co":"CH","c1eu":"","c1euReg":"","c1euCity":"","c2f":"Thomas","c2l":"Keller","c2d":"1976-09-23","c2r":"moderately_conservative","c2h":"15_plus","c2s1":"","c2s2":"","c2ci":"Zürich","c2st":"ZH","c2zp":"8001","c2co":"CH","rel":"spouse","inc1":"185000","inc2":"15000","inc1b":"120000","inc2b":"8000","raise":"0","savAnnual":"60000","expL":"78000","expI":"12000","expO":"10000","inf":"2.1","region":"ch","infEuCountry":"","aProp":"1250000","aOther":"0","retM":"6.3","retV":"10.5","retAge":"65","retSpend":"110000","retLife":"comfortable","retLoc":"US","penSrc":"manual","penAnnual":"29400","penStartAge":"65","penCola":"full","penSrc2":"manual","penAnnual2":"29400","penStartAge2":"65","penCola2":"full","pfFeeType":"none","pfAdvisoryFee":"0","prFeeType":"none","prAdvisoryFee":"0","prClient":"Béatrice & Thomas Keller","prAdvisor":"Private Wealth Intelligence","prAmount":"350000","prObjective":"balanced","prRationale":"Rebalance the concentrated Swiss single-stock exposure (Nestle/Novartis/Roche = 21% of the depot) into a diversified global core, add emerging-markets breadth and a hedged bond sleeve to match the household's blended moderate profile, and keep two years of planned goal spending in short-term instruments.","simYrs":"30","simN":"1000","tgtEquity":"60","rebalFreq":"none","gpOn":"no","gpYears":"10","estExemption":"0","estRate":"0","taxMode":"auto","taxFlat":"25","cgtRate":"15","cgtTurnover":"10","taxApply":"yes","taxState":"ZH","taxResidency":"","blow":"10","bmid":"50","bhigh":"90","rdPlanAge":"90","rdTarget":"85","caAdj":"7","caLife":"90","stressScenario":"base","chk_sameaddr":true,"chk_insPremExp":true},"c2visible":true,"bandMode":"standard","ccy":"CHF","ccyManual":false,"assets":[{"id":"a1","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse UBS","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":480000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c1"},{"id":"a2","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (VIAC)","baseLabel":"Pillar 3a — Fund / Securities","value":160000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c1"},{"id":"a3","type":"savings_account","group":"Banking","label":"ZKB Sparkonto","baseLabel":"Sparkonto / Compte d'épargne","value":90000,"liquid":true,"country":"CH","note":"Interest-bearing savings.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a4","type":"depot","group":"Investment & securities","label":"Swissquote Depot","baseLabel":"Securities account (Depot)","value":350000,"liquid":true,"country":"CH","note":"Swiss brokerage. Capital gains tax-free for private investors.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a5","type":"private_account","group":"Banking","label":"ZKB Privatkonto","baseLabel":"Privatkonto / Compte privé","value":35000,"liquid":true,"country":"CH","note":"Standard Swiss account. esisuisse protected up to CHF 100,000.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a6","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse Zürich Versicherung","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":390000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c2"},{"id":"a7","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (finpension)","baseLabel":"Pillar 3a — Fund / Securities","value":95000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c2"}],"loans":[{"id":"l1","type":"mortgage_primary","label":"ZKB Festhypothek","bal":800000,"rate":1.9,"yrs":20,"owner":"joint"}],"goals":[{"id":"g1","name":"University for Elena","amt":30000,"homePrice":null,"startYear":2033,"endYear":2036,"cat":"other","tier":"important"},{"id":"g2","name":"Kitchen renovation","amt":80000,"homePrice":null,"startYear":2029,"endYear":2029,"cat":"other","tier":"important"}],"children":[{"id":"ch1","first":"Elena","last":"Keller","dob":"2015-05-20"}],"investments":[{"id":"inv1","name":"iShares Core SPI","tkr":"CHSPI","type":"etf","cls":"equity","region":"dev_intl","val":90000,"er":0.1,"yld":2.6,"note":""},{"id":"inv2","name":"Vanguard FTSE All-World","tkr":"VWRL","type":"etf","cls":"equity","region":"global","val":105000,"er":0.22,"yld":1.9,"note":""},{"id":"inv3","name":"Nestlé","tkr":"NESN","type":"stock","cls":"equity","region":"dev_intl","val":30000,"er":null,"yld":3,"note":""},{"id":"inv4","name":"Novartis","tkr":"NOVN","type":"stock","cls":"equity","region":"dev_intl","val":25000,"er":null,"yld":3.4,"note":""},{"id":"inv5","name":"Roche GS","tkr":"ROG","type":"stock","cls":"equity","region":"dev_intl","val":20000,"er":null,"yld":3.1,"note":""},{"id":"inv6","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","type":"etf","cls":"fixed_income","region":"dev_intl","val":45000,"er":0.15,"yld":1.2,"note":""},{"id":"inv7","name":"CHF Money Market / Depot Cash","tkr":"","type":"etf","cls":"cash","region":"other","val":35000,"er":null,"yld":1,"note":""}],"proposals":[{"id":"pr1","name":"Vanguard FTSE All-World","tkr":"VWRL","vehicle":"etf","cls":"equity","alloc":30,"exp":null,"er":0.22,"yld":1.9,"note":""},{"id":"pr2","name":"iShares Core SPI","tkr":"CHSPI","vehicle":"etf","cls":"equity","alloc":15,"exp":null,"er":0.1,"yld":2.6,"note":""},{"id":"pr3","name":"iShares MSCI EM IMI","tkr":"EIMI","vehicle":"etf","cls":"equity","alloc":10,"exp":null,"er":0.18,"yld":2.4,"note":""},{"id":"pr4","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","vehicle":"etf","cls":"fixed_income","alloc":20,"exp":null,"er":0.15,"yld":1.2,"note":""},{"id":"pr5","name":"iShares Global Aggregate Bond CHF-hedged","tkr":"AGGS","vehicle":"etf","cls":"fixed_income","alloc":15,"exp":null,"er":0.1,"yld":1.8,"note":""},{"id":"pr6","name":"UBS ETF Gold CHF-hedged","tkr":"AUCHAH","vehicle":"etf","cls":"commodity","alloc":5,"exp":null,"er":0.23,"yld":null,"note":""},{"id":"pr7","name":"CHF Money Market","tkr":"","vehicle":"etf","cls":"cash","alloc":5,"exp":null,"er":null,"yld":1,"note":""}],"insurances":[{"id":"p1","type":"term_life","label":"Swiss Life Risikoversicherung","insured":"c1","ben":500000,"cash":0,"prem":1140,"benef":"Thomas Keller"},{"id":"p2","type":"term_life","label":"AXA Risikoversicherung","insured":"c2","ben":400000,"cash":0,"prem":1020,"benef":"Béatrice Keller"}],"equityComp":[{"id":"e1","kind":"rsu","label":"ZURN RSU 2026","tkr":"ZURN","shares":120,"strike":0,"price":545,"growth":6,"vestStart":2027,"vestYears":4,"owner":"c2"}],"beneficiaries":[],"whatIfScenarios":[{"id":"wi1","name":"Frühpension 58","retAgeOvr":58,"incChangePct":0,"extraExp":0,"extraGoal":null},{"id":"wi2","name":"Ferienhaus Ticino 2032","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":{"name":"Ferienhaus Ticino","amt":400000,"year":2032}},{"id":"wi3","name":"Pillar 2 früh beziehen – CHF 300k mit 58","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":null,"penDraw":{"age":58,"amt":300000,"cutPct":6.2}}],"assetSeq":7,"loanSeq":1,"goalSeq":2,"childSeq":1,"invSeq":7,"propSeq":7,"insSeq":2,"eqSeq":1,"benSeq":0,"whatIfSeq":3,"pfLinkedAccountId":"a4"}</script>

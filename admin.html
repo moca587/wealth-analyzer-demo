@@ -1394,7 +1394,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261013-2239";
+const APP_VERSION = "20261014-1800";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -2368,10 +2368,15 @@ const FUND_UNIVERSE = [
   {tkr:"VNAM",name:"Xtrackers FTSE Vietnam UCITS",cls:"equity",vehicle:"etf",er:0.85,yld:1.0,sponsor:"DWS",dom:"LU",ucits:true},
 
   // ─── SWITZERLAND / OTHER SINGLE COUNTRY UCITS ───
-  {tkr:"CSSMI",name:"iShares Core SMI UCITS",cls:"equity",vehicle:"etf",er:0.20,yld:3.0,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CSSMIM",name:"iShares Swiss Domestic Government Bond 1-3 UCITS",cls:"fixed_income",vehicle:"etf",er:0.15,yld:0.7,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CHSPI",name:"iShares Core SPI UCITS",cls:"equity",vehicle:"etf",er:0.10,yld:3.0,sponsor:"BlackRock",dom:"CH",ucits:true},
-  {tkr:"CASH",name:"UBS Solactive Switzerland 30 UCITS",cls:"equity",vehicle:"etf",er:0.15,yld:3.0,sponsor:"UBS",dom:"CH",ucits:true},
+  {tkr:"CSSMI",name:"iShares SMI ETF (CH)",cls:"equity",vehicle:"etf",er:0.35,yld:2.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSSMIM",name:"iShares SMIM ETF (CH)",cls:"equity",vehicle:"etf",er:0.45,yld:1.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHSPI",name:"iShares Core SPI ETF (CH)",cls:"equity",vehicle:"etf",er:0.10,yld:2.6,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHCORP",name:"iShares Core CHF Corporate Bond ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.2,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSBGC7",name:"iShares Swiss Domestic Government Bond 3-7 ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.2,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CSBGC0",name:"iShares Swiss Domestic Government Bond 7-15 ETF (CH)",cls:"fixed_income",vehicle:"etf",er:0.15,yld:1.3,sponsor:"BlackRock",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"SRECHA",name:"UBS SXI Real Estate Funds ETF CHF dis",cls:"real_estate",vehicle:"etf",er:0.96,yld:2.1,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"SRFCHA",name:"UBS SXI Real Estate ETF CHF dis",cls:"real_estate",vehicle:"etf",er:0.77,yld:2.1,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
+  {tkr:"CHFON",name:"UBS SARON SF ETF CHF acc",cls:"cash",vehicle:"etf",er:0.05,yld:0.0,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF"},
   {tkr:"CCAU",name:"iShares Core MSCI Canada UCITS",cls:"equity",vehicle:"etf",er:0.20,yld:2.6,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"AUST",name:"iShares MSCI Australia UCITS",cls:"equity",vehicle:"etf",er:0.50,yld:4.5,sponsor:"BlackRock",dom:"IE",ucits:true},
 
@@ -2441,6 +2446,7 @@ const FUND_UNIVERSE = [
   {tkr:"ITPS",name:"iShares Global Inflation Linked Gov Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.25,yld:3.5,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"IGLO",name:"iShares Global Government Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.20,yld:3.2,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"AGGG",name:"iShares Core Global Aggregate Bond UCITS",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.7,sponsor:"BlackRock",dom:"IE",ucits:true},
+  {tkr:"AGGS",name:"iShares Core Global Aggregate Bond UCITS ETF CHF Hedged (Acc)",cls:"fixed_income",vehicle:"etf",er:0.10,yld:0.0,sponsor:"BlackRock",dom:"IE",ucits:true,ccy:"CHF",hedged:true},
   {tkr:"AGGH",name:"iShares Core Global Aggregate Bond UCITS EUR Hedged",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.5,sponsor:"BlackRock",dom:"IE",ucits:true},
   {tkr:"VAGP",name:"Vanguard Global Aggregate Bond UCITS GBP Hedged",cls:"fixed_income",vehicle:"etf",er:0.10,yld:3.7,sponsor:"Vanguard",dom:"IE",ucits:true},
 
@@ -2464,7 +2470,7 @@ const FUND_UNIVERSE = [
   {tkr:"PHAU",name:"WisdomTree Physical Gold",cls:"commodity",vehicle:"alternative",er:0.39,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
   {tkr:"SGLD",name:"Invesco Physical Gold ETC",cls:"commodity",vehicle:"alternative",er:0.12,yld:0.0,sponsor:"Invesco",dom:"IE",ucits:true},
   {tkr:"XGLD",name:"Xtrackers IE Physical Gold ETC",cls:"commodity",vehicle:"alternative",er:0.12,yld:0.0,sponsor:"DWS",dom:"IE",ucits:true},
-  {tkr:"AUCH",name:"UBS ETF CH Gold (CHF Hedged)",cls:"commodity",vehicle:"alternative",er:0.23,yld:0.0,sponsor:"UBS",dom:"CH",ucits:true},
+  {tkr:"AUCHAH",name:"UBS Gold hCHF ETF CHF acc",cls:"commodity",vehicle:"alternative",er:0.23,yld:0.0,sponsor:"UBS",dom:"CH",ucits:false,ccy:"CHF",hedged:true},
   {tkr:"PHAG",name:"WisdomTree Physical Silver",cls:"commodity",vehicle:"alternative",er:0.49,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
   {tkr:"SSLV",name:"iShares Physical Silver ETC",cls:"commodity",vehicle:"alternative",er:0.20,yld:0.0,sponsor:"BlackRock",dom:"JE",ucits:true},
   {tkr:"WPLT",name:"WisdomTree Physical Platinum",cls:"commodity",vehicle:"alternative",er:0.49,yld:0.0,sponsor:"WisdomTree",dom:"JE",ucits:true},
@@ -2553,7 +2559,7 @@ const FUND_UNIVERSE = [
   {tkr:"LTRG",name:"Lindsell Train Global Equity Fund D USD",cls:"equity",vehicle:"mutual_fund",er:0.65,yld:1.5,sponsor:"Lindsell Train",dom:"IE",ucits:true},
   {tkr:"FUNDS",name:"Fundsmith Equity Fund T USD Acc",cls:"equity",vehicle:"mutual_fund",er:1.05,yld:0.0,sponsor:"Fundsmith",dom:"IE",ucits:true},
   {tkr:"UBSGE",name:"UBS Equity Global Sustainable Innovators P USD",cls:"equity",vehicle:"mutual_fund",er:1.80,yld:0.5,sponsor:"UBS",dom:"LU",ucits:true,esg:true},
-  {tkr:"UBSCH",name:"UBS Equity Switzerland Sustainable P CHF",cls:"equity",vehicle:"mutual_fund",er:1.62,yld:2.5,sponsor:"UBS",dom:"CH",ucits:true,esg:true},
+  {tkr:"UBCH",name:"UBS (CH) Equity Fund - Switzerland Sustainable (CHF) P-dist",cls:"equity",vehicle:"mutual_fund",er:0.95,yld:2.5,sponsor:"UBS",dom:"CH",ucits:false,esg:true,ccy:"CHF"},
   {tkr:"JBHEQ",name:"Julius Baer Equity Global Excellence A USD",cls:"equity",vehicle:"mutual_fund",er:1.78,yld:1.0,sponsor:"Julius Baer",dom:"LU",ucits:true},
   {tkr:"JBHFI",name:"Julius Baer Fixed Income Global EUR P EUR",cls:"fixed_income",vehicle:"mutual_fund",er:1.10,yld:3.5,sponsor:"Julius Baer",dom:"LU",ucits:true},
   {tkr:"VONLA",name:"Vontobel Fund US Equity B USD",cls:"equity",vehicle:"mutual_fund",er:1.74,yld:0.5,sponsor:"Vontobel",dom:"LU",ucits:true},
