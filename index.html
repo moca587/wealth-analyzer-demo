@@ -944,7 +944,7 @@ input[type=date]{color-scheme:light}
 .wi-draft-list{display:flex;flex-direction:column;gap:6px}
 .wi-draft-list:empty{display:none}
 .wi-draft-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);font-size:12px}
-.wi-draft-row .wi-draft-main{flex:1;min-width:160px;color:var(--text2)}
+.wi-draft-row .wi-draft-main{flex:1 1 160px;min-width:0;overflow-wrap:anywhere;color:var(--text2)}
 .wi-draft-row .wi-draft-main strong{color:var(--text);font-weight:600}
 .wi-add-row{display:grid;grid-template-columns:minmax(120px,1.4fr) minmax(90px,0.8fr) minmax(72px,0.6fr) auto;gap:8px;align-items:center}
 .wi-add-row.wi-add-event{grid-template-columns:minmax(100px,1fr) minmax(110px,1.1fr) minmax(72px,0.7fr) minmax(72px,0.7fr) minmax(72px,0.7fr) auto}
@@ -963,6 +963,10 @@ input.fld-invalid,.ccy-field.fld-invalid{
 #wiStatus{font-size:12px;color:var(--text3);margin:10px 0 0}
 @media(max-width:700px){
   .wi-add-row,.wi-add-row.wi-add-event{grid-template-columns:1fr 1fr}
+}
+@media(min-width:701px) and (max-width:1180px){
+  .wi-grid{grid-template-columns:minmax(140px,190px) minmax(0,1fr)}
+  .wi-grid > .wi-hint{grid-column:2;margin-top:-6px}
 }
 @media(max-width:700px){
   .wi-grid{grid-template-columns:1fr;row-gap:4px}
@@ -1361,8 +1365,12 @@ input.fld-invalid,.ccy-field.fld-invalid{
 .cmp-empty{text-align:center;padding:20px;color:var(--text3);font-size:13px}
 /* ── What-If Scenarios ── */
 .wi-item{border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px;background:var(--bg3)}
-.wi-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.wi-name{font-weight:600;font-size:13px;flex:1}
+.wi-head{display:flex;align-items:center;gap:6px 10px;margin-bottom:8px;flex-wrap:wrap}
+/* name and overrides take a real share and wrap (min-width:0 alone squeezed names to 0px at 375) */
+.wi-name{font-weight:600;font-size:13px;flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+/* the buttons stay beside the name; the change summary takes its own line below */
+.wi-head > .btn-x{flex:0 0 auto;order:1}
+.wi-head > span:not(.wi-name){order:2;flex:1 1 100%;min-width:0;overflow-wrap:anywhere}
 .wi-results{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px}
 .wi-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px}
 .wi-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
@@ -1374,8 +1382,51 @@ input.fld-invalid,.ccy-field.fld-invalid{
 .wi-impact .wi-surp{color:var(--text2)}
 .wi-impact .wi-surp .dn{color:var(--red)}
 .wi-impact .wi-surp .up{color:var(--green)}
+.wi-impact,.wi-impact .wi-surp,.wi-depwarn{overflow-wrap:anywhere;min-width:0}
 .wi-impact .wi-depwarn{margin-top:5px;padding:0;border:none;background:none;color:#d4956a;border-radius:0}
 .wi-depwarn{margin-top:8px;padding:7px 10px;font-size:11.5px;color:#d4956a;background:rgba(212,149,106,.10);border:1px solid rgba(212,149,106,.35);border-radius:var(--rs)}
+/* ── What-If: does it fit? (Simulation tab) ── */
+/* wraps at any width (a fixed grid clipped "Check it" beside the sidebar on iPad portrait) */
+.wf-quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 6px}
+.wf-quick > *{min-width:0;box-sizing:border-box}
+.wf-quick > #wfName{flex:2 1 180px;width:auto}
+.wf-quick > .ccy-field{flex:1 1 130px;width:auto}
+.wf-quick > #wfYear,.wf-quick > #wfUntil{flex:0 1 92px;width:92px}
+.wf-quick > #wfKind{flex:0 1 128px;width:128px}
+.wf-quick > .btn-primary{flex:0 0 auto;padding:8px 18px;white-space:nowrap}
+.wf-quick-lbl{font-size:12px;font-weight:700;color:var(--text);margin-top:4px}
+.wf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:start;border:1px solid var(--border);border-left:4px solid var(--border2);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px;background:var(--bg3)}
+.wf-row.fits{border-left-color:var(--green)}.wf-row.tight{border-left-color:var(--amber)}.wf-row.nofit{border-left-color:var(--red)}.wf-row.out{border-left-color:var(--text3)}
+.wf-stale > .wf-row{opacity:.5}
+.wf-row.wf-base{background:var(--bg2)}
+.wf-name{font-weight:700;font-size:13px;color:var(--text)}
+.wf-name,.wf-chg,.wf-why,.wf-k,.wf-fitmax,.wf-teaser span{overflow-wrap:anywhere}
+.wf-chg{font-size:11.5px;color:var(--text3);margin-top:2px;line-height:1.4}
+.wf-why{font-size:12px;line-height:1.45;color:var(--text2);margin-top:4px}
+.wf-side{display:flex;align-items:center;gap:6px}
+.wf-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 11px;border-radius:50px;white-space:nowrap;background:var(--bg2);color:var(--text3);border:1px solid var(--border)}
+.wf-badge.fits{background:rgba(27,104,65,.12);color:#1b6841;border-color:rgba(27,104,65,.28)}
+.wf-badge.tight{background:rgba(217,119,6,.13);color:#a8612b;border-color:rgba(217,119,6,.32)}
+.wf-badge.nofit{background:rgba(168,50,50,.11);color:#a83232;border-color:rgba(168,50,50,.28)}
+.wf-stats{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.wf-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:6px 10px}
+.wf-row.wf-base .wf-stat{background:var(--bg3)}
+.wf-k{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.wf-v{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--text);white-space:nowrap}
+.wf-d{display:block;font-size:11px;margin-top:1px;color:var(--text3);white-space:nowrap}
+.wf-d.up{color:var(--green)}.wf-d.dn{color:var(--red)}
+.wf-fitmax{font-size:12px;line-height:1.45;color:var(--text);margin-top:6px;padding:6px 10px;background:var(--bg2);border:1px dashed var(--border2);border-radius:var(--rs)}
+.wf-findbtn{margin-top:7px;padding:4px 12px;font-size:11.5px}
+.wf-note{font-size:12px;line-height:1.5;color:var(--text2);padding:9px 12px;margin-bottom:10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:var(--rs)}
+.wf-teaser{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 2px 8px;padding:9px 14px;font-size:12.5px;color:var(--text2);background:#fff;border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:var(--r)}
+.wf-teaser strong{color:var(--text)}
+.wf-teaser .btn-secondary{padding:4px 12px;font-size:11.5px}
+@media (max-width:760px){
+  .wf-quick > #wfName{flex-basis:100%}
+  .wf-row{grid-template-columns:1fr}
+  .wf-side{justify-content:flex-start}
+  .wf-stats{grid-template-columns:1fr 1fr}
+}
 
 /* ── Cash Flow Analysis ── */
 .cf-header{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--text2);margin-bottom:8px;padding:10px 14px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)}
@@ -2119,7 +2170,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div id="mcParamsBody" style="display:none;padding-top:12px">
   <div class="two-col">
     <div>
-      <div class="frow"><label class="flbl">Projection years</label><input type="number" id="simYrs" value="20" min="5" max="40" step="1" class="w120" oninput="refreshTopMetrics()"></div>
+      <div class="frow"><label class="flbl">Projection years</label><input type="number" id="simYrs" value="20" min="5" max="100" step="1" class="w120" oninput="refreshTopMetrics()"></div>
 
       <div class="frow"><label class="flbl">Glidepath de-risking</label>
         <select id="gpOn" class="w200" onchange="runSim()">
@@ -2482,7 +2533,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 12l4-5 3 3 3-4 4 5z"/></svg>
         </div>
         <div class="wh-stat-body">
-          <div class="wh-stat-lbl">Projected Wealth <small style="opacity:.6">(median)</small></div>
+          <div class="wh-stat-lbl">Projected Wealth <small style="opacity:.6" id="m-med-pct">(median)</small></div>
           <div class="wh-stat-val" id="m-med">-</div>
         </div>
       </div>
@@ -3334,6 +3385,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
 <!-- Results at a glance — populated after a run -->
 <div class="sim-summary" id="simSummary" style="display:none"></div>
+<!-- What-If teaser: how many saved scenarios still fit, with a link to the box below -->
+<div class="wf-teaser" id="wiFitTeaser" style="display:none"></div>
 
 <!-- Expand / collapse every section -->
 <div class="sim-toolbar">
@@ -3390,6 +3443,29 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
 <!-- ══════════ GROUP: GOALS & FUNDING ══════════ -->
 <div class="sim-group">Goals &amp; funding</div>
+
+<!-- What-If: does it fit? Every saved What-If scenario re-simulated against the current plan,
+     with one verdict each (renderWhatIfFit). The quick check adds a cost as a new scenario. -->
+<div class="panel" id="wiFitPanel">
+  <div class="ptitle section-dropdown open" onclick="toggleDropdown('wiFitBody')" style="margin:0">
+    <i data-lucide="scale" class="icon ptitle-icon" aria-hidden="true"></i>What-If: Does It Fit? <span class="dropdown-hint">click to toggle</span><span class="info-ic">i<span class="info-pop"><strong>Does it fit?</strong> Each What-If scenario re-runs the simulation with your current inputs and the same random seed, changing only what the scenario changes. It <strong>fits</strong> when your existing goals, each new one-time cost and every year's spending are each paid in full in at least 80% of simulated futures; it is <strong>tight</strong> when the weakest of these is between 50% and 80%, and it <strong>does not fit</strong> below 50%. These are the same 80% and 50% thresholds as the Results at a glance cards. The verdict covers the projection years only; Money lasts looks further, to age 90.</span></span>
+    <span class="ptitle-line"></span>
+  </div>
+  <div class="dropdown-body open" id="wiFitBody">
+    <div class="wf-quick-lbl">Check a cost</div>
+    <div class="wf-quick">
+      <input id="wfName" placeholder="e.g. Holiday home" title="What the cost is for, e.g. a holiday home, a sabbatical or a gift to a child" aria-label="What the cost is for">
+      <span class="ccy-field"><span class="ccy-sym ccy-cur">$</span><input type="number" id="wfAmt" step="1000" min="0" placeholder="Amount" aria-label="Amount"></span>
+      <input type="number" id="wfYear" placeholder="Year" step="1" aria-label="Year">
+      <select id="wfKind" aria-label="How often" onchange="wfKindChange()"><option value="once">one time</option><option value="yearly">every year</option></select>
+      <input type="number" id="wfUntil" placeholder="Until" step="1" aria-label="Until which year" style="display:none">
+      <button type="button" class="btn-primary" onclick="wfQuickCheck()"><i data-lucide="play" class="icon" aria-hidden="true"></i> Check it</button>
+    </div>
+    <div class="wi-hint">Saved as a What-If scenario, so it also appears on the Goals tab and in the PDF report. A one-time cost is paid from cash and investments in that year; a yearly cost is added to spending every year from the first year to the last (leave Until blank for the rest of the projection). For an income change, an earlier retirement or a pension withdrawal, use the full form on the <a href="#" onclick="wfOpenWhatIfForm();return false">Goals tab</a>.</div>
+    <div id="wfStatus" style="margin-top:6px"></div>
+    <div id="wiFitList" style="margin-top:10px"><div class="cmp-empty">No scenarios yet. Check a cost above, or build a fuller scenario on the Goals tab.</div></div>
+  </div>
+</div>
 
 <!-- Goal Funding — the single consolidated goal-funding box (combines what were
      previously 4 separate panels: Goal Analysis, Goal & Retirement Funding Status,
@@ -5022,7 +5098,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261018-2150";
+const APP_VERSION = "20261020-1932";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -7793,9 +7869,25 @@ const ZIP_TO_CITY = (function(){
 // Refresh everything that consumes `band` after a preset/custom change.
 // (The old updateBandReadText wrote to elements that no longer exist.)
 function bandChanged(){
+  // the header is dimmed when inputs changed since the last run: a band click re-reads that run, so it stays dimmed
+  const _medEl=$("m-med"), _wasDim=!!(_medEl && _medEl.style.opacity==="0.45"), _dimTitle=_medEl?_medEl.title:"";
+  const _probEl=$("m-prob"), _probDim=!!(_probEl && _probEl.style.opacity==="0.45"), _probTitle=_probEl?_probEl.title:"";
   if(Array.isArray(lastSimPaths) && lastSimPaths.length){
     try{ refreshTopMetrics(lastSimPaths, lastSimYrs); }catch(_){}
+    // refreshTopMetrics is debounced: set the header figure now, so the card below reads the new one
+    try{ const _inf=lastSimInf!=null?lastSimInf:num("inf",3.8)/100, _mid=(band&&band.mid)?band.mid:50;
+      setT("m-med", fmtMoney(percentileAt(lastSimPaths,lastSimYrs,_mid)/Math.pow(1+_inf,lastSimYrs)));
+      setT("m-med-pct", _mid===50?"(median)":"("+wiOrd(_mid)+" percentile)");
+      // Goal success as refreshTopMetrics will write it, now: the card read the header mid-count
+      if(goals.length){ const avg=goals.reduce((s2,g)=>s2+(goalSuccessFromPaths(g,lastSimPaths,lastSimYrs)||0),0)/goals.length; setT("m-prob",avg.toFixed(0)+"%"); } else setT("m-prob","-"); }catch(_){}
+    try{ renderSimSummary(); }catch(_){}   // the card shows the same percentile and figure as the header
   }
+  try{ wiMarkFitStale(); }catch(_){}       // the What-If wealth figures were read at the old percentile
+  // queued after refreshTopMetrics' own microtask (which un-dims), so this one has the last word
+  const _runAt=_simRunSeq;   // a run since the click has fresh figures: then the dimming stays off
+  if(_wasDim||_probDim) queueMicrotask(()=>{ if(_simRunSeq!==_runAt) return; try{
+    if(_wasDim){ _medEl.style.opacity="0.45"; _medEl.title=_dimTitle; }
+    if(_probDim){ _probEl.style.opacity="0.45"; _probEl.title=_probTitle; } }catch(_){} });
 }
 
 // Lookup any 5-digit US ZIP → {state, city}. Returns null if unrecognised.
@@ -7977,7 +8069,9 @@ function renderSimSummary(){
   const gapCls = gapTxt==="-" ? "" : (gapGood?"good":"bad");
   const card = (lbl,v,sub,cls,explain)=> '<div class="ss-card '+(cls||"")+'"><div class="ss-lbl">'+lbl+(explain?'<span class="info-ic">i<span class="info-pop">'+explain+'</span></span>':'')+'</div><div class="ss-val">'+v+'</div><div class="ss-sub">'+sub+'</div></div>';
   el.innerHTML =
-    card("Projected wealth", med, "median · today's money", "", "<strong>Projected wealth</strong>: the median (50th percentile) simulated net worth at the end of your simulation horizon, shown in today's money (deflated for inflation). Half of simulated paths end above this figure, half below.") +
+    card("Projected wealth", med, ((typeof band!=="undefined"&&band&&band.mid!==50)?wiOrd(band.mid)+" percentile":"median")+" · today's money", "", ((typeof band!=="undefined"&&band&&band.mid!==50)
+      ? "<strong>Projected wealth</strong>: the "+wiOrd(band.mid)+" percentile of simulated net worth (the middle line of your probability band) at the end of your simulation horizon, shown in today's money (deflated for inflation). "+(100-band.mid)+"% of simulated paths end above this figure."
+      : "<strong>Projected wealth</strong>: the median (50th percentile) simulated net worth at the end of your simulation horizon, shown in today's money (deflated for inflation). Half of simulated paths end above this figure, half below.")) +
     card("Goal success", prob, "across your goals", probCls, "<strong>Goal success</strong>: the average probability, across all your goals, of being fully funded by its target year, read from the same simulated outcomes used throughout the Simulation tab.") +
     card("Sustainable spend", spend, "per year · today's money", "", "<strong>Sustainable spend</strong>: the highest annual retirement spending, in today's purchasing power, with a 90% chance of lasting to age 90, from the median (50th percentile) simulated wealth at your retirement age. Includes your projected pension / state-benefit income; the portfolio only has to cover spending above what pensions provide. Cash in the plan earns nothing and is spent first; only the invested part earns the portfolio return.") +
     card("Money lasts", lasts, "planned spend to age 90", lastsCls, "<strong>Money lasts</strong>: the probability your <em>planned</em> retirement spending lasts to age 90, drawn from the median (50th percentile) simulated wealth at your retirement age and net of your projected pension income. This is the flip side of Sustainable spend: it scores the spending you entered rather than solving for a 90% level. Below 80% suggests trimming planned spending, saving more, or retiring later. Run the drawdown panel below for a full year-by-year view.") +
@@ -8065,6 +8159,7 @@ let bandMode="standard";
 let mcChart=null; let pfClassChart=null; let prClassChart=null; let overviewDonutChart=null;
 let fanChart = null;
 let lastSimPaths=null; let lastSimYrs=null;
+let lastSimInf=null;   // the inflation that run used: a band click re-reads those paths, not the field's new value
 let _taxUserEdited=false;
 let _penEdited=false;
 let _pen2Edited=false;
@@ -8099,6 +8194,7 @@ function showTab(name,el){
   if(name==="simulation"){
     try{ relocateSwissPensionPanels(); }catch(_){}
     try{ buildSimSubnav(); }catch(_){}
+    try{ wiMarkFitStale(); }catch(_){}
     buildSimInputsSummary();
     // Refresh the proposal-source banner so it shows the right state
     // when the user navigates back to the Simulation tab.
@@ -8992,6 +9088,7 @@ function onCurrencyCountryChange(){
   popCcyDropdown("accy");
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
+  try{ renderWhatIf(); }catch(_){}   // and the What-If list and box
   refreshTopMetrics();
 }
 function onCurrencyManualChange(){
@@ -9004,6 +9101,7 @@ function onCurrencyManualChange(){
   popCcyDropdown("accy");
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
+  try{ renderWhatIf(); }catch(_){}   // and the What-If list and box
   refreshTopMetrics();
 }
 // The household currency changed: switch the CMA set. A simulation run under the other
@@ -10575,7 +10673,7 @@ function setBand(mode){
   else if(mode==="alternative"){band={low:40,mid:60,high:90};}
   else { applyCustom(); return; }
 
-  setT("bdesc","Showing "+band.low+"th / "+band.mid+"th / "+band.high+"th percentiles.");
+  setT("bdesc","Showing "+wiOrd(band.low)+" / "+wiOrd(band.mid)+" / "+wiOrd(band.high)+" percentiles.");
   bandChanged();
 }
 function applyCustom(){
@@ -27028,7 +27126,18 @@ function buildSimInputsSummary(){
   if(el) el.innerHTML=html;
 }
 
+// Projection years as whole years of at least 5 (syncSimYrs fills 90 minus age, so above 40 is legitimate):
+// 4.5 or -3 used to reach the engine and every horizon text ("through 2029.5"). Fixes the field itself,
+// so every reader sees the same value; a whole number from 5 to 100 is left exactly as it is.
+function simYrsNormalize(){
+  const e=$("simYrs"); if(!e) return;
+  const v=Math.round(+e.value), c=isFinite(v)&&String(e.value).trim()!==""?Math.min(100,Math.max(5,v)):20;
+  if(String(c)!==String(e.value)) e.value=String(c);
+}
+let _simRunSeq=0;   // counts runs (bandChanged keeps a header dimmed only if no run followed)
 function runSim(){
+  _simRunSeq++;
+  try{ simYrsNormalize(); }catch(_){}
   const yrs=num("simYrs",20), sims=parseInt(val("simN")||"500",10);
   buildSimInputsSummary();
   // Repaint the proposal-source banner before charts (so users see which
@@ -27037,13 +27146,14 @@ function runSim(){
 
   const paths=runMC(yrs,sims);
 
-  lastSimPaths=paths; lastSimYrs=yrs;
+  lastSimPaths=paths; lastSimYrs=yrs; lastSimInf=num("inf",3.8)/100;
   // Projected Wealth (median) — set here so the overview metric always updates,
   // even if the bar-chart canvas (#mcChart) isn't present and redrawChart bails.
   try {
     const _inf=num("inf",3.8)/100;
     const _mid=(typeof band!=="undefined" && band && band.mid) ? band.mid : 50;
     setT("m-med", fmtMoney(percentileAt(paths,yrs,_mid)/Math.pow(1+_inf,yrs)));
+    setT("m-med-pct", _mid===50?"(median)":"("+wiOrd(_mid)+" percentile)");
   } catch(_){}
   redrawChart(paths);
   drawFanChart(paths);
@@ -27064,6 +27174,9 @@ function runSim(){
   try { if(typeof runGoalsBased==="function") runGoalsBased(); } catch(e){ console.warn("runGoalsBased:", e); }
   // Results-at-a-glance strip (reads the values the cascade just set)
   try { renderSimSummary(); } catch(e){ console.warn("renderSimSummary:", e); }
+  // What-If scenarios re-tested against this run's inputs, so "Does it fit?" never shows a verdict
+  // from older ones (each scenario re-runs the engine, so runAllWhatIf does it in its own task).
+  try { wiAfterRun(paths); } catch(e){ console.warn("wiAfterRun:", e); }
   // Heavy secondary panels run in their own tasks so the charts and metrics
   // above paint immediately (the browser paints between macrotasks). Profiled
   // shares of the old 1.8s block: cash-flow table ~140ms, sensitivity tornado
@@ -27624,7 +27737,7 @@ function redrawChart(paths){
   //   {key:"median",      name:"Median",      pctLabel:"50th percentile", label:["Median","50th percentile"],      pct:50, color:"rgba(91,155,213,0.85)",  border:"#1e40af"},
   //   {key:"optimistic",  name:"Optimistic",  pctLabel:"90th percentile", label:["Optimistic","90th percentile"],  pct:90, color:"rgba(76,175,125,0.85)",  border:"#1b6841"},
   // ];
-  const pctLabel = (p) => p + (p === 1 ? "st" : p === 2 ? "nd" : p === 3 ? "rd" : "th") + " percentile";
+  const pctLabel = (p) => wiOrd(p) + " percentile";   // 21st, 22nd, 113th (the old rule only knew 1-3)
 
   const SCENARIOS=[
     {key:"pessimistic", name:"Pessimistic", pctLabel:pctLabel(band.low), label:["Pessimistic",pctLabel(band.low)], pct:band.low, color:"rgba(212,149,106,0.85)", border:"#c06020"},
@@ -29226,10 +29339,12 @@ let _wiTimedEvents=null;
 let _wiDraftGoals=[];
 let _wiDraftEvents=[];
 
+// Text from a file that is not text (an object, an array, null) reads as the default, never "[object Object]".
+function _wiTxt(v, d){ return ((typeof v==="string"||typeof v==="number") && String(v).trim()!=="") ? String(v) : d; }
 function normalizeWhatIfScenario(w){
   if(!w||typeof w!=="object") return w;
   let extraGoals=Array.isArray(w.extraGoals)?w.extraGoals.filter(g=>g&&g.name&&+g.amt>0&&+g.year>0)
-    .map(g=>({name:String(g.name),amt:+g.amt,year:+g.year})):[];
+    .map(g=>({name:_wiTxt(g.name,"Cost"),amt:+g.amt,year:+g.year})):[];
   if(!extraGoals.length && w.extraGoal && w.extraGoal.name && +w.extraGoal.amt>0 && +w.extraGoal.year>0){
     extraGoals=[{name:String(w.extraGoal.name),amt:+w.extraGoal.amt,year:+w.extraGoal.year}];
   }
@@ -29237,18 +29352,25 @@ function normalizeWhatIfScenario(w){
     .map(e=>{
       const start=+e.startYear, end=Math.max(start, +(e.endYear||e.startYear));
       return {
-        label:String(e.label||(e.kind==="incomePct"?"Income change":"Extra expense")),
+        label:_wiTxt(e.label, e.kind==="incomePct"?"Income change":"Extra expense"),
         kind:e.kind,
         value:+e.value||0,
         startYear:start,
         endYear:end,
       };
     }).filter(e=>e.kind==="expense"?e.value!==0:true):[];
-  return Object.assign({}, w, {extraGoals, timedEvents, extraGoal:null});
+  // Numbers as numbers: a scenario from a file without these fields used to scale every income by NaN.
+  const rv=w.retAgeOvr, retAgeOvr=(rv==null||rv===""||!isFinite(+rv))?null:+rv;
+  // The withdrawal too: a string age never matched the engine's age===penDraw.age, and it reached the HTML unescaped.
+  const pd=w.penDraw, penDraw=(pd && +pd.age>0 && +pd.amt>0)?{age:Math.round(+pd.age), amt:+pd.amt, cutPct:Math.min(100,Math.max(0,+pd.cutPct||0))}:null;
+  return Object.assign({}, w, {name:_wiTxt(w.name,"Scenario"), retAgeOvr, incChangePct:+w.incChangePct||0, extraExp:+w.extraExp||0, extraGoals, timedEvents, penDraw, extraGoal:null});
 }
+// The last calendar year runMC charges: it runs years 0..simYrs-1 and stops at y===simYrs before
+// charging it, so a cost in cy+simYrs would be accepted and never simulated.
 function wiWhatIfHorizon(){
+  try{ simYrsNormalize(); }catch(_){}
   const cy=currentYear();
-  return {cy, horizon:cy+num("simYrs",20)};
+  return {cy, horizon:cy+num("simYrs",20)-1};
 }
 function wiRenderDraftLists(){
   const gEl=$("wiGoalsList");
@@ -29413,7 +29535,7 @@ function addWhatIf(){
     }
   }
   const scen=normalizeWhatIfScenario({
-    id:"wi"+(++whatIfSeq), name,
+    id:wiNewId(), name,
     retAgeOvr, incChangePct, extraExp,
     extraGoals:_wiDraftGoals.slice(),
     timedEvents:_wiDraftEvents.slice(),
@@ -29428,7 +29550,7 @@ function addWhatIf(){
     whatIfScenarios.push(scen);
   }
   clearWhatIfForm();
-  runAllWhatIf();
+  wiRetest();
 }
 function clearWhatIfForm(){
   ["wiName","wiRetAge","wiGoalName","wiGoalAmt","wiGoalYear","wiPenAge","wiEvLabel","wiEvStart","wiEvEnd"].forEach(id=>{const el=$(id); if(el) el.value="";});
@@ -29453,6 +29575,8 @@ function deleteWhatIf(id){
   if(_editingWhatIfId===id) cancelEditWhatIf();
   whatIfScenarios=whatIfScenarios.filter(w=>w.id!==id);
   renderWhatIf();
+  // the removed row held the focus: keep it in the list rather than drop it to the page
+  try{ if(document.activeElement===document.body){ const l=$("whatIfList"); if(l && l.closest(".tab.active")){ l.setAttribute("tabindex","-1"); l.focus({preventScroll:true}); } } }catch(_){}
 }
 function editWhatIf(id){
   const raw=whatIfScenarios.find(x=>x.id===id); if(!raw) return;
@@ -29478,12 +29602,14 @@ function editWhatIf(id){
   _editingWhatIfId=id;
   setWiAddBtn(true);
   show("wiCancelBtn",true);
+  // the form sits below the list: bring it into view and put the cursor in the name
+  try{ const f=$("wiName"); if(f && f.closest(".tab.active")){ f.scrollIntoView({behavior:"smooth", block:"center"}); f.focus({preventScroll:true}); } }catch(_){}
 }
 
-function runWhatIfScenario(scen){
+function runWhatIfScenario(scen, baseArg){
   scen=normalizeWhatIfScenario(scen);
   const yrs=num("simYrs",20);
-  const sims=parseInt(val("simN")||"200",10);
+  const sims=parseInt(val("simN")||"500",10);   // runSim's default: a blank select must not give 500 vs 200
 
   // Patch DOM fields temporarily, then restore them after runMC().
   // Uses a simple patch stack so every field is always restored.
@@ -29548,60 +29674,235 @@ function runWhatIfScenario(scen){
   if(allGoals.length>0){
     goalSucc=allGoals.reduce((s,g)=>s+(goalSuccessFromPaths(g,paths,yrs)||0),0)/allGoals.length;
   }
-  return {medNW,p10NW,p90NW,goalSucc,dep:paths.depletion||null,surplus,sav:num("savAnnual",0)};
+  // For "Does it fit?": the household's own goals and each new one-time cost scored apart (an average
+  // would hide a cost that is paid in only a third of futures).
+  const goalSuccBase=goals.length?goals.reduce((s,g)=>s+(goalSuccessFromPaths(g,paths,yrs)||0),0)/goals.length:null;
+  const F=_wiRunFacts(paths, yrs);
+  // runMC simulates calendar years cy..cy+yrs-1 (it stops at y===years before charging that year),
+  // client 1 aged a0..a0+yrs-1. A change outside that window is never simulated, so it must not be
+  // scored: a cost in the final year "fitted" at 100% while nothing was ever charged.
+  const cy=F.cy, lastYear=F.lastYear, a0=ageFromDOB(val("c1d"))||30, aLast=a0+yrs-1;
+  const outside=[], partial=[];
+  const events=tempGoals.map(g=>{
+    const out=g.startYear<cy||g.startYear>lastYear;
+    if(out) outside.push({what:'"'+g.name+'"', when:String(g.startYear), past:g.startYear<cy});
+    return {name:g.name, amt:g.amt, year:g.startYear, p:out?null:goalSuccessFromPaths(g,paths,yrs), outside:out};
+  });
+  (scen.timedEvents||[]).forEach(e=>{
+    const span=e.startYear===e.endYear?String(e.startYear):e.startYear+"-"+e.endYear;
+    if(e.endYear<cy||e.startYear>lastYear) outside.push({what:'"'+e.label+'"', when:span, past:e.endYear<cy});
+    else if(e.startYear<cy||e.endYear>lastYear){
+      const a=Math.max(cy,e.startYear), b=Math.min(lastYear,e.endYear);
+      partial.push({what:'"'+e.label+'"', when:a===b?String(a):a+"-"+b});
+    }
+  });
+  if(scen.penDraw && (scen.penDraw.age<a0||scen.penDraw.age>aLast))
+    outside.push({what:"The pension withdrawal at age "+scen.penDraw.age, when:String(cy+scen.penDraw.age-a0), past:scen.penDraw.age<a0});
+  if(scen.retAgeOvr!=null){
+    // The override moves client 1, and client 2 as well when their own retirement age is blank
+    // (retAgeFor): it is untested only if every client it moves would retire after the window.
+    const r1=num("retAge",65), ovr=scen.retAgeOvr;
+    if(ovr!==r1){
+      const c2on=!!($("c2card") && $("c2card").style.display!=="none"), e2=$("retAge2");
+      const c2own=!!(e2 && String(e2.value).trim()!=="" && isFinite(+e2.value) && +e2.value>0);
+      const a2Last=(ageFromDOB(val("c2d"))||a0)+yrs-1, first=Math.min(ovr,r1);
+      if(!(first<=aLast || (c2on && !c2own && first<=a2Last))){
+        // Even then it can move figures inside the window (a glide path follows the years to retirement,
+        // pillar 3a withdrawals are staggered before it): compare with the plan before calling it untested.
+        // Compared with the same scenario WITHOUT the retirement change (the plan itself when it changes
+        // nothing else): against the plan, a cost in the scenario read as an effect of the retirement.
+        const others=!!(scen.incChangePct || scen.extraExp || (scen.extraGoals||[]).length || (scen.timedEvents||[]).length || scen.penDraw);
+        const b=others ? runWhatIfScenario(Object.assign({}, scen, {retAgeOvr:null}), baseArg) : (baseArg||runBaselineWhatIf());
+        const same=b && Math.round(b.medNW)===Math.round(medNW) && Math.round(b.p10NW)===Math.round(p10NW) && Math.round(b.p90NW)===Math.round(p90NW)
+          && ((b.dep&&b.dep.prob)||0)===((paths.depletion&&paths.depletion.prob)||0);
+        if(same) outside.push({what:"Retiring at "+ovr, when:String(cy+ovr-a0), past:false});
+        else partial.push({txt:" Retiring at "+ovr+" falls in "+(cy+ovr-a0)+", after the projection ends in "+lastYear+": only its effect before then (for example on the glide path or pillar 3a withdrawals) is tested."});
+      }
+    }
+  }
+  return {medNW,p10NW,p90NW,goalSucc,dep:paths.depletion||null,surplus,sav:num("savAnnual",0),
+    goalSuccBase, goalsDetail:F.goalsDetail, events, outside, partial,
+    medReal:F.midReal, p10Real:p10NW/F.defl, p90Real:p90NW/F.defl, mid:F.mid, endYear:lastYear, startYear:cy};
 }
 
-// Baseline = current parameters, no overrides
-function runBaselineWhatIf(){
-  const yrs=num("simYrs",20), sims=parseInt(val("simN")||"200",10);
-  const paths=runMC(yrs,sims);
+// Baseline = current parameters, no overrides. paths0: the main run's own paths (runSim), used when they
+// have this run's shape, so the box's "current plan" IS the headline's run (and one engine run is saved).
+function runBaselineWhatIf(paths0){
+  const yrs=num("simYrs",20), sims=parseInt(val("simN")||"500",10);
+  const paths=(Array.isArray(paths0) && paths0.length===sims && paths0[0] && paths0[0].length===yrs+1)?paths0:runMC(yrs,sims);
   const medNW=percentileAt(paths,yrs,50);
   let goalSucc=null;
   if(goals.length>0){
     goalSucc=goals.reduce((s,g)=>s+(goalSuccessFromPaths(g,paths,yrs)||0),0)/goals.length;
   }
-  return {medNW,goalSucc,dep:paths.depletion||null,surplus:getNetSurplus(),sav:num("savAnnual",0)};
+  const F=_wiRunFacts(paths, yrs);
+  return {medNW,p10NW:percentileAt(paths,yrs,10),p90NW:percentileAt(paths,yrs,90),goalSucc,dep:paths.depletion||null,surplus:getNetSurplus(),sav:num("savAnnual",0),
+    goalSuccBase:goalSucc, goalsDetail:F.goalsDetail, events:[], outside:[], partial:[],
+    medReal:F.midReal, mid:F.mid, endYear:F.lastYear, startYear:F.cy};
+}
+// What both runs report alike: each goal on its own, wealth at the probability band's middle line (the
+// same percentile as the Projected wealth card) in today's money, and the last simulated year.
+function _wiRunFacts(paths, yrs){
+  const mid=(typeof band!=="undefined" && band && isFinite(band.mid))?band.mid:50;
+  const defl=Math.pow(1+num("inf",3.8)/100, yrs), cy=currentYear();
+  return {mid, defl, cy, lastYear:cy+yrs-1,
+    goalsDetail:goals.map(g=>({name:String(g.name||"Goal"), p:goalSuccessFromPaths(g,paths,yrs)})),
+    midReal:percentileAt(paths,yrs,mid)/defl};
 }
 
-function runAllWhatIf(){
-  if(whatIfScenarios.length===0){renderWhatIf(); return;}
+let _wiRunTimer=null, _wiGen=0, _wiTestedSig=null;
+let _wiFitStale=false, _wfAfterRetest="", _wiRerunOnce=false, _wfSearching=false;
+const _WI_SIG_SKIP=new Set(["c1f","c1l","c2f","c2l","c1s1","c1s2","c2s1","c2s2","prClient","prAdvisor","prObjective","prRationale"]);
+// What a tested result depends on: every saved input (the set a profile file carries), the probability
+// band, the currency and today's date (ages move on a birthday). A result whose fingerprint still
+// matches is current; one that does not was run on other inputs.
+function wiInputSig(){
+  try{
+    // Text that never reaches the engine is left out: typing a client's name, or the Proposal tab
+    // rewriting its client line, is not a change to the plan.
+    const f=PROFILE_FIELDS.filter(id=>!_WI_SIG_SKIP.has(id)).map(id=>{ const e=$(id); return e?e.value:""; });
+    const c=PROFILE_CHECKBOXES.map(id=>{ const e=$(id); return !!(e&&e.checked); });
+    const s=JSON.stringify([f, c, ($("c2card")||{style:{}}).style.display, CURRENT_CCY, new Date().toDateString(),
+      (typeof band!=="undefined"&&band)?[band.low,band.mid,band.high]:null,
+      assets, loans, goals, children, investments, proposals, insurances, equityComp,
+      (typeof portfolios!=="undefined"?portfolios:null), (typeof activePfId!=="undefined"?activePfId:null),
+      (typeof pfLinkedAccountId!=="undefined"?pfLinkedAccountId:null),
+      // the return and risk the engine will actually use (CMA set, proposal source, holdings)
+      (function(){ try{ const p=getSimEngineParams(); return p?[p.mu,p.sig,p.cashShare,p.tpl&&JSON.stringify(p.tpl)]:null; }catch(_){ return null; } })(),
+      (typeof chPanelState==="function"?chPanelState():null),
+      (typeof getSimUsesProposal==="function"?getSimUsesProposal():null)]);
+    let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
+    return s.length+":"+(h>>>0).toString(36);
+  }catch(e){ return "unknown:"+Date.now(); }   // cannot tell: treat as changed
+}
+// Called where an input may have changed (refreshTopMetrics, opening the Simulation tab): the box is
+// marked out of date only when the fingerprint really moved (opening the Income tab is not a change).
+function wiMarkFitStale(){
+  if(!whatIfScenarios.some(w=>w._result)) return;
+  const sig=wiInputSig(), stale=_wiTestedSig!==sig;
+  // A re-test stopped by an edit that was then put back: finish it, on the inputs it was testing.
+  if(!stale && !_wiRunTimer && whatIfScenarios.some(w=>!(w._result && w._sig===sig))){ _wiFitStale=false; runAllWhatIf(); try{ renderWhatIfFit(); }catch(_){} return; }
+  if(stale===_wiFitStale) return;
+  _wiFitStale=stale;
+  try{ renderWhatIfFit(); }catch(_){}
+}
+// Test the scenarios through runSim, which re-tests them after the main run, so the box's
+// "current plan" and the Results-at-a-glance cards always come from the same inputs.
+function wiRetest(){
+  if(typeof runSim==="function"){ try{ runSim(); return; }catch(e){ console.warn("runSim:", e); } }
+  runAllWhatIf();
+}
+// After every simulation run: nothing to do when no input changed since the scenarios were tested
+// (their results, and any "What fits" answer, stay); otherwise re-test with the run's own paths as the baseline.
+function wiAfterRun(paths){
+  if(!whatIfScenarios.length) return;
+  const sig=wiInputSig();
+  if(!_wiRunTimer && whatIfScenarios.every(w=>w._result && w._sig===sig)){
+    _wiTestedSig=sig; _wiRerunOnce=false;
+    setT("wiStatus",""); if(!_wfAfterRetest) setT("wfStatus","");
+    if(_wiFitStale){ _wiFitStale=false; renderWhatIf(); }
+    if(_wfAfterRetest){ statusMsg($("wfStatus"),"warn","The results are current. Press Find the amount that fits again."); _wfAfterRetest=""; }
+    return;
+  }
+  runAllWhatIf(paths);
+}
+function _wiRunFailed(e){
+  _wiRunTimer=null; _wiRerunOnce=false;
+  setT("wiStatus","Error: "+e.message);
+  statusMsg($("wfStatus"),"err","Could not test the scenarios: "+e.message);
+}
+// Re-tests every scenario whose result is missing or from other inputs, one scenario per task so the
+// page stays responsive (one engine run each); a newer request replaces a run still in progress.
+function runAllWhatIf(basePaths){
+  if(whatIfScenarios.length===0){ _wiRerunOnce=false; setT("wiStatus",""); setT("wfStatus",""); renderWhatIf(); return; }
+  try{ simYrsNormalize(); }catch(_){}
+  const gen=++_wiGen, sig0=wiInputSig();
   setT("wiStatus","Running simulations…");
-  setTimeout(()=>{
-    try {
+  const todo=whatIfScenarios.filter(w=>!w._result || w._sig!==sig0).length||whatIfScenarios.length;
+  const fs=$("wfStatus"); if(fs){ fs.style.color=""; fs.textContent="Testing "+todo+" scenario"+(todo>1?"s":"")+"…"; }
+  clearTimeout(_wiRunTimer);
+  _wiRunTimer=setTimeout(()=>{
+    if(gen!==_wiGen) return;
+    if(!whatIfScenarios.length){ _wiRunTimer=null; _wiRerunOnce=false; setT("wiStatus",""); setT("wfStatus",""); renderWhatIf(); return; }   // all removed meanwhile
+    let base, sig, list;
+    try{
       // Migrate any legacy single-goal scenarios before running.
       whatIfScenarios=whatIfScenarios.map(normalizeWhatIfScenario);
-      const base=runBaselineWhatIf();
-      whatIfScenarios.forEach(w=>{
-        w._result=runWhatIfScenario(w);
-        w._base=base;
-      });
+      sig=wiInputSig();
+      // The main run's paths are the baseline only if nothing changed since that run.
+      // The main run's paths are only the baseline for the inputs they ran on: when something changed in
+      // between (a canton filled in after a load, say), re-run the whole simulation once so the headline
+      // and the box agree, instead of testing against a baseline the cards above do not show.
+      if(basePaths && sig!==sig0 && !_wiRerunOnce){ _wiRerunOnce=true; _wiRunTimer=null; wiRetest(); return; }
+      base=runBaselineWhatIf(sig===sig0?basePaths:null); base._sig=sig;
+      list=whatIfScenarios.filter(w=>!w._result || w._sig!==sig);
+    }catch(e){ return _wiRunFailed(e); }
+    let i=0;
+    const step=()=>{
+      if(gen!==_wiGen) return;   // a newer run took over
+      if(i<list.length){
+        // An input edited between two steps (even one put back later) means this run no longer
+        // describes one set of inputs: stop, and say the box is out of date.
+        if(wiInputSig()!==sig){ _wiRunTimer=null; _wiRerunOnce=false; _wiTestedSig=sig; _wiFitStale=true; setT("wiStatus",""); setT("wfStatus",""); renderWhatIf(); return; }
+        const w=list[i++];
+        try{
+          if(w._sig!==sig) delete w._fitMax;   // found on other inputs
+          w._result=runWhatIfScenario(w, base); w._sig=sig; w._base=base;
+        }catch(e){ return _wiRunFailed(e); }
+        _wiRunTimer=setTimeout(step,0); return;
+      }
+      _wiRunTimer=null; _wiRerunOnce=false;
+      whatIfScenarios.forEach(w=>{ if(w._result && w._sig===sig) w._base=base; });
+      // An input edited while the scenarios ran leaves them on the inputs of the start of the run.
+      _wiTestedSig=sig; _wiFitStale=wiInputSig()!==sig;
       renderWhatIf();
       setT("wiStatus","");
-    } catch(e){ setT("wiStatus","Error: "+e.message); }
+      setT("wfStatus","");
+      if(_wfAfterRetest){ statusMsg($("wfStatus"),"warn",_wfAfterRetest); _wfAfterRetest=""; }
+    };
+    _wiRunTimer=setTimeout(step,0);
   },30);
 }
+// A scenario id that no other scenario holds (a file's whatIfSeq can lag behind its ids).
+function wiNewId(){
+  if(!_wiSafeSeq(whatIfSeq)) whatIfSeq=_wiSafeSeq(_maxIdSeq(whatIfScenarios));
+  let id, k=0;
+  do{ id="wi"+(++whatIfSeq); }while(whatIfScenarios.some(w=>w.id===id) && ++k<100000);
+  return id;
+}
+// A usable id counter: a whole number below a billion, else 0 (a counter at 2^53 or 1e20 stops
+// changing when incremented, and the id loops never ended).
+function _wiSafeSeq(v){ v=+v; return (Number.isSafeInteger(v) && v>=0 && v<1e9)?v:0; }
 
 function renderWhatIf(){
+  try{ renderWhatIfFit(); }catch(e){ console.warn("renderWhatIfFit:", e); }
   const list=$("whatIfList"); if(!list) return;
   if(whatIfScenarios.length===0){
     list.innerHTML='<div class="cmp-empty">No scenarios added yet. Define a scenario below and click Run.</div>';
     return;
   }
   list.innerHTML=whatIfScenarios.map(w=>{
-    const r=w._result, b=w._base;
+    const r=(w._result && w._sig===_wiTestedSig)?w._result:null, b=w._base;
     let statsHtml="";
     if(r){
-      const medDelta=b?r.medNW-b.medNW:null;
+      // Today's money, like the cards, the Does-it-fit box and the PDF (one figure per scenario everywhere).
+      const rMed=r.medReal!=null?r.medReal:r.medNW, bMed=b?(b.medReal!=null?b.medReal:b.medNW):null;
+      const medDelta=b?rMed-bMed:null;
       const medDeltaFmt=medDelta!=null?(medDelta>=0?"+":"")+fmtMoney(medDelta):"-";
       const medDeltaCls=medDelta==null?"":medDelta>=0?"up":"dn";
-      const gsStr=r.goalSucc!=null?r.goalSucc.toFixed(0)+"%":"-";
-      const gsDelta=r.goalSucc!=null&&b&&b.goalSucc!=null?r.goalSucc-b.goalSucc:null;
-      const gsDeltaFmt=gsDelta!=null?(gsDelta>=0?"+":"")+gsDelta.toFixed(1)+"%pts":"";
-      const gsDeltaCls=gsDelta==null?"":gsDelta>=0?"up":"dn";
+      // The household's own goals, as in the Does-it-fit box: averaging the scenario's new costs in made a
+      // CHF 200k gift read as raising goal success. Each new cost is reported on its own below.
+      const rGs=r.goalSuccBase!==undefined?r.goalSuccBase:r.goalSucc, bGs=b?(b.goalSuccBase!==undefined?b.goalSuccBase:b.goalSucc):null;
+      const gsStr=rGs!=null?rGs.toFixed(0)+"%":"-";
+      // the difference of the two figures shown, as in the box (no "+0.0%pts", no -0.3 beside a "-1 pts")
+      const gsDelta=rGs!=null&&bGs!=null?Math.round(rGs)-Math.round(bGs):null;
+      const gsDeltaFmt=gsDelta?(gsDelta>0?"+":"")+gsDelta+" pts":"";
+      const gsDeltaCls=!gsDelta?"":gsDelta>0?"up":"dn";
       // Impact strip: annual surplus change (why NW moves — or doesn't) plus
       // liquidity-depletion when a meaningful share of paths run dry.
       let impactHtml="";
       const surpParts=[];
+      (r.events||[]).forEach(e=>{ if(e && !e.outside && e.p!=null) surpParts.push(_daEsc('"'+e.name+'"')+" paid in full "+(e.p<=0?"in none of the futures":Math.round(e.p)<1?"in under 1% of futures":"in "+Math.round(e.p)+"% of futures")); });
       if(r.surplus!=null && b && b.surplus!=null && Math.abs(r.surplus-b.surplus)>0.5){
         const d=r.surplus-b.surplus;
         const dCls=d>=0?"up":"dn";
@@ -29610,39 +29911,42 @@ function renderWhatIf(){
         const sav=r.sav!=null?r.sav:(b.sav!=null?b.sav:num("savAnnual",0));
         if(r.surplus<0) surpParts.push("annual deficit: each year draws from cash/investments");
         else if(sav>0 && r.surplus<sav) surpParts.push(`committed savings ${fmtMoney(sav)}/yr exceeds surplus by ${fmtMoney(sav-r.surplus)}`);
-        else if(sav>0) surpParts.push(`committed savings ${fmtMoney(sav)}/yr still covered (extra spend mainly eats discretionary leftover)`);
+        else if(sav>0) surpParts.push(d<0?`committed savings ${fmtMoney(sav)}/yr still covered (the lower surplus mainly comes out of discretionary leftover)`:`committed savings ${fmtMoney(sav)}/yr still covered (the extra mainly adds to discretionary leftover)`);
         else surpParts.push("no committed annual savings: surplus leftovers are not invested");
       }
       let depLine="";
       if(r.dep && r.dep.prob>0.05){
         const cy=currentYear();
         const baseProb=b&&b.dep?b.dep.prob:null;
-        const baseNote=baseProb!=null?` · baseline ${(baseProb*100).toFixed(0)}%`:"";
+        const baseNote=baseProb!=null?` · baseline ${100-Math.round((1-baseProb)*100)}%`:"";
         const medYr=r.dep.medianYr!=null?` (median: ${cy+r.dep.medianYr}`+ (r.dep.medianUnfunded>0?`, ~${fmtMoney(r.dep.medianUnfunded)} short`:"") + `)`:"";
-        depLine=`⚠ Liquid assets run out in ${(r.dep.prob*100).toFixed(0)}% of paths${medYr}${baseNote}`;
+        depLine=`⚠ Liquid assets run out in ${100-Math.round((1-r.dep.prob)*100)}% of paths${medYr}${baseNote}`;
       }
+      // A change outside the projection window is never simulated (same rule as the Does-it-fit box).
+      if(r.outside && r.outside.length) depLine=(depLine?depLine+" · ":"")+"Not tested: "+_daEsc(wiFitWhy(r, wiFitVerdict(r)));
       if(surpParts.length || depLine){
         impactHtml=`<div class="wi-impact">${surpParts.length?`<div class="wi-surp">${surpParts.join(" · ")}</div>`:""}${depLine?`<div class="wi-depwarn">${depLine}</div>`:""}</div>`;
       }
-      statsHtml=`<div class="wi-results">
+      // an untested scenario has no figures of its own (as in the box and the PDF): only the reason
+      statsHtml=(r.outside&&r.outside.length)?impactHtml:`<div class="wi-results">
         <div class="wi-stat">
-          <div class="wi-stat-lbl">Median NW (end)</div>
-          <div class="wi-stat-val gold">${fmtMoney(r.medNW)}</div>
-          <div class="wi-delta ${medDeltaCls}">${medDeltaFmt} vs baseline</div>
+          <div class="wi-stat-lbl">${(r.mid==null||r.mid===50)?"Median wealth (end)":"Wealth (end, "+wiOrd(r.mid)+" percentile)"}</div>
+          <div class="wi-stat-val gold">${fmtMoney(rMed)}</div>
+          <div class="wi-delta ${medDeltaCls}">${medDeltaFmt} vs baseline, today's money</div>
         </div>
         <div class="wi-stat">
           <div class="wi-stat-lbl">10th-90th range</div>
-          <div class="wi-stat-val" style="font-size:12px">${fmtMoney(r.p10NW)} to ${fmtMoney(r.p90NW)}</div>
-          <div class="wi-delta">at end of projection</div>
+          <div class="wi-stat-val" style="font-size:12px">${fmtMoney(r.p10Real!=null?r.p10Real:r.p10NW)} to ${fmtMoney(r.p90Real!=null?r.p90Real:r.p90NW)}</div>
+          <div class="wi-delta">at end of projection, today's money</div>
         </div>
         <div class="wi-stat">
-          <div class="wi-stat-lbl">Goal success</div>
-          <div class="wi-stat-val ${r.goalSucc!=null&&r.goalSucc>=70?'pos':r.goalSucc!=null&&r.goalSucc<40?'neg':''}">${gsStr}</div>
+          <div class="wi-stat-lbl">Your goals</div>
+          <div class="wi-stat-val ${rGs!=null&&rGs>=70?'pos':rGs!=null&&rGs<40?'neg':''}">${gsStr}</div>
           <div class="wi-delta ${gsDeltaCls}">${gsDeltaFmt}</div>
         </div>
       </div>${impactHtml}`;
     } else {
-      statsHtml=`<div style="font-size:12px;color:var(--text3)">Click Run to compute results.</div>`;
+      statsHtml=`<div style="font-size:12px;color:var(--text3)">Not tested on the current inputs yet. Run Simulation to test it.</div>`;
     }
     // Override summary
     const overrides=wiDescribeOverrides(w);
@@ -29656,6 +29960,322 @@ function renderWhatIf(){
       ${statsHtml}
     </div>`;
   }).join("");
+}
+
+// ═══════════════════════════════════════════════════════════
+// WHAT-IF: DOES IT FIT?
+// ═══════════════════════════════════════════════════════════
+// One verdict per scenario from the three things that can break a plan: the household's own
+// goals, each one-time cost the scenario adds, and whether every year's spending, debt service
+// and goals could be paid from cash and investments. The weakest of them decides, on the same
+// thresholds as the Results-at-a-glance cards (80% on track, 50% caution). Shared by the
+// Simulation tab box and the PDF report, so both always say the same thing.
+const WI_FIT_OK=80, WI_FIT_TIGHT=50;
+const WI_FIT_LABEL={fits:"Fits", tight:"Tight", nofit:"Does not fit", out:"Not tested", na:"Not measured"};
+function wiFitVerdict(r){
+  if(!r) return null;
+  if(r.outside && r.outside.length) return {v:"out", parts:[], worst:null};   // not simulated: no verdict
+  const parts=[];
+  if(r.goalSuccBase!=null && isFinite(r.goalSuccBase)) parts.push({k:"goals", p:r.goalSuccBase});
+  (r.events||[]).forEach(e=>{ if(e && !e.outside && e.p!=null && isFinite(e.p)) parts.push({k:"event", p:e.p, e}); });
+  if(r.dep && isFinite(r.dep.prob)) parts.push({k:"cover", p:(1-r.dep.prob)*100});
+  if(!parts.length) return {v:"na", parts, worst:null};
+  const worst=parts.reduce((a,b)=>b.p<a.p?b:a), wp=Math.round(worst.p);   // judged on the figure shown
+  return {v:wp>=WI_FIT_OK?"fits":wp>=WI_FIT_TIGHT?"tight":"nofit", parts, worst};
+}
+// The verdict covers the projection only: when it ends before client 1 turns 90, say that Money lasts
+// (Results at a glance) looks further, so a "Fits" beside an amber Money lasts is not a contradiction.
+function wiHorizonNote(endYr, forPdf){
+  const a0=ageFromDOB(val("c1d")), cy=currentYear();
+  if(!a0 || !endYr) return "";
+  const ageEnd=a0+(endYr-cy);
+  if(ageEnd>=90) return "";
+  return " The verdict covers the projection to "+endYr+" (age "+ageEnd+") only"+(forPdf?".":"; Money lasts looks further, to age 90.");
+}
+// The teaser line: the tested scenarios and their verdicts, then the untested ones apart.
+function wiTeaserTxt(c){
+  const tested=c.fits+c.tight+c.nofit, parts=[];
+  if(c.fits) parts.push(c.fits+" fit"+(c.fits===1?"s":""));
+  if(c.tight) parts.push(c.tight+" "+(c.tight===1?"is":"are")+" tight");
+  if(c.nofit) parts.push(c.nofit+" "+(c.nofit===1?"does":"do")+" not fit");
+  let t=tested?tested+" scenario"+(tested>1?"s":"")+" tested against your plan: "+parts.join(", ")+".":"";
+  if(c.out) t+=(t?" "+c.out+" "+(c.out===1?"is":"are"):c.out+" scenario"+(c.out===1?" is":"s are"))+" not tested (outside the projection).";
+  if(c.wait) t+=(t?" ":"")+c.wait+" "+(t?(c.wait===1?"is":"are"):"scenario"+(c.wait===1?" is":"s are"))+" not tested on the current inputs yet.";
+  return t||"nothing measured yet.";
+}
+// Goals of the household that start after the last simulated year are never charged (they count as
+// funded, here and in Goal success): name them rather than let "100%" stand unexplained.
+function wiGoalsAfterNote(endYr){
+  const late=(goals||[]).filter(g=>+g.startYear>endYr);
+  if(!late.length) return "";
+  return " "+late.slice(0,3).map(g=>'"'+String(g.name||"Goal")+'" ('+(g.startYear===g.endYear?g.startYear:g.startYear+"-"+g.endYear)+")").join(", ")+(late.length>3?" and "+(late.length-3)+" more":"")
+    +(late.length>1?" start":" starts")+" after the projection ends in "+endYr+", so "+(late.length>1?"they are":"it is")+" not simulated and "+(late.length>1?"count":"counts")+" as funded.";
+}
+// How the plan itself stands, for the note above the scenarios (box and PDF).
+function wiPlanAlready(v){ return v==="tight"?"is already tight on its own":"already does not fit on its own"; }
+// 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th ... 21st, 52nd.
+function wiOrd(n){ n=+n; if(!Number.isInteger(n)) return n+"th";   // a decimal middle (22.5) is named as set, not rounded
+  const t=Math.abs(n)%100, u=Math.abs(n)%10; return n+((t>=11&&t<=13)?"th":u===1?"st":u===2?"nd":u===3?"rd":"th"); }
+// The percentile the wealth figures use, in words.
+function wiMidTxt(mid){ return (mid==null||mid===50)?"median (50th percentile)":"middle line of your probability band (the "+wiOrd(mid)+" percentile)"; }
+// The reason in one or two plain sentences (plain text: callers escape it for HTML).
+function wiFitWhy(r, fit, money, isBase){
+  money=money||fmtMoney;
+  if(fit && fit.v==="out"){
+    const o=(r&&r.outside)||[], past=o.filter(x=>x.past), fut=o.filter(x=>!x.past);
+    const list=xs=>xs.map(x=>x.what+" ("+x.when+")").join(" and ");
+    const t=[];
+    if(fut.length) t.push(list(fut)+(fut.length>1?" fall":" falls")+" after the projection ends in "+(r.endYear||"")+", so "+(fut.length>1?"they are":"it is")+" not simulated: extend Projection years to test "+(fut.length>1?"them":"it")+".");
+    if(past.length) t.push(list(past)+(past.length>1?" are":" is")+" in the past, so "+(past.length>1?"they are":"it is")+" not simulated: edit or delete the scenario.");
+    return t.join(" ");
+  }
+  if(!fit || fit.v==="na") return "Nothing to measure yet: run the simulation.";
+  const pc=p=>Math.round(p)+"%", cy=currentYear(), d=(r&&r.dep)||{}, last=(r&&r.endYear)||"";
+  // "in none of" / "in under 1% of" / "in only 38% of": a figure that merely rounds to 0 is not "none".
+  const inPct=(p,only)=>p<=0?"in none of the":Math.round(p)<1?"in under 1% of":(only?"in only ":"in ")+pc(p)+" of";
+  const shortPct=p=>p<=0?"none":Math.round(p)<1?"under 1%":pc(p);
+  const partTxt=((r&&r.partial)||[]).map(x=>x.txt||(" Only "+x.when+" of "+x.what+" is inside the projection, so only that part is tested.")).join("");
+  const cover=fit.parts.find(x=>x.k==="cover");
+  // A goal or a cost that goes unpaid also counts against "everything paid", so that measure is never
+  // above any of them: name the weakest item (one of your goals, or a new cost), then add only the
+  // FURTHER futures in which something else goes unpaid.
+  const items=[...((r&&r.goalsDetail)||[]).filter(g=>g&&g.p!=null&&isFinite(g.p)).map(g=>({goal:true, name:g.name, p:g.p})),
+               ...fit.parts.filter(x=>x.k==="event").map(x=>({goal:false, name:x.e.name, amt:x.e.amt, year:x.e.year, p:x.p}))];
+  const nameOf=x=>x.goal?'Your goal "'+x.name+'"':'"'+x.name+'" ('+money(x.amt)+" in "+x.year+")";
+  const verbOf=x=>x.goal?" is funded ":" is paid in full ";
+  if(fit.v==="fits"){
+    const nCost=items.filter(x=>!x.goal).length;
+    if(cover) return "Everything"+(nCost?(nCost>1?", the new costs included,":", the new cost included,"):"")+" is paid in full "+inPct(cover.p)+" simulated futures through "+last+"."+partTxt;
+    return items.map(x=>nameOf(x)+verbOf(x)+inPct(x.p)+" simulated futures").join("; ")+"."+partTxt;
+  }
+  const weak=items.filter(x=>Math.round(x.p)<WI_FIT_OK).sort((a,b)=>a.p-b.p);
+  const out=[];
+  if(weak.length){
+    const w=weak[0];
+    out.push(nameOf(w)+verbOf(w)+inPct(w.p,true)+" simulated futures.");
+    const also=weak.slice(1);
+    if(also.length) out.push("Also below 80%: "+also.slice(0,3).map(x=>'"'+x.name+'" '+shortPct(x.p)).join(", ")+(also.length>3?" and "+(also.length-3)+" more":"")+".");
+    const further=Math.round(w.p)-Math.round(cover?cover.p:w.p);   // from the two figures shown, so it adds up
+    if(cover && further>=1) out.push("In a further "+further+"% of futures other spending or goals go unpaid.");
+  } else if(cover){
+    out.push("In "+(100-Math.round(cover.p))+"% of simulated futures cash and investments run short and something goes unpaid"+(d.medianYr!=null?", typically from "+(cy+d.medianYr):"")+".");
+  }
+  return out.join(" ")+partTxt;
+}
+function renderWhatIfFit(){
+  const host=$("wiFitList"), teaser=$("wiFitTeaser");
+  if(!host && !teaser) return;
+  const hideTeaser=()=>{ if(teaser){ teaser.style.display="none"; teaser.innerHTML=""; } };
+  // removing the last row with the keyboard: keep the focus in the box, not on the page
+  const hadFocus=!!(host && document.activeElement && host.contains(document.activeElement));
+  const keepFocus=()=>{ if(hadFocus && host){ host.setAttribute("tabindex","-1"); try{ host.focus({preventScroll:true}); }catch(_){} } };
+  if(!whatIfScenarios.length){
+    if(host){ host.innerHTML='<div class="cmp-empty">No scenarios yet. Check a cost above, or build a fuller scenario on the <a href="#" onclick="wfOpenWhatIfForm();return false">Goals tab</a>.</div>'; host.classList.remove("wf-stale"); keepFocus(); }
+    hideTeaser(); return;
+  }
+  // Only results run on the inputs last tested count: a run stopped by an edit leaves older ones behind.
+  const cur=w=>!!(w._result && w._sig===_wiTestedSig);
+  const done=whatIfScenarios.filter(cur);
+  const base=(done.find(w=>w._base && w._base._sig===_wiTestedSig)||done.find(w=>w._base)||{})._base||null;
+  if(!done.length || !base){
+    const n=whatIfScenarios.length;
+    if(host){ host.innerHTML='<div class="cmp-empty">'+n+' scenario'+(n>1?'s':'')+' saved, not tested against the current inputs yet. <button type="button" class="btn-secondary" style="margin-left:6px" onclick="wiRetest()">Test now</button></div>'; host.classList.remove("wf-stale"); keepFocus(); }
+    hideTeaser(); return;
+  }
+  const endYr=base.endYear||(currentYear()+num("simYrs",20)-1);
+  const cov=r=>r&&r.dep&&isFinite(r.dep.prob)?(1-r.dep.prob)*100:null;
+  const pc=p=>p==null||!isFinite(p)?"-":Math.round(p)+"%";
+  const pts=d=>{ const k=d==null?0:Math.round(d); return k===0?"":'<span class="wf-d '+(k>0?"up":"dn")+'">'+(k>0?"+":"")+k+' pts</span>'; };
+  const money=d=>(d==null||Math.abs(d)<1)?"":'<span class="wf-d '+(d>0?"up":"dn")+'">'+(d>0?"+":"")+fmtMoney(d)+'</span>';
+  const stat=(k,v,dl)=>'<div class="wf-stat"><span class="wf-k">'+k+'</span><span class="wf-v">'+v+'</span>'+(dl||"")+'</div>';
+  const baseFit=wiFitVerdict(base);
+  const row=(name, chg, r, isBase, id, w)=>{
+    const fit=wiFitVerdict(r), v=fit?fit.v:"na";
+    const gs=r.goalSuccBase, cv=cov(r);
+    let stats=v==="out"?"":stat("Your goals", gs==null?"No goals":pc(gs), isBase||gs==null||base.goalSuccBase==null?"":pts(Math.round(gs)-Math.round(base.goalSuccBase)));
+    if(v!=="out"){
+      (r.events||[]).forEach(e=>{ stats+=stat(_daEsc(e.name)+" paid", e.outside?"Not simulated":pc(e.p), ""); });
+      stats+=stat("Everything paid", pc(cv), isBase||cv==null||cov(base)==null?"":pts(Math.round(cv)-Math.round(cov(base))));
+      stats+=stat("Wealth, end "+endYr, fmtMoney(r.medReal), isBase?"":money(r.medReal-base.medReal));
+    }
+    const acts=isBase?"":rowActionsHtml("wfEdit(this)","wfDelete(this)",_daEsc(name));
+    let more="";
+    // The search only answers "how much of this cost fits", so it is offered only while the plan
+    // itself fits (otherwise no amount of the cost could make the scenario fit).
+    if(!isBase && (v==="tight"||v==="nofit") && w && baseFit && baseFit.v==="fits"){
+      const c=wiCostsOf(w), mx=w._fitMax;
+      if(mx && mx.sig===Math.round(r.medNW)) more='<div class="wf-fitmax">'+_daEsc(wiFitMaxText(w, fmtMoney))+'</div>';
+      else if(c.once.length||c.yearly.length) more='<button type="button" class="btn-secondary wf-findbtn" onclick="wfFindFit(this)">Find the amount that fits</button>';
+    }
+    return '<div class="wf-row '+v+(isBase?" wf-base":"")+'"'+(id?' data-wid="'+_daEsc(id)+'"':'')+'>'
+      +'<div><div class="wf-name">'+_daEsc(name)+'</div>'+(chg?'<div class="wf-chg">'+chg+'</div>':'')
+      +'<div class="wf-why">'+_daEsc(wiFitWhy(r, fit, fmtMoney, isBase))+'</div>'+more+'</div>'
+      +'<div class="wf-side"><span class="wf-badge '+v+'">'+WI_FIT_LABEL[v]+'</span>'+acts+'</div>'
+      +(stats?'<div class="wf-stats">'+stats+'</div>':'')+'</div>';
+  };
+  let h='';
+  if(_wiFitStale)
+    h+='<div class="wf-note">Inputs changed since these scenarios were tested, so the figures below are out of date. <button type="button" class="btn-secondary" style="margin-left:6px" onclick="wiRetest()">Re-test</button></div>';
+  else if(!_wiRunTimer && done.length<whatIfScenarios.length){
+    const k=whatIfScenarios.length-done.length;
+    h+='<div class="wf-note">'+k+' scenario'+(k>1?'s are':' is')+' not tested on the current inputs yet. <button type="button" class="btn-secondary" style="margin-left:6px" onclick="wiRetest()">Test now</button></div>';
+  }
+  if(baseFit && (baseFit.v==="tight"||baseFit.v==="nofit"))
+    h+='<div class="wf-note">Your current plan '+wiPlanAlready(baseFit.v)+', so a scenario that adds a cost cannot fit until the plan does. Scenarios that add income or cut costs show how far they close the gap.</div>';
+  h+=row("Your current plan", "As entered, no changes", base, true, null);
+  const counts={fits:0, tight:0, nofit:0, out:0, na:0, wait:whatIfScenarios.length-done.length};
+  whatIfScenarios.forEach(w=>{
+    const chg=wiDescribeOverrides(w).join(" · ");   // names already escaped there
+    if(!cur(w)){
+      h+='<div class="wf-row" data-wid="'+_daEsc(w.id)+'"><div><div class="wf-name">'+_daEsc(w.name)+'</div><div class="wf-chg">'+chg+'</div><div class="wf-why">Not tested yet.</div></div><div class="wf-side">'+rowActionsHtml("wfEdit(this)","wfDelete(this)",_daEsc(w.name))+'</div></div>';
+      return;
+    }
+    const f=wiFitVerdict(w._result); counts[f?f.v:"na"]++;
+    h+=row(String(w.name||"Scenario"), chg, w._result, false, w.id, w);
+  });
+  h+='<div class="wi-hint" style="margin-top:4px">Your goals: the average chance that each existing goal is fully funded. Everything paid: the share of simulated futures in which cash and investments pay every year\'s spending, debt service, goals and the scenario\'s costs in full through '+endYr+'. Wealth: the '+wiMidTxt(base.mid)+' of simulated net worth at the end of '+endYr+', in today\'s money, as in Projected wealth above.'+wiHorizonNote(endYr)+_daEsc(wiGoalsAfterNote(endYr))+'</div>';
+  if(host){
+    const act=document.activeElement, had=!!(act && host.contains(act));
+    const wid=had && act.closest(".wf-row") ? act.closest(".wf-row").dataset.wid : null, cls=had ? String(act.className||"") : "";
+    host.innerHTML=h; host.classList.toggle("wf-stale", !!_wiFitStale); refreshIcons();
+    if(had){
+      const row=wid!=null ? [...host.querySelectorAll(".wf-row")].find(x=>x.dataset.wid===wid) : null;
+      const same=row && cls ? [...row.querySelectorAll("button")].find(b=>b.className===cls) : null;
+      const target=same || (row && row.querySelector(".wf-fitmax, button")) || host;
+      if(target===host || (target && target.classList.contains("wf-fitmax"))) target.setAttribute("tabindex","-1");
+      try{ target.focus({preventScroll:true}); }catch(_){}
+    }
+  }
+  if(teaser){
+    const n=done.length, parts=[];
+    if(counts.fits) parts.push(counts.fits+" fit"+(counts.fits===1?"s":""));
+    if(counts.tight) parts.push(counts.tight+" "+(counts.tight===1?"is":"are")+" tight");
+    if(counts.nofit) parts.push(counts.nofit+" "+(counts.nofit===1?"does":"do")+" not fit");
+    teaser.innerHTML=_wiFitStale
+      ? '<span><strong>What-If:</strong> inputs changed since your scenario'+(whatIfScenarios.length>1?'s were':' was')+' tested. Run Simulation to re-test.</span><button type="button" class="btn-secondary" onclick="wfGoToFit()">Show the scenarios</button>'
+      : '<span><strong>What-If:</strong> '+_daEsc(wiTeaserTxt(counts))+'</span><button type="button" class="btn-secondary" onclick="wfGoToFit()">Show the scenarios</button>';
+    teaser.style.display="flex";
+  }
+}
+function wfKindChange(){
+  const u=$("wfUntil"); if(u) u.style.display=val("wfKind")==="yearly"?"":"none";
+}
+function wfQuickCheck(){
+  const st=$("wfStatus");
+  const name=val("wfName").trim(), amt=num("wfAmt",0), year=parseInt(val("wfYear"),10)||0, kind=val("wfKind")||"once";
+  const {cy,horizon}=wiWhatIfHorizon();
+  if(!(amt>0)){ statusMsg(st,"err","Enter the amount, in the household's currency."); return; }
+  if(!(year>0)){ statusMsg(st,"err","Enter the calendar year of the cost."); return; }
+  if(year<cy||year>horizon){ statusMsg(st,"err","Year "+year+" is outside the projection window ("+cy+"-"+horizon+"), so it would never be simulated. Pick a year inside it, or extend Projection years."); return; }
+  let until=year;
+  if(kind==="yearly"){
+    const u=val("wfUntil").trim();
+    until=u===""?horizon:(parseInt(u,10)||0);
+    if(until<year||until>horizon){ statusMsg(st,"err","Until must be a year from "+year+" to "+horizon+", or blank for the rest of the projection."); return; }
+  }
+  const label=name||(kind==="yearly"?"Yearly cost":"One-time cost");
+  whatIfScenarios.push(normalizeWhatIfScenario({
+    id:wiNewId(), name:label, retAgeOvr:null, incChangePct:0, extraExp:0,
+    extraGoals: kind==="once"?[{name:label, amt, year}]:[],
+    timedEvents: kind==="yearly"?[{label, kind:"expense", value:amt, startYear:year, endYear:until}]:[],
+    penDraw:null,
+  }));
+  ["wfName","wfAmt","wfYear","wfUntil"].forEach(id=>{ const e=$(id); if(e) e.value=""; });
+  if($("wfKind")){ $("wfKind").value="once"; wfKindChange(); }
+  wiRetest();
+}
+function _wfLiveBtn(id){ const r=[...document.querySelectorAll("#wiFitList .wf-row")].find(x=>x.dataset.wid===id); return r?r.querySelector(".wf-findbtn"):null; }
+function _wfRowId(btn){ const r=btn&&btn.closest?btn.closest(".wf-row"):null; return r?r.dataset.wid:null; }
+function wfDelete(btn){ const id=_wfRowId(btn); if(id!=null) deleteWhatIf(id); }
+function wfEdit(btn){ const id=_wfRowId(btn); if(id==null) return; wfOpenWhatIfForm(); editWhatIf(id); }
+// The full What-If form lives on the Goals tab: open it there, expanded.
+function wfOpenWhatIfForm(){
+  showTab("goals", document.querySelector('.nav-item[data-tab="goals"]'));
+  const body=$("whatIfBody"); if(body && !body.classList.contains("open")) toggleDropdown("whatIfBody");
+  const f=$("wiName");
+  try{ (f||body).scrollIntoView({behavior:"smooth", block:"center"}); }catch(_){}
+  try{ if(f) f.focus({preventScroll:true}); }catch(_){}
+}
+// From the teaser: show the Goals & funding section and the box, expanded.
+function wfGoToFit(){
+  const p=$("wiFitPanel"); if(!p) return;
+  const sec=p.closest(".sim-section");
+  if(sec && sec.dataset.simsec!=null && typeof activateSimSec==="function") activateSimSec(+sec.dataset.simsec);
+  const body=$("wiFitBody"); if(body && !body.classList.contains("open")) toggleDropdown("wiFitBody");
+  try{ p.scrollIntoView({behavior:"smooth", block:"start"}); }catch(_){}
+}
+// "Find what fits": the largest share of a scenario's costs (its one-time costs and yearly extra
+// costs, nothing else) that still fits, found by halving: about eight engine runs, so only on request.
+function wiCostsOf(w){ const n=normalizeWhatIfScenario(w); return {once:n.extraGoals||[], yearly:(n.timedEvents||[]).filter(e=>e.kind==="expense")}; }
+function wiScaleCosts(w, f){
+  const n=normalizeWhatIfScenario(w);
+  return Object.assign({}, n, {
+    extraGoals:(n.extraGoals||[]).map(g=>Object.assign({}, g, {amt:g.amt*f})),
+    timedEvents:(n.timedEvents||[]).map(e=>e.kind==="expense"?Object.assign({}, e, {value:e.value*f}):e),
+  });
+}
+// Synchronous version (tests, scripts): the app uses the stepped search in wfFindFit.
+function wiFitSearch(w){
+  const fitsAt=f=>{ const v=wiFitVerdict(runWhatIfScenario(wiScaleCosts(w,f))); return !!v && v.v==="fits"; };
+  if(!fitsAt(0)) return {none:true};
+  let lo=0, hi=1;
+  for(let i=0;i<7;i++){ const m=(lo+hi)/2; if(fitsAt(m)) lo=m; else hi=m; }
+  return {f:lo};
+}
+// Amounts rounded DOWN to a round figure, so the amount quoted is never more than the one that fitted.
+// Steps match what fmtMoney and the PDF print exactly (2-decimal millions, whole thousands, whole
+// units below 1,000), so a quoted figure can never be rounded back up past what fitted.
+function _wiNiceDown(a){ const st=a>=1e9?1e7:a>=1e6?5e4:a>=1e5?1e4:a>=1e3?1e3:100; return Math.floor(a/st+1e-9)*st; }
+function wiFitMaxText(w, money){
+  const m=w&&w._fitMax; if(!m) return "";
+  money=money||fmtMoney;
+  const c=wiCostsOf(w), many=c.once.length+c.yearly.length>1;
+  if(m.err) return "The search did not finish: "+m.err;
+  if(m.none) return "Even without "+(many?"these costs":"this cost")+" the scenario would not reach Fits: its other changes are what hold it back.";
+  const span=e=>e.startYear===e.endYear?String(e.startYear):e.startYear+"-"+e.endYear;
+  const items=[...c.once.map(g=>({a:_wiNiceDown(g.amt*m.f), t:" in "+g.year})), ...c.yearly.map(e=>({a:_wiNiceDown(e.value*m.f), t:" a year ("+span(e)+")"}))];
+  const pos=items.filter(x=>x.a>0);
+  if(!pos.length) return "Almost none of "+(many?"these costs fits":c.yearly.length?"this yearly cost fits in those years":"this cost fits in that year")+": try "+(c.yearly.length&&!c.once.length?"later years":"a later year")+".";
+  return "What fits: up to "+pos.map(x=>money(x.a)+x.t).join(" and ")+(pos.length<items.length?" (the rest would have to be dropped)":"")+", keeping every measure at 80% or more.";
+}
+// The search runs one engine run per task (the page stays responsive) and gives up quietly when the
+// scenarios are re-tested meanwhile, or the inputs change under it.
+function wfFindFit(btn){
+  const id=_wfRowId(btn), w=whatIfScenarios.find(x=>x.id===id);
+  if(!w || !w._result) return;
+  if(_wiRunTimer){ statusMsg($("wfStatus"),"warn","The scenarios are being re-tested. Try again in a moment."); return; }
+  const sig=wiInputSig();
+  if(_wfSearching) return;   // one search at a time
+  if(_wiFitStale && w._sig===sig){ wiMarkFitStale(); btn=_wfLiveBtn(id)||btn; }   // inputs back to the tested ones (repainted)
+  if(_wiRunTimer){ statusMsg($("wfStatus"),"warn","The scenarios are being re-tested. Try again in a moment."); return; }
+  if(_wiFitStale || w._sig!==sig){
+    _wfAfterRetest="Re-tested on the current inputs. Press Find the amount that fits again.";
+    wiRetest(); return;
+  }
+  // aria-disabled, not disabled: a disabled button drops keyboard focus to the page in a real browser
+  _wfSearching=true; btn.setAttribute("aria-disabled","true"); btn.textContent="Searching…";
+  const gen=_wiGen;
+  const fitsAt=f=>{ const v=wiFitVerdict(runWhatIfScenario(wiScaleCosts(w,f), w._base)); return !!v && v.v==="fits"; };
+  let lo=0, hi=1, i=-1;
+  const finish=res=>{
+    _wfSearching=false;
+    if(gen!==_wiGen || !w._result) return;   // re-tested, or the results were cleared (currency switch)
+    if(wiInputSig()!==sig){ statusMsg($("wfStatus"),"warn","Inputs changed during the search, so it was not kept. Run Simulation, then search again."); renderWhatIfFit(); return; }
+    // Tied to the figures it was found on: the PDF prints it only while they still hold.
+    res.sig=Math.round(w._result.medNW); res.bsig=w._base?Math.round(w._base.medNW):null;
+    w._fitMax=res; setT("wfStatus",""); renderWhatIfFit();
+  };
+  const step=()=>{
+    if(gen!==_wiGen || !whatIfScenarios.includes(w) || !w._result){ _wfSearching=false; return; }   // re-tested, deleted or cleared meanwhile
+    if(wiInputSig()!==sig){ _wfSearching=false; statusMsg($("wfStatus"),"warn","Inputs changed during the search, so it stopped. Run Simulation, then search again."); renderWhatIfFit(); return; }
+    try{
+      if(i<0){ if(!fitsAt(0)) return finish({none:true}); i=0; }
+      else { const m=(lo+hi)/2; if(fitsAt(m)) lo=m; else hi=m; i++; }
+      if(i>=7) return finish({f:lo});
+    }catch(e){ return finish({err:e.message}); }
+    setTimeout(step,0);
+  };
+  setTimeout(step,30);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -30148,7 +30768,7 @@ const RPT_SECTION_DESC = {
   potentialwealth: "Projected portfolio value each year to age 90 (chart + table).",
   cf:              "Year-by-year cash-flow projection.",
   pension:         "State/occupational pensions, claiming-age comparison, plus Swiss pillar lump-sum tax and annuity-vs-lump-sum for CH residents.",
-  whatif:          "Each saved what-if scenario re-simulated and compared to the baseline plan.",
+  whatif:          "Each saved what-if scenario re-simulated against the current plan, with a verdict on whether it fits.",
   cma:             "Per-asset-class return, risk and correlation assumptions.",
   method:          "How the projections are built, plus key caveats.",
   educharts:       "The investor-education charts you selected, one per page.",
@@ -31159,7 +31779,7 @@ function drawFanChart(){
   // Legend (reflects the selected band)
   y = chartY + chartH + 8;
   const legendItems = [
-    {label:bLow+"th-"+bHigh+"th percentile", col:bandOuter},
+    {label:wiOrd(bLow)+"-"+wiOrd(bHigh)+" percentile", col:bandOuter},
     {label:"25th-75th percentile", col:bandInner},
   ];
   let lx = chartX;
@@ -31172,7 +31792,7 @@ function drawFanChart(){
   doc.setDrawColor(...ac); doc.setLineWidth(0.6);
   doc.line(lx, y-1, lx+7, y-1);
   doc.setFontSize(6.5); doc.setTextColor(...MUTED);
-  doc.text((bMid===50?"Median (50th)":"Mid ("+bMid+"th)"), lx+8.5, y);
+  doc.text((bMid===50?"Median (50th)":"Mid ("+wiOrd(bMid)+")"), lx+8.5, y);
   y += 6;
   doc.setTextColor(40); doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
 }
@@ -31280,7 +31900,9 @@ function drawFanChart(){
       doc.setFontSize(fsz); doc.setTextColor(...color); doc.setFont("helvetica","normal");
       const lines=doc.splitTextToSize(txt,CW);
       const lh=fsz*0.5+0.5;   // line height scales with the body size
-      lines.forEach(l=>{checkY(5); doc.text(l,M,y); y+=lh;});
+      // a page break draws the running header, which leaves its own font, size and colour behind:
+      // set the body style again after it, or the rest of the paragraph ran off the page in 9.5pt
+      lines.forEach(l=>{ if(y+5>PAGE_BOTTOM){ newPage(); doc.setFontSize(fsz); doc.setTextColor(...color); doc.setFont("helvetica","normal"); } doc.text(l,M,y); y+=lh;});
       y+=2;
       doc.setTextColor(40);
     }
@@ -31347,7 +31969,7 @@ function drawFanChart(){
       const pref = "In plain terms:  ";
       const lines = doc.splitTextToSize(pref+txt, CW);
       const lh = fsz*0.5+0.6;
-      lines.forEach(l=>{ checkY(5); doc.text(l, M, y); y += lh; });
+      lines.forEach(l=>{ if(y+5>PAGE_BOTTOM){ newPage(); doc.setFont("helvetica","italic"); doc.setFontSize(Math.max(7.6, fsz-0.2)); doc.setTextColor(...MUTED); } doc.text(l, M, y); y += lh; });
       y += 2.5;
       doc.setFont("helvetica","normal"); doc.setTextColor(40); doc.setFontSize(fsz);
     }
@@ -33080,7 +33702,7 @@ function drawFanChart(){
           const _bL=(typeof band!=="undefined"&&band&&isFinite(band.low ))?band.low :10;
           const _bM=(typeof band!=="undefined"&&band&&isFinite(band.mid ))?band.mid :50;
           const _bH=(typeof band!=="undefined"&&band&&isFinite(band.high))?band.high:90;
-          para("The fan chart below runs thousands of randomized market scenarios and plots the range of outcomes over time. The dark line is the "+(_bM===50?"median (50th percentile)":_bM+"th-percentile")+" result; the shaded bands show the spread: the outer band is the "+_bL+"th-"+_bH+"th percentile range (matching the probability band selected in the app), so there is roughly a "+Math.max(0,_bH-_bL)+"% chance your wealth lands inside it. A wider fan means more uncertainty the further out you look.");
+          para("The fan chart below runs thousands of randomized market scenarios and plots the range of outcomes over time. The dark line is the "+(_bM===50?"median (50th percentile)":wiOrd(_bM)+"-percentile")+" result; the shaded bands show the spread: the outer band is the "+wiOrd(_bL)+"-"+wiOrd(_bH)+" percentile range (matching the probability band selected in the app), so there is roughly a "+Math.max(0,_bH-_bL)+"% chance your wealth lands inside it. A wider fan means more uncertainty the further out you look.");
           drawFanChart();
 
           // ── Scenario cards — what your wealth could look like at the horizon
@@ -33124,11 +33746,11 @@ function drawFanChart(){
 
           checkY(40);
           const _pcts=[...new Set([_bL,25,_bM,75,_bH])].sort((a,b)=>a-b);
-          tbl(["Percentile","Nominal wealth","Real (inflation-adj.)","vs "+(_bM===50?"Median":_bM+"th")],
+          tbl(["Percentile","Nominal wealth","Real (inflation-adj.)","vs "+(_bM===50?"Median":wiOrd(_bM))],
             _pcts.map(p=>{
               const v=percentileAt(lastSimPaths,yrs,p);
               const med=percentileAt(lastSimPaths,yrs,_bM);
-              return [p+"th", fmt(v), fmt(df(v)), p===_bM?"-":(v>=med?"+":"")+((v/med-1)*100).toFixed(0)+"%"];
+              return [wiOrd(p), fmt(v), fmt(df(v)), p===_bM?"-":(v>=med?"+":"")+((v/med-1)*100).toFixed(0)+"%"];
             }));
         } else {
           para("Run the simulation to see the projected range.",[136,136,136]);
@@ -33728,10 +34350,22 @@ function drawFanChart(){
       whatif: () => {
         if(val("rptIncWhatIf") === "no") return;
         if(typeof whatIfScenarios==="undefined" || !whatIfScenarios.length) return;
-        let base; try{ base=runBaselineWhatIf(); }catch(e){ return; }
+        try{ simYrsNormalize(); }catch(_){}   // a value typed without a run (4.5, -3) printed "CHF NaNM"
+        // The app's results when they were run on these very inputs (the same numbers, no re-run);
+        // otherwise every scenario is re-run on the current inputs.
+        const sigNow=wiInputSig();
+        const cached=whatIfScenarios.every(w=>w._result && w._sig===sigNow && w._base && w._base._sig===sigNow);
+        let base; try{ base=cached?whatIfScenarios[0]._base:runBaselineWhatIf(); }catch(e){ return; }
+        const res=[];
+        whatIfScenarios.forEach(w=>{ let r; try{ r=cached?w._result:runWhatIfScenario(w, base); }catch(e){ return; } res.push({w, r, fit:wiFitVerdict(r)}); });
+        const baseFit=wiFitVerdict(base);
         newPage();
         sectionH2("What-If Scenarios");
-        plainLead("Alternative futures you asked us to test. Each scenario re-runs the full market simulation with only the listed changes, then compares the outcome against your baseline plan.");
+        plainLead("Alternative futures you asked us to test. Each scenario re-runs the full market simulation with only the listed changes, then checks whether it still fits your plan.");
+        // A currency and its amount never part at a line break ("CHF" alone at a line end).
+        const sym=String((CURRENCIES[CURRENT_CCY]||CURRENCIES.USD).sym||"").trim();
+        const nb=s=>sym?String(s).split(sym+" ").join(sym+"\u00a0"):String(s);
+        const fmtNB=v=>nb(fmt(v));
         const chg=w=>{ const n=typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):w; const p=[];
           if(n.retAgeOvr!=null && n.retAgeOvr!=="") p.push("retire at "+n.retAgeOvr);
           if(+n.incChangePct) p.push("income "+(n.incChangePct>0?"+":"")+n.incChangePct+"%");
@@ -33744,14 +34378,74 @@ function drawFanChart(){
           });
           if(n.penDraw) p.push("withdraw "+fmt(n.penDraw.amt)+" from the pension pool at age "+n.penDraw.age+(+n.penDraw.cutPct?" ("+(+n.penDraw.cutPct).toFixed(1)+"% to tax & penalty)":""));
           return p.join("; ")||"no changes"; };
-        const rows=[["Baseline (current plan)","-",fmt(base.medNW),"-",base.goalSucc!=null?base.goalSucc.toFixed(0)+"%":"-"]];
-        whatIfScenarios.forEach(w=>{
-          let r; try{ r=runWhatIfScenario(w); }catch(e){ return; }
-          const dM=r.medNW-base.medNW;
-          rows.push([String(w.name||"Scenario"), chg(w), fmt(r.medNW), (dM>=0?"+":"-")+fmt(Math.abs(dM)), r.goalSucc!=null?r.goalSucc.toFixed(0)+"%":"-"]);
+        const VCOL={fits:GOOD, tight:WARN, nofit:BAD, out:MUTED, na:MUTED};
+        const endYr=base.endYear||(currentYear()+num("simYrs",20)-1);
+        // ── Does it fit? one card per scenario: name, changes, the reason, the verdict pill
+        subBar("Does it fit?");
+        const fitCard=(name, sub, r, fit, isBase, extra)=>{
+          const v=fit?fit.v:"na", col=VCOL[v], lbl=WI_FIT_LABEL[v];
+          doc.setFont("helvetica","bold"); doc.setFontSize(7.4);
+          const pillW=doc.getTextWidth(lbl)+7;
+          doc.setFont("helvetica","bold"); doc.setFontSize(9);
+          let nameLines=doc.splitTextToSize(nb(name), CW-pillW-14);
+          if(nameLines.length>2){ nameLines=nameLines.slice(0,2); nameLines[1]=nameLines[1].replace(/\s*\S{0,3}$/,"")+"..."; }
+          doc.setFont("helvetica","normal"); doc.setFontSize(6.9);
+          const subLines=sub?doc.splitTextToSize(nb(sub), CW-pillW-14):[];
+          doc.setFontSize(7.6);
+          const whyLines=doc.splitTextToSize(nb(wiFitWhy(r, fit, fmtNB, isBase)+(extra?" "+extra:"")), CW-12);
+          const h=7.6 + (nameLines.length-1)*3.9 + subLines.length*3.3 + whyLines.length*3.6 + 2.6;
+          checkY(h+3);
+          doc.setFillColor(...CARD_BG); doc.setDrawColor(...CARD_LN); doc.setLineWidth(0.3);
+          doc.roundedRect(M, y, CW, h, 1.4, 1.4, "FD");
+          doc.setFillColor.apply(doc, col); doc.rect(M, y, 1.6, h, "F");
+          const px=M+CW-4-pillW;
+          doc.setFillColor.apply(doc, tint(col,0.86)); doc.roundedRect(px, y+2.4, pillW, 5, 2.5, 2.5, "F");
+          doc.setFont("helvetica","bold"); doc.setFontSize(7.4); doc.setTextColor.apply(doc, col);
+          doc.text(lbl, px+pillW/2, y+5.9, {align:"center"});
+          doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...INK);
+          nameLines.forEach((l,i)=>doc.text(l, M+5, y+6+i*3.9));
+          let yy=y+6+(nameLines.length-1)*3.9;
+          doc.setFont("helvetica","normal"); doc.setFontSize(6.9); doc.setTextColor(...MUTED);
+          subLines.forEach(l=>{ yy+=3.3; doc.text(l, M+5, yy); });
+          doc.setFontSize(7.6); doc.setTextColor(...INK_SOFT); yy+=0.8;
+          whyLines.forEach(l=>{ yy+=3.6; doc.text(l, M+5, yy); });
+          y+=h+2.6;
+          doc.setTextColor(40); doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
+        };
+        if(baseFit && (baseFit.v==="tight" || baseFit.v==="nofit"))
+          callout("Read this first", "Your current plan "+wiPlanAlready(baseFit.v)+", so a scenario that adds a cost cannot fit until the plan does. Scenarios that add income or cut costs show how far they close the gap.", {accent:WARN});
+        fitCard("Your current plan", "As entered, no changes", base, baseFit, true);
+        res.forEach(({w,r,fit})=>{
+          const mx=w._fitMax, ok=mx && !mx.err && w._sig===sigNow && mx.sig===Math.round(r.medNW) && mx.bsig===Math.round(base.medNW)
+            && fit && (fit.v==="tight"||fit.v==="nofit") && baseFit && baseFit.v==="fits";
+          fitCard(String(w.name||"Scenario"), chg(w), r, fit, false, ok?wiFitMaxText(w, fmtNB):"");
         });
-        tbl(["Scenario","Changes","Median wealth","vs baseline","Goal success"], rows);
-        para("Median wealth is the 50th percentile of simulated net worth at the end of the projection horizon. Each scenario uses fresh random draws, so figures can wobble slightly between reports.", MUTED);
+        // ── Side by side: the figures behind each verdict
+        y+=4;
+        const pc=p=>p==null||!isFinite(p)?"-":Math.round(p)+"%";
+        const cov=r=>r&&r.dep&&isFinite(r.dep.prob)?(1-r.dep.prob)*100:null;
+        // Number cells are one line, right-aligned: the report's own format, no NBSP (jsPDF measures it
+        // wider than a space and the cell ends short); 9-digit figures in millions in the same style.
+        const symRaw=String((CURRENCIES[CURRENT_CCY]||CURRENCIES.USD).sym||"");   // "CHF " carries its space, "$" none
+        const tm=v=>{ const a=Math.abs(v); if(a<1e8) return fmt(v); const m=a>=1e9?(a/1e9).toFixed(2)+"B":(a/1e6).toFixed(numFmt==="m"?2:1)+"M"; return (v<0?"-":"")+(numFmt==="full"?symRaw:sym)+m; };
+        const rows=[["Your current plan","-",WI_FIT_LABEL[baseFit?baseFit.v:"na"],pc(base.goalSuccBase),pc(cov(base)),tm(base.medReal),"-"]];
+        res.forEach(({w,r,fit})=>{
+          const dM=r.medReal-base.medReal, out=fit && fit.v==="out";   // an untested row has no figures of its own
+          rows.push([nb(String(w.name||"Scenario")), nb(chg(w)), WI_FIT_LABEL[fit?fit.v:"na"], out?"-":pc(r.goalSuccBase), out?"-":pc(cov(r)), out?"-":tm(r.medReal), out?"-":(dM>=0?"+":"-")+tm(Math.abs(dM))]);
+        });
+        checkY(42);   // heading (about 11mm) + the table's own 24mm check + margin: never alone at a page foot
+        subBar("Side by side");
+        const vByLabel={}; Object.keys(WI_FIT_LABEL).forEach(k=>{ vByLabel[WI_FIT_LABEL[k]]=k; });
+        // Widths that keep "CHF 4,271,848" on one line in portrait too (it broke mid-number at 17mm).
+        const tfs=Math.min(fsz, 7.6);
+        tbl(["Scenario","Changes","Verdict","Your goals","Everything paid","Wealth, end "+endYr,"vs your plan"], rows, {
+          styles:{fontSize:tfs, cellPadding:1.6, overflow:"linebreak"}, headStyles:{fontSize:tfs}, rowPageBreak:"avoid",
+          columnStyles:{0:{fontStyle:"bold",cellWidth:CW*0.15},1:{cellWidth:CW*0.27},2:{cellWidth:CW*0.11},3:{halign:"right",cellWidth:CW*0.09},4:{halign:"right",cellWidth:CW*0.10},5:{halign:"right",cellWidth:CW*0.14},6:{halign:"right",cellWidth:CW*0.14}},
+          didParseCell:d=>{ if(d.section==="body" && d.column.index===2){ const v=vByLabel[d.cell.raw]; if(v){ d.cell.styles.textColor=VCOL[v]; d.cell.styles.fontStyle="bold"; } } }
+        });
+        const howTxt="How the verdict works: a scenario fits when your existing goals, each new one-time cost and every year's spending are each paid in full in at least 80% of simulated futures; it is tight when the weakest of these is between 50% and 80%, and it does not fit below 50%. A scenario whose change falls outside the projection ("+(base.startYear||currentYear())+"-"+endYr+") is not tested. Your goals is the average chance that each existing goal is fully funded. Everything paid is the share of simulated futures in which cash and investments pay every year's spending, debt service, goals and the scenario's costs in full through "+endYr+". Wealth is the "+wiMidTxt(base.mid)+" of simulated net worth at the end of "+endYr+", in today's money. Every scenario re-runs the same simulation as your current plan, with the same random seed, so the differences come from the changes alone."+wiHorizonNote(endYr, true)+wiGoalsAfterNote(endYr);
+        doc.setFontSize(fsz); checkY(doc.splitTextToSize(howTxt, CW).length*(fsz*0.5+0.5)+4);   // kept together
+        para(howTxt, MUTED);
       },
       // ─── CASH FLOW ──
       cf: () => {
@@ -36051,8 +36745,8 @@ function _refreshTopMetricsNow(simPaths, simYrs){
   const medEl=$("m-med"), probEl=$("m-prob");
   if(Array.isArray(simPaths) && simPaths.length){
     const yrsP=(simYrs!=null?simYrs:(simPaths[0].length-1));
-    try{ const _inf=num("inf",3.8)/100; const _mid=(typeof band!=="undefined"&&band&&band.mid)?band.mid:50;
-      setT("m-med",fmtMoney(percentileAt(simPaths,yrsP,_mid)/Math.pow(1+_inf,yrsP))); }catch(_){}
+    try{ const _inf=(simPaths===lastSimPaths && lastSimInf!=null)?lastSimInf:num("inf",3.8)/100; const _mid=(typeof band!=="undefined"&&band&&band.mid)?band.mid:50;
+      setT("m-med",fmtMoney(percentileAt(simPaths,yrsP,_mid)/Math.pow(1+_inf,yrsP))); setT("m-med-pct", _mid===50?"(median)":"("+wiOrd(_mid)+" percentile)"); }catch(_){}
     try{ if(typeof goals!=="undefined" && goals.length){
         const avg=goals.reduce((s,g)=>s+(goalSuccessFromPaths(g,simPaths,yrsP)||0),0)/goals.length;
         setT("m-prob",avg.toFixed(0)+"%");
@@ -36061,6 +36755,7 @@ function _refreshTopMetricsNow(simPaths, simYrs){
     if(probEl){ probEl.style.opacity=""; probEl.title=""; }
   } else if(Array.isArray(lastSimPaths) && lastSimPaths.length){
     const t="Inputs changed since the last simulation. Re-run to update";
+    try{ wiMarkFitStale(); }catch(_){}
     if(medEl){ medEl.style.opacity="0.45"; medEl.title=t; }
     if(probEl && (probEl.textContent||"").trim()){ probEl.style.opacity="0.45"; probEl.title=t; }
   }
@@ -36194,7 +36889,14 @@ function restoreProfile(p){
   // "Built by ..." since 28 Sep 2026 and "AI-generated" before (when mu was also jittered
   // by a ticker hash, so it no longer equals today's fund.mu): price them by class.
   proposals=(p.proposals||[]).map(x => (x && x.exp != null && /^(Built by (the rules engine|Claude (AI))|AI-generated) · /.test(x.note||"")) ? {...x, exp:null} : x); propSeq=p.propSeq||_maxIdSeq(proposals);
-  whatIfScenarios=(p.whatIfScenarios||[]).map(w=>typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):w); whatIfSeq=p.whatIfSeq||_maxIdSeq(whatIfScenarios);
+  // Results saved in the file were run on the inputs of that day: drop them, the next run re-tests.
+  whatIfScenarios=(Array.isArray(p.whatIfScenarios)?p.whatIfScenarios:[]).filter(w=>w && typeof w==="object" && !Array.isArray(w)).map(w=>{ const n=typeof normalizeWhatIfScenario==="function"?normalizeWhatIfScenario(w):Object.assign({},w); delete n._result; delete n._base; delete n._fitMax; delete n._sig; return n; }); whatIfSeq=Math.max(_wiSafeSeq(p.whatIfSeq), _wiSafeSeq(_maxIdSeq(whatIfScenarios)));
+  // Ids go into data attributes and onclick handlers and are compared as strings: a numeric, missing,
+  // duplicated or quoted id from a hand-edited file gets a fresh one.
+  { const taken=new Set(whatIfScenarios.map(w=>String(w.id))), seen=new Set();
+    whatIfScenarios.forEach(w=>{ let id=String(w.id==null?"":w.id);
+      if(!/^[A-Za-z0-9_-]{1,40}$/.test(id) || seen.has(id)){ let k=0; do{ id="wi"+(++whatIfSeq); }while((taken.has(id)||seen.has(id)) && ++k<100000); }
+      seen.add(id); w.id=id; }); }
   pfLinkedAccountId=p.pfLinkedAccountId||"";
   if(p.c2visible) showC2(); else hideC2();
   renderAssets(); renderLoans(); renderInsurances(); renderEquityGrants(); renderBeneficiaries(); renderGoals(); renderChildren();
@@ -37169,25 +37871,33 @@ document.addEventListener("DOMContentLoaded",function(){
     if(!mN){ pop(el); return; }
     const target=parseFloat(mN[2].replace(/,/g,""));
     if(!isFinite(target)){ pop(el); return; }
-    let from=0;
+    // Count only between figures in the same unit: across M -> k (or another prefix) it counted from 0,
+    // and a long task after a run held a near-zero frame on screen. Then the new figure just appears.
     const mP=RX.exec(prevText||"");
-    if(mP && mP[1]===mN[1] && mP[3]===mN[3]){
-      const p=parseFloat(mP[2].replace(/,/g,""));
-      if(isFinite(p)) from=p;
-    }
+    if(mP && !(mP[1]===mN[1] && mP[3]===mN[3])){ pop(el); return; }
+    const from=mP?parseFloat(mP[2].replace(/,/g,"")):0;   // a first figure (after "-") still counts up from 0
+    if(!isFinite(from)){ pop(el); return; }
     if(from===target){ return; }
     const dec=(mN[2].split(".")[1]||"").length;
     const useComma=mN[2].indexOf(",")>=0;
-    const t0=performance.now(), dur=650;
-    el.__wowAnim=true;
-    function frame(t){
-      const k=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-k,3);   // ease-out cubic
+    let t0=null; const dur=650;   // set at the first frame: a run's panels block the page longer than dur
+    // One token per count-up. The layer's own frames are taken back out of the observer's queue
+    // (takeRecords), so the observer only sees the app's writes: a re-write of the same figure keeps the
+    // count-up going, a different one replaces it (its last frame used to put the older figure back).
+    const tok=el.__wowTok=(el.__wowTok||0)+1;
+    el.__wowAnim=true; el.__wowTarget=newText; el.__wowFrame=prevText;   // what is on screen until the first frame
+    const put=txt=>{ el.__wowFrame=txt; el.textContent=txt; if(el.__wowObs) el.__wowObs.takeRecords(); };
+    function frame(){
+      if(el.__wowTok!==tok) return;
+      // the clock is clamped: a rAF time older than t0 made the ease run outside old-to-new ("174%")
+      const now=performance.now(); if(t0===null) t0=now;
+      const k=Math.max(0,Math.min(1,(now-t0)/dur)), e=1-Math.pow(1-k,3);   // ease-out cubic
       const v=from+(target-from)*e;
       let s=v.toFixed(dec);
       if(useComma) s=(+s).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec});
-      el.textContent=mN[1]+s+mN[3];
+      put(mN[1]+s+mN[3]);
       if(k<1) requestAnimationFrame(frame);
-      else { el.textContent=newText; el.__wowAnim=false; }
+      else { put(newText); el.__wowAnim=false; }
     }
     requestAnimationFrame(frame);
     pop(el);
@@ -37196,13 +37906,20 @@ document.addEventListener("DOMContentLoaded",function(){
     const el=document.getElementById(id);
     if(!el) return;
     let last=el.textContent;
-    new MutationObserver(()=>{
-      if(el.__wowAnim) return;              // our own frames — ignore
-      const now=el.textContent;
+    const obs=new MutationObserver(()=>{
+      const now=el.textContent;   // only the app's writes arrive here (the frames take their records back)
+      if(el.__wowAnim){
+        if(now===el.__wowTarget){ last=now; return; }   // the same figure again: keep counting
+        const prev=el.__wowFrame||last; last=now;        // another figure: count from what is on screen
+        el.__wowTok=(el.__wowTok||0)+1; el.__wowAnim=false;
+        animateTo(el, prev, now); return;
+      }
       if(now===last) return;
       const prev=last; last=now;
       animateTo(el, prev, now);
-    }).observe(el,{childList:true,characterData:true,subtree:true});
+    });
+    el.__wowObs=obs;
+    obs.observe(el,{childList:true,characterData:true,subtree:true});
   });
 })();
 
@@ -37694,6 +38411,6 @@ document.addEventListener("DOMContentLoaded",function(){
 </style>
 <!-- Sample client for the demo entry link (?client=keller): fictional profile from
      "Sample Client profiles/beatrice-keller-swiss-profile.json". -->
-<script type="application/json" id="demoClient-keller">{"v":"1.1","savedAt":"2026-07-18T16:45:00.000Z","fields":{"c1f":"Béatrice","c1l":"Keller","c1d":"1978-04-12","c1r":"moderate","c1h":"15_plus","c1s1":"","c1s2":"","c1ci":"Zürich","c1st":"ZH","c1zp":"8001","c1co":"CH","c1eu":"","c1euReg":"","c1euCity":"","c2f":"Thomas","c2l":"Keller","c2d":"1976-09-23","c2r":"moderately_conservative","c2h":"15_plus","c2s1":"","c2s2":"","c2ci":"Zürich","c2st":"ZH","c2zp":"8001","c2co":"CH","rel":"spouse","inc1":"185000","inc2":"15000","inc1b":"120000","inc2b":"8000","raise":"0","savAnnual":"60000","expL":"78000","expI":"12000","expO":"10000","inf":"2.1","region":"ch","infEuCountry":"","aProp":"1250000","aOther":"0","retM":"6.3","retV":"10.5","retAge":"65","retSpend":"110000","retLife":"comfortable","retLoc":"US","penSrc":"manual","penAnnual":"29400","penStartAge":"65","penCola":"full","penSrc2":"manual","penAnnual2":"29400","penStartAge2":"65","penCola2":"full","pfFeeType":"none","pfAdvisoryFee":"0","prFeeType":"none","prAdvisoryFee":"0","prClient":"Béatrice & Thomas Keller","prAdvisor":"Private Wealth Intelligence","prAmount":"350000","prObjective":"balanced","prRationale":"Rebalance the concentrated Swiss single-stock exposure (Nestle/Novartis/Roche = 21% of the depot) into a diversified global core, add emerging-markets breadth and a hedged bond sleeve to match the household's blended moderate profile, and keep two years of planned goal spending in short-term instruments.","simYrs":"30","simN":"1000","tgtEquity":"60","rebalFreq":"none","gpOn":"no","gpYears":"10","estExemption":"0","estRate":"0","taxMode":"auto","taxFlat":"25","cgtRate":"15","cgtTurnover":"10","taxApply":"yes","taxState":"ZH","taxResidency":"","blow":"10","bmid":"50","bhigh":"90","rdPlanAge":"90","rdTarget":"85","caAdj":"7","caLife":"90","stressScenario":"base","chk_sameaddr":true,"chk_insPremExp":true},"c2visible":true,"bandMode":"standard","ccy":"CHF","ccyManual":false,"assets":[{"id":"a1","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse UBS","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":480000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c1"},{"id":"a2","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (VIAC)","baseLabel":"Pillar 3a — Fund / Securities","value":160000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c1"},{"id":"a3","type":"savings_account","group":"Banking","label":"ZKB Sparkonto","baseLabel":"Sparkonto / Compte d'épargne","value":90000,"liquid":true,"country":"CH","note":"Interest-bearing savings.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a4","type":"depot","group":"Investment & securities","label":"Swissquote Depot","baseLabel":"Securities account (Depot)","value":350000,"liquid":true,"country":"CH","note":"Swiss brokerage. Capital gains tax-free for private investors.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a5","type":"private_account","group":"Banking","label":"ZKB Privatkonto","baseLabel":"Privatkonto / Compte privé","value":35000,"liquid":true,"country":"CH","note":"Standard Swiss account. esisuisse protected up to CHF 100,000.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a6","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse Zürich Versicherung","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":390000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c2"},{"id":"a7","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (finpension)","baseLabel":"Pillar 3a — Fund / Securities","value":95000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c2"}],"loans":[{"id":"l1","type":"mortgage_primary","label":"ZKB Festhypothek","bal":800000,"rate":1.9,"yrs":20,"owner":"joint"}],"goals":[{"id":"g1","name":"University for Elena","amt":30000,"homePrice":null,"startYear":2033,"endYear":2036,"cat":"other","tier":"important"},{"id":"g2","name":"Kitchen renovation","amt":80000,"homePrice":null,"startYear":2029,"endYear":2029,"cat":"other","tier":"important"}],"children":[{"id":"ch1","first":"Elena","last":"Keller","dob":"2015-05-20"}],"investments":[{"id":"inv1","name":"iShares Core SPI","tkr":"CHSPI","type":"etf","cls":"equity","region":"dev_intl","val":90000,"er":0.1,"yld":2.6,"note":""},{"id":"inv2","name":"Vanguard FTSE All-World","tkr":"VWRL","type":"etf","cls":"equity","region":"global","val":105000,"er":0.22,"yld":1.9,"note":""},{"id":"inv3","name":"Nestlé","tkr":"NESN","type":"stock","cls":"equity","region":"dev_intl","val":30000,"er":null,"yld":3,"note":""},{"id":"inv4","name":"Novartis","tkr":"NOVN","type":"stock","cls":"equity","region":"dev_intl","val":25000,"er":null,"yld":3.4,"note":""},{"id":"inv5","name":"Roche GS","tkr":"ROG","type":"stock","cls":"equity","region":"dev_intl","val":20000,"er":null,"yld":3.1,"note":""},{"id":"inv6","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","type":"etf","cls":"fixed_income","region":"dev_intl","val":45000,"er":0.15,"yld":1.2,"note":""},{"id":"inv7","name":"CHF Money Market / Depot Cash","tkr":"","type":"etf","cls":"cash","region":"other","val":35000,"er":null,"yld":1,"note":""}],"proposals":[{"id":"pr1","name":"Vanguard FTSE All-World","tkr":"VWRL","vehicle":"etf","cls":"equity","alloc":30,"exp":null,"er":0.22,"yld":1.9,"note":""},{"id":"pr2","name":"iShares Core SPI","tkr":"CHSPI","vehicle":"etf","cls":"equity","alloc":15,"exp":null,"er":0.1,"yld":2.6,"note":""},{"id":"pr3","name":"iShares MSCI EM IMI","tkr":"EIMI","vehicle":"etf","cls":"equity","alloc":10,"exp":null,"er":0.18,"yld":2.4,"note":""},{"id":"pr4","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","vehicle":"etf","cls":"fixed_income","alloc":20,"exp":null,"er":0.15,"yld":1.2,"note":""},{"id":"pr5","name":"iShares Global Aggregate Bond CHF-hedged","tkr":"AGGS","vehicle":"etf","cls":"fixed_income","alloc":15,"exp":null,"er":0.1,"yld":1.8,"note":""},{"id":"pr6","name":"UBS ETF Gold CHF-hedged","tkr":"AUCHAH","vehicle":"etf","cls":"commodity","alloc":5,"exp":null,"er":0.23,"yld":null,"note":""},{"id":"pr7","name":"CHF Money Market","tkr":"","vehicle":"etf","cls":"cash","alloc":5,"exp":null,"er":null,"yld":1,"note":""}],"insurances":[{"id":"p1","type":"term_life","label":"Swiss Life Risikoversicherung","insured":"c1","ben":500000,"cash":0,"prem":1140,"benef":"Thomas Keller"},{"id":"p2","type":"term_life","label":"AXA Risikoversicherung","insured":"c2","ben":400000,"cash":0,"prem":1020,"benef":"Béatrice Keller"}],"equityComp":[{"id":"e1","kind":"rsu","label":"ZURN RSU 2026","tkr":"ZURN","shares":120,"strike":0,"price":545,"growth":6,"vestStart":2027,"vestYears":4,"owner":"c2"}],"beneficiaries":[],"whatIfScenarios":[{"id":"wi1","name":"Frühpension 58","retAgeOvr":58,"incChangePct":0,"extraExp":0,"extraGoal":null},{"id":"wi2","name":"Ferienhaus Ticino 2032","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":{"name":"Ferienhaus Ticino","amt":400000,"year":2032}},{"id":"wi3","name":"Pillar 2 früh beziehen – CHF 300k mit 58","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":null,"penDraw":{"age":58,"amt":300000,"cutPct":6.2}}],"assetSeq":7,"loanSeq":1,"goalSeq":2,"childSeq":1,"invSeq":7,"propSeq":7,"insSeq":2,"eqSeq":1,"benSeq":0,"whatIfSeq":3,"pfLinkedAccountId":"a4"}</script>
+<script type="application/json" id="demoClient-keller">{"v":"1.1","savedAt":"2026-07-18T16:45:00.000Z","fields":{"c1f":"Béatrice","c1l":"Keller","c1d":"1978-04-12","c1r":"moderate","c1h":"15_plus","c1s1":"","c1s2":"","c1ci":"Zürich","c1st":"ZH","c1zp":"8001","c1co":"CH","c1eu":"","c1euReg":"","c1euCity":"","c2f":"Thomas","c2l":"Keller","c2d":"1976-09-23","c2r":"moderately_conservative","c2h":"15_plus","c2s1":"","c2s2":"","c2ci":"Zürich","c2st":"ZH","c2zp":"8001","c2co":"CH","rel":"spouse","inc1":"185000","inc2":"15000","inc1b":"120000","inc2b":"8000","raise":"0","savAnnual":"60000","expL":"78000","expI":"12000","expO":"10000","inf":"2.1","region":"ch","infEuCountry":"","aProp":"1250000","aOther":"0","retM":"6.3","retV":"10.5","retAge":"65","retSpend":"110000","retLife":"comfortable","retLoc":"US","penSrc":"manual","penAnnual":"29400","penStartAge":"65","penCola":"full","penSrc2":"manual","penAnnual2":"29400","penStartAge2":"65","penCola2":"full","pfFeeType":"none","pfAdvisoryFee":"0","prFeeType":"none","prAdvisoryFee":"0","prClient":"Béatrice & Thomas Keller","prAdvisor":"Private Wealth Intelligence","prAmount":"350000","prObjective":"balanced","prRationale":"Rebalance the concentrated Swiss single-stock exposure (Nestle/Novartis/Roche = 21% of the depot) into a diversified global core, add emerging-markets breadth and a hedged bond sleeve to match the household's blended moderate profile, and keep two years of planned goal spending in short-term instruments.","simYrs":"30","simN":"1000","tgtEquity":"60","rebalFreq":"none","gpOn":"no","gpYears":"10","estExemption":"0","estRate":"0","taxMode":"auto","taxFlat":"25","cgtRate":"15","cgtTurnover":"10","taxApply":"yes","taxState":"ZH","taxResidency":"","blow":"10","bmid":"50","bhigh":"90","rdPlanAge":"90","rdTarget":"85","caAdj":"7","caLife":"90","stressScenario":"base","chk_sameaddr":true,"chk_insPremExp":true},"c2visible":true,"bandMode":"standard","ccy":"CHF","ccyManual":false,"assets":[{"id":"a1","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse UBS","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":480000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c1"},{"id":"a2","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (VIAC)","baseLabel":"Pillar 3a — Fund / Securities","value":160000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c1"},{"id":"a3","type":"savings_account","group":"Banking","label":"ZKB Sparkonto","baseLabel":"Sparkonto / Compte d'épargne","value":90000,"liquid":true,"country":"CH","note":"Interest-bearing savings.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a4","type":"depot","group":"Investment & securities","label":"Swissquote Depot","baseLabel":"Securities account (Depot)","value":350000,"liquid":true,"country":"CH","note":"Swiss brokerage. Capital gains tax-free for private investors.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a5","type":"private_account","group":"Banking","label":"ZKB Privatkonto","baseLabel":"Privatkonto / Compte privé","value":35000,"liquid":true,"country":"CH","note":"Standard Swiss account. esisuisse protected up to CHF 100,000.","ccy":"CHF","withdrawAge":null,"owner":"joint"},{"id":"a6","type":"bvg_lpp","group":"Pension system (3 pillars)","label":"Pensionskasse Zürich Versicherung","baseLabel":"BVG/LPP – 2nd pillar (occupational)","value":390000,"liquid":false,"country":"CH","note":"Mandatory occupational pension fund.","ccy":"CHF","withdrawAge":65,"owner":"c2"},{"id":"a7","type":"pillar_3a_fund","group":"Pension system (3 pillars)","label":"3a Depot (finpension)","baseLabel":"Pillar 3a — Fund / Securities","value":95000,"liquid":false,"country":"CH","note":"Pillar 3a via securities account (higher long-term return potential).","ccy":"CHF","withdrawAge":60,"owner":"c2"}],"loans":[{"id":"l1","type":"mortgage_primary","label":"ZKB Festhypothek","bal":800000,"rate":1.9,"yrs":20,"owner":"joint"}],"goals":[{"id":"g1","name":"University for Elena","amt":30000,"homePrice":null,"startYear":2033,"endYear":2036,"cat":"other","tier":"important"},{"id":"g2","name":"Kitchen renovation","amt":80000,"homePrice":null,"startYear":2029,"endYear":2029,"cat":"other","tier":"important"}],"children":[{"id":"ch1","first":"Elena","last":"Keller","dob":"2015-05-20"}],"investments":[{"id":"inv1","name":"iShares Core SPI","tkr":"CHSPI","type":"etf","cls":"equity","region":"dev_intl","val":90000,"er":0.1,"yld":2.6,"note":""},{"id":"inv2","name":"Vanguard FTSE All-World","tkr":"VWRL","type":"etf","cls":"equity","region":"global","val":105000,"er":0.22,"yld":1.9,"note":""},{"id":"inv3","name":"Nestlé","tkr":"NESN","type":"stock","cls":"equity","region":"dev_intl","val":30000,"er":null,"yld":3,"note":""},{"id":"inv4","name":"Novartis","tkr":"NOVN","type":"stock","cls":"equity","region":"dev_intl","val":25000,"er":null,"yld":3.4,"note":""},{"id":"inv5","name":"Roche GS","tkr":"ROG","type":"stock","cls":"equity","region":"dev_intl","val":20000,"er":null,"yld":3.1,"note":""},{"id":"inv6","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","type":"etf","cls":"fixed_income","region":"dev_intl","val":45000,"er":0.15,"yld":1.2,"note":""},{"id":"inv7","name":"CHF Money Market / Depot Cash","tkr":"","type":"etf","cls":"cash","region":"other","val":35000,"er":null,"yld":1,"note":""}],"proposals":[{"id":"pr1","name":"Vanguard FTSE All-World","tkr":"VWRL","vehicle":"etf","cls":"equity","alloc":30,"exp":null,"er":0.22,"yld":1.9,"note":""},{"id":"pr2","name":"iShares Core SPI","tkr":"CHSPI","vehicle":"etf","cls":"equity","alloc":15,"exp":null,"er":0.1,"yld":2.6,"note":""},{"id":"pr3","name":"iShares MSCI EM IMI","tkr":"EIMI","vehicle":"etf","cls":"equity","alloc":10,"exp":null,"er":0.18,"yld":2.4,"note":""},{"id":"pr4","name":"iShares Core CHF Corporate Bond","tkr":"CHCORP","vehicle":"etf","cls":"fixed_income","alloc":20,"exp":null,"er":0.15,"yld":1.2,"note":""},{"id":"pr5","name":"iShares Global Aggregate Bond CHF-hedged","tkr":"AGGS","vehicle":"etf","cls":"fixed_income","alloc":15,"exp":null,"er":0.1,"yld":1.8,"note":""},{"id":"pr6","name":"UBS ETF Gold CHF-hedged","tkr":"AUCHAH","vehicle":"etf","cls":"commodity","alloc":5,"exp":null,"er":0.23,"yld":null,"note":""},{"id":"pr7","name":"CHF Money Market","tkr":"","vehicle":"etf","cls":"cash","alloc":5,"exp":null,"er":null,"yld":1,"note":""}],"insurances":[{"id":"p1","type":"term_life","label":"Swiss Life Risikoversicherung","insured":"c1","ben":500000,"cash":0,"prem":1140,"benef":"Thomas Keller"},{"id":"p2","type":"term_life","label":"AXA Risikoversicherung","insured":"c2","ben":400000,"cash":0,"prem":1020,"benef":"Béatrice Keller"}],"equityComp":[{"id":"e1","kind":"rsu","label":"ZURN RSU 2026","tkr":"ZURN","shares":120,"strike":0,"price":545,"growth":6,"vestStart":2027,"vestYears":4,"owner":"c2"}],"beneficiaries":[],"whatIfScenarios":[{"id":"wi1","name":"Frühpension 58","retAgeOvr":58,"incChangePct":0,"extraExp":0,"extraGoal":null},{"id":"wi2","name":"Ferienhaus Ticino 2032","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":{"name":"Ferienhaus Ticino","amt":400000,"year":2032}},{"id":"wi3","name":"Pillar 2 früh beziehen: CHF 300k mit 58","retAgeOvr":null,"incChangePct":0,"extraExp":0,"extraGoal":null,"penDraw":{"age":58,"amt":300000,"cutPct":6.2}}],"assetSeq":7,"loanSeq":1,"goalSeq":2,"childSeq":1,"invSeq":7,"propSeq":7,"insSeq":2,"eqSeq":1,"benSeq":0,"whatIfSeq":3,"pfLinkedAccountId":"a4"}</script>
 </body>
 </html>
