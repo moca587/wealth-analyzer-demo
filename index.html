@@ -5098,7 +5098,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261020-2152";
+const APP_VERSION = "20261020-2231";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -5161,7 +5161,7 @@ CA:{flag:"🇨🇦",name:"Canada",groups:[
 {group:"Registered accounts",accounts:[
   {value:"rrsp",label:"RRSP",note:"Registered Retirement Savings Plan. Pre-tax. 2024 limit: 18% of prior income, max $31,560.",liquid:false,withdrawAge:71},
   {value:"spousal_rrsp",label:"Spousal RRSP",note:"Income-split for retirement. Contributor takes deduction; spouse owns.",liquid:false,withdrawAge:71},
-  {value:"tfsa",label:"TFSA (Tax-Free Savings Account)",note:"2024 annual limit: $7,000. Lifetime cumulative ~$95,000 (since 2009).",liquid:false},
+  {value:"tfsa",label:"TFSA (Tax-Free Savings Account)",note:"2024 annual limit: $7,000. Lifetime cumulative ~$95,000 (since 2009). Withdrawals are tax-free at any time; the room comes back the next year.",liquid:true},
   {value:"fhsa",label:"FHSA (First Home Savings Account)",note:"$8,000/yr, $40,000 lifetime. Tax-deductible, tax-free first-home withdrawals.",liquid:false},
   {value:"resp",label:"RESP (Education)",note:"Up to $50,000 per child. Gov't CESG grant 20% on first $2,500/yr.",liquid:false},
   {value:"rdsp",label:"RDSP (Disability)",note:"For Canadians with disabilities. Gov't matching grants + bonds.",liquid:false},
@@ -8717,9 +8717,9 @@ function updateRisk(n){
   const sel=$("c"+n+"r").value;
   const badge=$("c"+n+"rb"),note=$("c"+n+"rn");
   if(!sel){ badge.style.display="none"; note.textContent=""; updateHouseRisk(); return; }
-  const r=RISK_PROFILES[sel];
+  const r=RISK_PROFILES[sel], rv=riskProfileRV(sel);
   badge.style.display="inline-flex";
-  badge.textContent=r.label+" • μ "+r.retMean+"% σ "+r.retVol+"%";
+  badge.textContent=r.label+" • μ "+rv.retMean+"% σ "+rv.retVol+"%";
   badge.style.background=r.bg; badge.style.color=r.color; badge.style.border="1px solid "+r.border;
   note.textContent=r.note;
   updateHouseRisk();
@@ -8741,8 +8741,8 @@ function updateHouseRisk(){
   if(!el) return;
   if(!r1 && !(showC2&&r2)){ el.innerHTML="-"; return; }
   const profiles=[];
-  if(r1) profiles.push(RISK_PROFILES[r1]);
-  if(showC2 && r2) profiles.push(RISK_PROFILES[r2]);
+  if(r1 && RISK_PROFILES[r1]) profiles.push(Object.assign({}, RISK_PROFILES[r1], riskProfileRV(r1)));
+  if(showC2 && r2 && RISK_PROFILES[r2]) profiles.push(Object.assign({}, RISK_PROFILES[r2], riskProfileRV(r2)));
   if(profiles.length===0){ el.innerHTML="-"; return; }
   if(profiles.length===1){
     const p=profiles[0];
@@ -8753,13 +8753,30 @@ function updateHouseRisk(){
   const sig=(profiles.reduce((a,p)=>a+p.retVol,0)/profiles.length).toFixed(1);
   el.innerHTML=`Blended (${profiles.map(p=>p.label).join(" / ")})<span class="info-ic">i<span class="info-pop">Household risk profile is the average of both clients' selected profiles. Blended expected return μ ${mu}%, volatility σ ${sig}%. These are the assumptions this feeds into the market simulation.</span></span>`;
 }
+// Each risk profile's equity share, the midpoint of what its own description says; the rest is
+// fixed income. Used to price the profile on the Swiss franc assumption set (riskProfileRV).
+const RISK_PROFILE_EQUITY={very_conservative:0.15, conservative:0.25, moderately_conservative:0.40, moderate:0.60, moderately_aggressive:0.725, aggressive:0.875, very_aggressive:0.975};
+// A risk profile's expected return and volatility (percent) on the household's assumption set:
+// what runs when there are no holdings, and what every risk-profile figure shows. Swiss franc
+// households get the profile's equity / fixed-income mix priced on the CHF set the way a portfolio
+// is priced (gbPortfolioRisk); other currencies keep the profile table. The table applied to CHF
+// households too, running Moderate at 7.0% / 12% against 4.7% / 9.1% for 60/40 on the CHF set.
+function riskProfileRV(key){
+  const r=RISK_PROFILES[key]; if(!r) return null;
+  let chf=false; try{ chf=(CMA_ACTIVE==="CHF"); }catch(_){}   // not yet set while the page loads
+  if(chf && RISK_PROFILE_EQUITY[key]!=null){
+    const e=RISK_PROFILE_EQUITY[key], m=gbPortfolioRisk({equity:e, fixed_income:1-e});
+    return {retMean:Math.round(m.arithMu*1000)/10, retVol:Math.round(m.sigma*1000)/10};
+  }
+  return {retMean:r.retMean, retVol:r.retVol};
+}
 function getReturnParams(){
   const r1=$("c1r").value, r2=$("c2r").value;
   const showC2=$("c2card").style.display!=="none";
   let mu=num("retM",7), sig=num("retV",12);
   const blend=[];
-  if(r1) blend.push(RISK_PROFILES[r1]);
-  if(showC2 && r2) blend.push(RISK_PROFILES[r2]);
+  if(r1 && RISK_PROFILES[r1]) blend.push(riskProfileRV(r1));
+  if(showC2 && r2 && RISK_PROFILES[r2]) blend.push(riskProfileRV(r2));
   if(blend.length>0){
     mu=blend.reduce((a,p)=>a+p.retMean,0)/blend.length;
     sig=blend.reduce((a,p)=>a+p.retVol,0)/blend.length;
@@ -9109,6 +9126,7 @@ function onCurrencyManualChange(){
 function _cmaAfterCcyChange(){
   if(!applyCmaForCurrency(CURRENT_CCY)) return;
   lastSimPaths=[]; lastSimYrs=null; setT("m-med","-"); setT("m-prob","-");
+  try{ updateRisk(1); updateRisk(2); getReturnParams(); }catch(_){}   // risk-profile figures follow the set (riskProfileRV)
   try{ (whatIfScenarios||[]).forEach(w=>{ delete w._result; delete w._base; }); if(typeof renderWhatIf==="function") renderWhatIf(); }catch(_){}   // results from the other set
   try{ updatePortfolioFeeDisplay(); updateProposalFeeDisplay(); }catch(_){}
   try{ if(typeof renderProposalMetrics==="function") renderProposalMetrics(); }catch(_){}
@@ -25616,6 +25634,20 @@ function portfolioInvestedSeed(){return investments.filter(i=>i.cls!=="cash").re
 function retirementAccountSeed(){
   return assets.filter(a=>!a.liquid && a.withdrawAge>0).reduce((s,a)=>s+a.value,0);
 }
+// The accounts outside that pool, split by what the projections may spend: the liquid ones,
+// and locked accounts with no withdrawal age (term deposits, structured products, private-equity
+// interests, education and home-saving plans...). Those have no release rule, so they are held
+// at their value like Other assets and never spent; they used to join the liquid pool and pay
+// for deficits and goals. Unlinked holdings (mode C) are taken to sit in the liquid accounts
+// first, so net worth today is the same as the overview's.
+function nonRetirementAccountSplit(){
+  const total=Math.max(0, totalAccountValue()-retirementAccountSeed());
+  const ex=pfLinkedAccountId && investments.length>0;
+  const lockedAll=Math.min(total, assets.filter(a=>!a.liquid && !(a.withdrawAge>0) && !(ex && a.id===pfLinkedAccountId)).reduce((s,a)=>s+(+a.value||0),0));
+  const liquid=total-lockedAll;
+  if(investments.length>0 && !pfLinkedAccountId) return {liquid, locked:Math.max(0, lockedAll-Math.max(0, portfolioInvestmentSeed()-liquid))};
+  return {liquid, locked:lockedAll};
+}
 // Ownership split of that retirement pool, from each account's `owner` field:
 // c1-owned + half of joint vs c2-owned + half of joint. Accounts with no owner
 // (added before the owner selector existed) count toward the primary client —
@@ -26294,9 +26326,10 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
   const baseInc=getGrossIncome();
   const baseExp=getTotalExpenses();
 
-  // Starting balance sheet values
-  const propVal=num("aProp",0), other=num("aOther",0);
-  const totalAcc=totalAccountValue();
+  // Starting balance sheet values. Locked accounts with no withdrawal age are held flat with
+  // Other assets: in net worth, never spent (nonRetirementAccountSplit).
+  const acctSplit=nonRetirementAccountSplit();
+  const propVal=num("aProp",0), other=num("aOther",0)+acctSplit.locked;
 
   // Portfolio builder values (re-split by the proposal's cash share when running it)
   let pfCash=portfolioCashSeed();      // cash holdings — never compound
@@ -26310,7 +26343,7 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
   const retSh=retirementOwnerShares(); // per-client split from the accounts' owner field
   const country=val("c1co")||"US";
   const country2=(_chHasC2() && val("c2co")) || country;   // client 2's own drawdown rules
-  const liquidAcc=Math.max(0, totalAcc-retSeed); // exclude retirement accounts from liquid pool
+  const liquidAcc=acctSplit.liquid; // liquid accounts only: no retirement pool, no locked accounts
   const pfTotal=pfInvested+pfCash;
 
   let investSeed, cashSeed;
@@ -26563,6 +26596,13 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
         cash-=fromCash; savDone+=fromCash;
       }
       cash+=savDone;
+      // A drawdown from a retirement pool (the minimum or 4% rule) is capital leaving the pool,
+      // not income: the part of it the year did not need is reinvested, as a Swiss client's
+      // pillar capital is. It used to count as spent and vanish. Pure arithmetic, no draws.
+      if(rmd>0 && remaining>0){
+        const keep=Math.min(remaining, rmd); remaining-=keep;
+        inv+=keep; assetBuckets=scaleBucketsToTotal(assetBuckets, inv); inv=sumBuckets(assetBuckets);
+      }
       // Positive residual surplus is discretionary spending — not additionally saved.
       // Only deficits drain cash (then investments).
       if(remaining<0){
@@ -26700,11 +26740,10 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
 // invested. The portfolio is re-split the way runMC runs it (getSimEngineParams).
 function _drawdownSeed(){
   const retSeed=retirementAccountSeed();
-  const totalAcc=totalAccountValue();
   let pfCash=portfolioCashSeed(), pfInvested=portfolioInvestedSeed();
   const E=getSimEngineParams();
   if(E.cashShare!=null && isFinite(E.cashShare) && pfCash+pfInvested>0){ const t=pfCash+pfInvested; pfCash=t*E.cashShare; pfInvested=t-pfCash; }
-  const liquidAcc=Math.max(0, totalAcc-retSeed);
+  const liquidAcc=nonRetirementAccountSplit().liquid;   // locked accounts with no withdrawal age are not spendable
   const pfTotal=pfInvested+pfCash;
   let investSeed, cashSeed;
   if(investments.length>0 && !pfLinkedAccountId){
@@ -27088,6 +27127,8 @@ function buildSimInputsSummary(){
   // Assets & wealth
   html+=section("Assets & Starting Wealth");
   html+=row("Accounts (assets tab)",fmtMoney(totalAcc),`incl. ${fmtMoney(retSeed)} retirement pool`);
+  const _lockedNA=nonRetirementAccountSplit().locked;
+  if(_lockedNA>0) html+=row("Locked, no withdrawal age",fmtMoney(_lockedNA),"held at its value, not spent");
   if(propV>0) html+=row("Property / real estate",fmtMoney(propV));
   if(otherV>0) html+=row("Other assets",fmtMoney(otherV));
   if(debt>0) html+=row("Total debt (loans)",`− ${fmtMoney(debt)}`,`${loans.length} loan${loans.length!==1?"s":""}`);
@@ -27741,7 +27782,7 @@ function redrawChart(paths){
 
   const SCENARIOS=[
     {key:"pessimistic", name:"Pessimistic", pctLabel:pctLabel(band.low), label:["Pessimistic",pctLabel(band.low)], pct:band.low, color:"rgba(212,149,106,0.85)", border:"#c06020"},
-    {key:"median",      name:"Median",      pctLabel:pctLabel(band.mid), label:["Median",pctLabel(band.mid)],      pct:band.mid, color:"rgba(91,155,213,0.85)",  border:"#1e40af"},
+    {key:"median",      name:band.mid===50?"Median":"Middle", pctLabel:pctLabel(band.mid), label:[band.mid===50?"Median":"Middle",pctLabel(band.mid)], pct:band.mid, color:"rgba(91,155,213,0.85)",  border:"#1e40af"},
     {key:"optimistic",  name:"Optimistic",  pctLabel:pctLabel(band.high), label:["Optimistic",pctLabel(band.high)],  pct:band.high, color:"rgba(76,175,125,0.85)",  border:"#1b6841"},
   ];
 
@@ -28194,11 +28235,11 @@ function renderCashFlow(){
   //    Returns driven by holdings' weighted asset-class returns (haircut).
   // ─────────────────────────────────────────────────────────────────────────────
   const hasPortfolio=investments.length>0;
-  const totalAcc=totalAccountValue();          // excludes linked account when portfolio linked
   const pfCash=portfolioCashSeed();
   const pfInvested=portfolioInvestedSeed();
   const pfTotal=pfInvested+pfCash;             // total value tracked in portfolio tab
-  const liquidAcc=Math.max(0,totalAcc-retSeed);// liquid assets excl. retirement pool
+  const acctSplit=nonRetirementAccountSplit();
+  const liquidAcc=acctSplit.liquid;            // liquid accounts: no retirement pool, no locked accounts (held as Other assets, as in runMC)
 
   let inv, cash, cfMode, cfModeNote;
 
@@ -28274,7 +28315,8 @@ function renderCashFlow(){
   const retMuRetired = RET_POOL_MU;
 
   const cy=currentYear();
-  const other=num("aOther",0);
+  const other=num("aOther",0)+acctSplit.locked;   // locked accounts with no withdrawal age: held flat, never spent
+  if(acctSplit.locked>0) cfModeNote+=`<br>Locked accounts with no withdrawal age (${fmtMoney(acctSplit.locked)}: term deposits, structured products and the like) are held at their value with other assets and are not spent.`;
 
   // ── Breakdown captures for tooltips ─────────────────────────────────────────
   const c1Sal=num("inc1",0), c1Bon=num("inc2",0);
@@ -28400,6 +28442,8 @@ function renderCashFlow(){
       //   if(ca<0){deficitDrain=ca; iv+=ca; ca=0; if(iv<0) iv=0;}
       // }
       let surpToInv=0, deficitDrain=0;
+      // The part of a retirement-pool drawdown the year did not need is reinvested, as in runMC.
+      if(rmd>0 && surpAfterSav>0){ surpToInv=Math.min(surpAfterSav, rmd); iv+=surpToInv; }
 
       if(surpAfterSav<0){
         const deficit=Math.abs(surpAfterSav);
@@ -28599,7 +28643,7 @@ function renderCashFlow(){
     const tipRet=JSON.stringify({type:"ret",open:Math.round(rpBefore),rate:Math.round((rpPre>0?rpGrowth/rpPre:retMu)*1000)/10,growth:Math.round(rpGrowth),rmd:Math.round(rmd),close:Math.round(retPot),phase,
       paid:Math.round(d.chLump?d.chLump.gross:0), bvgC:Math.round(_cc?_cc.bvg1+_cc.bvg2:0), p3C:Math.round(_cc?_cc.p31+_cc.p32:0)});
 
-    const tipSurp=JSON.stringify({type:"surp",earned:Math.round(earnedInc),pen:Math.round(pen),tax:Math.round(tax),exp:Math.round(livingExp),debt:Math.round(debt),pc:Math.round(d.chContrib?d.chContrib.emp:0),gross:Math.round(d.surp),sav:Math.round(actualSav),net:Math.round(surpAfterSav)});
+    const tipSurp=JSON.stringify({type:"surp",earned:Math.round(earnedInc),pen:Math.round(pen),tax:Math.round(tax),exp:Math.round(livingExp),debt:Math.round(debt),pc:Math.round(d.chContrib?d.chContrib.emp:0),gross:Math.round(d.surp),sav:Math.round(actualSav),net:Math.round(surpAfterSav),reinv:Math.round(surpToInv)});
 
     html+=`<tr class="${cls}">
       <td class="cf-l">${yearLabel}</td>
@@ -28614,7 +28658,7 @@ function renderCashFlow(){
       <td class="${surpAfterSav>=0?'cf-pos':'cf-neg'} cf-tip-cell" data-cf-tip='${tipSurp.replace(/'/g,"&#39;")}'>${fmtMoney(surpAfterSav)}</td>
       <td class="cf-tip-cell" data-cf-tip='${tipGoal.replace(/'/g,"&#39;")}'>${goalOut>0?fmtMoney(goalOut):"-"}</td>
       <td class="cf-tip-cell" data-cf-tip='${tipCash.replace(/'/g,"&#39;")}'>${fmtMoney(cash)}</td>
-      <td class="inv-cell" data-inv='{"open":${Math.round(invOpen)},"ret":${Math.round(invReturn)},"sav":0,"surp":0,"def":${Math.round(deficitDrain)},"goal":${Math.round(goalDrain)},"close":${Math.round(inv)},"mu":${(cfMu*100).toFixed(1)}}'>${fmtMoney(inv)}</td>
+      <td class="inv-cell" data-inv='{"open":${Math.round(invOpen)},"ret":${Math.round(invReturn)},"sav":0,"surp":${Math.round(surpToInv)},"def":${Math.round(deficitDrain)},"goal":${Math.round(goalDrain)},"close":${Math.round(inv)},"mu":${(cfMu*100).toFixed(1)}}'>${fmtMoney(inv)}</td>
       <td class="cf-tip-cell" data-cf-tip='${tipRet.replace(/'/g,"&#39;")}'>${retSeed>0?fmtMoney(retPot):"-"}</td>
       <td><strong class="${nw<0?'cf-neg':''}">${fmtMoney(nw)}</strong></td>
       <td class="cf-l">${tags}</td>
@@ -32916,7 +32960,7 @@ function drawFanChart(){
         (function(){
           const w = gbAssetClassWeights();
           const port = gbPortfolioRisk(w);
-          const prof = RISK_PROFILES[val("c1r")];
+          const prof = RISK_PROFILES[val("c1r")] ? Object.assign({}, RISK_PROFILES[val("c1r")], riskProfileRV(val("c1r"))) : null;
           if(prof){
             const dev = Math.abs(port.sigma*100 - prof.retVol);
             bullet(dev <= 3
@@ -32987,7 +33031,7 @@ function drawFanChart(){
 
         const _riskLbl = k => RISK_PROFILES[k]?.label || "-";
         const _horLbl  = k => HORIZON_PROFILES[k]?.label || "-";
-        const _muSig   = k => { const r=RISK_PROFILES[k]; return r ? ("~"+r.retMean.toFixed(1)+"% · vol "+r.retVol+"%") : "-"; };
+        const _muSig   = k => { const r=riskProfileRV(k); return r ? ("~"+r.retMean.toFixed(1)+"% · vol "+r.retVol+"%") : "-"; };
         // Every client card lists the SAME four person-specific stats, so the
         // two cards read symmetrically. Shared plan facts (retirement age,
         // residence, currency, children) live in the Household strip below.
@@ -34154,8 +34198,8 @@ function drawFanChart(){
         newPage();
         sectionH2("Evaluating the Efficiency of Your Portfolio");
         const port=gbPortfolioRisk(gbAssetClassWeights());
-        const prof=RISK_PROFILES[val("c1r")];
-        const profVol=prof?prof.retVol:12, profRet=prof?prof.retMean:7;
+        const prof=RISK_PROFILES[val("c1r")], profRV=riskProfileRV(val("c1r"));
+        const profVol=profRV?profRV.retVol:12, profRet=profRV?profRV.retMean:7;
         para("The shaded region represents the risk band associated with your investor profile"+(prof?" ("+prof.label+")":"")+". The diamond marks your "+(investments.length?"current":"target")+" allocation's expected return and risk (standard deviation) under the plan's capital market assumptions.");
         const chH=62; checkY(chH+26);
         const cx=M+18, plotW=CW-24, cy0=y;
@@ -34610,9 +34654,10 @@ function drawFanChart(){
         if(val("rptIncMethod") === "no") return;
         checkY(30);
         sectionH2("Methodology & Assumptions");
+        para("Model version: Wealth Analyzer build "+APP_VERSION+", "+(CMA_ACTIVE==="CHF"?"Swiss franc":"US dollar")+" capital market assumptions, "+((Array.isArray(lastSimPaths)&&lastSimPaths.length)?lastSimPaths.length.toLocaleString()+" simulated paths":"no simulation run")+". Every model change is recorded against the build in which it took effect.");
         para("Return simulation: Log-normal returns sampled via Box-Muller transform. Each annual return is drawn as (μ − 0.5σ²) + σ×N(0,1), producing the full distribution of outcomes rather than a single deterministic path.");
-        para("Asset growth: Investment accounts grow at the sampled portfolio return. Property appreciates stochastically at 3% ± 2% per year. Retirement pool grows at a fixed 3.5% nominal across both accumulation and retirement, decoupled from household risk and the Investment Proposal, with no new contributions credited"+(chHouseholdSwiss()?" (Swiss pillars differ: see below)":"")+". Cash earns no explicit return.");
-        para("Savings & surplus: The annual savings target is deposited to cash each year if surplus allows. Positive residual surplus (above savings) is treated as discretionary spending. Deficits draw from cash first, then investments.");
+        para("Asset growth: Investment accounts grow at the sampled portfolio return. Property appreciates stochastically at 3% ± 2% per year. Retirement pool grows at a fixed 3.5% nominal across both accumulation and retirement, decoupled from household risk and the Investment Proposal, with no new contributions credited"+(chHouseholdSwiss()?" (Swiss pillars differ: see below)":"")+". Cash earns no explicit return. Locked accounts with no withdrawal age (term deposits, structured products, private-equity interests and the like) are held at their value with other assets and are never spent.");
+        para("Savings & surplus: The annual savings target is deposited to cash each year if surplus allows. Positive residual surplus (above savings) is treated as discretionary spending, except the part of a retirement-account withdrawal that the year's spending did not need, which is reinvested. Deficits draw from cash first, then investments.");
         para("Debt amortisation: Each loan amortises annually using standard mortgage math. Interest and principal separation is computed per loan at each simulation step.");
         para("Net figures: Projections apply prevailing income and investment taxes internally so that surplus, cash flow and net worth stay realistic. This report does not itemise, display or advise on tax. Consult a qualified tax professional for tax matters.");
         { const _sw=chHouseholdSwiss(), _swAll=_sw && chAllResident();
@@ -34891,7 +34936,7 @@ function drawFanChart(){
         const _w = doc.getTextWidth("Prepared by: ");
         doc.setFont("helvetica","normal"); doc.setTextColor(...MUTED);
         doc.text(rBy||"", M+_w, ph-6.5);
-        doc.text("Date: "+rptDateStr+"     |     "+_p+" of "+_tot, pw-M, ph-6.5, {align:"right"});
+        doc.text("Date: "+rptDateStr+"     |     Build "+APP_VERSION+"     |     "+_p+" of "+_tot, pw-M, ph-6.5, {align:"right"});
         if(confidLabel){ doc.setFont("helvetica","bold"); doc.setTextColor(...ac); doc.text(confidLabel, pw/2, ph-6.5, {align:"center"}); }
       }
       doc.setTextColor(40); doc.setFont("helvetica","normal");
@@ -36918,6 +36963,8 @@ function loadProfile(){
   input.click();
 }
 
+// Account types corrected from locked to liquid in COUNTRY_ACCOUNTS (Canadian TFSA, 20 Oct 2026).
+const _LIQUID_CORRECTED=new Set(["tfsa"]);
 function restoreProfile(p){
   profileGen++;
   const f=p.fields||{};
@@ -36950,6 +36997,9 @@ function restoreProfile(p){
     // Accounts imported before 2026-09 carry no withdrawAge, which kept pensions out
     // of the retirement pool (projected as spendable cash) — take it from the account type.
     if(o.withdrawAge==null && !o.liquid && typeof _acctDef==="function"){ const d=_acctDef(o.country||(f.c1co||"US"), o.type); if(d && d.withdrawAge!=null) o.withdrawAge=d.withdrawAge; }
+    // Account types the registry used to mark locked by mistake: an account saved before the
+    // correction carries the old flag, which since 20 Oct 2026 keeps it from ever being spent.
+    if(!o.liquid && _LIQUID_CORRECTED.has(o.type) && typeof _acctDef==="function"){ const d=_acctDef(o.country||(f.c1co||"US"), o.type); if(d && d.liquid) o.liquid=true; }
     return o; }); assetSeq=p.assetSeq||_maxIdSeq(assets);
   loans=(p.loans||[]).map(l=>({...l, bal:(+l.bal||0), rate:(+l.rate||0), yrs:(+l.yrs||0), label:String(l.label!=null?l.label:"Loan")})); loanSeq=p.loanSeq||_maxIdSeq(loans);
   insurances=p.insurances||[]; insSeq=p.insSeq||_maxIdSeq(insurances);
@@ -37748,7 +37798,7 @@ document.addEventListener("DOMContentLoaded",function(){
       h+=row('Opening balance',fmtN(d.open));
       h+=row('Return ('+d.mu+'%/yr)',fmt(d.ret));
       if(d.sav) h+=row('Savings contribution',fmt(d.sav));
-      if(d.surp) h+=row('Surplus allocated (30%)',fmt(d.surp));
+      if(d.surp) h+=row('Unneeded withdrawals reinvested',fmt(d.surp));
       if(d.def) h+=row('Deficit drawdown',fmt(d.def));
       if(d.goal) h+=row('Goal withdrawal',fmt(-d.goal));
       h+='<div class="itr itotal"><span class="ilabel">Closing balance</span>'+fmtN(d.close)+'</div>';
@@ -37844,7 +37894,10 @@ document.addEventListener("DOMContentLoaded",function(){
         if(d.sav) h+=row("Savings target deducted",fmtS(-d.sav));
         h+=total(isDeficit?"Net deficit":"Net surplus / deficit",Math.abs(d.net));
         if(isDeficit) h+=row("Deficit draws from cash, then investments","","ineu");
-        else if(d.net>0) h+=row("Residual spent (discretionary lifestyle)","","ineu");
+        else if(d.net>0){
+          if(d.reinv>0) h+=row("Unneeded withdrawals reinvested",fmtS(-d.reinv));
+          if(d.net-(d.reinv||0)>0) h+=row("Residual spent (discretionary lifestyle)","","ineu");
+        }
         return h;
       }
       if(d.type==="goal"){
