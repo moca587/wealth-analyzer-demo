@@ -5098,7 +5098,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261020-1932";
+const APP_VERSION = "20261020-2152";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -31378,19 +31378,32 @@ async function generatePDFReport(mode, previewWin){
 
     // ── Sanitize text: jsPDF's built-in fonts only render WinAnsi (Latin-1).
     // Map common non-Latin1 glyphs (σ, true minus, ≈, arrows, ≤/≥) to ASCII so
-    // they don't come out as mojibake anywhere in the report.
+    // they don't come out as mojibake anywhere in the report. The prose helpers
+    // (para, plainLead, bullets, callout, glossary) run it BEFORE wrapping, so they
+    // measure what is printed: "σ" was wrapped as one glyph and printed as "sigma",
+    // and the Methodology "Return simulation" line ended up to 14mm past the margin.
+    const pdfSafe = s => (typeof s !== "string") ? s : s
+      .replace(/σ/g,"sigma").replace(/μ/g,"mu")
+      .replace(/−/g,"-").replace(/≈/g,"~").replace(/≠/g,"!=")
+      .replace(/≤/g,"<=").replace(/≥/g,">=")
+      .replace(/→/g,"->").replace(/←/g,"<-")
+      .replace(/◦/g,"-").replace(/‣/g,"-").replace(/▪/g,"-")   // sub-bullets → dash
+      .replace(/•/g,"-").replace(/·/g,"·"); // keep middot (Latin-1)
     (function patchText(){
       const _orig = doc.text.bind(doc);
-      const _san = s => (typeof s !== "string") ? s : s
-        .replace(/σ/g,"sigma").replace(/μ/g,"mu")
-        .replace(/−/g,"-").replace(/≈/g,"~").replace(/≠/g,"!=")
-        .replace(/≤/g,"<=").replace(/≥/g,">=")
-        .replace(/→/g,"->").replace(/←/g,"<-")
-        .replace(/◦/g,"-").replace(/‣/g,"-").replace(/▪/g,"-")   // sub-bullets → dash
-        .replace(/•/g,"-").replace(/·/g,"·"); // keep middot (Latin-1)
       doc.text = function(txt){
         const a = Array.prototype.slice.call(arguments);
-        a[0] = Array.isArray(txt) ? txt.map(_san) : _san(txt);
+        a[0] = Array.isArray(txt) ? txt.map(pdfSafe) : pdfSafe(txt);
+        // A centred label at a chart's edge (the last year or "28%" tick) is pulled inside the
+        // margins instead of running past them; text wider than the content is left as it is.
+        const o = a[3];
+        if(typeof a[0] === "string" && a[0].indexOf("\n") < 0 && typeof a[1] === "number" && o && o.align === "center" && !o.angle){
+          const w = doc.getTextWidth(a[0]);
+          if(w <= CW){
+            if(a[1] + w/2 > pw - M) a[1] = pw - M - w/2;
+            else if(a[1] - w/2 < M) a[1] = M + w/2;
+          }
+        }
         return _orig.apply(null, a);
       };
     })();
@@ -31471,6 +31484,13 @@ async function generatePDFReport(mode, previewWin){
       // pass at the end, so every page can show "<n> of <total>".
     }
     function checkY(need=20){if(y+need>PAGE_BOTTOM) newPage();}
+    // One axis's tick labels share one size: the largest at which the widest fits its room
+    // (a "CHF 11,559,159" tick at 6pt ran 1.4mm past the gutter into the left margin).
+    function axisFontSize(labels, room, size){
+      doc.setFontSize(size);
+      const wide = Math.max.apply(null, labels.map(l=>doc.getTextWidth(String(l))).concat([0]));
+      return wide > room ? size*room/wide : size;
+    }
 
     // ── Chapter divider — display-style page on the standard template (running
     //    header + footer), drawn only when the chapter's first section renders.
@@ -31712,18 +31732,20 @@ function drawFanChart(){
   doc.line(chartX, chartY, chartX, chartY + chartH);           // Y axis
   doc.line(chartX, chartY + chartH, chartX + chartW, chartY + chartH); // X axis
 
-  // Y-axis tick labels (5 ticks)
-  doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...MUTED);
+  // Y-axis tick labels (5 ticks), sized to fit the gutter
+  const yTicks = [0,1,2,3,4].map(t => fmt(lo + (hi - lo) * (t / 4)));
+  doc.setFont("helvetica","normal"); doc.setFontSize(axisFontSize(yTicks, GUT - 1, 6)); doc.setTextColor(...MUTED);
   for(let t = 0; t <= 4; t++){
     const val = lo + (hi - lo) * (t / 4);
     const yy  = my(val);
     doc.setDrawColor(...GRID); doc.setLineWidth(0.1);
     doc.line(chartX, yy, chartX + chartW, yy); // gridline
     doc.setTextColor(...MUTED);
-    doc.text(fmt(val), chartX - 1, yy + 1, {align:"right"});
+    doc.text(yTicks[t], chartX - 1, yy + 1, {align:"right"});
   }
 
   // X-axis tick labels (every 5 yrs, or every 2 if horizon ≤ 15)
+  doc.setFontSize(6);
   const step = numYrs > 15 ? 5 : 2;
   const cy2  = (typeof currentYear === "function") ? currentYear() : new Date().getFullYear();
   for(let yr = 0; yr <= numYrs; yr += step){
@@ -31898,7 +31920,7 @@ function drawFanChart(){
       checkY(8);
       // Body text follows the user's font-size setting (used to hardcode 8).
       doc.setFontSize(fsz); doc.setTextColor(...color); doc.setFont("helvetica","normal");
-      const lines=doc.splitTextToSize(txt,CW);
+      const lines=doc.splitTextToSize(pdfSafe(txt),CW);
       const lh=fsz*0.5+0.5;   // line height scales with the body size
       // a page break draws the running header, which leaves its own font, size and colour behind:
       // set the body style again after it, or the rest of the paragraph ran off the page in 9.5pt
@@ -31917,7 +31939,7 @@ function drawFanChart(){
       doc.setFont("helvetica","normal"); doc.setFontSize(size); doc.setTextColor(...(opts.color||INK_SOFT));
       const lh = size*0.5+0.6;
       (items||[]).forEach(t=>{
-        const lines = doc.splitTextToSize(String(t), wRegion-5);
+        const lines = doc.splitTextToSize(pdfSafe(String(t)), wRegion-5);
         checkY(lines.length*lh+2);
         doc.setFillColor(...ac); doc.circle(xLeft+1.2, y-1.1, 0.7, "F");
         lines.forEach((l,li)=>{ doc.text(l, xLeft+4.2, y); y+=lh; });
@@ -31931,7 +31953,8 @@ function drawFanChart(){
     function callout(title, body, opts){
       opts = opts || {};
       const accent = opts.accent || ac;
-      const lines = doc.splitTextToSize(String(body||""), CW-12);
+      doc.setFont("helvetica","normal"); doc.setFontSize(7.6);   // wrap at the size the body is drawn (7pt wrapping ran 2.2mm into the margin)
+      const lines = doc.splitTextToSize(pdfSafe(String(body||"")), CW-12);
       const lh = 3.9;
       const boxH = (title?6.5:3) + lines.length*lh + 4;
       checkY(boxH+4);
@@ -31967,7 +31990,7 @@ function drawFanChart(){
       checkY(9);
       doc.setFont("helvetica","italic"); doc.setFontSize(Math.max(7.6, fsz-0.2)); doc.setTextColor(...MUTED);
       const pref = "In plain terms:  ";
-      const lines = doc.splitTextToSize(pref+txt, CW);
+      const lines = doc.splitTextToSize(pdfSafe(pref+txt), CW);
       const lh = fsz*0.5+0.6;
       lines.forEach(l=>{ if(y+5>PAGE_BOTTOM){ newPage(); doc.setFont("helvetica","italic"); doc.setFontSize(Math.max(7.6, fsz-0.2)); doc.setTextColor(...MUTED); } doc.text(l, M, y); y += lh; });
       y += 2.5;
@@ -32060,13 +32083,15 @@ function drawFanChart(){
       const maxV = Math.max.apply(null, allV.concat([0.0001]));
       const minV = Math.min.apply(null, allV.concat([maxV]));
       const lo = Math.min(0, minV), hi = (maxV*1.08) || 1;
-      const gut = 12, px = x+gut, pw2 = w-gut, baseY = by0+h, plotH = h-6;
+      const ticks = [0,1,2,3,4].map(g => { const v = lo+(hi-lo)*g/4; return opts.fmtVal==="pct" ? (Math.round(v)+"%") : fmt(v); });
+      doc.setFont("helvetica","normal"); doc.setFontSize(6);
+      // the gutter grows to the widest tick label ("CHF 804,794" ran 2.5mm into the left margin)
+      const gut = Math.max(12, Math.max.apply(null, ticks.map(t=>doc.getTextWidth(t)))+2.5), px = x+gut, pw2 = w-gut, baseY = by0+h, plotH = h-6;
       const xat = i => npts>1 ? px + (i/(npts-1))*pw2 : px+pw2/2;
       const yat = v => baseY - ((v-lo)/((hi-lo)||1))*plotH;
-      doc.setFont("helvetica","normal"); doc.setFontSize(6);
       for(let g=0; g<=4; g++){ const v = lo+(hi-lo)*g/4, gy = yat(v);
         doc.setDrawColor(...GRID); doc.setLineWidth(0.18); doc.line(px, gy, px+pw2, gy);
-        doc.setTextColor(...FAINT); doc.text(opts.fmtVal==="pct" ? (Math.round(v)+"%") : fmt(v), px-2, gy+1.1, {align:"right"}); }
+        doc.setTextColor(...FAINT); doc.text(ticks[g], px-2, gy+1.1, {align:"right"}); }
       doc.setDrawColor(...AXIS); doc.setLineWidth(0.4); doc.line(px, by0, px, baseY); doc.line(px, baseY, px+pw2, baseY);
       // x category labels
       doc.setTextColor(...MUTED); doc.setFontSize(6.2);
@@ -32101,13 +32126,14 @@ function drawFanChart(){
       const npts = points.length || 1;
       const maxV = Math.max.apply(null, points.concat([0.0001]));
       const lo = 0, hi = (maxV*1.1) || 1;
-      const gut = 12, px = x+gut, pw2 = w-gut, baseY = by0+h, plotH = h-6;
+      const ticks = [0,1,2,3,4].map(g => { const v = lo+(hi-lo)*g/4; return opts.fmtVal==="pct" ? (Math.round(v)+"%") : fmt(v); });
+      doc.setFont("helvetica","normal"); doc.setFontSize(6);
+      const gut = Math.max(12, Math.max.apply(null, ticks.map(t=>doc.getTextWidth(t)))+2.5), px = x+gut, pw2 = w-gut, baseY = by0+h, plotH = h-6;   // gutter fits the widest tick
       const xat = i => npts>1 ? px + (i/(npts-1))*pw2 : px+pw2/2;
       const yat = v => baseY - ((v-lo)/((hi-lo)||1))*plotH;
-      doc.setFont("helvetica","normal"); doc.setFontSize(6);
       for(let g=0; g<=4; g++){ const v = lo+(hi-lo)*g/4, gy = yat(v);
         doc.setDrawColor(...GRID); doc.setLineWidth(0.18); doc.line(px, gy, px+pw2, gy);
-        doc.setTextColor(...FAINT); doc.text(opts.fmtVal==="pct" ? (Math.round(v)+"%") : fmt(v), px-2, gy+1.1, {align:"right"}); }
+        doc.setTextColor(...FAINT); doc.text(ticks[g], px-2, gy+1.1, {align:"right"}); }
       doc.setDrawColor(...AXIS); doc.setLineWidth(0.4); doc.line(px, by0, px, baseY); doc.line(px, baseY, px+pw2, baseY);
       // filled area polygon (top edge, then back along the baseline)
       const poly = [];
@@ -33245,8 +33271,9 @@ function drawFanChart(){
               doc.text(doc.splitTextToSize(g.name||"(goal)", labW)[0], M, gy2+rowH/2+1);
               doc.setFillColor(...tierCol(g.tier)); doc.roundedRect(x0, gy2+rowH/2-bh2/2, Math.max(2,x1-x0), bh2, 0.8, 0.8, "F");
               doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...MUTED);
-              const lblX = Math.min(x1+2, px+pwd-14);
-              doc.text(fmt(g.amt)+"/yr", lblX, gy2+rowH/2+1);
+              const amtLbl = fmt(g.amt)+"/yr";   // ends at the margin at the latest ("CHF 131,750/yr" is wider than 14mm)
+              const lblX = Math.min(x1+2, px+pwd-Math.max(14, doc.getTextWidth(amtLbl)));
+              doc.text(amtLbl, lblX, gy2+rowH/2+1);
               gy2 += rowH;
             });
             if(goals.length>list.length){ doc.setFontSize(6.4); doc.setTextColor(...MUTED);
@@ -34181,8 +34208,10 @@ function drawFanChart(){
         const grow=(mu,i)=>startV*Math.pow(1+mu,i);
         const maxV=Math.max.apply(null,lines.map(L=>grow(L.p.geoMu,yrsP)))*1.06;
         const mxP=i=>cx+(i/yrsP)*plotW, myP=v=>cy0+chH-(v/maxV)*chH;
+        const yTicks=[0,1,2,3,4].map(t=>fmt(maxV*t/4));
+        doc.setFontSize(axisFontSize(yTicks, cx-2-M, 6.5));
+        for(let t=0;t<=4;t++){ const v=maxV*t/4; doc.setDrawColor(228,231,236); doc.setLineWidth(0.15); doc.line(cx,myP(v),cx+plotW,myP(v)); doc.setTextColor(110,118,130); doc.text(yTicks[t],cx-2,myP(v)+1,{align:"right"}); }
         doc.setFontSize(6.5);
-        for(let t=0;t<=4;t++){ const v=maxV*t/4; doc.setDrawColor(228,231,236); doc.setLineWidth(0.15); doc.line(cx,myP(v),cx+plotW,myP(v)); doc.setTextColor(110,118,130); doc.text(fmt(v),cx-2,myP(v)+1,{align:"right"}); }
         const cyNow=(typeof currentYear==="function")?currentYear():new Date().getFullYear();
         for(let i=0;i<=yrsP;i+=Math.max(1,Math.round(yrsP/8))){ doc.setTextColor(110,118,130); doc.text(String(cyNow+i),mxP(i),cy0+chH+4,{align:"center"}); }
         doc.setDrawColor(170); doc.setLineWidth(0.3); doc.line(cx,cy0,cx,cy0+chH); doc.line(cx,cy0+chH,cx+plotW,cy0+chH);
@@ -34194,9 +34223,20 @@ function drawFanChart(){
         doc.setLineDashPattern([],0);
         y=cy0+chH+10;
         let lx=cx; doc.setFontSize(6.8);
-        lines.concat([{lbl:"Inflation (CPI assumption)",col:[150,150,150]}]).forEach(L=>{
+        // "Inflation (CPI assumption)" ran past the margin (cut at the paper edge in portrait):
+        // a row too wide for the page tightens its even steps to fit, and when that would crowd
+        // the items, the ones that do not fit start a second row
+        const legend=lines.concat([{lbl:"Inflation (CPI assumption)",col:[150,150,150]}]);
+        const itemW=L=>8+doc.getTextWidth(L.lbl);
+        let lstep=Math.min(58,plotW/5+6);
+        if(cx+lstep*(legend.length-1)+itemW(legend[legend.length-1])>pw-M){
+          const tight=(pw-M-0.5-cx-itemW(legend[legend.length-1]))/(legend.length-1);
+          if(legend.every(L=>itemW(L)+4<=tight)) lstep=tight;
+        }
+        legend.forEach(L=>{
+          if(lx>cx && lx+itemW(L)>pw-M){ lx=cx; y+=5; }
           doc.setDrawColor.apply(doc,L.col); doc.setLineWidth(1); doc.line(lx,y-1.2,lx+6,y-1.2);
-          doc.setTextColor(70); doc.text(L.lbl,lx+8,y); lx+=Math.min(58,plotW/5+6); });
+          doc.setTextColor(70); doc.text(L.lbl,lx+8,y); lx+=lstep; });
         y+=8;
         subBar("Summary of Results");
         tbl(["Series","Volatility (σ)","Avg annual return","Growth of "+fmt(startV)+" ("+yrsP+" yrs)"],
@@ -34491,21 +34531,54 @@ function drawFanChart(){
           // font + right-aligned money columns so it fits the landscape width;
           // tbl() paginates and repeats the header on continuation pages.
           const CFCOLS=[0,1,2,3,4,6,7,8,9,10,11,12,13,14,15];
-          // Explicit widths (mm) summing to ~237mm so the 15-col schedule fits
+          const cfHead=["Year","Age","Phase","Earned income",cfPensionHeader(),"Expenses","Debt service","Savings target","Surplus","Goal outflow","Cash","Investments","Ret. pool","Net worth","Notes"];
+          const cfRows=filtered.map(r=>{
+            const c=r.cells;
+            if(c.length<15) return Array(CFCOLS.length).fill("-");
+            return CFCOLS.map(i=>{
+              // Notes holds one tag per event: join them ("Thomas retires" ran into "Thomas's pension starts")
+              const tags=i===15&&c[i] ? Array.from(c[i].querySelectorAll(".cf-tag")).map(t=>t.textContent.trim()).filter(Boolean) : [];
+              return tags.length ? tags.join("; ") : (c[i]?.textContent||"").trim();
+            });
+          });
+          // Explicit widths (mm) summing to 223mm so the 15-col schedule fits
           // inside the landscape content width on BOTH Letter and A4 (with a
           // margin to spare); Notes takes the widest slot, money columns are
           // right-aligned. tbl() paginates and repeats the header per page.
           const cfW=[10,11,14,15,16,14,14,14,14,14,14,15,14,16,28];
           const cfA=["center","center","left","right","right","right","right","right","right","right","right","right","right","right","left"];
-          const cfColStyles={}; cfW.forEach((w,i)=>{ cfColStyles[i]={cellWidth:w,halign:cfA[i]}; });
-          tbl(["Year","Age","Phase","Earned income",cfPensionHeader(),"Expenses","Debt service","Savings target","Surplus","Goal outflow","Cash","Investments","Ret. pool","Net worth","Notes"],
-            filtered.map(r=>{
-              const c=r.cells;
-              if(c.length<15) return Array(CFCOLS.length).fill("-");
-              return CFCOLS.map(i=>(c[i]?.textContent||"").trim());
-            }),
-            { styles:{fontSize:6.2, cellPadding:1.2, overflow:"linebreak"},
-              headStyles:{fontSize:6.2},
+          const NOTES=cfW.length-1;
+          // Each column's widest value on ONE line at font size fs (a header wraps between words)
+          const cfNeed=(fs,pad)=>cfHead.map((h,i)=>{
+            if(i===NOTES) return 0;
+            doc.setFont("helvetica","normal"); doc.setFontSize(fs);
+            let w=Math.max.apply(null, cfRows.map(r=>doc.getTextWidth(String(r[i]||""))).concat([0]));
+            doc.setFont("helvetica","bold");
+            String(h).split(/\s+/).forEach(word=>{ w=Math.max(w, doc.getTextWidth(word)); });
+            return w+2*pad;
+          });
+          let cfFs=6.2, cfPad=1.2;
+          // A column too narrow for its widest amount widens ("CHF 28.64M" wrapped in 14mm);
+          // autoTable keeps a line up to 1/k (0.35mm) wider than its cell on one line
+          let cfWidths=cfNeed(cfFs,cfPad).map((n,i)=>Math.max(cfW[i],n-0.3));
+          if(cfWidths.reduce((a,b)=>a+b,0) > CW){
+            // Portrait (174-180mm): the landscape widths drew Ret. pool, Net worth and Notes past the
+            // paper edge. Each column gets its widest value, Notes the rest; the font steps down
+            // from 6.2pt until Notes keeps 24mm.
+            cfPad=0.9;
+            for(cfFs=6.2; ; cfFs=Math.round((cfFs-0.2)*10)/10){
+              cfWidths=cfNeed(cfFs,cfPad).map((n,i)=>i===NOTES?0:n+0.5);
+              cfWidths[NOTES]=CW-cfWidths.reduce((a,b)=>a+b,0);
+              if(cfWidths[NOTES]>=24 || cfFs<=5) break;
+            }
+            // still too wide at 5pt: narrow the other columns so Notes keeps 16mm and nothing leaves the page
+            if(cfWidths[NOTES]<16){ const k=(CW-16)/(CW-cfWidths[NOTES]); cfWidths=cfWidths.map((w,i)=>i===NOTES?16:w*k); }
+          }
+          doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
+          const cfColStyles={}; cfWidths.forEach((w,i)=>{ cfColStyles[i]={cellWidth:w,halign:cfA[i]}; });
+          tbl(cfHead, cfRows,
+            { styles:{fontSize:cfFs, cellPadding:{top:1.2,bottom:1.2,left:cfPad,right:cfPad}, overflow:"linebreak"},
+              headStyles:{fontSize:cfFs},
               columnStyles:cfColStyles });
         } else {
           para("Run the simulation to populate the cash-flow table.");
@@ -34606,9 +34679,9 @@ function drawFanChart(){
         RPT_GLOSSARY.forEach(g => {
           const term = g[0], def = g[1];
           doc.setFont("helvetica","bold"); doc.setFontSize(8.6);
-          const termLines = doc.splitTextToSize(term, colW);
+          const termLines = doc.splitTextToSize(pdfSafe(term), colW);
           doc.setFont("helvetica","normal"); doc.setFontSize(7.3);
-          const defLines = doc.splitTextToSize(def, colW);
+          const defLines = doc.splitTextToSize(pdfSafe(def), colW);
           const blockH = termLines.length*3.7 + defLines.length*3.3 + 3.5;
           if(gy + blockH > bottom){
             if(col === 0){ col = 1; gy = contentTop; }
