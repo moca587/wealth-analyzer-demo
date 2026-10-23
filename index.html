@@ -901,6 +901,22 @@ input[type=date]{color-scheme:light}
 .asset-item,.loan-item{background:#f8faff;border:1px solid rgba(0,87,184,0.08);border-radius:var(--rs);padding:10px 12px;margin-bottom:6px}
 .item-row{display:flex;align-items:center;gap:8px}
 .item-meta{font-size:11px;color:var(--text3);margin-top:4px;display:flex;gap:12px}
+.fx-amt{display:inline-flex;flex-direction:column;align-items:flex-end;line-height:1.25}
+.fx-eq{font-size:10.5px;font-weight:400;color:var(--text3)}
+.pf-row .fx-amt{align-items:flex-start}
+.fx-tbl{display:grid;grid-template-columns:auto minmax(0,1fr) 78px;gap:8px 10px;align-items:center;font-size:12px}
+.fx-tbl .fx-h{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.03em}
+.fx-tbl .fx-code{font-weight:600;color:var(--text)}
+.fx-tbl .fx-rate{font-variant-numeric:tabular-nums;color:var(--text2)}
+.fx-pill{display:inline-block;margin-top:3px;font-size:10.5px;line-height:1.35;padding:1px 7px;border-radius:999px;border:1px solid var(--border);color:var(--text3);white-space:normal}
+.fx-pill.ok{color:#1b6841;border-color:rgba(76,175,125,.35);background:rgba(76,175,125,.08)}
+.fx-pill.warn{color:#8a5a2b;border-color:rgba(212,149,106,.4);background:rgba(212,149,106,.1)}
+.fx-pin{width:78px;font-size:12px;padding:4px 6px}
+.fx-all{margin-top:12px}
+.fx-all summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--text2)}
+.fx-all-grid{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:baseline;font-size:11.5px;margin-top:8px}
+.fx-all-grid .fx-src{color:var(--text3);font-size:10.5px;text-align:right}
+.fx-tab-note{font-size:11px;color:var(--text3);line-height:1.6;margin:8px 0 2px;padding:7px 10px;border-left:3px solid var(--border2);background:var(--bg3);border-radius:6px}
 .abadge,.lbadge{font-size:10px;padding:2px 8px;border-radius:20px;white-space:nowrap;font-weight:500}
 .lbadge{background:rgba(91,155,213,.15);color:var(--blue);border:1px solid rgba(91,155,213,.25)}
 .grp-header{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px}
@@ -2061,6 +2077,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     if(p){ p.classList.add('open'); p.setAttribute('aria-hidden','false'); }
     // refresh the API-key summary pill (full grid renders when the section is expanded)
     try{ if(window.renderMdKeysGrid) window.renderMdKeysGrid(); }catch(_){}
+    try{ if(window.renderFxPanel) window.renderFxPanel(); }catch(_){}
     try{ if(window.refreshAiKeyField) window.refreshAiKeyField(); }catch(_){}
     try{ if(window.applyMcParamsState) window.applyMcParamsState(); }catch(_){}
     try{ if(window.refreshPrivacyUI) window.refreshPrivacyUI(); if(window.renderNetLog) window.renderNetLog(); }catch(_){}
@@ -2149,7 +2166,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="set-sec">
       <div class="set-sec-h">Display</div>
       <div class="set-row">
-        <div class="set-row-lbl">Currency<small>Auto-set from Client 1's country, or override here</small></div>
+        <div class="set-row-lbl">Household currency<small>Set from Client 1's country of residence, or override here. Amounts in other currencies are converted (Exchange rates, under Data &amp; integrations)</small></div>
         <div class="ccy-picker" title="Display currency">
           <span class="ccy-picker-sym" id="ccy-sym">$</span>
           <select id="m-ccy-tag" onchange="onCurrencyManualChange()"></select>
@@ -2276,6 +2293,14 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="set-sec">
       <div class="set-sec-h">Data &amp; integrations</div>
 
+      <!-- Exchange rates (collapsed by default) -->
+      <div id="fxPanel" style="margin-top:14px">
+        <div onclick="toggleFxPanel()" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3)">
+          <span style="font-size:13px;font-weight:600;color:var(--text)"><i data-lucide="arrow-left-right" class="icon" aria-hidden="true"></i> Exchange rates <span id="fxSummary" style="font-size:11px;font-weight:500;color:var(--text3);margin-left:4px"></span></span>
+          <span id="fxCaret" style="font-size:13px;color:var(--text3);transition:transform .2s">▼</span>
+        </div>
+        <div id="fxBody" style="display:none;padding-top:12px"></div>
+      </div>
       <!-- Market data provider keys (collapsed by default) -->
       <div id="mdKeysPanel" style="margin-top:14px">
         <div onclick="toggleMdKeys()" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid var(--border);border-radius:var(--rs);background:var(--bg3)">
@@ -2300,7 +2325,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
     <div class="set-sec">
       <div class="set-sec-h">About</div>
-      <div class="set-note"><strong style="color:var(--text2)">WealthAnalyzer</strong> by Private Wealth Intelligence · market-simulation financial planner.<br>Version <span id="setVersion">-</span> · Beta version.<br>Calculations run in your browser and documents are read on this device. Data leaves it only for features that need a service: live prices and ticker lookups (ticker symbols only), custodian feeds and order routing if you set them up (an order ticket carries the account, the positions and, in some formats, the client's name), and, only if your firm turns AI features on, the uploads you choose to have Claude read and the Portfolio Builder's plan figures (to Anthropic's API). See Privacy and AI above for this session's activity.</div>
+      <div class="set-note"><strong style="color:var(--text2)">WealthAnalyzer</strong> by Private Wealth Intelligence · market-simulation financial planner.<br>Version <span id="setVersion">-</span> · Beta version.<br>Calculations run in your browser and documents are read on this device. Data leaves it only for features that need a service: exchange rates (no client data is sent), live prices and ticker lookups (ticker symbols only), custodian feeds and order routing if you set them up (an order ticket carries the account, the positions and, in some formats, the client's name), and, only if your firm turns AI features on, the uploads you choose to have Claude read and the Portfolio Builder's plan figures (to Anthropic's API). See Privacy and AI above for this session's activity.</div>
     </div>
 
   </div>
@@ -2936,19 +2961,20 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="ptitle" style="margin:0">Assets &amp; Accounts</div>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:12px;color:var(--text3)">Country:</span>
-      <select id="acountry" class="w180" onchange="refreshAssetTypes()"></select>
+      <select id="acountry" class="w180" onchange="refreshAssetTypes();fxAccyFollowCountry()"></select>
     </div>
   </div>
   <div style="font-size:11px;color:var(--text3);margin-bottom:14px" id="acLabel">🇺🇸 United States account types</div>
 
   <div id="assetList"><div class="empty">No accounts added yet.</div></div>
+  <div class="fx-tab-note" style="display:none"></div>
 
   <div class="sdiv">
     <div class="slbl">Add Account</div>
     <div class="frow"><label class="flbl">Account type</label><select id="atype" class="w200" onchange="updateAssetNote()"></select></div>
     <div class="frow"><label class="flbl">Owned by</label><select id="aowner" class="w200"></select></div>
     <div class="frow"><label class="flbl">Label (optional)</label><input id="albl" placeholder="e.g. Chase checking" class="w200"></div>
-    <div class="frow"><label class="flbl">Balance / Value</label><input type="number" id="aval" placeholder="Amount" step="100" class="w140"><select id="accy" class="w120" style="margin-left:6px"></select></div>
+    <div class="frow"><label class="flbl">Balance / Value</label><input type="number" id="aval" placeholder="Amount" step="100" class="w140"><select id="accy" class="w120" style="margin-left:6px" title="Currency the account is held in" onchange="fxEnsureRate(this.value)"></select></div>
     <div id="anote" class="rnote-box" style="display:none;margin-bottom:8px"></div>
     <button id="assetAddBtn" class="btn-secondary full" onclick="addAsset()">+ Add Account</button>
     <button id="assetCancelBtn" class="btn-secondary full" onclick="cancelEditAsset()" style="display:none;margin-top:4px;color:var(--text3)">✕ Cancel edit</button>
@@ -2984,6 +3010,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <div class="frow"><label class="flbl">Number of shares</label><input type="number" id="eqshares" placeholder="0" step="100" class="w140"></div>
         <div class="frow" id="eqstrikeRow"><label class="flbl">Strike price (options)</label><input type="number" id="eqstrike" placeholder="0" step="0.01" class="w140"></div>
         <div class="frow"><label class="flbl">Current share price</label><input type="number" id="eqprice" placeholder="0" step="0.01" class="w140"></div>
+        <div class="frow"><label class="flbl">Price currency</label><select id="eqccy" class="w140" onchange="fxEnsureRate(this.value)"></select></div>
         <div class="frow"><label class="flbl">Assumed share growth %/yr</label><input type="number" id="eqgrowth" value="8" step="0.5" class="w120"></div>
         <div class="frow"><label class="flbl">First vesting year</label><input type="number" id="eqstart" placeholder="2027" step="1" class="w120"></div>
         <div class="frow"><label class="flbl">Vesting period (years)</label><input type="number" id="eqyears" value="4" step="1" class="w120"></div>
@@ -3052,6 +3079,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 <div class="panel">
   <div class="ptitle">Liabilities: Loans</div>
   <div id="loanList"><div class="empty">No loans added.</div></div>
+  <div class="fx-tab-note" style="display:none"></div>
   <div class="sdiv form-uniform">
     <div class="slbl">Add Loan</div>
     <div class="frow"><label class="flbl">Loan type</label>
@@ -3059,6 +3087,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     </div>
     <div class="frow"><label class="flbl">Owned by</label><select id="lowner"></select></div>
     <div class="frow"><label class="flbl">Balance</label><input type="number" id="lbal" placeholder="Balance" step="1000"></div>
+    <div class="frow"><label class="flbl">Currency</label><select id="lccy" onchange="fxEnsureRate(this.value)"></select></div>
     <div class="frow"><label class="flbl">Interest rate %</label><input type="number" id="lrate" placeholder="Rate %" step="0.1"></div>
     <div class="frow"><label class="flbl">Years remaining</label><input type="number" id="lyrs" placeholder="Years" step="1"></div>
     <div class="frow"><label class="flbl">Label (optional)</label><input id="llbl" placeholder="e.g. Home 2019"></div>
@@ -3094,6 +3123,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="frow"><label class="flbl">Benefit amount</label><input type="number" id="isben" placeholder="Death benefit / monthly / daily" step="1000"></div>
     <div class="frow"><label class="flbl">Cash value (if any)</label><input type="number" id="iscash" placeholder="0" step="1000"></div>
     <div class="frow"><label class="flbl">Annual premium</label><input type="number" id="isprem" placeholder="0" step="100"></div>
+    <div class="frow"><label class="flbl">Currency</label><select id="isccy" onchange="fxEnsureRate(this.value)"></select></div>
     <div class="frow"><label class="flbl">Beneficiary (optional)</label><input id="isbenef" placeholder="e.g. Spouse 50% / Children 50%"></div>
     <div class="frow"><label class="flbl">Label (optional)</label><input id="islbl" placeholder="e.g. Zurich term 2040"></div>
     <button id="insAddBtn" class="btn-secondary full" onclick="addInsurance()">+ Add Policy</button>
@@ -3335,7 +3365,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <input id="wiEvLabel" placeholder="e.g. Sabbatical">
           <select id="wiEvKind">
             <option value="incomePct">Income change %</option>
-            <option value="expense">Extra expense $/yr</option>
+            <option value="expense">Extra expense per year</option>
           </select>
           <input type="number" id="wiEvValue" value="0" step="1" placeholder="Value">
           <input type="number" id="wiEvStart" placeholder="From" step="1">
@@ -4016,7 +4046,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <select id="pfFeeType" class="w180" onchange="updatePortfolioFeeDisplay()">
         <option value="none">None</option>
         <option value="aum">AUM % (annual, on portfolio)</option>
-        <option value="flat">Flat $ per year</option>
+        <option value="flat">Flat amount per year</option>
       </select>
     </div>
     <div class="frow" style="margin:0"><label class="flbl">Advisory fee</label>
@@ -4194,6 +4224,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div id="siMapModal" style="display:none"></div>
   <div id="fdSpecModal" style="display:none"></div>
   <div id="pfList"><div class="pf-empty">No investments added.</div></div>
+  <div class="fx-tab-note" style="display:none"></div>
   <div class="sdiv">
     <div class="slbl">Add Investment</div>
     <div class="pf-add">
@@ -4227,7 +4258,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <option value="alternative">Alternatives (other)</option>
         </select>
       </div>
-      <div class="fld"><label>Value ($)</label><input type="number" id="pfVal" placeholder="0" min="0" step="100"></div>
+      <div class="fld"><label>Value</label><input type="number" id="pfVal" placeholder="0" min="0" step="100"></div>
+      <div class="fld"><label>Currency</label><select id="pfCcy" onchange="fxEnsureRate(this.value)"></select></div>
       <div class="fld"><label>Region</label>
         <select id="pfRegion">
           <option value="us">US</option>
@@ -4264,7 +4296,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <select id="pfAltSubcat"></select>
       </div>
       <div class="fld"><label>Name</label><input id="pfAltName" placeholder="fund / product name"></div>
-      <div class="fld"><label>Value ($)</label><input type="number" id="pfAltVal" placeholder="0" min="0" step="100"></div>
+      <div class="fld"><label>Value</label><input type="number" id="pfAltVal" placeholder="0" min="0" step="100"></div>
+      <div class="fld"><label>Currency</label><select id="pfAltCcy" onchange="fxEnsureRate(this.value)"></select></div>
       <div class="fld"><label>Region</label>
         <select id="pfAltRegion">
           <option value="us">US</option>
@@ -4309,7 +4342,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div class="pr-head">
     <input id="prClient" placeholder="Client / household name (auto from Household tab)" oninput="this.dataset.userEdited='1';renderProposalMetrics()">
     <input id="prAdvisor" placeholder="Advisor name" oninput="renderProposalMetrics()">
-    <input type="number" id="prAmount" placeholder="Target $ amount" min="0" step="1000" oninput="renderProposals();renderProposalMetrics()">
+    <input type="number" id="prAmount" placeholder="Target amount" min="0" step="1000" oninput="renderProposals();renderProposalMetrics()">
     <select id="prObjective" onchange="renderProposalMetrics()">
       <option value="growth">Growth</option>
       <option value="balanced" selected>Balanced</option>
@@ -4327,7 +4360,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <select id="prFeeType" class="w160" onchange="updateProposalFeeDisplay()">
           <option value="none">None</option>
           <option value="aum">AUM % (annual)</option>
-          <option value="flat">Flat $ per year</option>
+          <option value="flat">Flat amount per year</option>
         </select>
       </div>
       <div class="frow" style="margin-bottom:0"><label class="flbl" style="min-width:80px">Rate</label>
@@ -4609,7 +4642,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px">
     <div>
       <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">How much can you invest?</label>
-      <div style="display:flex;align-items:center;gap:6px"><span style="font-size:16px;color:var(--text3)">$</span><input type="number" id="aiSimpleAmount" value="100000" step="10000" style="flex:1;font-size:15px;font-weight:600;padding:9px 12px"></div>
+      <div style="display:flex;align-items:center;gap:6px"><span class="ccy-cur" style="font-size:16px;color:var(--text3)">$</span><input type="number" id="aiSimpleAmount" value="100000" step="10000" style="flex:1;font-size:15px;font-weight:600;padding:9px 12px"></div>
       <div style="font-size:11px;color:var(--text3);margin-top:4px">Your starting investment amount</div>
     </div>
     <div>
@@ -5098,7 +5131,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261020-2231";
+const APP_VERSION = "20261023-1626";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -6597,40 +6630,50 @@ const COUNTRY_LOANS={
 const REL_LABELS={spouse:"Spouse",domestic_partner:"Domestic partner",significant_other:"Significant other",partner:"Partner",fiance:"Fiancé / Fiancée",co_applicant:"Co-applicant",dependent:"Dependent",parent:"Parent",sibling:"Sibling",business_partner:"Business partner",other:"Other"};
 
 // ── Currency system ──────────────────────────────────
-// fxToUSD = value of 1 local unit in USD (e.g. 1 CHF = 1.13 USD ⇒ fxToUSD:1.13)
-// Values in the app are stored in whatever numeric form the advisor entered, and the active
-// currency (driven by Client 1 country of residence) is used for display symbols. Per-asset
-// ccy overrides the symbol for that specific account row.
+// fxToUSD = value of 1 local unit in USD (1 CHF = 1.213 USD gives fxToUSD:1.213). This is the
+// built-in FALLBACK only: live rates replace it (see "Exchange rates" below). ECB reference
+// rates of 23 Oct 2026; TWD, SAR, AED and NGN, which the ECB does not publish, from Exchange
+// Rate API the same day.
+// The household currency (CURRENT_CCY, from Client 1's country of residence unless overridden
+// in Settings) is the one every total, chart, simulation and the report is in. Accounts, loans,
+// holdings, policies and equity grants each carry their own currency and are converted into it.
+const STATIC_FX_AS_OF="2026-10-23";
 const CURRENCIES={
   USD:{sym:"$",code:"USD",name:"US Dollar",fxToUSD:1.00},
-  EUR:{sym:"€",code:"EUR",name:"Euro",fxToUSD:1.08},
-  GBP:{sym:"£",code:"GBP",name:"British Pound",fxToUSD:1.27},
-  CHF:{sym:"CHF ",code:"CHF",name:"Swiss Franc",fxToUSD:1.13},
-  CAD:{sym:"C$",code:"CAD",name:"Canadian Dollar",fxToUSD:0.73},
-  AUD:{sym:"A$",code:"AUD",name:"Australian Dollar",fxToUSD:0.66},
-  JPY:{sym:"¥",code:"JPY",name:"Japanese Yen",fxToUSD:0.0067},
-  SGD:{sym:"S$",code:"SGD",name:"Singapore Dollar",fxToUSD:0.74},
-  HKD:{sym:"HK$",code:"HKD",name:"Hong Kong Dollar",fxToUSD:0.13},
-  CNY:{sym:"¥",code:"CNY",name:"Chinese Yuan",fxToUSD:0.14},
-  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.031},
-  KRW:{sym:"₩",code:"KRW",name:"Korean Won",fxToUSD:0.00074},
-  INR:{sym:"₹",code:"INR",name:"Indian Rupee",fxToUSD:0.012},
-  IDR:{sym:"Rp",code:"IDR",name:"Indonesian Rupiah",fxToUSD:0.0000625},
-  MXN:{sym:"MX$",code:"MXN",name:"Mexican Peso",fxToUSD:0.059},
-  BRL:{sym:"R$",code:"BRL",name:"Brazilian Real",fxToUSD:0.20},
-  SAR:{sym:"SAR ",code:"SAR",name:"Saudi Riyal",fxToUSD:0.267},
-  ZAR:{sym:"R",code:"ZAR",name:"South African Rand",fxToUSD:0.055},
-  SEK:{sym:"kr ",code:"SEK",name:"Swedish Krona",fxToUSD:0.095},
-  NOK:{sym:"kr ",code:"NOK",name:"Norwegian Krone",fxToUSD:0.094},
-  DKK:{sym:"kr ",code:"DKK",name:"Danish Krone",fxToUSD:0.145},
-  PLN:{sym:"zł ",code:"PLN",name:"Polish Zloty",fxToUSD:0.25},
-  NZD:{sym:"NZ$",code:"NZD",name:"New Zealand Dollar",fxToUSD:0.61},
-  THB:{sym:"฿",code:"THB",name:"Thai Baht",fxToUSD:0.028},
-  MYR:{sym:"RM ",code:"MYR",name:"Malaysian Ringgit",fxToUSD:0.22},
-  AED:{sym:"AED ",code:"AED",name:"UAE Dirham",fxToUSD:0.272},
-  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.00065},
-  ILS:{sym:"₪",code:"ILS",name:"Israeli Shekel",fxToUSD:0.27},
-  TRY:{sym:"₺",code:"TRY",name:"Turkish Lira",fxToUSD:0.025}
+  EUR:{sym:"€",code:"EUR",name:"Euro",fxToUSD:1.119},
+  GBP:{sym:"£",code:"GBP",name:"British Pound",fxToUSD:1.337},
+  CHF:{sym:"CHF ",code:"CHF",name:"Swiss Franc",fxToUSD:1.213},
+  CAD:{sym:"C$",code:"CAD",name:"Canadian Dollar",fxToUSD:0.7145},
+  AUD:{sym:"A$",code:"AUD",name:"Australian Dollar",fxToUSD:0.7022},
+  JPY:{sym:"¥",code:"JPY",name:"Japanese Yen",fxToUSD:0.006378},
+  SGD:{sym:"S$",code:"SGD",name:"Singapore Dollar",fxToUSD:0.7822},
+  HKD:{sym:"HK$",code:"HKD",name:"Hong Kong Dollar",fxToUSD:0.1275},
+  CNY:{sym:"¥",code:"CNY",name:"Chinese Yuan",fxToUSD:0.1499},
+  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.03068},
+  KRW:{sym:"₩",code:"KRW",name:"Korean Won",fxToUSD:0.000755},
+  INR:{sym:"₹",code:"INR",name:"Indian Rupee",fxToUSD:0.01053},
+  IDR:{sym:"Rp",code:"IDR",name:"Indonesian Rupiah",fxToUSD:0.00005522},
+  MXN:{sym:"MX$",code:"MXN",name:"Mexican Peso",fxToUSD:0.05324},
+  BRL:{sym:"R$",code:"BRL",name:"Brazilian Real",fxToUSD:0.1982},
+  SAR:{sym:"SAR ",code:"SAR",name:"Saudi Riyal",fxToUSD:0.2667},
+  ZAR:{sym:"R",code:"ZAR",name:"South African Rand",fxToUSD:0.06025},
+  SEK:{sym:"kr ",code:"SEK",name:"Swedish Krona",fxToUSD:0.1006},
+  NOK:{sym:"kr ",code:"NOK",name:"Norwegian Krone",fxToUSD:0.1069},
+  DKK:{sym:"kr ",code:"DKK",name:"Danish Krone",fxToUSD:0.1497},
+  PLN:{sym:"zł ",code:"PLN",name:"Polish Zloty",fxToUSD:0.2547},
+  NZD:{sym:"NZ$",code:"NZD",name:"New Zealand Dollar",fxToUSD:0.5687},
+  THB:{sym:"฿",code:"THB",name:"Thai Baht",fxToUSD:0.02963},
+  MYR:{sym:"RM ",code:"MYR",name:"Malaysian Ringgit",fxToUSD:0.2448},
+  AED:{sym:"AED ",code:"AED",name:"UAE Dirham",fxToUSD:0.2723},
+  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.0007549},
+  ILS:{sym:"₪",code:"ILS",name:"Israeli Shekel",fxToUSD:0.3204},
+  TRY:{sym:"₺",code:"TRY",name:"Turkish Lira",fxToUSD:0.02011},
+  // Statement currencies with no residence country in the app: an account can be held in them.
+  CZK:{sym:"CZK ",code:"CZK",name:"Czech Koruna",fxToUSD:0.04601},
+  HUF:{sym:"HUF ",code:"HUF",name:"Hungarian Forint",fxToUSD:0.003052},
+  RON:{sym:"RON ",code:"RON",name:"Romanian Leu",fxToUSD:0.2092},
+  ISK:{sym:"ISK ",code:"ISK",name:"Icelandic Krona",fxToUSD:0.008218},
+  PHP:{sym:"PHP ",code:"PHP",name:"Philippine Peso",fxToUSD:0.01571}
 };
 // All 20 eurozone members map to EUR; the rest keep their native currency.
 const COUNTRY_CURRENCIES={
@@ -6650,6 +6693,422 @@ const COUNTRY_CURRENCIES={
 // Eurozone member detection — used for region/inflation sub-picker prefill
 const EUROZONE_MEMBERS = new Set(["EU","AT","BE","CY","HR","EE","FI","FR","DE","GR","IE","IT","LV","LT","LU","MT","NL","PT","SK","SI","ES"]);
 let CURRENT_CCY="USD";
+
+// ── Exchange rates ──────────────────────────────────────────────────────────
+// Accounts, loans, holdings, insurance policies and equity grants are each held in their own
+// currency (item.ccy). The amount as entered stays in item.nat ({value:...} for an account); the
+// field everything else reads (a.value, l.bal, i.val, p.cash/prem/ben, g.price/strike) holds it
+// converted into the household currency, so every total, chart, the simulation and the report
+// are in one currency without knowing about FX. fxRebase() derives the one from the other. An
+// item in the household currency converts at exactly 1: its figure is the one typed.
+// item._fxb remembers the figure fxRebase last wrote. A field found holding anything else was
+// written as entered (a form, an import, a hand-edited file) and becomes the new amount as entered,
+// so a writer only has to set the field and the currency, as it always did.
+// item._ccyAuto: the item was in the household currency when its currency was set, so it follows
+// the household currency when that changes (see fxBaseChanged). An item put in another currency
+// keeps it.
+// Rates, newest first (on the same day: live, then saved, then built-in): live ECB reference rates
+// (Frankfurter), Exchange Rate API for the currencies the ECB does not publish, the rates saved with
+// a loaded plan, the built-in table above. A rate the advisor pinned (saved with the plan) beats
+// them all. Nothing ever waits for the network.
+const FX_ITEM_FIELDS={ assets:["value"], loans:["bal"], investments:["val"], insurances:["cash","prem","ben"], equityComp:["price","strike"] };
+const FX_SRC_LABEL={ ecb:"ECB", erapi:"Exchange Rate API", saved:"Saved with the plan", static:"Built-in table", pinned:"Pinned", base:"", none:"No rate" };
+const FX_CACHE_KEY="wa_fx_rates";
+const waFx={ live:{}, liveSrc:{}, liveAsOf:{}, saved:{}, savedAsOf:{}, pins:{}, pinAt:{}, pinBase:"", hold:0, frozen:null, dirty:false, busy:null, fetchedAt:0, err:"" };
+let _fxRestoring=false;   // a profile is being loaded: its currencies are taken as saved, nothing is relabelled
+function fxCode(c){ const s=String(c==null?"":c).trim().toUpperCase(); return /^[A-Z]{3}$/.test(s)?s:""; }
+// While a report is drawn the rate sources are read from the copy taken when it started.
+function _fxSrc(){ return (waFx.hold && waFx.frozen) ? waFx.frozen : waFx; }
+function fxUsdPer(code){
+  if(code==="USD") return {r:1, src:"fixed", asOf:""};
+  const S=_fxSrc(), c=CURRENCIES[code], cands=[];
+  if(S.live[code]>0) cands.push({r:S.live[code], src:S.liveSrc[code]||"ecb", asOf:S.liveAsOf[code]||""});
+  if(S.saved[code]>0) cands.push({r:S.saved[code], src:"saved", asOf:S.savedAsOf[code]||""});
+  if(c && c.fxToUSD>0) cands.push({r:c.fxToUSD, src:"static", asOf:STATIC_FX_AS_OF});
+  if(!cands.length) return {r:0, src:"none", asOf:""};
+  // The newest wins: a cache from weeks ago must not beat the rates saved with a newer plan, or a
+  // newer build's table. ISO dates compare as strings; a tie keeps the order above.
+  let best=cands[0]; for(const x of cands.slice(1)) if((x.asOf||"")>(best.asOf||"")) best=x;
+  return best;
+}
+function _fxPinned(code){ const S=_fxSrc(); return (S.pinBase===CURRENT_CCY && S.pins[code]>0) ? S.pins[code] : 0; }
+// 1 unit of `code` in the household currency. 1 for the household currency itself, and for a code
+// with no rate anywhere (fxInfo flags it as missing, the rates panel asks for a pinned rate).
+function fxToBaseRate(code){
+  code=fxCode(code); const b=CURRENT_CCY;
+  if(!code || code===b) return 1;
+  const p=_fxPinned(code); if(p) return p;
+  const f=fxUsdPer(code), t=fxUsdPer(b);
+  return (f.r>0 && t.r>0) ? f.r/t.r : 1;
+}
+// 1 unit of `from` in `to` (either defaults to the household currency).
+function fxRate(from, to){ from=fxCode(from)||CURRENT_CCY; to=fxCode(to)||CURRENT_CCY; return from===to ? 1 : fxToBaseRate(from)/fxToBaseRate(to); }
+function toBase(amount, code){ const v=+amount||0, k=fxToBaseRate(code); return k===1 ? v : v*k; }
+function fromBase(amount, code){ const v=+amount||0, k=fxToBaseRate(code); return k===1 ? v : v/k; }
+const _FX_RANK={fixed:0, ecb:1, erapi:2, saved:3, static:4, none:5};
+// The rate for one currency as shown to the advisor: 1 code = rate household currency.
+function fxInfo(code){
+  const b=CURRENT_CCY; code=fxCode(code)||b;
+  if(code===b) return {code, rate:1, src:"base", asOf:"", missing:false};
+  const p=_fxPinned(code); if(p) return {code, rate:p, src:"pinned", asOf:_fxSrc().pinAt[code]||"", missing:false};
+  const f=fxUsdPer(code), t=fxUsdPer(b);
+  if(!(f.r>0 && t.r>0)) return {code, rate:1, src:"none", asOf:"", missing:true};
+  const w=(_FX_RANK[f.src]||0)>=(_FX_RANK[t.src]||0) ? f : t;   // a cross rate is only as good as its weaker leg
+  return {code, rate:f.r/t.r, src:w.src==="fixed"?"ecb":w.src, asOf:w.asOf||f.asOf||t.asOf||"", missing:false};
+}
+function fxJoin(a){ a=(a||[]).filter(Boolean); return a.length<2 ? (a[0]||"") : a.slice(0,-1).join(", ")+" and "+a[a.length-1]; }
+function fxFmtRate(r){ r=+r||0; return r>=100 ? r.toFixed(2) : r>=1 ? r.toFixed(4) : r>0 ? (+r.toPrecision(4)).toString() : "-"; }
+function fxFmtDate(d){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||"")); if(!m) return ""; const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1]; return (+m[3])+" "+mo+" "+m[1]; }
+// "ECB, 22 Oct 2026" style source line for one currency.
+function fxSourceText(code){ const i=fxInfo(code); if(i.src==="base") return ""; const d=fxFmtDate(i.asOf); return (FX_SRC_LABEL[i.src]||i.src)+(d?", "+d:""); }
+// The household currency changed from `from` to `to` (residence moved, or the Settings override).
+// Figures stay as typed, as they always did: the household amounts (income, expenses, goals...) are
+// read in `to`, and so is every item that followed the household currency (_ccyAuto). An item put
+// in another currency on purpose keeps it and converts, also after a switch there and back. The
+// toast offers the other reading, that everything was entered in `from`: those items go back to
+// `from` and the household amounts that are still as they were are converted.
+const FX_HH_FIELDS=["inc1","inc2","inc1b","inc2b","savAnnual","expL","expI","expO","aProp","aOther","prAmount","retSpend"];
+function fxBaseChanged(from, to){
+  from=fxCode(from); to=fxCode(to); if(!from || !to || from===to) return;
+  // Pinned rates were against `from`: carried over to `to` (through a pinned `to` rate if there is
+  // one, else the market rate), so the plan's own rates survive the switch.
+  const oldPins=waFx.pinBase===from ? {...waFx.pins} : {}, oldAt={...waFx.pinAt};
+  waFx.pins={}; waFx.pinAt={}; waFx.pinBase=to;
+  const k=oldPins[to]>0 ? 1/oldPins[to] : fxRate(from, to);   // 1 from = k to, as the plan's figures used it
+  Object.keys(oldPins).forEach(c=>{ if(c!==to && c!==from){ waFx.pins[c]=oldPins[c]*k; waFx.pinAt[c]=oldAt[c]||""; } });
+  if(oldPins[to]>0){ waFx.pins[from]=k; waFx.pinAt[from]=oldAt[to]||""; }
+  if(_fxRestoring){ fxRebase(); return; }
+  const moved=[]; fxEachItem(it=>{ if((fxCode(it.ccy)||from)===from && it._ccyAuto!==false){ it.ccy=to; it._ccyAuto=true; moved.push(it); } });
+  fxRebase();
+  // What "Convert" may touch: the amounts as they are now. Anything written after the toast (an
+  // import setting the country first, a figure typed meanwhile) is in `to` already and is left alone.
+  const snapF={}; FX_HH_FIELDS.concat(["penAnnual","penAnnual2","estExemption","pfAdvisoryFee","prAdvisoryFee"]).forEach(id=>{ const e=$(id); if(e) snapF[id]=String(e.value); });
+  const snapG=new Map((goals||[]).map(g=>[g, g.amt+"|"+g.homePrice]));
+  const wSig=w=>JSON.stringify([w.extraExp, w.extraGoals, w.timedEvents, w.penDraw]);
+  const snapW=new Map((whatIfScenarios||[]).map(w=>[w, wSig(w)]));
+  const typed=FX_HH_FIELDS.some(id=>{ const e=$(id); return e && id!=="retSpend" && +e.value>0; })
+    || (goals||[]).some(g=>+g.amt>0) || (whatIfScenarios||[]).some(w=>+w.extraExp>0 || (w.extraGoals||[]).length || (w.timedEvents||[]).some(e=>e.kind==="expense") || w.penDraw);
+  if(!moved.length && !typed) return;
+  const gen=profileGen, src=oldPins[to]>0 ? "pinned rate" : (fxSourceText(from)||"built-in table");
+  if(!(k>0) || k===1) return;
+  showUndoToast("Household currency is now "+to+". The amounts already entered were kept as typed, in "+to+".", ()=>{
+    if(gen!==profileGen) return "Another household has been loaded since. Nothing was converted.";
+    if(CURRENT_CCY!==to) return "The household currency has changed again since. Nothing was converted.";
+    moved.forEach(it=>{ if(fxCode(it.ccy)===to){ it.ccy=from; it._ccyAuto=false; } });
+    _fxConvertHousehold(k, {f:snapF, g:snapG, w:snapW, wSig});
+    fxRebase(); fxRefreshViews();
+    return "Converted from "+from+" at 1 "+from+" = "+fxFmtRate(k)+" "+to+" ("+src+").";
+  }, "Convert from "+from, 15000);
+}
+// Multiply the household-currency amounts that still hold the figures snapshotted when the toast
+// was offered by `rate` (the "Convert from" choice above).
+function _fxConvertHousehold(rate, snap){
+  const conv=v=>Math.round((+v||0)*rate);
+  const fld=id=>{ const e=$(id); if(e && String(e.value)===snap.f[id] && String(e.value).trim()!=="" && isFinite(+e.value) && +e.value!==0) e.value=String(conv(e.value)); };
+  FX_HH_FIELDS.forEach(fld);
+  if(typeof _penEdited!=="undefined" && _penEdited) fld("penAnnual");
+  if(typeof _pen2Edited!=="undefined" && _pen2Edited) fld("penAnnual2");
+  { const e=$("estExemption"); if(e && e.dataset.userset) fld("estExemption"); }
+  if(val("pfFeeType")==="flat") fld("pfAdvisoryFee");
+  if(val("prFeeType")==="flat") fld("prAdvisoryFee");
+  (goals||[]).forEach(g=>{ if(snap.g.get(g)!==g.amt+"|"+g.homePrice) return;
+    if(+g.amt>0) g.amt=conv(g.amt); if(+g.homePrice>0) g.homePrice=conv(g.homePrice); });
+  (whatIfScenarios||[]).forEach(w=>{ if(snap.w.get(w)!==snap.wSig(w)) return;
+    if(+w.extraExp) w.extraExp=conv(w.extraExp);
+    (w.extraGoals||[]).forEach(g=>{ if(+g.amt) g.amt=conv(g.amt); });
+    (w.timedEvents||[]).forEach(e=>{ if(e.kind==="expense" && +e.value) e.value=conv(e.value); });
+    if(w.penDraw && +w.penDraw.amt) w.penDraw.amt=conv(w.penDraw.amt);
+    delete w._result; delete w._base; delete w._fitMax; delete w._sig; });
+  ["updateIncTotal","updateExpTotal","updateSavingsPanel","renderGoals","renderProposals","renderProposalMetrics",
+   "updatePortfolioFeeDisplay","updateProposalFeeDisplay","refreshPensionEstimates"].forEach(n=>{ try{ if(typeof window[n]==="function") window[n](); }catch(_){} });
+}
+// The estate allowance field follows the currency while it holds the country default (the
+// allowances are anchored in USD); a typed figure is left alone. `fromCcy`: the currency the
+// field's default was derived in (the old household currency after a switch).
+function fxEstateFollow(fromCcy){
+  const e=$("estExemption"); if(!e || e.dataset.userset) return;
+  try{ const reg=estateRegimeFor(val("c1co")), was=Math.round((reg.exUSD||0)*fxRate("USD", fromCcy||CURRENT_CCY));
+    if(String(e.value).trim()==="" || Math.abs((+e.value||0)-was)<=Math.max(1, was*0.02)){ e.value=estateExemptionDisplay(reg); if(typeof renderEstate==="function") renderEstate(); } }catch(_){}
+}
+// A notice that stays up long enough to read (no Undo button).
+function fxInfoToast(msg){ showUndoToast(msg, null, null, 20000); const u=document.querySelector("#undo-toast .ut-undo"); if(u) u.remove(); }
+
+// Every item collection, each item once (the active portfolio's holdings are also in `portfolios`).
+function fxEachItem(fn){
+  const seen=new Set(), run=(arr,fields)=>(Array.isArray(arr)?arr:[]).forEach(it=>{ if(it && typeof it==="object" && !seen.has(it)){ seen.add(it); fn(it, fields); } });
+  run(assets, FX_ITEM_FIELDS.assets); run(loans, FX_ITEM_FIELDS.loans);
+  run(investments, FX_ITEM_FIELDS.investments);
+  (Array.isArray(portfolios)?portfolios:[]).forEach(p=>run(p && p.investments, FX_ITEM_FIELDS.investments));
+  run(insurances, FX_ITEM_FIELDS.insurances); run(equityComp, FX_ITEM_FIELDS.equityComp);
+}
+// Currencies other than the household's that some item is held in.
+function fxInUse(){ const s=new Set(); fxEachItem(it=>{ const c=fxCode(it.ccy); if(c && c!==CURRENT_CCY) s.add(c); }); return [...s].sort(); }
+// Currencies the rule tables are in, other than the household's: the tax brackets, each client's
+// state pension country, and USD for an estate allowance anchored in it.
+function fxRuleCodes(){
+  const s=new Set();
+  try{ const tb=getCountryBrackets(), t=fxCode(tb && tb.sym); if(t) s.add(t); }catch(_){}
+  try{ [val("c1co"), (typeof _chHasC2==="function" && _chHasC2()) ? val("c2co") : ""].forEach(c=>{ const k=c && COUNTRY_CURRENCIES[c]; if(k) s.add(k); }); }catch(_){}
+  try{ const reg=estateRegimeFor(val("c1co")); if(reg && reg.exUSD>0) s.add("USD"); }catch(_){}
+  s.delete(CURRENT_CCY); return [...s].sort();
+}
+// The rates the figures on screen depend on: a What-If or report result goes stale when it changes.
+function fxSig(){ const o={b:CURRENT_CCY}; [...new Set(fxInUse().concat(fxRuleCodes()))].forEach(c=>{ o[c]=+fxToBaseRate(c).toPrecision(10); }); return JSON.stringify(o); }
+// Re-derive every item's household-currency figures from the amounts as entered (see above).
+function fxRebase(){
+  const items=[]; fxEachItem((it,fields)=>items.push([it,fields]));
+  // A spread copy ({...a}) shares nat / _fxb with its original: give each sharer its own copy
+  // BEFORE anything is written, or a change to one would leak into the other.
+  const nRef=new Map(), bRef=new Map(), cnt=(m,o)=>{ if(o && typeof o==="object") m.set(o,(m.get(o)||0)+1); };
+  items.forEach(([it])=>{ cnt(nRef,it.nat); cnt(bRef,it._fxb); });
+  items.forEach(([it])=>{ if(nRef.get(it.nat)>1) it.nat={...it.nat}; if(bRef.get(it._fxb)>1) it._fxb={...it._fxb}; });
+  items.forEach(([it,fields])=>{
+    it.ccy=fxCode(it.ccy)||CURRENT_CCY;
+    if(typeof it._ccyAuto!=="boolean") it._ccyAuto=(it.ccy===CURRENT_CCY);
+    if(!it.nat || typeof it.nat!=="object" || Array.isArray(it.nat)) it.nat={};
+    if(!it._fxb || typeof it._fxb!=="object" || Array.isArray(it._fxb)) it._fxb={};
+    const nat=it.nat, fb=it._fxb, k=fxToBaseRate(it.ccy);
+    fields.forEach(f=>{
+      if(!(f in nat) || ((f in fb) && it[f]!==fb[f])) nat[f]=it[f];
+      const n=nat[f];
+      it[f]=(n==null || n==="") ? n : (k===1 ? n : (+n||0)*k);
+      fb[f]=it[f];
+    });
+  });
+}
+// The amount as entered of one field of an item, in item.ccy (after fxRebase).
+function fxNat(it, f){ return (it && it.nat && it.nat[f]!=null) ? it.nat[f] : (it ? it[f] : 0); }
+// Native amount with its ISO code, plus the household-currency figure when they differ:
+// "USD 895,000" and "≈ CHF 735,724". `full` keeps every digit; otherwise k / M like fmtMoney.
+function fmtMoneyIn(n, code, full){
+  code=fxCode(code)||CURRENT_CCY;
+  if(n==null||isNaN(n)) return "-";
+  if(code===CURRENT_CCY) return full ? fmtMoneyFull(n) : fmtMoney(n);
+  const a=Math.abs(+n), s=n<0?"-":"";
+  if(full) return s+code+" "+Math.round(a).toLocaleString();
+  if(a>=1e9) return s+code+" "+(a/1e9).toFixed(2)+"B";
+  if(a>=1e6) return s+code+" "+(a/1e6).toFixed(2)+"M";
+  if(a>=1e3) return s+code+" "+(a/1e3).toFixed(0)+"k";
+  return s+code+" "+Math.round(a).toLocaleString();
+}
+// Row cell for an item amount: the household figure alone, or the native amount with the converted one under it.
+function fxCellHtml(it, f, full){
+  const c=fxCode(it && it.ccy)||CURRENT_CCY, base=+(it && it[f])||0;
+  if(c===CURRENT_CCY) return full ? fmtMoneyFull(base) : fmtMoney(base);
+  const i=fxInfo(c);
+  return '<span class="fx-amt"><span class="fx-nat">'+fmtMoneyIn(+fxNat(it,f)||0, c, full)+'</span><span class="fx-eq" title="'+_fxAttr("1 "+c+" = "+fxFmtRate(i.rate)+" "+CURRENT_CCY+(i.missing?" (no rate: counted 1:1, pin a rate in Settings)":", "+fxSourceText(c)))+'">'+(i.missing?"⚠ ":"")+"≈ "+(full ? fmtMoneyFull(base) : fmtMoney(base))+'</span></span>';
+}
+function _fxAttr(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+// A household-currency amount of something held in `code`: "USD 2,000 (≈ CHF 1,644)", or just the figure.
+function fxPairText(base, code){
+  code=fxCode(code)||CURRENT_CCY; if(code===CURRENT_CCY) return fmtMoneyFull(base);
+  return fmtMoneyIn((+base||0)/fxToBaseRate(code), code, true)+" (≈ "+fmtMoneyFull(base)+")";
+}
+// The same as a two-line row cell, from a household-currency amount.
+function fxAmtHtml(base, code, full){
+  code=fxCode(code)||CURRENT_CCY; if(code===CURRENT_CCY) return full ? fmtMoneyFull(base) : fmtMoney(base);
+  return '<span class="fx-amt"><span class="fx-nat">'+fmtMoneyIn((+base||0)/fxToBaseRate(code), code, full)+'</span><span class="fx-eq">≈ '+(full ? fmtMoneyFull(base) : fmtMoney(base))+'</span></span>';
+}
+// Put a currency into a <select>, adding it if the list does not have it (a code from an import).
+function fxSelSet(id, code){
+  const sel=$(id); if(!sel) return; code=fxCode(code)||CURRENT_CCY;
+  if(![...sel.options].some(o=>o.value===code)){ const o=document.createElement("option"); o.value=code; o.textContent=code; sel.appendChild(o); }
+  sel.value=code;
+}
+// A new account defaults to the currency of the account's country (a US 401k is in USD in a Swiss
+// household); OTHER, or no country, to the household currency.
+function fxAcctCcyDefault(){ const c=($("acountry")||{}).value; return (c && c!=="OTHER" && COUNTRY_CURRENCIES[c]) || CURRENT_CCY; }
+function fxAccyFollowCountry(){ const c=fxAcctCcyDefault(); fxSelSet("accy", c); fxEnsureRate(c); }
+// Holdings default to the currency of the account they are linked to.
+function fxPfCcyDefault(){ const a=pfLinkedAccountId && (assets||[]).find(x=>x.id===pfLinkedAccountId); return (a && fxCode(a.ccy)) || CURRENT_CCY; }
+function fxPopItemCcySelects(){
+  popCcyDropdown("accy", fxAcctCcyDefault());
+  ["lccy","isccy","eqccy"].forEach(id=>popCcyDropdown(id, CURRENT_CCY));
+  ["pfCcy","pfAltCcy"].forEach(id=>popCcyDropdown(id, fxPfCcyDefault()));
+}
+// Back to its default once an edit ends (saved or cancelled), so the next new item is not tagged
+// with the currency of the one just edited.
+function fxResetCcySel(id){
+  const d=id==="accy" ? fxAcctCcyDefault() : (id==="pfCcy" || id==="pfAltCcy") ? fxPfCcyDefault() : CURRENT_CCY;
+  fxSelSet(id, d);
+}
+// ── The Exchange rates panel (Settings, Data & integrations) ──
+function _fxPanelOpen(){ try{ return localStorage.getItem("wa_fx_open")==="1"; }catch(_){ return false; } }
+function toggleFxPanel(force){
+  const open=(force===true) ? true : !_fxPanelOpen();
+  try{ localStorage.setItem("wa_fx_open", open?"1":"0"); }catch(_){}
+  const b=$("fxBody"), c=$("fxCaret"); if(b) b.style.display=open?"block":"none"; if(c) c.style.transform=open?"rotate(0deg)":"rotate(-90deg)";
+  if(open) renderFxPanel(true);
+}
+function fxOpenPanel(){ try{ if(typeof openSettings==="function") openSettings(); }catch(_){} toggleFxPanel(true); setTimeout(()=>{ const p=$("fxPanel"); if(p && p.scrollIntoView) p.scrollIntoView({block:"start", behavior:"smooth"}); }, 60); }
+function renderFxPanel(force){
+  const sum=$("fxSummary"), body=$("fxBody"), b=CURRENT_CCY;
+  if(!sum && !body) return;
+  const used=fxInUse(), pins=waFx.pinBase===b ? Object.keys(waFx.pins) : [];
+  const codes=[...new Set(used.concat(pins))].filter(c=>c!==b).sort();
+  // The summary names the weakest source in use (the one worth a look), with its date.
+  if(sum){ let w=null; codes.forEach(c=>{ const i=fxInfo(c); if(!w || (_FX_RANK[i.src]||0)>(_FX_RANK[w.src]||0)) w=i; });
+    sum.textContent=!codes.length ? "none in use" : codes.length+" in use · "+(w.missing ? "a rate is missing" : (FX_SRC_LABEL[w.src]||w.src)+(w.asOf?" "+fxFmtDate(w.asOf):"")); }
+  const c=$("fxCaret"); if(c) c.style.transform=_fxPanelOpen()?"rotate(0deg)":"rotate(-90deg)";
+  if(body) body.style.display=_fxPanelOpen()?"block":"none";
+  if(!body) return;
+  const st=waFx.busy ? "Fetching rates..." : waFx.err ? ("Could not refresh: "+_daEsc(waFx.err)+". The rates shown are the last ones fetched, those saved with the plan, or the built-in table.") : (waFx.fetchedAt ? "Fetched "+new Date(waFx.fetchedAt).toLocaleString() : "Live rates not fetched yet; the built-in table ("+fxFmtDate(STATIC_FX_AS_OF)+") is used until they are.");
+  // A pin being typed is not wiped by a refresh landing meanwhile: only the status line changes.
+  const ae=document.activeElement;
+  if(!force && ae && ae.classList && ae.classList.contains("fx-pin") && body.contains(ae)){ const s=$("fxStatus"); if(s) s.textContent=st; return; }
+  let h='<div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:10px">Every total, the simulation and the report are in the household currency, <strong style="color:var(--text2)">'+_daEsc(b)+'</strong>. An account, loan, holding, policy or grant in another currency keeps its own amount and is converted at these rates. Type a rate to pin it for this plan (it is saved with the plan); clear it to use the live rate again.</div>';
+  if(!codes.length) h+='<div class="set-note" style="margin-top:0">Nothing is held in another currency yet. Pick a currency next to an amount on the Assets, Liabilities or Holdings tab. The rates of the day for every currency are listed below.</div>';
+  else {
+    h+='<div class="fx-tbl"><span class="fx-h">Currency</span><span class="fx-h">Rate and source</span><span class="fx-h">Pin</span>';
+    codes.forEach(code=>{ const i=fxInfo(code), pinned=i.src==="pinned", d=fxFmtDate(i.asOf);
+      const pill=i.missing ? '<span class="fx-pill warn">No rate</span>' : '<span class="fx-pill '+(i.src==="ecb"||i.src==="erapi"||pinned?"ok":"warn")+'">'+_daEsc(FX_SRC_LABEL[i.src]||i.src)+(d?" · "+d:"")+'</span>';
+      h+='<span class="fx-code">'+_daEsc(code)+'</span><span class="fx-rate">1 '+_daEsc(code)+' = '+(i.missing?"?":fxFmtRate(i.rate))+' '+_daEsc(b)+'<br>'+pill+'</span>'
+        +'<input class="fx-pin" type="number" step="any" min="0" inputmode="decimal" aria-label="Pin the '+_daEsc(code)+' rate" placeholder="'+(i.missing?"needed":"live")+'" value="'+(pinned?String(waFx.pins[code]):"")+'" onchange="fxSetPin(\''+code+'\', this.value)">'; });
+    h+='</div>';
+  }
+  // Every currency the app knows, against the household currency: the day's rates at a glance.
+  { const wasOpen=!!(body.querySelector("details.fx-all") && body.querySelector("details.fx-all").open);
+    h+='<details class="fx-all"'+(wasOpen?' open':'')+'><summary>All currencies, 1 unit in '+_daEsc(b)+'</summary><div class="fx-all-grid">'
+      +Object.keys(CURRENCIES).filter(c=>c!==b).map(c=>{ const i=fxInfo(c);
+        return '<span class="fx-code">'+_daEsc(c)+'</span><span class="fx-rate">'+(i.missing?"-":fxFmtRate(i.rate))+'</span><span class="fx-src">'+_daEsc(FX_SRC_LABEL[i.src]||i.src)+(i.asOf?" · "+fxFmtDate(i.asOf):"")+'</span>'; }).join("")
+      +'</div></details>'; }
+  if(b!=="CHF" && (val("c1co")==="CH" || (typeof taxCountry==="function" && taxCountry()==="CH")))
+    h+='<div style="margin-top:12px;padding:9px 11px;background:rgba(245,158,11,.07);border-left:3px solid var(--amber);border-radius:6px;font-size:11.5px;color:var(--text2);line-height:1.6">With '+_daEsc(b)+' as the household currency, Swiss income tax uses the general Swiss brackets and the pillar accounts are projected as ordinary retirement savings: the official tax tables and the pillar payout model need CHF. Set the household currency to CHF for them.</div>';
+  h+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn-secondary" onclick="fxRefresh(true)" style="font-size:12px;padding:7px 14px"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh rates</button>'
+    +'<span id="fxStatus" style="font-size:11.5px;color:'+(waFx.err?"var(--amber)":"var(--text3)")+'">'+st+'</span></div>';
+  h+='<div class="set-note">Rates: ECB euro reference rates via Frankfurter (frankfurter.dev), and <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a> for currencies the ECB does not publish. Only the request for the rate table is sent, never a client figure. Future exchange-rate moves are not simulated.</div>';
+  body.innerHTML=h;
+  try{ refreshIcons(); }catch(_){}
+}
+// Under the Assets, Liabilities and Holdings lists: which currencies were converted, at what rate.
+function renderFxAssetsNote(){
+  let html="";
+  try{ const used=fxInUse();
+    if(used.length) html="Shown in "+_daEsc(CURRENT_CCY)+" in every total, the simulation and the report: "+used.map(c=>{ const i=fxInfo(c);
+      return "1 "+c+" = "+fxFmtRate(i.rate)+" "+CURRENT_CCY+(i.missing?" (no rate: counted 1:1)":" ("+_daEsc(fxSourceText(c))+")"); }).join("; ")
+      +'. <a href="#" onclick="fxOpenPanel();return false">Exchange rates</a>'; }catch(_){ html=""; }
+  document.querySelectorAll(".fx-tab-note").forEach(el=>{ el.innerHTML=html; el.style.display=html?"":"none"; });
+}
+
+// Live rates: Frankfurter (ECB reference rates against USD), and Exchange Rate API for a currency
+// the ECB does not publish (or for all of them when the ECB call fails). Cached in this browser;
+// asked again after six hours, or at once for a currency with no live rate yet.
+function _fxLoadCache(){
+  try{ const c=JSON.parse(localStorage.getItem(FX_CACHE_KEY)||"null");
+    if(c && c.live && typeof c.live==="object"){
+      Object.keys(c.live).forEach(k=>{ const code=fxCode(k), v=+c.live[k]; if(code && v>0 && isFinite(v)){ waFx.live[code]=v; waFx.liveSrc[code]=(c.src && c.src[k]==="erapi")?"erapi":"ecb"; waFx.liveAsOf[code]=String((c.asOf||{})[k]||""); } });
+      waFx.fetchedAt=+c.at||0; } }catch(_){}
+}
+function _fxSaveCache(){ try{ localStorage.setItem(FX_CACHE_KEY, JSON.stringify({at:waFx.fetchedAt, live:waFx.live, src:waFx.liveSrc, asOf:waFx.liveAsOf})); }catch(_){} }
+// One request with its own 10 s limit, past the browser's HTTP cache (rates change daily).
+async function _fxOnce(url){
+  const ctl=(typeof AbortController!=="undefined")?new AbortController():null, tm=ctl?setTimeout(()=>ctl.abort(),10000):null;
+  try{ return await fetch(url, Object.assign({cache:"no-cache"}, ctl?{signal:ctl.signal}:{})); } finally { if(tm) clearTimeout(tm); }
+}
+async function _fxGet(url){
+  let r=null, err=null;
+  try{ r=await _fxOnce(url); }catch(e){ err=e; r=null; }
+  if((!r || !r.ok) && typeof dataProxyServes==="function" && dataProxyServes(url)){ const pu=dataProxyUrl(url); if(pu){ try{ r=await _fxOnce(pu); }catch(e){ err=err||e; } } }
+  if(!r || !r.ok) throw new Error(r ? "HTTP "+r.status : (err && err.waBlocked && err.message) ? err.message : "no connection");
+  return await r.json();
+}
+// ECB rates per USD from either Frankfurter API version: v2 (an array of {date, quote, rate}) or v1.
+function _fxEcbRows(j){
+  if(Array.isArray(j)) return j.filter(x=>x && x.quote).map(x=>({c:x.quote, u:+x.rate, d:String(x.date||"")}));
+  if(j && j.rates && typeof j.rates==="object") return Object.keys(j.rates).map(c=>({c, u:+j.rates[c], d:String(j.date||"")}));
+  return [];
+}
+function fxNeedsErApi(extra, ecbFailed){
+  const want=new Set([CURRENT_CCY].concat(fxInUse(), fxRuleCodes(), Object.keys(waFx.pins), extra||[]));
+  return [...want].filter(c=>c && c!=="USD" && (ecbFailed || !(waFx.live[c]>0 && waFx.liveSrc[c]==="ecb")));
+}
+function fxRefresh(force, extra){
+  extra=(Array.isArray(extra)?extra:[]).map(fxCode).filter(Boolean);
+  if(waFx.busy) return waFx.busy;
+  if(!force && waFx.fetchedAt && Date.now()-waFx.fetchedAt<6*3600*1000 && !fxNeedsErApi(extra).some(c=>!(waFx.live[c]>0))) return Promise.resolve(false);
+  // What each currency's rate was before: only a moved rate for a currency the figures use is a
+  // change. An account added while the request was out is not.
+  const was={}; Object.keys(CURRENCIES).concat(Object.keys(waFx.live), extra).forEach(c=>{ was[c]=fxUsdPer(c).r; });
+  waFx.err="";
+  waFx.busy=(async()=>{
+    const errs=[]; let ecbOk=false;
+    for(const url of ["https://api.frankfurter.dev/v2/rates?base=USD&providers=ECB", "https://api.frankfurter.dev/v1/latest?base=USD"]){
+      try{ const rows=_fxEcbRows(await _fxGet(url));
+        if(rows.length){ ecbOk=true; rows.forEach(x=>{ const code=fxCode(x.c); if(code && x.u>0 && isFinite(x.u)){ waFx.live[code]=1/x.u; waFx.liveSrc[code]="ecb"; waFx.liveAsOf[code]=x.d; } }); break; }
+      }catch(e){ if(/v1/.test(url)) errs.push("ECB: "+((e && e.message)||e)); }
+    }
+    if(!ecbOk && !errs.length) errs.push("ECB: no rates in the answer");
+    const need=fxNeedsErApi(extra, !ecbOk);
+    if(need.length){
+      try{ const j=await _fxGet("https://open.er-api.com/v6/latest/USD");
+        if(j && j.result==="success" && j.rates){ const d=j.time_last_update_unix ? new Date(j.time_last_update_unix*1000).toISOString().slice(0,10) : "";
+          need.forEach(c=>{ const u=+j.rates[c]; if(u>0 && isFinite(u)){ waFx.live[c]=1/u; waFx.liveSrc[c]="erapi"; waFx.liveAsOf[c]=d; } }); }
+        else errs.push("Exchange Rate API: no rates in the answer");
+      }catch(e){ errs.push("Exchange Rate API: "+((e && e.message)||e)); }
+    }
+    waFx.err=errs.join("; ");
+    if(ecbOk){ waFx.fetchedAt=Date.now(); }   // a failed ECB call is retried on the next refresh, not in six hours
+    _fxSaveCache();
+    const changed=[CURRENT_CCY].concat(fxInUse(), fxRuleCodes(), extra).some(c=>c!=="USD" && (was[c]||0)!==fxUsdPer(c).r);
+    if(changed) fxRatesChanged(); else if(!waFx.hold){ try{ fxRebase(); }catch(_){} }
+    return changed;
+  })().finally(()=>{ waFx.busy=null; try{ renderFxPanel(); }catch(_){} });
+  try{ renderFxPanel(); }catch(_){}   // "Fetching rates..."
+  return waFx.busy;
+}
+// A currency was picked or imported: fetch its rate if no live one is known yet.
+function fxEnsureRate(code){ code=fxCode(code); if(code && code!==CURRENT_CCY && code!=="USD" && !(waFx.live[code]>0)) { try{ if(waFx.busy) waFx.busy.then(()=>fxRefresh(true,[code])); else fxRefresh(true,[code]); }catch(_){} } }
+// Rates changed (refresh, pin): re-derive, drop results computed on the old rates, refresh the
+// figures derived from rule tables in another currency, redraw.
+function fxRatesChanged(){
+  if(waFx.hold){ waFx.dirty=true; return; }
+  fxRebase();
+  if((fxInUse().length || fxRuleCodes().length) && Array.isArray(lastSimPaths) && lastSimPaths.length){ lastSimPaths=[]; lastSimYrs=null; setT("m-med","-"); setT("m-prob","-"); }
+  try{ refreshPensionEstimates(); }catch(_){}
+  try{ const e=$("estExemption"); if(e && !e.dataset.userset){ e.value=estateExemptionDisplay(estateRegimeFor(val("c1co"))); } }catch(_){}
+  try{ updateTaxPanel(); }catch(_){}
+  try{ const tb=$("cfBody"); if(tb && tb.querySelectorAll("tr").length>1) renderCashFlow(); }catch(_){}   // the deterministic schedule, when it is on screen
+  fxRefreshViews();
+}
+// Hold the rates still while a report is drawn: the sources are copied when the first hold starts,
+// every lookup reads the copy until the last one ends, and a refresh landing meanwhile is applied after.
+function fxHold(){
+  if(!waFx.hold) waFx.frozen={ live:{...waFx.live}, liveSrc:{...waFx.liveSrc}, liveAsOf:{...waFx.liveAsOf}, saved:{...waFx.saved}, savedAsOf:{...waFx.savedAsOf}, pins:{...waFx.pins}, pinAt:{...waFx.pinAt}, pinBase:waFx.pinBase };
+  waFx.hold++;
+}
+function fxRelease(){ waFx.hold=Math.max(0,waFx.hold-1); if(!waFx.hold){ waFx.frozen=null; if(waFx.dirty){ waFx.dirty=false; fxRatesChanged(); } } }
+function fxRefreshViews(){
+  ["renderAssets","renderLoans","renderInsurances","renderEquityGrants","renderInvestments","renderPortfolioMetrics","drawPortfolioPie",
+   "updateLinkedReconcile","renderRetirementNumber","renderEstate","renderFxPanel","renderFxAssetsNote"].forEach(n=>{ try{ if(typeof window[n]==="function") window[n](); }catch(_){} });
+  try{ if(typeof renderWhatIf==="function") renderWhatIf(); }catch(_){}
+  try{ if(typeof refreshTopMetrics==="function") refreshTopMetrics(); }catch(_){}
+}
+// Pin (or clear, with a blank / zero rate) the rate of one currency against the household currency.
+function fxSetPin(code, rate){
+  code=fxCode(code); if(!code || code===CURRENT_CCY) return;
+  if(waFx.pinBase!==CURRENT_CCY){ waFx.pins={}; waFx.pinAt={}; waFx.pinBase=CURRENT_CCY; }
+  const v=parseFloat(String(rate==null?"":rate).replace(",",".")), s0=fxSig();
+  if(v>0 && isFinite(v)){ waFx.pins[code]=v; waFx.pinAt[code]=new Date().toISOString().slice(0,10); }
+  else { delete waFx.pins[code]; delete waFx.pinAt[code]; }
+  if(fxSig()!==s0) fxRatesChanged(); else { try{ renderFxPanel(true); }catch(_){} }
+}
+// Saved with a plan: the rates its figures used (live ones only; the built-in table is in the app)
+// and any pinned rate. A loaded plan uses them until newer live rates arrive; pinned ones always win.
+function fxSnapshot(){
+  const rates={}, codes=new Set([CURRENT_CCY].concat(fxInUse(), fxRuleCodes(), Object.keys(waFx.pins)));
+  codes.forEach(c=>{ const u=fxUsdPer(c); if(u.r>0 && c!=="USD") rates[c]={usdPer:u.r, src:u.src, asOf:u.asOf}; });
+  const pinned=waFx.pinBase===CURRENT_CCY;
+  return { base:CURRENT_CCY, rates, pins:pinned?{...waFx.pins}:{}, pinAt:pinned?{...waFx.pinAt}:{} };
+}
+function fxRestore(fx){
+  waFx.saved={}; waFx.savedAsOf={}; waFx.pins={}; waFx.pinAt={}; waFx.pinBase=CURRENT_CCY;
+  if(!fx || typeof fx!=="object") return;
+  const rs=(fx.rates && typeof fx.rates==="object") ? fx.rates : {};
+  Object.keys(rs).forEach(c=>{ const k=fxCode(c), r=rs[c]; if(k && r && (r.src==="ecb" || r.src==="erapi" || r.src==="saved") && +r.usdPer>0 && isFinite(+r.usdPer)){ waFx.saved[k]=+r.usdPer; waFx.savedAsOf[k]=String(r.asOf||""); } });
+  const b=fxCode(fx.base);
+  if(b && b===CURRENT_CCY && fx.pins && typeof fx.pins==="object"){
+    Object.keys(fx.pins).forEach(c=>{ const k=fxCode(c), v=+fx.pins[c]; if(k && k!==b && v>0 && isFinite(v)){ waFx.pins[k]=v; waFx.pinAt[k]=String((fx.pinAt||{})[c]||""); } }); }
+}
 
 // ── Country estate / inheritance tax regimes (illustrative, ~2024) ──────────
 // exUSD = approximate exemption in USD-equivalent; rate = top marginal %.
@@ -6679,7 +7138,7 @@ const COUNTRY_ESTATE = {
 const ESTATE_BASIS_LABEL = {estate:"Estate tax (levied on the estate)", inheritance:"Inheritance tax (levied on what each heir receives)", none:"No estate or inheritance tax", deemed:"No estate tax; capital gains taxed at death", unknown:"Set manually"};
 function estateRegimeFor(cc){ if(COUNTRY_ESTATE[cc]) return COUNTRY_ESTATE[cc]; if(typeof EUROZONE_MEMBERS!=="undefined" && EUROZONE_MEMBERS.has(cc)) return COUNTRY_ESTATE.EU; return COUNTRY_ESTATE.OTHER; }
 // exemption converted from USD-equivalent into the app's display currency
-function estateExemptionDisplay(reg){ const fx=(CURRENCIES[CURRENT_CCY]&&CURRENCIES[CURRENT_CCY].fxToUSD)||1; return Math.round((reg.exUSD||0)/fx); }
+function estateExemptionDisplay(reg){ return Math.round(toBase(reg.exUSD||0, "USD")); }
 // Apply the selected country's estate regime into the editable inputs (preset-style).
 function syncEstateRegime(force){
   const reg=estateRegimeFor(val("c1co")); const exEl=$("estExemption"), rtEl=$("estRate");
@@ -8288,16 +8747,17 @@ window.refreshIcons = refreshIcons;
 let profileGen = 0;
 // Undo notice: "<msg> · Undo". One at a time (a new one replaces the old); auto-dismisses.
 // onUndo may return a string to show instead (e.g. why undo isn't possible).
-function showUndoToast(msg, onUndo){
+function showUndoToast(msg, onUndo, label, ms){
   let t=document.getElementById("undo-toast");
   if(!t){
     t=document.createElement("div"); t.id="undo-toast"; t.setAttribute("role","status"); t.setAttribute("aria-live","polite");
     document.body.appendChild(t);
   }
   clearTimeout(t._timer);
-  t.innerHTML='<span class="ut-msg"></span><button type="button" class="ut-undo">'+lucideIcon("undo-2")+' Undo</button>'
+  t.innerHTML='<span class="ut-msg"></span><button type="button" class="ut-undo">'+(label?'':lucideIcon("undo-2")+' ')+'Undo</button>'
     +'<button type="button" class="ut-close" aria-label="Dismiss" title="Dismiss">'+lucideIcon("x")+'</button>';
   t.querySelector(".ut-msg").textContent=msg;
+  if(label) t.querySelector(".ut-undo").textContent=label;
   const close=()=>{ clearTimeout(t._timer); t.classList.remove("show"); };
   t.querySelector(".ut-close").onclick=close;
   t.querySelector(".ut-undo").onclick=()=>{
@@ -8307,7 +8767,7 @@ function showUndoToast(msg, onUndo){
   };
   refreshIcons();
   t.classList.add("show");
-  t._timer=setTimeout(close, 8000);
+  t._timer=setTimeout(close, ms||8000);
 }
 window.showUndoToast=showUndoToast;
 
@@ -8642,14 +9102,14 @@ function popRetLoc(){
   });
   sel.value="US";
 }
-function popCcyDropdown(selectId){
+function popCcyDropdown(selectId, def){
   const sel=$(selectId); if(!sel) return;
   sel.innerHTML="";
   Object.entries(CURRENCIES).forEach(([code,c])=>{
     const o=document.createElement("option"); o.value=code; o.textContent=c.code+" · "+c.name;
     sel.appendChild(o);
   });
-  sel.value=CURRENT_CCY;
+  fxSelSet(selectId, def||CURRENT_CCY);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -9097,29 +9557,36 @@ window.onEuCountryPick = onEuCountryPick;
 function onCurrencyCountryChange(){
   // Country changed — only auto-update currency if user hasn't manually overridden it
   if(_ccyManual) return;
-  const cc=COUNTRY_CURRENCIES[$("c1co").value]||"USD";
+  const cc=COUNTRY_CURRENCIES[$("c1co").value]||"USD", prev=CURRENT_CCY;
   CURRENT_CCY=cc;
+  if(prev!==cc) fxBaseChanged(prev, cc);   // items follow the household currency; offers to convert instead
   const sel=$("m-ccy-tag"); if(sel) sel.value=cc;
   syncCcySym();
   _cmaAfterCcyChange();
-  popCcyDropdown("accy");
+  fxPopItemCcySelects();
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
   try{ renderWhatIf(); }catch(_){}   // and the What-If list and box
   refreshTopMetrics();
+  // Every list shows figures in the household currency, and the rates panel is against it.
+  if(prev!==CURRENT_CCY && !_fxRestoring){ fxRefreshViews(); try{ fxRefresh(false); }catch(_){} }
 }
 function onCurrencyManualChange(){
   // User explicitly picked a currency — lock in the override
   const sel=$("m-ccy-tag"); if(!sel) return;
+  const prev=CURRENT_CCY;
   CURRENT_CCY=sel.value||"USD";
   _ccyManual=true;
+  if(prev!==CURRENT_CCY){ fxBaseChanged(prev, CURRENT_CCY); fxEstateFollow(prev); try{ refreshPensionEstimates(); }catch(_){} }
   syncCcySym();
   _cmaAfterCcyChange();
-  popCcyDropdown("accy");
+  fxPopItemCcySelects();
   renderAssets();
   renderGoals();          // re-render the goal list so amounts show the new symbol
   try{ renderWhatIf(); }catch(_){}   // and the What-If list and box
   refreshTopMetrics();
+  // Every list shows figures in the household currency, and the rates panel is against it.
+  if(prev!==CURRENT_CCY && !_fxRestoring){ fxRefreshViews(); try{ fxRefresh(false); }catch(_){} }
 }
 // The household currency changed: switch the CMA set. A simulation run under the other
 // set no longer matches the figures on screen, so it is cleared as on a profile load.
@@ -9220,7 +9687,7 @@ function onZipChange(prefix){
 
 function syncAssetCountry(){
   const c=$("c1co").value;
-  if($("acountry").value!==c){ $("acountry").value=c; refreshAssetTypes(); }
+  if($("acountry").value!==c){ $("acountry").value=c; refreshAssetTypes(); if(!_editingAssetId) fxAccyFollowCountry(); }
   onCurrencyCountryChange();
   // Pension auto — income-based estimate (replacement rate × income, capped), per country
   refreshPensionEstimates();
@@ -9374,18 +9841,18 @@ function addAsset(){
   const m=getSelectedAssetMeta(); if(!m){alert("Pick an account type"); return;}
   const v=num("aval",0); if(v<=0){alert("Enter a positive balance"); return;}
   const lbl=val("albl")||m.label;
-  const ccy=val("accy")||CURRENT_CCY;
+  const ccy=fxCode(val("accy"))||CURRENT_CCY;
   const owner=val("aowner")||"c1";
   if(!_editingAssetId && isStatePensionDef(m)){
-    const r=applyStatePension(m, v, owner);
+    const r=applyStatePension(m, toBase(v, ccy), owner);   // the pension is an annual household-currency amount
     if(r){ $("aval").value=""; $("albl").value=""; refreshTopMetrics();
       const gen=profileGen;
       showUndoToast(statePensionMsg(r), ()=>{ if(gen!==profileGen) return "Another household has been loaded since. Nothing to undo."; undoStatePension(r); });
       return; }
   }
   if(_editingAssetId){
-    assets=assets.map(a=>a.id===_editingAssetId?{...a,label:lbl,value:v,ccy:ccy,owner:owner}:a);
-    _editingAssetId=null;
+    assets=assets.map(a=>a.id===_editingAssetId?{...a,label:lbl,value:v,ccy:ccy,owner:owner,nat:{value:v},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}:a);
+    _editingAssetId=null; fxResetCcySel("accy");
     $("assetAddBtn").textContent="+ Add Account";
     show("assetCancelBtn",false);
   } else {
@@ -9393,7 +9860,7 @@ function addAsset(){
       id:"a"+(++assetSeq),
       type:m.value, group:m.group, label:lbl, baseLabel:m.label,
       value:v, liquid:m.liquid, country:$("acountry").value,
-      note:m.note||"", ccy:ccy, withdrawAge:m.withdrawAge, owner:owner,
+      note:m.note||"", ccy:ccy, nat:{value:v}, withdrawAge:m.withdrawAge, owner:owner,
     });
   }
   $("aval").value=""; $("albl").value="";
@@ -9406,9 +9873,8 @@ function editAsset(id){
   const sel=$("atype");
   if(sel && [...sel.options].some(o=>o.value===a.type)) sel.value=a.type;
   $("albl").value=a.label;
-  $("aval").value=a.value;
-  const accySel=$("accy");
-  if(accySel && [...accySel.options].some(o=>o.value===a.ccy)) accySel.value=a.ccy;
+  $("aval").value=fxNat(a,"value");   // the amount as entered, in the account's own currency
+  fxSelSet("accy", a.ccy);
   populateOwnerSelect();
   const ownSel=$("aowner"), aOwn=a.owner||"c1";
   if(ownSel && [...ownSel.options].some(o=>o.value===aOwn)) ownSel.value=aOwn;
@@ -9419,7 +9885,7 @@ function editAsset(id){
   const btn=$("assetAddBtn"); if(btn) btn.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function cancelEditAsset(){
-  _editingAssetId=null;
+  _editingAssetId=null; fxResetCcySel("accy");
   $("aval").value=""; $("albl").value="";
   $("assetAddBtn").textContent="+ Add Account";
   show("assetCancelBtn",false);
@@ -9465,6 +9931,8 @@ function populateOwnerSelect(){
 }
 function renderAssets(){
   const list=$("assetList"); if(!list) return;
+  fxRebase();
+  try{ renderFxAssetsNote(); }catch(_){}
   populateOwnerSelect();
   // Swiss pillar panels mirror the pillar accounts — refresh on every add / edit / delete (incl. the last one)
   try{ if(typeof updateCHPensionVisibility==="function") updateCHPensionVisibility(); }catch(_){}
@@ -9477,7 +9945,6 @@ function renderAssets(){
     const gc=_gcLookup(g);
     html += `<div class="grp-header" style="color:${gc.text}">${g}</div>`;
     arr.forEach(a=>{
-      const ccyObj=CURRENCIES[a.ccy]||CURRENCIES.USD;
       const liqBadge = a.liquid
         ? `<span class="lbadge" style="background:rgba(76,175,125,.15);color:#1b6841;border-color:rgba(76,175,125,.3)">Liquid</span>`
         : `<span class="lbadge">Locked</span>`;
@@ -9495,7 +9962,7 @@ function renderAssets(){
           <span class="abadge" style="background:${gc.bg};color:${gc.text};border:1px solid ${gc.border}">${a.baseLabel||a.type}</span>
           <span style="font-weight:500;flex:1">${_daEsc(a.label)}</span>
           ${ownBadge}
-          <span style="font-variant-numeric:tabular-nums;font-weight:500">${fmtMoneyFull(a.value,ccyObj.sym)}</span>
+          <span style="font-variant-numeric:tabular-nums;font-weight:500">${fxCellHtml(a,"value",true)}</span>
           ${liqBadge}
           ${ageBadge}
           <button class="btn-x" style="font-size:10px;padding:2px 7px;color:var(--text3);border:1px solid var(--border);border-radius:3px" onclick="editAsset('${a.id}')">✎</button>
@@ -9546,13 +10013,14 @@ function addLoan(){
   if(b<=0){alert("Enter loan balance"); return;}
   const lbl=val("llbl")||LOAN_LABELS[t]||t;
   const owner=val("lowner")||"c1";
+  const ccy=fxCode(val("lccy"))||CURRENT_CCY;
   if(_editingLoanId){
-    loans=loans.map(l=>l.id===_editingLoanId?{...l,type:t,label:lbl,bal:b,rate:r,yrs:y,owner:owner}:l);
-    _editingLoanId=null;
+    loans=loans.map(l=>l.id===_editingLoanId?{...l,type:t,label:lbl,bal:b,rate:r,yrs:y,owner:owner,ccy:ccy,nat:{bal:b},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}:l);
+    _editingLoanId=null; fxResetCcySel("lccy");
     $("loanAddBtn").textContent="+ Add Loan";
     show("loanCancelBtn",false);
   } else {
-    loans.push({id:"l"+(++loanSeq),type:t,label:lbl,bal:b,rate:r,yrs:y,owner:owner});
+    loans.push({id:"l"+(++loanSeq),type:t,label:lbl,bal:b,rate:r,yrs:y,owner:owner,ccy:ccy,nat:{bal:b}});
   }
   $("lbal").value=""; $("llbl").value="";
   renderLoans();
@@ -9562,7 +10030,8 @@ function editLoan(id){
   const l=loans.find(x=>x.id===id); if(!l) return;
   const sel=$("ltype");
   if(sel && [...sel.options].some(o=>o.value===l.type)) sel.value=l.type;
-  $("lbal").value=l.bal;
+  $("lbal").value=fxNat(l,"bal");
+  fxSelSet("lccy", l.ccy);
   $("lrate").value=l.rate;
   $("lyrs").value=l.yrs;
   $("llbl").value=l.label;
@@ -9574,7 +10043,7 @@ function editLoan(id){
   const btn=$("loanAddBtn"); if(btn) btn.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function cancelEditLoan(){
-  _editingLoanId=null;
+  _editingLoanId=null; fxResetCcySel("lccy");
   $("lbal").value=""; $("llbl").value="";
   $("loanAddBtn").textContent="+ Add Loan";
   show("loanCancelBtn",false);
@@ -9601,6 +10070,8 @@ function loanMonthly(loan){
 function sumDebtServiceAnnual(){return loans.reduce((s,l)=>s+loanMonthly(l)*12,0);}
 function renderLoans(){
   const list=$("loanList"); if(!list) return;
+  fxRebase();
+  try{ renderFxAssetsNote(); }catch(_){}
   populateOwnerSelect();
   if(loans.length===0){list.innerHTML='<div class="empty">No loans added.</div>'; return;}
   list.innerHTML=loans.map(l=>{
@@ -9613,13 +10084,13 @@ function renderLoans(){
         <span class="lbadge">${LOAN_LABELS[l.type]||l.type}</span>
         <span style="font-weight:500;flex:1">${_daEsc(l.label)}</span>
         ${ownBadge}
-        <span style="font-variant-numeric:tabular-nums;font-weight:500">${fmtMoneyFull(l.bal)}</span>
+        <span style="font-variant-numeric:tabular-nums;font-weight:500">${fxCellHtml(l,"bal",true)}</span>
         <button class="btn-x" style="font-size:10px;padding:2px 7px;color:var(--text3);border:1px solid var(--border);border-radius:3px" onclick="editLoan('${l.id}')">✎</button>
         <button class="btn-x" onclick="delLoan('${l.id}')">✕</button>
       </div>
       <div class="item-meta">
         <span>${l.rate.toFixed(2)}% • ${l.yrs}y remaining</span>
-        <span>Monthly: ${fmtMoneyFull(m)}</span>
+        <span>Monthly: ${fxPairText(m, l.ccy)}</span>
       </div>
     </div>`;
   }).join("");
@@ -9641,13 +10112,14 @@ function addInsurance(){
   if(ben<=0&&cash<=0&&prem<=0){alert("Enter at least a benefit amount, cash value, or premium");return;}
   const lbl=val("islbl")||INS_TYPE_LABELS[t]||t;
   const benef=val("isbenef")||"";
+  const ccy=fxCode(val("isccy"))||CURRENT_CCY;
   if(_editingInsId){
-    insurances=insurances.map(p=>p.id===_editingInsId?{...p,type:t,label:lbl,insured:ins,ben,cash,prem,benef}:p);
-    _editingInsId=null;
+    insurances=insurances.map(p=>p.id===_editingInsId?{...p,type:t,label:lbl,insured:ins,ben,cash,prem,benef,ccy,nat:{ben,cash,prem},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}:p);
+    _editingInsId=null; fxResetCcySel("isccy");
     $("insAddBtn").textContent="+ Add Policy";
     show("insCancelBtn",false);
   } else {
-    insurances.push({id:"p"+(++insSeq),type:t,label:lbl,insured:ins,ben,cash,prem,benef});
+    insurances.push({id:"p"+(++insSeq),type:t,label:lbl,insured:ins,ben,cash,prem,benef,ccy,nat:{ben,cash,prem}});
   }
   ["isben","iscash","isprem","isbenef","islbl"].forEach(id=>{if($(id))$(id).value="";});
   renderInsurances(); refreshTopMetrics();
@@ -9655,14 +10127,15 @@ function addInsurance(){
 function editInsurance(id){
   const p=insurances.find(x=>x.id===id); if(!p) return;
   $("istype").value=p.type; $("isins").value=p.insured||"c1";
-  $("isben").value=p.ben||""; $("iscash").value=p.cash||"";
-  $("isprem").value=p.prem||""; $("isbenef").value=p.benef||""; $("islbl").value=p.label||"";
+  $("isben").value=fxNat(p,"ben")||""; $("iscash").value=fxNat(p,"cash")||"";
+  $("isprem").value=fxNat(p,"prem")||""; $("isbenef").value=p.benef||""; $("islbl").value=p.label||"";
+  fxSelSet("isccy", p.ccy);
   _editingInsId=id;
   $("insAddBtn").textContent="Save changes";
   show("insCancelBtn",true);
 }
 function cancelEditInsurance(){
-  _editingInsId=null;
+  _editingInsId=null; fxResetCcySel("isccy");
   ["isben","iscash","isprem","isbenef","islbl"].forEach(id=>{if($(id))$(id).value="";});
   $("insAddBtn").textContent="+ Add Policy";
   show("insCancelBtn",false);
@@ -9680,6 +10153,8 @@ function delInsurance(id){
 }
 function renderInsurances(){
   const list=$("insList"); if(!list) return;
+  fxRebase();
+  try{ renderFxAssetsNote(); }catch(_){}
   populateOwnerSelect();   // keep the "Insured" dropdown labelled with real names
   if(insurances.length===0){list.innerHTML='<div class="empty">No policies added.</div>'; return;}
   list.innerHTML=insurances.map(p=>{
@@ -9689,13 +10164,13 @@ function renderInsurances(){
       <div class="item-row">
         <span class="lbadge">${INS_TYPE_LABELS[p.type]||p.type}</span>
         <span style="font-weight:500;flex:1">${_daEsc(p.label)}</span>
-        <span style="font-variant-numeric:tabular-nums;font-weight:500">${p.ben?fmtMoneyFull(p.ben):"-"}</span>
+        <span style="font-variant-numeric:tabular-nums;font-weight:500">${p.ben?fxCellHtml(p,"ben",true):"-"}</span>
         <button class="btn-x" style="font-size:10px;padding:2px 7px;color:var(--text3);border:1px solid var(--border);border-radius:3px" onclick="editInsurance('${p.id}')">✎</button>
         <button class="btn-x" onclick="delInsurance('${p.id}')">✕</button>
       </div>
       <div class="item-meta">
         <span>Insured: ${_daEsc(who)} • ${benLbl}${p.benef?" • → "+_daEsc(p.benef):""}</span>
-        <span>${p.cash?"Cash value: "+fmtMoneyFull(p.cash)+" • ":""}Premium: ${fmtMoneyFull(p.prem||0)}/yr</span>
+        <span>${p.cash?"Cash value: "+fxPairText(p.cash, p.ccy)+" • ":""}Premium: ${fxPairText(p.prem||0, p.ccy)}/yr</span>
       </div>
     </div>`;
   }).join("");
@@ -9741,11 +10216,12 @@ function addEquityGrant(){
   if(shares<=0||price<=0){alert("Enter shares and current price");return;}
   const lbl=val("eqlbl")||((tkr||"Grant")+" "+EQ_KIND_LABELS[kind]);
   const owner=val("eqowner")||"c1";
+  const ccy=fxCode(val("eqccy"))||CURRENT_CCY;
   if(_editingEqId){
-    equityComp=equityComp.map(g=>g.id===_editingEqId?{...g,kind,label:lbl,tkr,shares,strike,price,growth,vestStart,vestYears,owner:owner}:g);
-    _editingEqId=null; $("eqAddBtn").textContent="+ Add Grant"; show("eqCancelBtn",false);
+    equityComp=equityComp.map(g=>g.id===_editingEqId?{...g,kind,label:lbl,tkr,shares,strike,price,growth,vestStart,vestYears,owner:owner,ccy,nat:{price,strike},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}:g);
+    _editingEqId=null; fxResetCcySel("eqccy"); $("eqAddBtn").textContent="+ Add Grant"; show("eqCancelBtn",false);
   } else {
-    equityComp.push({id:"e"+(++eqSeq),kind,label:lbl,tkr,shares,strike,price,growth,vestStart,vestYears,owner:owner});
+    equityComp.push({id:"e"+(++eqSeq),kind,label:lbl,tkr,shares,strike,price,growth,vestStart,vestYears,owner:owner,ccy,nat:{price,strike}});
   }
   ["eqtkr","eqshares","eqstrike","eqprice","eqlbl","eqstart"].forEach(id=>{if($(id))$(id).value="";});
   renderEquityGrants(); refreshTopMetrics();
@@ -9753,14 +10229,15 @@ function addEquityGrant(){
 function editEquityGrant(id){
   const g=equityComp.find(x=>x.id===id); if(!g) return;
   $("eqkind").value=g.kind; $("eqtkr").value=g.tkr||""; $("eqshares").value=g.shares||"";
-  $("eqstrike").value=g.strike||""; $("eqprice").value=g.price||""; $("eqgrowth").value=g.growth??8;
+  $("eqstrike").value=fxNat(g,"strike")||""; $("eqprice").value=fxNat(g,"price")||""; $("eqgrowth").value=g.growth??8;
+  fxSelSet("eqccy", g.ccy);
   $("eqstart").value=g.vestStart||""; $("eqyears").value=g.vestYears||4; $("eqlbl").value=g.label||"";
   populateOwnerSelect();
   const eqOwn=$("eqowner"); if(eqOwn && [...eqOwn.options].some(o=>o.value===(g.owner||"c1"))) eqOwn.value=g.owner||"c1";
   _editingEqId=id; $("eqAddBtn").textContent="Save changes"; show("eqCancelBtn",true);
 }
 function cancelEditEquityGrant(){
-  _editingEqId=null;
+  _editingEqId=null; fxResetCcySel("eqccy");
   ["eqtkr","eqshares","eqstrike","eqprice","eqlbl","eqstart"].forEach(id=>{if($(id))$(id).value="";});
   $("eqAddBtn").textContent="+ Add Grant"; show("eqCancelBtn",false);
 }
@@ -9777,6 +10254,8 @@ function delEquityGrant(id){
 }
 function renderEquityGrants(){
   const list=$("eqList"); if(!list) return;
+  fxRebase();
+  try{ renderFxAssetsNote(); }catch(_){}
   populateOwnerSelect();
   if(equityComp.length===0){list.innerHTML='<div class="empty">No grants added.</div>'; return;}
   list.innerHTML=equityComp.map(g=>{
@@ -9791,13 +10270,13 @@ function renderEquityGrants(){
         <span class="lbadge">${EQ_KIND_LABELS[g.kind]||g.kind}</span>
         <span style="font-weight:500;flex:1">${_daEsc(g.label)}${g.tkr?" · "+_daEsc(g.tkr):""}</span>
         ${ownBadge}
-        <span style="font-variant-numeric:tabular-nums;font-weight:500">${fmtMoneyFull(itm)}</span>
+        <span style="font-variant-numeric:tabular-nums;font-weight:500">${fxAmtHtml(itm, g.ccy, true)}</span>
         <button class="btn-x" style="font-size:10px;padding:2px 7px;color:var(--text3);border:1px solid var(--border);border-radius:3px" onclick="editEquityGrant('${g.id}')">✎</button>
         <button class="btn-x" onclick="delEquityGrant('${g.id}')">✕</button>
       </div>
       <div class="item-meta">
-        <span>${(+g.shares||0).toLocaleString()} shares • vest ${window_}${g.kind!=="rsu"?" • strike "+fmtMoneyFull(g.strike||0):""}</span>
-        <span>Price ${fmtMoneyFull(g.price||0)} • growth ${(+g.growth||0).toFixed(1)}%/yr</span>
+        <span>${(+g.shares||0).toLocaleString()} shares • vest ${window_}${g.kind!=="rsu"?" • strike "+fxPairText(g.strike||0, g.ccy):""}</span>
+        <span>Price ${fxPairText(g.price||0, g.ccy)} • growth ${(+g.growth||0).toFixed(1)}%/yr</span>
       </div>
     </div>`;
   }).join("");
@@ -10096,7 +10575,7 @@ function pensionSetup(ageNow1, ageNow2){
   // the AHV range (up to the maximum single pension) is capped; anything above it is not AHV
   // and passes through unchanged.
   else if(typeof _ahvCouple==="function" && _ahvCouple() && S.c1.src!=="none" && S.c2.src!=="none"){
-    const aMax=AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR;
+    const aMax=ahvMaxAnnual();
     const ref=n=>{ const r=S["c"+n], sfx=n===2?"2":"";
       const f=(r.src==="auto" || (r.start>=AHV_REF_AGE-2 && r.start<=AHV_REF_AGE+5)) ? ahvClaimFactor(r.src==="auto"?r.start:num("penStartAge"+sfx,AHV_REF_AGE)) : 1;
       return {f, ahv:Math.min(f>0?r.base/f:r.base, aMax)}; };
@@ -10105,7 +10584,9 @@ function pensionSetup(ageNow1, ageNow2){
   }
   // Pension-fund (2nd pillar) annuities already in payment: fixed, from today, not capped.
   if(typeof chPillarSettings==="function" && typeof chSwissClient==="function"){ const pk=chPillarSettings().pkAnn;
-    S.pk1=chSwissClient(1)?(pk[1]||0):0; S.pk2=(showC2 && chSwissClient(2))?(pk[2]||0):0; }
+    // Without the pillar model (a non-CHF household) a Swiss resident's annuity in payment still counts, from CHF.
+    const sw=n=>chSwissClient(n) || (!chFxOk() && typeof chResident==="function" && chResident(n));
+    S.pk1=sw(1)?toBase(pk[1]||0,"CHF"):0; S.pk2=(showC2 && sw(2))?toBase(pk[2]||0,"CHF"):0; }
   return S;
 }
 // Pensions paid when the clients are age1 / age2 (nominal).
@@ -10145,10 +10626,20 @@ const AHV_PAYMENTS_PER_YEAR = 13;                        // 12 monthly + the 13t
 function ahvMonthly(E){ E=Math.max(0,+E||0);
   const m = E<=36*AHV_MIN_MONTHLY ? 0.74*AHV_MIN_MONTHLY + 13/600*E : 1.04*AHV_MIN_MONTHLY + 8/600*E;
   return Math.min(AHV_MAX_MONTHLY, Math.max(AHV_MIN_MONTHLY, m)); }
-function ahvAnnual(E){ return Math.round(ahvMonthly(E)*AHV_PAYMENTS_PER_YEAR); }
-function ahvCoupleCap(){ return Math.round(1.5*AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR); }
+// The AHV scale is in CHF: an income in another household currency goes in at the rate and the
+// pension comes back out (both 1 for a CHF household).
+function _ahvK(){ return CURRENT_CCY==="CHF" ? 1 : fxRate(CURRENT_CCY, "CHF"); }
+function ahvAnnual(E){ const k=_ahvK(); return k===1 ? Math.round(ahvMonthly(E)*AHV_PAYMENTS_PER_YEAR) : Math.round(Math.round(ahvMonthly((+E||0)*k)*AHV_PAYMENTS_PER_YEAR)/k); }
+function ahvCoupleCap(){ return Math.round(Math.round(1.5*AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR)/_ahvK()); }
+function ahvMaxAnnual(){ return Math.round(Math.round(AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR)/_ahvK()); }
+function ahvMinAnnual(){ return Math.round(Math.round(AHV_MIN_MONTHLY*AHV_PAYMENTS_PER_YEAR)/_ahvK()); }
+// Caps and flat amounts in PENSION_DEFAULTS are in the pension country's currency.
 function estStatePension(country, income){
   if(country==="CH") return ahvAnnual(income);
+  const c=COUNTRY_CURRENCIES[country], k=(c && c!==CURRENT_CCY) ? fxRate(CURRENT_CCY, c) : 1;
+  return k===1 ? _estStatePensionLocal(country, income) : Math.round(_estStatePensionLocal(country, (+income||0)*k)/k);
+}
+function _estStatePensionLocal(country, income){
   const p=penDefaultsFor(country);
   if(p.flat) return Math.round(p.cap||p.annual||0);   // flat (non-earnings-related) pension — income-independent
   if(typeof p.repl==="number"){
@@ -10160,8 +10651,8 @@ function estStatePension(country, income){
 function _penNote(c,p,est){
   const cn=(COUNTRY_ACCOUNTS[c]&&COUNTRY_ACCOUNTS[c].name)||c;
   const cap=(p.cap&&p.cap>0)?p.cap:Infinity;
-  const capped=isFinite(cap)&&est>=Math.round(cap);
-  const basis=c==="CH" ? ("AHV scale 44 (full contribution record), 13 payments a year"+(est>=Math.round(AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR)?", maximum pension":est<=Math.round(AHV_MIN_MONTHLY*AHV_PAYMENTS_PER_YEAR)?", minimum pension":""))
+  const capB=isFinite(cap) ? Math.round(toBase(cap, COUNTRY_CURRENCIES[c]||CURRENT_CCY)) : Infinity, capped=isFinite(capB)&&est>=capB-1;   // the cap is in the pension country's currency
+  const basis=c==="CH" ? ("AHV scale 44 (full contribution record), 13 payments a year"+(est>=ahvMaxAnnual()?", maximum pension":est<=ahvMinAnnual()?", minimum pension":""))
     : p.flat ? "flat benefit"
     : (typeof p.repl==="number" ? ("~"+Math.round(p.repl)+"% of income"+(capped?" (at cap)":"")) : "estimate");
   return "Auto-estimated "+cn+" "+(p.name||"state pension")+": "+basis+" ≈ "+fmtMoney(est)+"/yr from age "+(p.age||67);
@@ -10208,13 +10699,13 @@ function _ahvCoupleCheck(){
   // Swiss hint: this field is AHV (1st pillar); the 2nd pillar is modelled from its capital.
   const hint=$("penCHHint");
   if(hint){ hint.style.display=isCH?"":"none";
-    hint.textContent=!isCH?"":("Switzerland: enter the AHV/AVS (1st pillar) pension here, in today's money. "+((bvg1+bvg2)>0
+    hint.textContent=!isCH?"":!chFxOk()?("Switzerland: enter the AHV/AVS (1st pillar) pension here, in today's money. With "+CURRENT_CCY+" as the household currency the pillar accounts are projected as ordinary retirement savings; the Swiss pillar model (lump sums, a pension-fund annuity in payment) needs CHF as the household currency."):("Switzerland: enter the AHV/AVS (1st pillar) pension here, in today's money. "+((bvg1+bvg2)>0
       ? "The 2nd pillar is modelled from the pension-fund capital on the Assets tab ("+fmtMoney(bvg1+bvg2)+", paid out as a lump sum at retirement), so adding a Pensionskasse annuity here as well would count it twice."
       : "This field is AHV only. A pension-fund annuity already in payment goes in the Swiss pillars panel on the Assets tab.")); }
   const warn=(n,t)=>{ const w=$(n===2?"penWarn2":"penWarn"); if(w){ w.textContent=t||""; w.style.display=t?"":"none"; } };
   warn(1,""); warn(2,"");
   if(!isCH) return;
-  const cap=ahvCoupleCap(), aMax=Math.round(AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR);
+  const cap=ahvCoupleCap(), aMax=ahvMaxAnnual();
   const auto1=(val("penSrc")||"auto")==="auto" && !_penEdited, auto2=(val("penSrc2")||"auto")==="auto" && !_pen2Edited;
   // A typed figure above the AHV maximum is not AHV alone.
   [[1,"penSrc","penAnnual",bvg1],[2,"penSrc2","penAnnual2",bvg2]].forEach(([n,s,a,b])=>{
@@ -10365,6 +10856,11 @@ function getEligibleChildCount(maxAge){
 
 // Return total annual child-related tax saving for the given gross income
 function getChildTaxSaving(grossIncome){
+  const k=_taxK();
+  if(k===1) return _childTaxSavingLocal(grossIncome);
+  _taxInLocal++; try{ return _childTaxSavingLocal(grossIncome*k)/k; } finally { _taxInLocal--; }   // credits, phase-outs and deductions are local amounts
+}
+function _childTaxSavingLocal(grossIncome){
   if(!getApplyTax()||grossIncome<=0||children.length===0) return 0;
   // Switzerland: the federal and cantonal child deductions are inside the official tables; this
   // is what they save (for display: computeIncomeTax already includes it).
@@ -10464,6 +10960,11 @@ function getStateTaxRate(){
   return item?item.r:0;
 }
 
+// The tax country's brackets and child rules are in its own currency (TAX_BRACKETS[cc].sym) and
+// the plan's income is in the household currency: income goes in at the rate, tax comes back out
+// (1 when the two are the same). _taxInLocal: already converted by an outer call (child rules).
+let _taxInLocal=0;
+function _taxK(){ if(_taxInLocal) return 1; const tb=getCountryBrackets(), c=fxCode(tb && tb.sym); return (c && c!==CURRENT_CCY) ? fxRate(CURRENT_CCY, c) : 1; }
 function computeFederalTax(income){
   if(income<=0) return 0;
   const mode=$("taxMode")?.value||"auto";
@@ -10471,15 +10972,15 @@ function computeFederalTax(income){
   if(mode==="flat") return income*num("taxFlat",25)/100;
   // Switzerland: the federal share of the official tables, before the child deductions.
   if(chIncomeTaxOn()){ const r=chIncomeTaxNow(income); if(r) return r.fed0; }
-  const tb=getCountryBrackets();
+  const tb=getCountryBrackets(), k=_taxK(), x=income*k;
   let tax=0, prev=0;
   for(const [cap,rate] of tb.bands){
-    const top=Math.min(income,cap);
+    const top=Math.min(x,cap);
     if(top>prev) tax+=(top-prev)*rate/100;
     prev=cap;
-    if(income<=cap) break;
+    if(x<=cap) break;
   }
-  return tax;
+  return tax/k;
 }
 
 function computeStateTax(income){
@@ -10731,16 +11232,17 @@ function addInvestment(){
   const v=num("pfVal",0);
   const er=parseFloat(val("pfEr")), yld=parseFloat(val("pfYld"));
   const note=val("pfNote").trim();
+  const ccy=fxCode(val("pfCcy"))||fxPfCcyDefault();
   if(!name||v<=0){alert("Enter name and a positive value"); return;}
   if(_editingInvId){
     investments=investments.map(i=>i.id===_editingInvId
-      ? {...i,name,tkr,type,cls,region,val:v,er:isNaN(er)?null:er,yld:isNaN(yld)?null:yld,note}
+      ? {...i,name,tkr,type,cls,region,val:v,er:isNaN(er)?null:er,yld:isNaN(yld)?null:yld,note,ccy,nat:{val:v},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}
       : i);
-    _editingInvId=null;
+    _editingInvId=null; fxResetCcySel("pfCcy");
     $("pfAddBtn").textContent="Add";
     show("pfCancelBtn",false);
   } else {
-    investments.push({id:"inv"+(++invSeq),name,tkr,type,cls,region,val:v,
+    investments.push({id:"inv"+(++invSeq),name,tkr,type,cls,region,val:v,ccy,nat:{val:v},
       er:isNaN(er)?null:er, yld:isNaN(yld)?null:yld, note,
       metrics:(_lastFundPerf&&_lastFundPerf.tkr&&tkr&&_lastFundPerf.tkr===tkr.toUpperCase())?_lastFundPerf.metrics:null});
   }
@@ -10763,7 +11265,8 @@ function editInvestment(id){
   if(clsSel&&[...clsSel.options].some(o=>o.value===i.cls)) clsSel.value=i.cls;
   const regSel=$("pfRegion");
   if(regSel&&[...regSel.options].some(o=>o.value===i.region)) regSel.value=i.region;
-  $("pfVal").value=i.val;
+  $("pfVal").value=fxNat(i,"val");
+  fxSelSet("pfCcy", i.ccy);
   $("pfEr").value=i.er!=null?i.er:"";
   $("pfYld").value=i.yld!=null?i.yld:"";
   $("pfNote").value=i.note||"";
@@ -10773,7 +11276,7 @@ function editInvestment(id){
   const btn=$("pfAddBtn"); if(btn) btn.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function cancelEditInvestment(){
-  _editingInvId=null;
+  _editingInvId=null; fxResetCcySel("pfCcy");
   ["pfName","pfTkr","pfVal","pfEr","pfYld","pfNote"].forEach(id=>{const el=$(id); if(el) el.value="";});
   setT("pfTkrHint","");
   $("pfAddBtn").textContent="Add";
@@ -10823,16 +11326,17 @@ function addAltInvestment(){
   const name=val("pfAltName").trim(), v=num("pfAltVal",0), region=val("pfAltRegion");
   const er=parseFloat(val("pfAltEr")), yld=parseFloat(val("pfAltYld")), note=val("pfAltNote").trim();
   const cls=type; // private_equity / hedge_fund / structured map 1:1 to CMA asset classes
+  const ccy=fxCode(val("pfAltCcy"))||fxPfCcyDefault();
   if(!name||v<=0){alert("Enter name and a positive value"); return;}
   if(_editingAltId){
     investments=investments.map(i=>i.id===_editingAltId
-      ? {...i,name,tkr:"",type,cls,subcat,region,val:v,er:isNaN(er)?null:er,yld:isNaN(yld)?null:yld,note}
+      ? {...i,name,tkr:"",type,cls,subcat,region,val:v,er:isNaN(er)?null:er,yld:isNaN(yld)?null:yld,note,ccy,nat:{val:v},_fxb:{},_ccyAuto:ccy===CURRENT_CCY}
       : i);
-    _editingAltId=null;
+    _editingAltId=null; fxResetCcySel("pfAltCcy");
     $("pfAltAddBtn").textContent="Add alternative";
     show("pfAltCancelBtn",false);
   } else {
-    investments.push({id:"inv"+(++invSeq),name,tkr:"",type,cls,subcat,region,val:v,
+    investments.push({id:"inv"+(++invSeq),name,tkr:"",type,cls,subcat,region,val:v,ccy,nat:{val:v},
       er:isNaN(er)?null:er, yld:isNaN(yld)?null:yld, note});
   }
   ["pfAltName","pfAltVal","pfAltEr","pfAltYld","pfAltNote"].forEach(id=>{const el=$(id); if(el) el.value="";});
@@ -10843,7 +11347,8 @@ function editAltInvestment(i){
   const ts=$("pfAltType"); if(ts&&[...ts.options].some(o=>o.value===i.type)) ts.value=i.type;
   updateAltSubcats(i.subcat);
   $("pfAltName").value=i.name;
-  $("pfAltVal").value=i.val;
+  $("pfAltVal").value=fxNat(i,"val");
+  fxSelSet("pfAltCcy", i.ccy);
   const reg=$("pfAltRegion"); if(reg&&[...reg.options].some(o=>o.value===i.region)) reg.value=i.region;
   $("pfAltEr").value=i.er!=null?i.er:"";
   $("pfAltYld").value=i.yld!=null?i.yld:"";
@@ -10854,7 +11359,7 @@ function editAltInvestment(i){
   const btn=$("pfAltAddBtn"); if(btn) btn.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 function cancelEditAltInvestment(){
-  _editingAltId=null;
+  _editingAltId=null; fxResetCcySel("pfAltCcy");
   ["pfAltName","pfAltVal","pfAltEr","pfAltYld","pfAltNote"].forEach(id=>{const el=$(id); if(el) el.value="";});
   const b=$("pfAltAddBtn"); if(b) b.textContent="Add alternative";
   show("pfAltCancelBtn",false);
@@ -12030,6 +12535,12 @@ function lxReadQuestionnaire(doc){
   lxQ_goals(ctx);
   lxQ_tax(ctx);
   lxQ_freeText(ctx);
+  // The form's money fields (income, expenses, goals, retirement) are in its main currency: carried
+  // on those rows, so Apply converts them like the accounts.
+  { const dc=ctx.ccy || ctx.ccyMajor; if(dc){ const st=o=>{ if(o && typeof o==="object" && !o.ccy) o.ccy=dc; };
+      (out.income||[]).forEach(st); (out.goals||[]).forEach(st);
+      if(out.expenses && typeof out.expenses==="object" && Object.keys(out.expenses).length) st(out.expenses);
+      if(out.retirement && typeof out.retirement==="object" && Object.keys(out.retirement).length) st(out.retirement); } }
 
   const rows = out.household.length + out.income.length + out.assets.length + out.liabilities.length + out.goals.length + out.holdings.length;
   const objs = Object.keys(out.expenses).length + Object.keys(out.retirement).length + Object.keys(out.tax).length;
@@ -12315,7 +12826,7 @@ function lxQ_moneyConf(ctx, m, what){
   const main = ctx.ccy || ctx.ccyMajor;
   if(m.ccy && main && m.ccy !== main){
     c = Math.min(c, 0.5);
-    ctx.notes.push(what + " is in " + m.ccy + (ctx.ccy ? ", not the main currency " + ctx.ccy : ", while the other amounts on the form are in " + main + " (no main currency given)") + "; imported unconverted, check it.");
+    ctx.notes.push(what + " is in " + m.ccy + (ctx.ccy ? ", not the main currency " + ctx.ccy : ", while the other amounts on the form are in " + main + " (no main currency given)") + "; check it before applying.");
   }
   return c;
 }
@@ -12340,7 +12851,7 @@ function lxQ_income(ctx){
   const cur = lxQ_field(ctx, "main currency", { sec:"D" });
   if(cur && cur.val){
     const code = lxQ_ccy(cur.val.text) || (/^[A-Z]{3}$/.test(cur.val.text.trim()) ? cur.val.text.trim() : "");
-    if(code){ ctx.ccy = code; ctx.notes.push("Main currency: " + code + ". Amounts are imported as written, in " + code + "."); }
+    if(code){ ctx.ccy = code; ctx.notes.push("Main currency: " + code + ". Amounts keep it and are converted to the plan's currency at today's rate on Apply."); }
     else ctx.notes.push("Main currency written as '" + cur.val.text + "'.");
   }
   const anchors = lxQ_find(ctx, "salary main income", { sec:"D" });
@@ -12527,7 +13038,7 @@ function lxQ_otherAssets(ctx, fld, home){
     if(a.value <= 0) return;
     let conf = am.length > 1 ? 0.7 : 0.8;
     const ccy = lxQ_ccy(seg) || lxQ_ccy(t) || ctx.ccy || "";
-    if(ccy && main && ccy !== main){ conf = 0.5; ctx.notes.push("Other asset '" + (lbl || t) + "' is in " + ccy + ", not " + main + "; imported unconverted, check it."); }
+    if(ccy && main && ccy !== main){ conf = 0.5; ctx.notes.push("Other asset '" + (lbl || t) + "' is in " + ccy + ", not " + main + "; it is converted at today's rate on Apply, check it."); }
     ctx.out.assets.push(lxRow(lxQ_c(ctx, conf), lxQ_quote(ctx, [fld.lab.text, t]), { label:lxQ_txt(lbl || "Other assets"), accountTypeHint:"Other asset", otherValue:Math.abs(a.value), country:home, ccy }));
   });
 }
@@ -14189,7 +14700,7 @@ function lxS_holdings(ctx, recs, out){
     else if(qtyTok) note += ", " + qtyTok.raw + (isNominal ? " nominal" : " units");
     const valor = lines.map(x => x.text).join(" ").match(/\b(?:Valor|Val\.)\s*:?\s*(\d{4,9})\b/i);
     if(valor) note += ", Valor " + valor[1];
-    if(foreign){ conf = Math.min(conf, 0.5); note += "; value in " + valCcy + ", not converted"; ctx.notes.push(name + " is valued in " + valCcy + " (" + pick.tok.raw + "), not in the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
+    if(foreign){ conf = Math.min(conf, 0.5); note += "; value in " + valCcy; ctx.notes.push(name + " is valued in " + valCcy + " (" + pick.tok.raw + "), not in the reference currency " + ctx.ref + "; it is converted at today's rate on Apply, check before applying."); }
     // (on a scan the disagreement may be a misread digit in the value: it starts unticked)
     if(mismatch){ conf = Math.min(conf, ctx.ocr ? 0.55 : 0.6); ctx.notes.push(name + ": " + qtyTok.raw + " x " + priceRaw + " does not give the stated value " + pick.tok.raw + "; check the position."); }
     if(pick.how === "weight?") ctx.notes.push(name + ": the last number on the line looked like a weight in %, so " + pick.tok.raw + " was read as the value; check it.");
@@ -14210,7 +14721,7 @@ function lxS_holdings(ctx, recs, out){
     else if(prev && (prev.detailed || !qtyTok)){ ctx.notes.push("ISIN " + isin + " appears twice with the same value " + pick.tok.raw + "; it was counted once."); return; }
     else if(prev){ out.splice(out.indexOf(prev.meta), 1); ctx.notes.push("ISIN " + isin + " appears twice with the same value " + pick.tok.raw + "; it was counted once."); }
     const tkrCell = lxS_cellsOf(l, hdr, "ticker")[0], tkr = tkrCell && /^[A-Z][A-Z0-9.\-]{0,11}$/.test(tkrCell.text) ? tkrCell.text : undefined;
-    const row = lxRow(conf, lxS_quote(lines), { name, tkr, val, type:cls.type, cls:cls.cls, region:cls.region, note });
+    const row = lxRow(conf, lxS_quote(lines), { name, tkr, val, ccy:valCcy, type:cls.type, cls:cls.cls, region:cls.region, note });
     const meta = { row, kind:"holding", i:Math.max(...lines.map(x => ctx.doc.lines.indexOf(x))), ccy:valCcy, amount:val, checked, mismatch, fixed:hit.fixed, isin, raw:pick.tok.raw, numFixed:numFixed.length > 0 || !!hit.doubled };
     if(dupOf){ meta.dupOf = dupOf; meta.baseConf = row.confidence; row.confidence = Math.min(row.confidence, 0.5); }
     out.push(meta);
@@ -14356,8 +14867,8 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
   if(lxS_has(f, lxS_LOAN, ctx.ocr) || pick.tok.v < 0){
     const type = lxS_loanType(f, pick.tok.v < 0);
     let lconf = Math.min(conf, 0.8);
-    if(ccy && ctx.ref && ccy !== ctx.ref){ lconf = Math.min(lconf, 0.5); ctx.notes.push(label + ": the debt is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
-    const row = lxRow(lconf, quote, { type, label:label + (pick.tok.v < 0 && !lxS_has(f, lxS_LOAN, ctx.ocr) ? " (overdrawn)" : ""), balance:Math.abs(pick.tok.v) });
+    if(ccy && ctx.ref && ccy !== ctx.ref){ lconf = Math.min(lconf, 0.5); ctx.notes.push(label + ": the debt is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; it is converted at today's rate on Apply, check before applying."); }
+    const row = lxRow(lconf, quote, { type, label:label + (pick.tok.v < 0 && !lxS_has(f, lxS_LOAN, ctx.ocr) ? " (overdrawn)" : ""), balance:Math.abs(pick.tok.v), ccy });
     out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v), fixed:ib.fixed, numFixed:!!pick.tok.fixed });
     return;
   }
@@ -14369,7 +14880,7 @@ function lxS_account(ctx, recs, k, l, ib, hdr, out, hasPositions, claimed, split
   const accountType = (kind && codes[kind]) || (kind === "passbook" && codes.savings) || (kind === "livreta" && codes.savings) || "";
   const taxType = kind === "p3a" || kind === "isa" ? "tax_free" : kind === "vested" ? "tax_deferred" : "taxable";
   const foreign = !!(ccy && ctx.ref && ccy !== ctx.ref);
-  if(foreign){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
+  if(foreign){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; it is converted at today's rate on Apply, check before applying."); }
   const row = lxRow(conf, quote, { label, accountType, accountTypeHint:desc || undefined, taxType, value:pick.tok.v, country, ccy });
   out.push({ row, kind:"account", i:k, ccy, amount:pick.tok.v, fixed:ib.fixed, numFixed:!!pick.tok.fixed });
 }
@@ -14459,9 +14970,9 @@ function lxS_loans(ctx, recs, out){
     let conf = { col:0.8, bare:0.8, trail:0.7, "weight?":0.55 }[pick.how] || 0.7;
     if(r.doubt){ conf = Math.min(conf, 0.5); ctx.notes.push(label + ": the line names both the loan and its collateral, so " + pick.tok.raw + " may be the property's value rather than the debt; check before applying."); }
     const ccy = lxS_amountCcy(l, hdr, pick.tok) || ctx.ref;
-    if(ccy && ctx.ref && ccy !== ctx.ref){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; the app does not convert, check before applying."); }
+    if(ccy && ctx.ref && ccy !== ctx.ref){ conf = Math.min(conf, 0.5); ctx.notes.push(label + " is in " + ccy + " (" + pick.tok.raw + "), not the reference currency " + ctx.ref + "; it is converted at today's rate on Apply, check before applying."); }
     if(pick.tok.fixed) ctx.notes.push(label + ": the scan shows \"" + pick.tok.printed + "\", read as " + pick.tok.raw + " (an OCR letter inside a number); check it before applying.");
-    const row = lxRow(conf, lxS_quote([l]), { type, label, balance:Math.abs(pick.tok.v), ratePct:rate.rate == null ? undefined : rate.rate, years:yrs.years == null ? undefined : yrs.years });
+    const row = lxRow(conf, lxS_quote([l]), { type, label, balance:Math.abs(pick.tok.v), ccy, ratePct:rate.rate == null ? undefined : rate.rate, years:yrs.years == null ? undefined : yrs.years });
     out.push({ row, kind:"liability", i:k, ccy, amount:Math.abs(pick.tok.v), numFixed:!!pick.tok.fixed });
   });
 }
@@ -14723,7 +15234,7 @@ function lxReadStatement(doc){
   // of them can be trusted as is
   if(ctx.mixed){
     meta.forEach(m => { if(m.row) m.row.confidence = Math.min(m.row.confidence, 0.55); });
-    ctx.notes.push("No reference currency is printed and the rows are in " + ctx.mixed.join(" and ") + "; the app does not convert, so every row starts unticked. Check which currency the plan uses before applying.");
+    ctx.notes.push("No reference currency is printed and the rows are in " + ctx.mixed.join(" and ") + ", so every row starts unticked. Each converts to the plan's currency at today's rate on Apply: check which figure each row carries before applying.");
   }
 
   const res = lxEmpty("statement");
@@ -16263,7 +16774,7 @@ function lxReadPensionCertificate(doc){
     // Swiss funds keep CHF; a figure explicitly in another currency is not converted.
     const ccys = pickA.vcs.map(v => v.v.ccy).concat(lxCcyIn(pickA.quote)).filter(Boolean);
     const ccy = ccys.find(c => c !== "CHF") || "CHF";
-    if(ccy !== "CHF"){ conf = Math.min(conf, 0.5); notes.push("The retirement assets are printed in " + ccy + ", not converted to CHF. Check before applying."); }
+    if(ccy !== "CHF"){ conf = Math.min(conf, 0.5); notes.push("The retirement assets are printed in " + ccy + "; the account keeps " + ccy + " and is converted at today's rate on Apply. Check before applying."); }
     const fc = {};
     // OCR only: the conversion rate checked against the projection printed beside it
     const X = ocr && !vested && V.value != null ? lxP_convCheck(fields, A, V.value, ocr) : null;
@@ -16374,15 +16885,17 @@ function aiNeedsReload(){ return aiEnabled() && !!(window.WA_NET && !WA_NET.aiOn
 // Everything saveProfile writes, as an object (also carried across a reload).
 function _profileSnapshot(){
   _pfEnsure(); _pfSnapshotActive();   // fold the live holdings into the active portfolio before serialising
+  fxRebase();
   const fields={};
   PROFILE_FIELDS.forEach(id=>{if($(id)) fields[id]=$(id).value;});
   PROFILE_CHECKBOXES.forEach(id=>{if($(id)) fields["chk_"+id]=$(id).checked;});
   return {
-    v:"1.1",savedAt:new Date().toISOString(),
+    v:"1.2",savedAt:new Date().toISOString(),
     fields,
     c2visible:$("c2card").style.display!=="none",
     bandMode:(typeof bandMode!=="undefined"?bandMode:"standard"),
     ccy:CURRENT_CCY, ccyManual:(typeof _ccyManual!=="undefined"?_ccyManual:false),
+    fx:fxSnapshot(),   // the rates the figures used, and any pinned rate
     assets,loans,goals,children,investments,proposals,insurances,equityComp,beneficiaries,whatIfScenarios,
     assetSeq,loanSeq,goalSeq,childSeq,invSeq,propSeq,insSeq,eqSeq,benSeq,whatIfSeq,pfLinkedAccountId,
     portfolios,activePfId,pfSeq,
@@ -16793,10 +17306,10 @@ function _waDedupe(ext){
     (hi)=>"Another income figure for this client comes from "+hi._doc+": tick the one to keep.");
   // Already in the plan.
   (ext.assets||[]).forEach(r=>{ if(r._dupNote || r._kind!=="account") return;
-    const hit=(typeof assets!=="undefined"?assets:[]).find(a=>(r.accountType && a.type===r.accountType && near(+a.value,+r.value)) || (N(a.label) && N(a.label)===N(r.label)));
-    if(hit) flag(r, "May already be in the plan as “"+(hit.label||hit.type)+"” ("+fmtMoneyFull(+hit.value||0)+").") });
+    const hit=(typeof assets!=="undefined"?assets:[]).find(a=>(r.accountType && a.type===r.accountType && near(+fxNat(a,"value"),+r.value)) || (N(a.label) && N(a.label)===N(r.label)));
+    if(hit) flag(r, "May already be in the plan as “"+(hit.label||hit.type)+"” ("+fmtMoneyIn(+fxNat(hit,"value")||0, hit.ccy, true)+").") });
   (ext.liabilities||[]).forEach(r=>{ if(r._dupNote) return;
-    const hit=(typeof loans!=="undefined"?loans:[]).find(l=>l.type===r.type && near(+l.bal,+r.balance));
+    const hit=(typeof loans!=="undefined"?loans:[]).find(l=>l.type===r.type && near(+fxNat(l,"bal"),+r.balance));
     if(hit) flag(r, "May already be in the plan as the loan “"+(hit.label||hit.type)+"”.") });
   (ext.holdings||[]).forEach(r=>{ if(r._dupNote) return;
     const hit=(typeof investments!=="undefined"?investments:[]).find(i=>(N(i.name) && N(i.name)===N(r.name)) || (isin(r) && String(i.note||"").includes(isin(r))));
@@ -17877,10 +18390,10 @@ function normalizeExtraction(raw){
     relationship:h.relationship||"", riskTolerance:_daEnum(h.riskTolerance,["very_conservative","conservative","moderately_conservative","moderate","moderately_aggressive","aggressive","very_aggressive"],""),
     timeHorizon:_daEnum(h.timeHorizon,["1_5","5_10","10_15","15_plus"],"") }); });
   (raw.income||[]).forEach(i=>{ out.income.push({ _ok:ok(i.confidence), _src:i.sourceQuote||"", _doc:i._doc||"",
-    who:_daEnum(i.who,["client1","client2"],"client1"), primary:_daNum(i.primary), secondary:_daNum(i.secondary), raisePct:_daRate(i.raisePct) }); });
+    who:_daEnum(i.who,["client1","client2"],"client1"), primary:_daNum(i.primary), secondary:_daNum(i.secondary), raisePct:_daRate(i.raisePct), ccy:fxCode(i.ccy) }); });
   if(raw.expenses && typeof raw.expenses==="object"){ const e=raw.expenses;
     const row={ _ok:ok(e.confidence), _src:e.sourceQuote||"",
-      living:_daNum(e.living), insurance:_daNum(e.insurance), other:_daNum(e.other), annualSavings:_daNum(e.annualSavings), inflationPct:_daRate(e.inflationPct) };
+      living:_daNum(e.living), insurance:_daNum(e.insurance), other:_daNum(e.other), annualSavings:_daNum(e.annualSavings), inflationPct:_daRate(e.inflationPct), ccy:fxCode(e.ccy) };
     // An empty {} is not data — counting it blocked the re-ask and the diagnostic.
     if([row.living,row.insurance,row.other,row.annualSavings,row.inflationPct].some(v=>v!=null)) out.expenses.push(row); }
   (raw.assets||[]).forEach(a=>{
@@ -17909,19 +18422,19 @@ function normalizeExtraction(raw){
       pfContrib:_daNum(a.pfContrib), pfConv:_daRate(a.pfConv), pfRate:_daRate(a.pfRate),
       _pfOk:(a._fieldConfidence && typeof a._fieldConfidence==="object") ? { pfContrib:_daConf(a._fieldConfidence.pfContrib), pfConv:_daConf(a._fieldConfidence.pfConv), pfRate:_daConf(a._fieldConfidence.pfRate) } : null }); });
   (raw.liabilities||[]).forEach(l=>{ out.liabilities.push({ _ok:ok(l.confidence), _src:l.sourceQuote||"", _doc:l._doc||"",
-    type:_daKey(l.type,_DA_LOAN_ALIAS,LOAN_LABELS,"other"), label:l.label||"", balance:_daNum(l.balance), ratePct:_daRate(l.ratePct), years:(l.years!=null?(parseInt(String(l.years).replace(/[^\d]/g,""),10)||null):null) }); });   // term length, NOT a calendar year
+    type:_daKey(l.type,_DA_LOAN_ALIAS,LOAN_LABELS,"other"), label:l.label||"", balance:_daNum(l.balance), ccy:fxCode(l.ccy), ratePct:_daRate(l.ratePct), years:(l.years!=null?(parseInt(String(l.years).replace(/[^\d]/g,""),10)||null):null) }); });   // term length, NOT a calendar year
   (raw.goals||[]).forEach(g=>{ out.goals.push({ _ok:ok(g.confidence), _src:g.sourceQuote||"", _doc:g._doc||"",
     name:g.name||"", amount:_daNum(g.amount), homePrice:_daNum(g.homePrice), startYear:_daYear(g.startYear), endYear:_daYear(g.endYear),
     category:_daEnum(g.category,["retirement","home","education","travel","emergency","business","wedding","car","health","legacy","other"],"other"),
-    tier:_daEnum(g.tier,["essential","important","aspirational","legacy"],"important") }); });
+    tier:_daEnum(g.tier,["essential","important","aspirational","legacy"],"important"), ccy:fxCode(g.ccy) }); });
   (raw.holdings||[]).forEach(h=>{ out.holdings.push({ _ok:ok(h.confidence), _src:h.sourceQuote||"", _doc:h._doc||"",
-    name:h.name||"", tkr:h.tkr||"", val:_daNum(h.val),
+    name:h.name||"", tkr:h.tkr||"", val:_daNum(h.val), ccy:fxCode(h.ccy),
     type:_daKey(h.type,_DA_TYPE_ALIAS,INV_TYPE_LABELS,"other"), cls:_daKey(h.cls,_DA_CLS_ALIAS,INV_CLASS_LABELS,"other"),
     region:_daKey(h.region,_DA_REGION_ALIAS,INV_REGION_LABELS,"other"), er:_daRate(h.er), yld:_daRate(h.yld), note:h.note||"" }); });
   if(raw.retirement && typeof raw.retirement==="object"){ const rt=raw.retirement;
     const anyVal=[rt.desiredAnnualSpend,rt.client1RetirementAge,rt.client2RetirementAge,rt.client1PensionAnnual,rt.client1PensionStartAge,rt.client2PensionAnnual,rt.client2PensionStartAge,rt.client1CombinedPensionAnnual,rt.client2CombinedPensionAnnual].some(v=>v!=null&&v!=="");
     if(anyVal){ const age=v=>{ const n=parseInt(String(v==null?"":v).replace(/[^\d]/g,""),10); return (isFinite(n)&&n>0)?n:null; };
-      out.retirement.push({ _ok:ok(rt.confidence), _src:rt.sourceQuote||"",
+      out.retirement.push({ _ok:ok(rt.confidence), _src:rt.sourceQuote||"", ccy:fxCode(rt.ccy),
         desiredAnnualSpend:_daNum(rt.desiredAnnualSpend),
         client1RetirementAge:age(rt.client1RetirementAge), client2RetirementAge:age(rt.client2RetirementAge),
         client1PensionAnnual:_daNum(rt.client1PensionAnnual), client1PensionStartAge:age(rt.client1PensionStartAge),
@@ -18037,16 +18550,16 @@ function renderReviewModal(){
 
   html+=section("Income", x.income.map((r,i)=>_daRow("income",i,r._ok,r._src,[
     {html:_daSelect("income",i,"who",r.who,WHO),w:"flex:0 0 90px"},
-    {lbl:"Primary $/yr",html:_daInput("income",i,"primary",r.primary,"number"),w:"flex:1"},
-    {lbl:"Secondary $/yr",html:_daInput("income",i,"secondary",r.secondary,"number"),w:"flex:1"},
+    {lbl:"Primary per year",html:_daInput("income",i,"primary",r.primary,"number"),w:"flex:1"},
+    {lbl:"Secondary per year",html:_daInput("income",i,"secondary",r.secondary,"number"),w:"flex:1"},
     {lbl:"Raise %",html:_daInput("income",i,"raisePct",r.raisePct,"number"),w:"flex:0 0 90px"}
   ],req(r))));
 
   html+=section("Expenses", x.expenses.map((r,i)=>_daRow("expenses",i,r._ok,r._src,[
-    {lbl:"Living $/yr",html:_daInput("expenses",i,"living",r.living,"number"),w:"flex:1"},
-    {lbl:"Insurance $/yr",html:_daInput("expenses",i,"insurance",r.insurance,"number"),w:"flex:1"},
-    {lbl:"Other $/yr",html:_daInput("expenses",i,"other",r.other,"number"),w:"flex:1"},
-    {lbl:"Savings $/yr",html:_daInput("expenses",i,"annualSavings",r.annualSavings,"number"),w:"flex:1"},
+    {lbl:"Living per year",html:_daInput("expenses",i,"living",r.living,"number"),w:"flex:1"},
+    {lbl:"Insurance per year",html:_daInput("expenses",i,"insurance",r.insurance,"number"),w:"flex:1"},
+    {lbl:"Other per year",html:_daInput("expenses",i,"other",r.other,"number"),w:"flex:1"},
+    {lbl:"Savings per year",html:_daInput("expenses",i,"annualSavings",r.annualSavings,"number"),w:"flex:1"},
     {lbl:"Inflation %",html:_daInput("expenses",i,"inflationPct",r.inflationPct,"number"),w:"flex:0 0 90px"}
   ],req(r))));
 
@@ -18064,13 +18577,13 @@ function renderReviewModal(){
     {lbl:"Label",html:_daInput("assets",i,"label",a.label),w:"flex:1.3"},
     {lbl:"Add as",html:_daSelect("assets",i,"_kind",a._kind||"account",KIND).replace("<select ",'<select onchange="_daKindChange(this)" '),w:"flex:0 0 150px"},
     {lbl:"Account type",html:_daAcctTypeSelect(i,cc,_daAcctPick(cc,a),(a._kind||"account")!=="account"),w:"flex:1.3"},
-    {lbl:"Value",html:_daInput("assets",i,"value",a.value,"number"),w:"flex:1"},
+    {lbl:"Value"+(fxCode(a.ccy) && fxCode(a.ccy)!==CURRENT_CCY ? " ("+fxCode(a.ccy)+")" : ""),html:_daInput("assets",i,"value",a.value,"number"),w:"flex:1"},
     {lbl:"Country",html:_daSelect("assets",i,"country",cc,CTRY).replace("<select ",'<select onchange="_daAcctCountryChange(this)" '),w:"flex:0 0 120px"},
     {lbl:"Owner",html:_daSelect("assets",i,"owner",a.owner||"client1",OWNERS),w:"flex:0 0 110px"}   // a pension unlocks at its owner's age
   ],a.value>0&&req(a)); });
   const curProp=num("aProp",0), curOther=num("aOther",0);
   if(assetRows.length && (curProp>0||curOther>0)){
-    const impProp=x.assets.filter(a=>a._kind==="property").reduce((s,a)=>s+(+a.value||0),0);
+    const impProp=x.assets.filter(a=>a._kind==="property").reduce((s,a)=>s+toBase(+a.value||0, fxCode(a.ccy)||CURRENT_CCY),0);   // in the household currency, like curProp
     const same = curProp>0 && impProp>0 && Math.abs(impProp-curProp)<=curProp*0.01;   // re-import of the same home → replace
     assetRows.unshift(`<div class="da-row" style="font-size:12px;color:var(--text2);align-items:center">The app already holds `
       +(curProp>0?`<strong>${_daEsc(_daMoneyFmt(curProp))}</strong> of property`:"")+(curProp>0&&curOther>0?" and ":"")
@@ -18081,14 +18594,14 @@ function renderReviewModal(){
   html+=section("Liabilities / loans", x.liabilities.map((l,i)=>_daRow("liabilities",i,l._ok,l._src,[
     {lbl:"Type",html:_daSelect("liabilities",i,"type",l.type,LOANS),w:"flex:0 0 150px"},
     {lbl:"Label",html:_daInput("liabilities",i,"label",l.label),w:"flex:1"},
-    {lbl:"Balance",html:_daInput("liabilities",i,"balance",l.balance,"number"),w:"flex:1"},
+    {lbl:"Balance"+(fxCode(l.ccy) && fxCode(l.ccy)!==CURRENT_CCY ? " ("+fxCode(l.ccy)+")" : ""),html:_daInput("liabilities",i,"balance",l.balance,"number"),w:"flex:1"},
     {lbl:"Rate %",html:_daInput("liabilities",i,"ratePct",l.ratePct,"number"),w:"flex:0 0 90px"},
     {lbl:"Years",html:_daInput("liabilities",i,"years",l.years,"number"),w:"flex:0 0 80px"}
   ],l.balance>0&&req(l))));
 
   html+=section("Goals", x.goals.map((g,i)=>_daRow("goals",i,g._ok,g._src,[
     {lbl:"Name",html:_daInput("goals",i,"name",g.name),w:"flex:1.3"},
-    {lbl:"Amount $/yr",html:_daInput("goals",i,"amount",g.amount,"number"),w:"flex:1"},
+    {lbl:"Amount per year",html:_daInput("goals",i,"amount",g.amount,"number"),w:"flex:1"},
     {lbl:"Start yr",html:_daInput("goals",i,"startYear",g.startYear,"number"),w:"flex:0 0 90px"},
     {lbl:"End yr",html:_daInput("goals",i,"endYear",g.endYear,"number"),w:"flex:0 0 90px"},
     {lbl:"Category",html:_daSelect("goals",i,"category",g.category,GCAT),w:"flex:0 0 120px"},
@@ -18098,7 +18611,7 @@ function renderReviewModal(){
   html+=section("Investment holdings", x.holdings.map((h,i)=>_daRow("holdings",i,h._ok,h._src,[
     {lbl:"Name",html:_daInput("holdings",i,"name",h.name),w:"flex:1.4"},
     {lbl:"Ticker",html:_daInput("holdings",i,"tkr",h.tkr),w:"flex:0 0 90px"},
-    {lbl:"Value",html:_daInput("holdings",i,"val",h.val,"number"),w:"flex:1"},
+    {lbl:"Value"+(fxCode(h.ccy) && fxCode(h.ccy)!==CURRENT_CCY ? " ("+fxCode(h.ccy)+")" : ""),html:_daInput("holdings",i,"val",h.val,"number"),w:"flex:1"},
     {lbl:"Type",html:_daSelect("holdings",i,"type",h.type,TYPES),w:"flex:0 0 120px"},
     {lbl:"Class",html:_daSelect("holdings",i,"cls",h.cls,CLSS),w:"flex:0 0 130px"},
     {lbl:"Region",html:_daSelect("holdings",i,"region",h.region,REGS),w:"flex:0 0 100px"},
@@ -18107,7 +18620,7 @@ function renderReviewModal(){
   ],h.val>0&&req(h))));
 
   html+=section("Retirement plan", (x.retirement||[]).map((r,i)=>_daRow("retirement",i,r._ok,r._src,[
-    {lbl:"Desired spend $/yr",html:_daInput("retirement",i,"desiredAnnualSpend",r.desiredAnnualSpend,"number"),w:"flex:1.1"},
+    {lbl:"Desired spend per year",html:_daInput("retirement",i,"desiredAnnualSpend",r.desiredAnnualSpend,"number"),w:"flex:1.1"},
     {lbl:"C1 retire age",html:_daInput("retirement",i,"client1RetirementAge",r.client1RetirementAge,"number"),w:"flex:0 0 90px"},
     {lbl:"C1 state pension /yr",html:_daInput("retirement",i,"client1PensionAnnual",r.client1PensionAnnual,"number"),w:"flex:1"},
     {lbl:"C1 from age",html:_daInput("retirement",i,"client1PensionStartAge",r.client1PensionStartAge,"number"),w:"flex:0 0 85px"},
@@ -18386,15 +18899,21 @@ function applyDataAgent(){
     bump("people");
   });
 
+  // Income, expenses, goals and retirement figures given in another currency (a questionnaire's main
+  // currency, a feed row's) are household-currency fields: converted on the way in, and said so.
+  const fxSeen=new Set();
+  const hb=(v,r)=>{ const c=fxCode(r && r.ccy); if(v==null || !isFinite(v) || !c || c===CURRENT_CCY) return v;
+    if(!fxSeen.has(c)){ fxSeen.add(c); const i=fxInfo(c); notes.push("amounts given in "+c+" were converted to "+CURRENT_CCY+(i.missing?" at 1:1 (no "+c+" rate yet: check them, or pin a rate in Settings)":" at 1 "+c+" = "+fxFmtRate(i.rate)+" "+CURRENT_CCY+" ("+fxSourceText(c)+")")); fxEnsureRate(c); }
+    return Math.round(toBase(v, c)); };
   // Income (amounts via _daNum, so a typed "185'000" or "CHF 185,000" still lands)
-  each("income",x.income,r=>{ const a=_daNum(r.primary), b=_daNum(r.secondary);
+  each("income",x.income,r=>{ const a=hb(_daNum(r.primary),r), b=hb(_daNum(r.secondary),r);
     if(!(a>0) && !(b>0)){ skipped.push("an income row with no amount"); return; }
     if(r.who==="client2"){ if(a>0) _daSet("inc1b",a); if(b>0) _daSet("inc2b",b); } else { if(a>0) _daSet("inc1",a); if(b>0) _daSet("inc2",b); }
     const rp=_daRate(r.raisePct); if(rp!=null) _daSet("raise",rp);
     bump("incomes"); });
 
   // Expenses
-  each("expenses",x.expenses,r=>{ const L=_daNum(r.living), I=_daNum(r.insurance), O=_daNum(r.other), S=_daNum(r.annualSavings), inf=_daRate(r.inflationPct);
+  each("expenses",x.expenses,r=>{ const L=hb(_daNum(r.living),r), I=hb(_daNum(r.insurance),r), O=hb(_daNum(r.other),r), S=hb(_daNum(r.annualSavings),r), inf=_daRate(r.inflationPct);
     if(L==null && I==null && O==null && S==null && inf==null){ skipped.push("an expenses row with no amounts"); return; }
     if(L!=null) _daSet("expL",L); if(I!=null) _daSet("expI",I); if(O!=null) _daSet("expO",O); if(S!=null) _daSet("savAnnual",S);
     if(inf) _daSet("inf",inf);
@@ -18404,19 +18923,24 @@ function applyDataAgent(){
   // aOther) — as an account a house would count as spendable cash in the simulation.
   let propSum=0, otherSum=0; const spBatch={};
   each("assets",x.assets,(r,i)=>{ const v=_daNum(r.value); if(!(v>0)){ skipped.push("“"+(r.label||"an account")+"” (no value)"); return; }
-    if(r._kind==="property"){ propSum+=v; bump("property"); return; }
-    if(r._kind==="other"){ otherSum+=v; bump("other assets"); return; }
+    // Property and other personal assets are household-currency fields: a figure in another currency is converted into them.
+    const pc=fxCode(r.ccy)||CURRENT_CCY;
+    if((r._kind==="property" || r._kind==="other") && fxInfo(pc).missing){ skipped.push("“"+(r.label||(r._kind==="property"?"a property":"an asset"))+"” (in "+pc+", which has no exchange rate yet: enter it in "+CURRENT_CCY+", or pin a "+pc+" rate in Settings first)"); fxEnsureRate(pc); return; }
+    if(r._kind==="property"){ propSum+=toBase(v, pc); bump("property"); return; }
+    if(r._kind==="other"){ otherSum+=toBase(v, pc); bump("other assets"); return; }
     // The reviewer's account-type choice (or Claude's exact code); wording-based matching only as a fallback.
     const ctry=r.country||val("c1co")||"US"; const mk=_daAccountByCode(ctry,r.accountType) || _daMatchAccount(ctry,r.accountTypeHint,r.taxType,r.label);
+    // The row's own currency; without one, the account country's (a US account is in USD), else the household's.
+    const aCcy=fxCode(r.ccy) || (ctry && ctry!=="OTHER" && COUNTRY_CURRENCIES[ctry]) || CURRENT_CCY; fxEnsureRate(aCcy);
     // withdrawAge + owner, exactly as the Assets tab's own "Add account" sets them:
     // without withdrawAge a pension (pillar 2 / 3a, 401k…) is not in the retirement
     // pool at all — the projections treated it as spendable cash at any age.
     const def=_acctDef(ctry,mk.type), own=_daOwnerCode(r.owner);
-    if(isStatePensionDef(def)){ const sp=applyStatePension(def, v, own, spBatch);
+    if(isStatePensionDef(def)){ const sp=applyStatePension(def, toBase(v, aCcy), own, spBatch);
       if(sp && sp.conflict){ notes.push(sp.name+" of "+fmtMoneyFull(sp.annual)+"/yr was not applied: "+sp.who+" already has one from this document (enter it on the Income tab if it is a different benefit)"); return; }
       if(sp){ notes.push(statePensionMsg(sp).replace(/\.$/,"")); bump("pensions"); return; } }
-    assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,liquid:mk.liquid,country:ctry,
-      withdrawAge:(def&&def.withdrawAge!=null)?def.withdrawAge:null, owner:own,
+    assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,ccy:aCcy,nat:{value:v},liquid:mk.liquid,country:ctry,
+      withdrawAge:(def&&def.withdrawAge!=null)?def.withdrawAge:null, owner:own, _ccyAuto:aCcy===CURRENT_CCY,
       note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))});
     // A Swiss pension certificate also gives the fund's own figures: they replace the
     // BVG-minimum assumptions in the Swiss pillars panel for that client.
@@ -18438,17 +18962,18 @@ function applyDataAgent(){
   // Replace or add, as chosen in the review window when a value already existed
   // (overwriting silently used to wipe a property entered earlier).
   const propMode=(($("daPropMode")||{}).value)||"add";
-  if(propSum>0) _daSet("aProp", propMode==="replace" ? propSum : num("aProp",0)+propSum);
-  if(otherSum>0) _daSet("aOther", propMode==="replace" ? otherSum : num("aOther",0)+otherSum);
+  if(propSum>0) _daSet("aProp", Math.round(propMode==="replace" ? propSum : num("aProp",0)+propSum));
+  if(otherSum>0) _daSet("aOther", Math.round(propMode==="replace" ? otherSum : num("aOther",0)+otherSum));
 
   // Liabilities
   each("liabilities",x.liabilities,r=>{ const b=_daNum(r.balance); if(!(b>0)){ skipped.push("“"+(r.label||"a loan")+"” (no balance)"); return; }
     const t=(r.type in LOAN_LABELS)?r.type:"other";
-    loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,rate:_daRate(r.ratePct)||0,yrs:parseInt(r.years,10)||0});
+    const lc=fxCode(r.ccy)||CURRENT_CCY;
+    loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,ccy:lc,nat:{bal:b},rate:_daRate(r.ratePct)||0,yrs:parseInt(r.years,10)||0}); fxEnsureRate(lc);
     bump("loans"); });
 
   // Goals
-  each("goals",x.goals,r=>{ const amt=_daNum(r.amount); if(!(amt>0)||!r.name){ skipped.push("“"+(r.name||"a goal")+"” (no "+(!r.name?"name":"amount")+")"); return; }
+  each("goals",x.goals,r=>{ const amt=hb(_daNum(r.amount),r); if(!(amt>0)||!r.name){ skipped.push("“"+(r.name||"a goal")+"” (no "+(!r.name?"name":"amount")+")"); return; }
     const sY=parseInt(r.startYear,10)||(typeof currentYear==="function"?currentYear():new Date().getFullYear());
     let eY=parseInt(r.endYear,10); if(!eY||eY<sY) eY=sY+1;
     goals.push({id:"g"+(++goalSeq),name:r.name,amt:amt,homePrice:(r.category==="home"?amt:undefined),startYear:sY,endYear:eY,cat:r.category||"other",tier:r.tier||"important"});
@@ -18459,12 +18984,12 @@ function applyDataAgent(){
     const er=_daRate(r.er), yld=_daRate(r.yld);
     investments.push({id:"inv"+(++invSeq),name:r.name,tkr:r.tkr||"",
       type:(r.type in INV_TYPE_LABELS)?r.type:"other", cls:(r.cls in INV_CLASS_LABELS)?r.cls:"other", region:(r.region in INV_REGION_LABELS)?r.region:"other",
-      val:v, er:er, yld:yld, note:"Imported by "+_daImportSource()});
+      val:v, ccy:fxCode(r.ccy)||fxPfCcyDefault(), nat:{val:v}, er:er, yld:yld, note:"Imported by "+_daImportSource()});
     bump("holdings"); });
 
   // Retirement plan → spending, retirement ages, and each client's pension.
   each("retirement",x.retirement,r=>{ let touched=false;
-    const spend=_daNum(r.desiredAnnualSpend), p1=_daNum(r.client1PensionAnnual), p2=_daNum(r.client2PensionAnnual);
+    const spend=hb(_daNum(r.desiredAnnualSpend),r), p1=hb(_daNum(r.client1PensionAnnual),r), p2=hb(_daNum(r.client2PensionAnnual),r);
     if(spend>0){ _daSet("retSpend",spend); touched=true; }
     if(parseInt(r.client1RetirementAge,10)>0){ _daSet("retAge",parseInt(r.client1RetirementAge,10)); touched=true; }
     if(parseInt(r.client2RetirementAge,10)>0 && $("retAge2")){ _daSet("retAge2",parseInt(r.client2RetirementAge,10)); touched=true; }
@@ -18493,7 +19018,7 @@ function applyDataAgent(){
       // A Swiss household keeps the official tables (canton, tariff, children, and lower tax once
       // retired): the stated rate is kept as the manual flat rate, one choice away, and the tax
       // panel shows it beside what the tables give.
-      const swiss=taxCountry()==="CH" && (($("taxMode")||{}).value||"auto")==="auto";
+      const swiss=chFxOk() && taxCountry()==="CH" && (($("taxMode")||{}).value||"auto")==="auto";
       if(!swiss) _daSetSel("taxMode","flat");
       _daSet("taxFlat",flat);
       const tf=$("taxFlat"); if(tf) tf.dataset.statedTotal=String(it);   // kept the total if the canton changes later (_taxReconcileStated)
@@ -18769,7 +19294,7 @@ function siParseOFX(text){
     const cls=info.kind?(clsByKind[info.kind]||"other"):(type==="bond"?"fixed_income":type==="stock"?"equity":"other");
     out.holdings.push({_ok:hadMkt?0.9:0.6,_src:("OFX "+ptag+" "+(uid||"")).trim(),
       name:info.name||info.tkr||uid||"Position", tkr:info.tkr||(uid&&uid.length<=6?uid:""),
-      val:v, type, cls, region:"other", er:null, yld:null, note:""});
+      val:v, ccy:curdef, type, cls, region:"other", er:null, yld:null, note:""});
   }
   // Brokerage cash
   const availcash=siNum(siTag(text,"AVAILCASH"),"auto");
@@ -18784,7 +19309,7 @@ function siParseOFX(text){
   function balAfter(tagOpen){ const idx=text.search(new RegExp(tagOpen,"i")); if(idx<0) return null; return siNum(siTag(text.slice(idx,idx+300),"BALAMT"),"auto"); }
   if(isCC){
     const bal=balAfter("<LEDGERBAL>");
-    if(bal!=null && Math.abs(bal)>0) out.liabilities.push({_ok:0.8,_src:"OFX CCSTMTRS balance",type:"cc",label:"Credit card",balance:Math.abs(bal),ratePct:null,years:null});
+    if(bal!=null && Math.abs(bal)>0) out.liabilities.push({_ok:0.8,_src:"OFX CCSTMTRS balance",type:"cc",label:"Credit card",balance:Math.abs(bal),ccy:curdef,ratePct:null,years:null});
   } else if(isBank && !isInv){
     const bal=balAfter("<LEDGERBAL>"); const at=(siTag(text,"ACCTTYPE")||"CHECKING").toUpperCase();
     if(bal!=null && bal>0) out.assets.push({_ok:0.9,_src:"OFX LEDGERBAL ("+at+")",label:at.charAt(0)+at.slice(1).toLowerCase()+" account",accountTypeHint:at,value:bal,country:val("c1co")||"US",ccy:curdef,propertyValue:null,otherValue:null});
@@ -18830,12 +19355,12 @@ function siFinishImport(){
   const unread=(window._siUnread||[]).length ? "✗ Couldn't read "+window._siUnread.join(", ")+" as text. Export it as CSV (UTF-8), or use Read a statement." : "";
   if(!total){ siStatus(unread || "No positions or balances detected. Try Read a statement for non-standard files.", unread ? "var(--red)" : "var(--amber)"); return; }
   _daExtraction=_siAccum;
-  const foreign=_siCcySeen?[..._siCcySeen].filter(c=>c&&c!==CURRENT_CCY):[];
+  const foreign=_fxForeignIn(_siAccum, _siCcySeen);
   let msg="✓ Parsed "+total+" row"+(total!==1?"s":"")+". Review below.";
   if(_siSkipped>0) msg+=" "+_siSkipped+" position"+(_siSkipped!==1?"s":"")+" skipped (no value found).";
   if(unread) msg+=" "+unread;
-  if(foreign.length) msg+=" ⚠ Amounts in "+foreign.join("/")+" shown as-is (not FX-converted).";
-  siStatus(msg, (foreign.length||_siSkipped>0||unread)?"var(--amber)":"var(--green)");
+  if(foreign.length) msg+=" Amounts in "+foreign.join(", ")+" keep their currency and convert to "+CURRENT_CCY+" at today's rate (Settings, Exchange rates).";
+  siStatus(msg, (_siSkipped>0||unread)?"var(--amber)":"var(--green)");
   renderReviewModal();
 }
 
@@ -18856,9 +19381,11 @@ function siBuildExtraction(){
     let inferred=false;
     if((v==null||v===0) && qty!=null && price!=null){ v=qty*price; inferred=true; }
     if(v==null || !(v>0)) return;
+    const rc=fxCode(cell(row,"ccy"))||ccy;   // a mapped currency column wins over the file's currency
+    if(rc) (_siCcySeen=_siCcySeen||new Set()).add(rc);
     if(kind==="assets"){
       out.assets.push({_ok:0.85,_src:st.fileName+": "+row.join(" | "),label:nameRaw||tkr||"Account",
-        accountTypeHint:cell(row,"cls")||nameRaw,value:v,country:val("c1co")||"US",ccy,propertyValue:null,otherValue:null});
+        accountTypeHint:cell(row,"cls")||nameRaw,value:v,country:val("c1co")||"US",ccy:rc,propertyValue:null,otherValue:null});
     } else {
       const clsCell=cell(row,"cls");
       let cls=clsCell?_daKey(clsCell,_DA_CLS_ALIAS,INV_CLASS_LABELS,"other"):"other";
@@ -18870,7 +19397,7 @@ function siBuildExtraction(){
       else if(/money market|mmf|sweep|\bcash\b/.test(hay)){ type="cash"; cls="cash"; }
       else if(tkr){ type="stock"; if(cls==="other") cls="equity"; }
       out.holdings.push({_ok:inferred?0.6:0.85,_src:st.fileName+": "+row.join(" | "),
-        name:nameRaw||tkr,tkr:tkr||"",val:v,type,cls,region:"other",er:null,yld:null,note:""});
+        name:nameRaw||tkr,tkr:tkr||"",val:v,ccy:rc,type,cls,region:"other",er:null,yld:null,note:""});
     }
   });
   return out;
@@ -19139,7 +19666,7 @@ function fdFromCamt(text,srcLabel){
     const label=(nmEl&&nmEl.textContent.trim())||(ibanTxt?("Account "+ibanTxt.slice(-6)):("Account "+(si+1)));
     const srcTxt="ISO 20022 camt · "+(srcLabel||"statement")+" · "+used+(ibanTxt?(" · "+ibanTxt):"");
     if(amount<0){
-      out.liabilities.push({_ok:0.85,_src:srcTxt,type:"other",label:label+" (overdrawn)",balance:Math.abs(amount),ratePct:null,years:null});
+      out.liabilities.push({_ok:0.85,_src:srcTxt,type:"other",label:label+" (overdrawn)",balance:Math.abs(amount),ccy:ccy||CURRENT_CCY,ratePct:null,years:null});
     } else {
       out.assets.push({_ok:0.9,_src:srcTxt,label:label,accountTypeHint:"Bank account",
         value:amount,country:val("c1co")||"CH",ccy:ccy||CURRENT_CCY,propertyValue:null,otherValue:null});
@@ -19150,6 +19677,12 @@ function fdFromCamt(text,srcLabel){
 }
 
 // ── Adapter dispatch ───────────────────────────────────────────────────
+// Currencies other than the household's in an extraction (every row, whichever adapter set it).
+function _fxForeignIn(ext, seen){
+  const s=new Set(seen?[...seen].map(fxCode):[]);
+  ["assets","liabilities","holdings"].forEach(k=>((ext&&ext[k])||[]).forEach(x=>{ const c=fxCode(x && x.ccy); if(c) s.add(c); }));
+  s.delete(""); s.delete(CURRENT_CCY); return [...s].sort();
+}
 let _fdCcySeen=null;
 let _fdActiveLabel="";   // set while a feed owns the shared review pipeline
 function fdAdapt(text,format,srcLabel){
@@ -19182,10 +19715,10 @@ function fdDeliver(text,fmt,srcLabel){
   if(!total){ fdStatus("✗ Connected, but no positions, balances or contacts were found in the payload.","var(--amber)"); return 0; }
   siDedupe(ext);
   _daExtraction=ext;
-  const foreign=[..._fdCcySeen].filter(c=>c&&c!==CURRENT_CCY);
+  const foreign=_fxForeignIn(ext, _fdCcySeen);
   let msg="✓ "+total+" record"+(total!==1?"s":"")+" normalized via "+WA_FEED_SCHEMA+" ("+r.fmt+"). Review below.";
-  if(foreign.length) msg+=" ⚠ Amounts in "+foreign.join("/")+" shown as-is (not FX-converted).";
-  fdStatus(msg, foreign.length?"var(--amber)":"var(--green)");
+  if(foreign.length) msg+=" Amounts in "+foreign.join(", ")+" keep their currency and convert to "+CURRENT_CCY+" at today's rate (Settings, Exchange rates).";
+  fdStatus(msg, "var(--green)");
   renderReviewModal();
   return total;
 }
@@ -19427,6 +19960,7 @@ function ordValidate(ticket){
   if(!ticket.lines.length) errors.push("The proposal has no positions.");
   if(!(ticket.totals.amount>0)) errors.push("Set a target amount in Proposal Setup. Without it, every order line is zero.");
   if(!ticket.account.id) errors.push("No custody account. Orders must book to an account; enter one in Order Routing.");
+  { const rc=fxCode(route.ccy); if(rc && rc!==CURRENT_CCY) errors.push("The custody account in Order Routing is in "+rc+", but the proposal's target amount is in "+CURRENT_CCY+" (the household currency). An order is never converted between currencies, so nothing is sent: route to a "+CURRENT_CCY+" account, or change the route's currency if the account is in fact in "+CURRENT_CCY+"."); }
 
   const unidentified=ticket.lines.filter(function(l){ return !l.instrument.isin && !l.instrument.cusip && !l.instrument.valor && !l.instrument.ticker; });
   if(unidentified.length){
@@ -19999,6 +20533,7 @@ function _pfLoadInto(id){
   if($("pfLinkedAccount")) $("pfLinkedAccount").value=pfLinkedAccountId;
   try{ updateLinkedReconcile(); }catch(_){}
   renderPortfolioSwitcher();
+  if(!_editingInvId) fxResetCcySel("pfCcy"); if(!_editingAltId) fxResetCcySel("pfAltCcy");   // this portfolio's linked account
   renderInvestments(); renderPortfolioMetrics(); try{ drawPortfolioPie(); }catch(_){}
   try{ refreshTopMetrics(); }catch(_){}
 }
@@ -20024,7 +20559,7 @@ function pfNew(){
 function pfDuplicate(){
   _pfSnapshotActive();
   const cur=portfolios.find(x=>x.id===activePfId); if(!cur) return;
-  let s=0; const holds=(cur.investments||[]).map(h=>({...h,id:"inv"+(++s)}));
+  let s=0; const holds=(cur.investments||[]).map(h=>({...h,id:"inv"+(++s),nat:{...(h.nat||{})},_fxb:{...(h._fxb||{})}}));
   const id="pf"+(++pfSeq);
   portfolios.push({id,name:cur.name+" (copy)",investments:holds,invSeq:s,pfLinkedAccountId:cur.pfLinkedAccountId||""});
   _pfLoadInto(id);
@@ -20241,6 +20776,8 @@ function renderCrossPortfolioOverlap(){
 
 function renderInvestments(){
   const list=$("pfList"); if(!list) return;
+  fxRebase();
+  try{ renderFxAssetsNote(); }catch(_){}
   if(investments.length===0){list.innerHTML='<div class="pf-empty">No investments added.</div>'; return;}
   const pfHeaderRow='<div class="pf-row" style="background:var(--bg3);border-bottom:2px solid var(--border2)"><span>Type</span><span>Name</span><span>Ticker</span><span>Class</span><span>Value<span class="info-ic">i<span class="info-pop">Current market value of this holding, summed into Total value above and used to weight all other portfolio metrics.</span></span></span><span>Region</span><span>Exp. Ratio<span class="info-ic">i<span class="info-pop">This holding\'s own reported annual expense ratio; contributes to the portfolio\'s value-weighted average shown above.</span></span></span><span>Yield<span class="info-ic">i<span class="info-pop">Annual income (dividends/interest) this holding pays as a % of its value.</span></span></span><span>Notes</span></div>';
   list.innerHTML=pfHeaderRow+investments.map(i=>{
@@ -20251,7 +20788,7 @@ function renderInvestments(){
       <span class="pname">${_daEsc(i.name)}</span>
       <span class="ptkr">${_daEsc(i.tkr||"-")}</span>
       <span style="color:var(--text2)">${INV_CLASS_LABELS[i.cls]||i.cls}${i.subcat?` <span style="color:var(--text3)">· ${_daEsc(i.subcat)}</span>`:""}</span>
-      <span style="color:var(--text);font-variant-numeric:tabular-nums;font-weight:500">${fmtMoney(i.val)}</span>
+      <span style="color:var(--text);font-variant-numeric:tabular-nums;font-weight:500">${fxCellHtml(i,"val",false)}</span>
       <span style="color:var(--text3)">${INV_REGION_LABELS[i.region]||i.region}</span>
       <span style="color:var(--text2);font-variant-numeric:tabular-nums">${er}</span>
       <span style="color:var(--text2);font-variant-numeric:tabular-nums">${yld}</span>
@@ -23100,7 +23637,8 @@ const COUNTRY_CCY = {US:"USD", CA:"CAD", GB:"GBP", AU:"AUD", CH:"CHF", JP:"JPY",
                      DE:"EUR", FR:"EUR", IT:"EUR", ES:"EUR", NL:"EUR", BE:"EUR",
                      AT:"EUR", IE:"EUR", PT:"EUR", FI:"EUR", GR:"EUR", LU:"EUR", EU:"EUR"};
 function clientCurrency(brief){
-  return (brief && (brief.currency || COUNTRY_CCY[(brief.country||"US").toUpperCase()])) || "USD";
+  // The household currency (Settings override included); a brief's own currency wins when it has one.
+  return (brief && brief.currency) || (typeof CURRENT_CCY!=="undefined" && CURRENT_CCY) || COUNTRY_CCY[((brief && brief.country)||"US").toUpperCase()] || "USD";
 }
 
 // ── Swiss sleeves (Portfolio Builder, rules engine) ──────────────────────
@@ -25579,7 +26117,7 @@ function refreshPortfolioAccountDropdown(){
   assets.forEach(a=>{
     const o=document.createElement("option");
     o.value=a.id;
-    o.textContent=`${a.label||a.baseLabel||a.type}: ${fmtMoney(a.value)}`;
+    o.textContent=`${a.label||a.baseLabel||a.type}: ${fmtMoneyIn(+fxNat(a,"value")||0, a.ccy)}`;
     sel.appendChild(o);
   });
   if(prev&&[...sel.options].some(o=>o.value===prev)) sel.value=prev;
@@ -25588,6 +26126,8 @@ function refreshPortfolioAccountDropdown(){
 }
 function onPfLinkedAccountChange(){
   pfLinkedAccountId=$("pfLinkedAccount")?.value||"";
+  if(!_editingInvId) fxSelSet("pfCcy", fxPfCcyDefault());       // holdings of a linked account are in its currency
+  if(!_editingAltId) fxSelSet("pfAltCcy", fxPfCcyDefault());
   updateLinkedReconcile();
   refreshTopMetrics();
 }
@@ -25735,7 +26275,7 @@ function getProposalAdvisoryFeePct(){
 }
 function updatePortfolioFeeDisplay(){
   const type=val("pfFeeType")||"none";
-  setT("pfFeeUnit",type==="flat"?"$/yr":"%/yr");
+  setT("pfFeeUnit",type==="flat"?CURRENT_CCY+"/yr":"%/yr");
   // Whole portfolio, cash at 0%: the same basis as the Investment Proposal and Compare tabs.
   const cw=getCurrentPortfolioParams();
   const fee=getPortfolioAdvisoryFeePct();
@@ -25745,7 +26285,7 @@ function updatePortfolioFeeDisplay(){
 }
 function updateProposalFeeDisplay(){
   const type=val("prFeeType")||"none";
-  setT("prFeeUnit",type==="flat"?"$/yr":"%/yr");
+  setT("prFeeUnit",type==="flat"?CURRENT_CCY+"/yr":"%/yr");
   // Same figures as the proposal metrics and the Compare tab: each position's own
   // expected return where it has one, else its asset-class assumption, cash at 0%.
   const grossRet=proposals.length?computePortfolioMetrics(proposals,"alloc").grossMu*100:0;
@@ -29316,19 +29856,22 @@ function wiAutoCut(amt, age){
   // most of it: Swiss when Swiss clients' pillars (and a Swiss resident's other locked
   // accounts) hold at least half, otherwise the other client's residence country.
   let country=val("c1co")||"US";
-  try{ if(typeof chHouseholdSwiss==="function" && chHouseholdSwiss()){
+  const chOk=chFxOk();   // the capital-withdrawal table is in CHF and part of the Swiss pillar model
+  try{ if(chOk && typeof chHouseholdSwiss==="function" && chHouseholdSwiss()){
     const own=chOwnerPillars(), sh=retirementOwnerShares(), seed=retirementAccountSeed();
     const swiss=[1,2].reduce((s,n)=>{ if(!chSwissClient(n)) return s; const o=own["c"+n];
       return s+(chResident(n) ? seed*(sh["c"+n]||0) : o.bvg+o.fz+o.p3); },0);
     if(seed>0 && swiss>=0.5*seed) country="CH";
     else if(country==="CH") country=(_chHasC2() && val("c2co"))||country;
   } }catch(_){}
+  // Without it: the rules of whoever owns most of the pool, as above, by the owners' shares.
+  if(!chOk && country==="CH" && _chHasC2() && val("c2co") && val("c2co")!=="CH"){ try{ const sh=retirementOwnerShares(); if((sh.c2||0)>(sh.c1||0)) country=val("c2co"); }catch(_){} }
   const marginalPct=()=>{ try{
       const inc=Math.max(0,getGrossIncome());
       const t=(computeFederalTax(inc+amt)+computeStateTax(inc+amt))-(computeFederalTax(inc)+computeStateTax(inc));
       return Math.max(0,t/amt*100);
     }catch(_){ return null; } };
-  if(country==="CH"){
+  if(country==="CH" && chOk){
     // The household's canton (the panel's explicit pick, else the address) — the
     // panel select could hold a previous client's canton or none at all.
     const canton=chCantonCode();
@@ -29806,7 +30349,7 @@ function wiInputSig(){
     // rewriting its client line, is not a change to the plan.
     const f=PROFILE_FIELDS.filter(id=>!_WI_SIG_SKIP.has(id)).map(id=>{ const e=$(id); return e?e.value:""; });
     const c=PROFILE_CHECKBOXES.map(id=>{ const e=$(id); return !!(e&&e.checked); });
-    const s=JSON.stringify([f, c, ($("c2card")||{style:{}}).style.display, CURRENT_CCY, new Date().toDateString(),
+    const s=JSON.stringify([f, c, ($("c2card")||{style:{}}).style.display, CURRENT_CCY, (typeof fxSig==="function"?fxSig():""), new Date().toDateString(),
       (typeof band!=="undefined"&&band)?[band.low,band.mid,band.high]:null,
       assets, loans, goals, children, investments, proposals, insurances, equityComp,
       (typeof portfolios!=="undefined"?portfolios:null), (typeof activePfId!=="undefined"?activePfId:null),
@@ -31319,7 +31862,13 @@ function waLib(name){
            catch(e){ try{ console.error("[waLib] "+name,e); }catch(_){} } }
   return ready ? ready() : !!blk;
 }
+// Rates are held still while a report is drawn: a refresh landing mid-report is applied after it.
 async function generatePDFReport(mode, previewWin){
+  try{ fxRebase(); }catch(_){}
+  fxHold();
+  try{ return await _generatePDFReportInner(mode, previewWin); } finally { fxRelease(); }
+}
+async function _generatePDFReportInner(mode, previewWin){
   // mode: undefined/"download" → save the file; "preview" → show the SAME
   // document in a browser tab via blob URL (guarantees preview === download).
   if(mode!=="preview") setT("rptStatus","Generating PDF…");
@@ -31435,6 +31984,9 @@ async function generatePDFReport(mode, previewWin){
       .replace(/•/g,"-").replace(/·/g,"·"); // keep middot (Latin-1)
     (function patchText(){
       const _orig = doc.text.bind(doc);
+      // One sanitizer for everything drawn: tbl() hands autoTable sanitised cells and splitTextToSize
+      // wraps sanitised text, so a column or a line is measured as it is printed.
+      const _san = doc.__san = pdfSafe;
       doc.text = function(txt){
         const a = Array.prototype.slice.call(arguments);
         a[0] = Array.isArray(txt) ? txt.map(pdfSafe) : pdfSafe(txt);
@@ -31448,7 +32000,23 @@ async function generatePDFReport(mode, previewWin){
             else if(a[1] - w/2 < M) a[1] = M + w/2;
           }
         }
+        // A right-aligned label a little wider than its gutter (a long axis figure left of a chart) is set
+        // smaller to fit; anything further out is a layout bug and is left to show.
+        try{
+          if(typeof a[0] === "string" && a[0].indexOf("\n") < 0 && o && typeof o === "object" && o.align === "right" && !o.maxWidth){
+            const x=+a[1], tw=doc.getTextWidth(a[0]);
+            if(x>M && x-tw<M && M-(x-tw)<8){ const fs=doc.getFontSize(), k=Math.max(0.62,(x-M)/tw); doc.setFontSize(fs*k); const r=_orig.apply(null, a); doc.setFontSize(fs); return r; }
+          }
+        }catch(_){}
         return _orig.apply(null, a);
+      };
+      // Wrapping must measure what will be drawn: sigma, mu and arrows were measured as one glyph and drawn
+      // as several letters, so a wrapped line (Methodology, CMA, Glossary) ran past the right margin.
+      const _origSplit = doc.splitTextToSize.bind(doc);
+      doc.splitTextToSize = function(t){
+        const a = Array.prototype.slice.call(arguments);
+        a[0] = Array.isArray(t) ? t.map(_san) : _san(t);
+        return _origSplit.apply(null, a);
       };
     })();
 
@@ -31586,6 +32154,13 @@ async function generatePDFReport(mode, previewWin){
 
     function tbl(head, rows, opts = {}) {
     checkY(24);
+    // autoTable sizes its columns from the text it is given and wraps with the (sanitised) splitTextToSize:
+    // hand it the sanitised text, so "Volatility (sigma)" is measured as it is drawn and stays on one line.
+    if(typeof doc.__san === "function"){
+      const sz=v=>typeof v==="string"?doc.__san(v):v;
+      head=Array.isArray(head)?head.map(sz):head;
+      rows=Array.isArray(rows)?rows.map(r=>Array.isArray(r)?r.map(sz):r):rows;
+    }
     // Base options first, then user overrides via ...opts, then finally wire
     // in didDrawPage so it survives user overrides. autoTable's `didDrawPage`
     // fires after each page's table content is drawn — on continuation pages
@@ -31838,7 +32413,8 @@ function drawFanChart(){
       doc.setDrawColor(...FAINT); doc.setLineWidth(0.3); doc.setLineDashPattern([1,1],0);
       doc.line(rx, chartY, rx, chartY+chartH);
       doc.setLineDashPattern([],0);
-      doc.setFontSize(6); doc.setTextColor(...MUTED); doc.text("retirement", rx+1, chartY+4);
+      doc.setFontSize(6); doc.setTextColor(...MUTED);
+      { const lw=doc.getTextWidth("retirement"); doc.text("retirement", rx+1+lw>M+CW ? rx-1-lw : rx+1, chartY+4); }
     }
   }catch(_){}
 
@@ -31906,7 +32482,10 @@ function drawFanChart(){
       const mv=[]; for(let i=1;i<pts.length;i++) mv.push([pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]]);
       doc.setFillColor(...tint(ac,0.82)); doc.setLineWidth(0); doc.lines(mv,pts[0][0],pts[0][1],[1,1],"F",true);
       series.forEach(s=>{ doc.setDrawColor.apply(doc,s.cf.c); doc.setLineWidth(0.7); for(let i=1;i<=yrs;i++) doc.line(mx(i-1),my(s.pts[i-1]),mx(i),my(s.pts[i])); });
-      const rx=mx(Math.max(0,retAge-a1)); doc.setDrawColor(...FAINT); doc.setLineWidth(0.3); doc.setLineDashPattern([1,1],0); doc.line(rx,cy0,rx,cy0+ch); doc.setLineDashPattern([],0); doc.setFontSize(6); doc.setTextColor(...MUTED); doc.text("retirement",rx+1,cy0+4);
+      // only when retirement falls inside the chart (a 15-year projection put the line and its label off the paper)
+      const ri=Math.max(0,retAge-a1);
+      if(ri>0 && ri<yrs){ const rx=mx(ri); doc.setDrawColor(...FAINT); doc.setLineWidth(0.3); doc.setLineDashPattern([1,1],0); doc.line(rx,cy0,rx,cy0+ch); doc.setLineDashPattern([],0); doc.setFontSize(6); doc.setTextColor(...MUTED);
+        const lw=doc.getTextWidth("retirement"); doc.text("retirement", rx+1+lw>M+CW ? rx-1-lw : rx+1, cy0+4); }
       y=cy0+ch+11;
       let lx=cx; doc.setFontSize(7); series.forEach(s=>{ doc.setDrawColor.apply(doc,s.cf.c); doc.setLineWidth(1.1); doc.line(lx,y-1.2,lx+7,y-1.2); doc.setTextColor(...MUTED); doc.text(s.cf.lbl,lx+9,y); lx+=Math.min(95,plotW/3); });
       y+=7; doc.setTextColor(40); doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
@@ -32635,9 +33214,18 @@ function drawFanChart(){
       const insCash=(typeof insuranceCashValue==="function")?(+insuranceCashValue()||0):0;
       const liquidAssets=assets.filter(a=>a.liquid), lockedAssets=assets.filter(a=>!a.liquid);
       const sum=arr=>arr.reduce((s,a)=>s+(+a.value||0),0);
+      // An item held in another currency shows its own amount beside the label: "JPM Chase (USD 895k)".
+      const _fxLbl=a=>{ const l=String(a.label||a.baseLabel||a.type||""), c=fxCode(a.ccy); return (c && c!==CURRENT_CCY && a.nat && a.nat.value!=null) ? l+" ("+fmtMoneyIn(+a.nat.value||0, c)+")" : l; };
       const colGap=12, colW=(CW-colGap)/2, Lx=M, Rx=M+colW+colGap;
       const colBar=(cx,yy,title)=>{ const h=7.6; doc.setFillColor.apply(doc,acBar); doc.rect(cx,yy-5.2,colW,h,"F"); doc.setFillColor(...ac); doc.rect(cx,yy-5.2,1.4,h,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.setTextColor.apply(doc,acDark); doc.text(title,cx+3.8,yy); return yy+h+2.5; };
-      const row=(cx,yy,label,value,o)=>{ o=o||{}; doc.setFont("helvetica",o.bold?"bold":"normal"); doc.setFontSize(o.bold?8.3:8); doc.setTextColor.apply(doc, o.bold?INK:acDark); doc.text(String(label==null?"":label),cx+(o.indent||0),yy); if(value!=null){ doc.setTextColor.apply(doc, o.bold?INK:INK_SOFT); doc.text(String(value),cx+colW-1,yy,{align:"right"}); } return yy+(o.gap||4.8); };
+      const row=(cx,yy,label,value,o)=>{ o=o||{}; doc.setFont("helvetica",o.bold?"bold":"normal"); doc.setFontSize(o.bold?8.3:8); doc.setTextColor.apply(doc, o.bold?INK:acDark);
+        // A label too long for the room beside its amount is shortened, keeping a "(USD 895k)" suffix whole.
+        let lab=String(label==null?"":label);
+        if(value!=null){ const room=colW-(o.indent||0)-doc.getTextWidth(String(value))-4;
+          if(doc.getTextWidth(lab)>room){ const m=/^(.*?)(\s\([A-Z]{3} [^)]*\))$/.exec(lab); let head=m?m[1]:lab; const tail=m?m[2]:"";
+            while(head.length>3 && doc.getTextWidth(head+"…"+tail)>room) head=head.slice(0,-1);
+            lab=head.replace(/\s+$/,"")+"…"+tail; } }
+        doc.text(lab,cx+(o.indent||0),yy); if(value!=null){ doc.setTextColor.apply(doc, o.bold?INK:INK_SOFT); doc.text(String(value),cx+colW-1,yy,{align:"right"}); } return yy+(o.gap||4.8); };
       const subtot=(cx,yy,label,value)=>{ doc.setDrawColor(...LINE); doc.setLineWidth(0.2); doc.line(cx+2,yy-2.6,cx+colW,yy-2.6); return row(cx,yy+1.4,label,value,{bold:true,indent:2,gap:6.4}); };
       // Overflow guard: a long account list used to run past the footer band —
       // cap each column's rows to the space left and roll the rest into a
@@ -32646,7 +33234,7 @@ function drawFanChart(){
         let yy=startY;
         const capacity=Math.max(0, Math.floor((PAGE_BOTTOM-26-yy)/4.8));
         const shown=items.length>capacity ? items.slice(0,Math.max(0,capacity-1)) : items;
-        shown.forEach(a=>{ yy=row(cx,yy,a.label||a.baseLabel||a.type,fmt(a.value),{indent:4}); });
+        shown.forEach(a=>{ yy=row(cx,yy,_fxLbl(a),fmt(a.value),{indent:4}); });
         const rest=items.length-shown.length;
         if(rest>0){ const restSum=items.slice(shown.length).reduce((s,a)=>s+(+a.value||0),0);
           yy=row(cx,yy,"… plus "+rest+" more",fmt(restSum),{indent:4}); }
@@ -32676,7 +33264,7 @@ function drawFanChart(){
       // LIABILITIES column
       Ry=colBar(Rx,Ry,"Liabilities");
       if(loans.length){
-        Ry=listRows(Rx,Ry,loans.map(l=>({label:l.label||"Loan",value:l.bal})));
+        Ry=listRows(Rx,Ry,loans.map(l=>({label:l.label||"Loan",value:l.bal,ccy:l.ccy,nat:{value:fxNat(l,"bal")}})));
         Ry=subtot(Rx,Ry,"Total Liabilities",fmt(debtTot));
       } else { Ry=row(Rx,Ry,"No liabilities.",null,{}); }
       // bottom totals
@@ -32730,7 +33318,7 @@ function drawFanChart(){
         {label:"Net Worth",value:Math.max(0,nwf),color:[0,87,184]}
       ], {fmtVal:"money"});
       doc.setFont("helvetica","italic"); doc.setFontSize(6.6); doc.setTextColor(150);
-      doc.text("$ value", chartX, chartY-1.5);
+      doc.text(CURRENT_CCY+" value", chartX, chartY-1.5);
       const Rx=M+chartW+14, Rw=CW-chartW-14;
       const propV=num("aProp",0), otherV=num("aOther",0);
       const insCash=(typeof insuranceCashValue==="function")?(+insuranceCashValue()||0):0;
@@ -33306,7 +33894,8 @@ function drawFanChart(){
                 doc.setDrawColor(...FAINT); doc.setLineWidth(0.3); doc.setLineDashPattern([1,1],0);
                 doc.line(rx, gy2-2, rx, gy2 + list.length*rowH);
                 doc.setLineDashPattern([],0);
-                doc.setFontSize(6); doc.setTextColor(...MUTED); doc.text("retirement", rx+1, gy2-0.4); }
+                doc.setFontSize(6); doc.setTextColor(...MUTED);
+                { const lw=doc.getTextWidth("retirement"); doc.text("retirement", rx+1+lw>M+CW ? rx-1-lw : rx+1, gy2-0.4); } }
             }catch(_){}
             list.forEach(g=>{
               const bh2 = 2.2 + 3.8*(g.amt/maxAmt);   // amount-scaled thickness
@@ -33396,7 +33985,10 @@ function drawFanChart(){
           const leg = [[(showC2?(val("c1f")||"Client 1")+"'s pension":"Pension / state benefits"), acDark]].concat(pen2>0?[[(val("c2f")||"Client 2")+"'s pension", tint(ac,0.35)]]:[]).concat([["Drawn from portfolio ("+fmt(fromPort)+"/yr)", WARN]]);
           let lx2 = bx;
           doc.setFontSize(6.4);
-          leg.forEach(([lbl,col])=>{ doc.setFillColor(...col); doc.rect(lx2, by-2.4, 3, 3, "F");
+          leg.forEach(([lbl,col])=>{
+            // a key that would run past the right margin starts a new row (long client names pushed it 8mm out)
+            if(lx2>bx && lx2+4.4+doc.getTextWidth(lbl)>M+CW){ lx2=bx; by+=4.2; }
+            doc.setFillColor(...col); doc.rect(lx2, by-2.4, 3, 3, "F");
             doc.setTextColor(...MUTED); doc.text(lbl, lx2+4.4, by); lx2 += doc.getTextWidth(lbl)+16; });
           y = by+6;
           doc.setTextColor(40); doc.setFontSize(fsz);
@@ -33883,7 +34475,7 @@ function drawFanChart(){
           doc.setTextColor(255,255,255); doc.text(txt,x+w/2,cyy,{align:"center"}); };
         const drawStacked=(x,y0,w,h,bars,maxV)=>{ const baseY=y0+h,n=bars.length,gap=w/n,bw=Math.min(gap*0.5,34);
           doc.setDrawColor(..._grid); doc.setLineWidth(0.2); doc.setFontSize(6.5); doc.setTextColor(150);
-          for(let g=0;g<=4;g++){ const gy=baseY-(h-4)*g/4,v=maxV*g/4; doc.line(x,gy,x+w,gy); doc.text("$"+Math.round(v/1000).toLocaleString()+"k",x-2,gy+1.5,{align:"right"}); }
+          for(let g=0;g<=4;g++){ const gy=baseY-(h-4)*g/4,v=maxV*g/4; doc.line(x,gy,x+w,gy); doc.text((CURRENT_CCY==="USD"?"$":CURRENT_CCY+" ")+(v>0?Math.round(v/1000).toLocaleString()+"k":"0"),x-2,gy+1.5,{align:"right"}); }
           doc.setDrawColor(170); doc.setLineWidth(0.4); doc.line(x,baseY,x+w,baseY);
           bars.forEach((b,i)=>{ const bx=x+gap*i+(gap-bw)/2; let acc=0;
             b.segs.forEach(s=>{ if(!(s.value>0))return; const sh=(s.value/maxV)*(h-4),ty=baseY-acc-sh;
@@ -34360,7 +34952,7 @@ function drawFanChart(){
           if(isCH){
             // A typed figure above the AHV maximum is not AHV alone - flag the 2nd-pillar double count.
             const manual=[[PSr.c1,n1],[PSr.c2,n2]].filter(([s],i)=>(i===0?on1:on2) && s.src==="manual");
-            const aMax=Math.round(AHV_MAX_MONTHLY*AHV_PAYMENTS_PER_YEAR), bvgCap=(I?I.aP2:0);
+            const aMax=ahvMaxAnnual(), bvgCap=(I?I.aP2:0);
             const over=manual.filter(([s])=>s.base>aMax+1);
             const coupleOver=!!PSr.capCut;   // the same test the projection applies (at the reference age)
             if(over.length || coupleOver){
@@ -34591,39 +35183,58 @@ function drawFanChart(){
           // right-aligned. tbl() paginates and repeats the header per page.
           const cfW=[10,11,14,15,16,14,14,14,14,14,14,15,14,16,28];
           const cfA=["center","center","left","right","right","right","right","right","right","right","right","right","right","right","left"];
-          const NOTES=cfW.length-1;
-          // Each column's widest value on ONE line at font size fs (a header wraps between words)
-          const cfNeed=(fs,pad)=>cfHead.map((h,i)=>{
-            if(i===NOTES) return 0;
-            doc.setFont("helvetica","normal"); doc.setFontSize(fs);
-            let w=Math.max.apply(null, cfRows.map(r=>doc.getTextWidth(String(r[i]||""))).concat([0]));
-            doc.setFont("helvetica","bold");
-            String(h).split(/\s+/).forEach(word=>{ w=Math.max(w, doc.getTextWidth(word)); });
-            return w+2*pad;
-          });
-          let cfFs=6.2, cfPad=1.2;
-          // A column too narrow for its widest amount widens ("CHF 28.64M" wrapped in 14mm);
-          // autoTable keeps a line up to 1/k (0.35mm) wider than its cell on one line
-          let cfWidths=cfNeed(cfFs,cfPad).map((n,i)=>Math.max(cfW[i],n-0.3));
-          if(cfWidths.reduce((a,b)=>a+b,0) > CW){
-            // Portrait (174-180mm): the landscape widths drew Ret. pool, Net worth and Notes past the
-            // paper edge. Each column gets its widest value, Notes the rest; the font steps down
-            // from 6.2pt until Notes keeps 24mm.
-            cfPad=0.9;
-            for(cfFs=6.2; ; cfFs=Math.round((cfFs-0.2)*10)/10){
-              cfWidths=cfNeed(cfFs,cfPad).map((n,i)=>i===NOTES?0:n+0.5);
-              cfWidths[NOTES]=CW-cfWidths.reduce((a,b)=>a+b,0);
-              if(cfWidths[NOTES]>=24 || cfFs<=5) break;
-            }
-            // still too wide at 5pt: narrow the other columns so Notes keeps 16mm and nothing leaves the page
-            if(cfWidths[NOTES]<16){ const k=(CW-16)/(CW-cfWidths[NOTES]); cfWidths=cfWidths.map((w,i)=>i===NOTES?16:w*k); }
+          // Notes: a currency stays with its figure when the note wraps ("tax CHF" / "54k" broke across two lines)
+          { const cs=String((CURRENCIES[CURRENT_CCY]||CURRENCIES.USD).sym||"").trim();
+            if(cs) cfRows.forEach(r=>{ const n=r.length-1; if(typeof r[n]==="string") r[n]=r[n].split(cs+" ").join(cs+" "); }); }
+          const cfOpts=cs=>({ styles:{fontSize:6.2, cellPadding:1.2, overflow:"linebreak"}, headStyles:{fontSize:6.2}, columnStyles:cs });
+          // One Age column per client: the app's "48 / 50" cell is split, each column headed with the
+          // client's first name and wide enough for it. A single client keeps the one Age column.
+          const two=cfRows.some(r=>/\//.test(String(r[1]||"")));
+          let head2=cfHead, rows2=cfRows, W2=cfW, A2=cfA, ageW=[11];
+          if(two){
+            const nm=[val("c1f")||"Client 1", val("c2f")||"Client 2"];
+            doc.setFont("helvetica","bold"); doc.setFontSize(6.2);
+            ageW=nm.map(n=>Math.min(18, Math.max(11, doc.getTextWidth(n)+3)));
+            doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
+            head2=[cfHead[0], "Age\n"+nm[0], "Age\n"+nm[1]].concat(cfHead.slice(2));
+            rows2=cfRows.map(r=>{ const p=String(r[1]||"").split(/\s*\/\s*/); return [r[0], p[0]||"", p[1]||""].concat(r.slice(2)); });
+            W2=[cfW[0]].concat(ageW, cfW.slice(2));
+            A2=[cfA[0], "center", "center"].concat(cfA.slice(2));
           }
+          const o=two?1:0;   // later columns move one to the right when the ages are split
+          const ageIdx=two?[1,2]:[1];
+          // A column too narrow for its widest value on one line widens ("CHF 28.64M" wrapped in 14mm);
+          // autoTable keeps a line up to 0.35mm wider than its cell on one line. Headers wrap between words.
+          const NOTES=head2.length-1;
+          const need=head2.map((h,i)=>{ if(i===NOTES) return 0;
+            doc.setFont("helvetica","normal"); doc.setFontSize(6.2);
+            let w=Math.max.apply(null, rows2.map(r=>doc.getTextWidth(String(r[i]||""))).concat([0]));
+            doc.setFont("helvetica","bold"); String(h).split(/\s+/).forEach(word=>{ w=Math.max(w, doc.getTextWidth(word)); });
+            return w+2*1.2; });
           doc.setFont("helvetica","normal"); doc.setFontSize(fsz);
-          const cfColStyles={}; cfWidths.forEach((w,i)=>{ cfColStyles[i]={cellWidth:w,halign:cfA[i]}; });
-          tbl(cfHead, cfRows,
-            { styles:{fontSize:cfFs, cellPadding:{top:1.2,bottom:1.2,left:cfPad,right:cfPad}, overflow:"linebreak"},
-              headStyles:{fontSize:cfFs},
-              columnStyles:cfColStyles });
+          const LW=W2.map((w,i)=>i===NOTES?w:Math.max(w, need[i]-0.3));
+          if(CW>=LW.reduce((s2,v)=>s2+v,0)){
+            // Landscape: one table; Notes take the width the other columns leave, so it fills the page
+            const spare=CW-LW.reduce((s2,v)=>s2+v,0);
+            const cfColStyles={}; LW.forEach((w,i)=>{ cfColStyles[i]={cellWidth:i===NOTES?w+spare:w,halign:A2[i]}; });
+            tbl(head2, rows2, cfOpts(cfColStyles));
+          } else {
+            // Portrait: the 15 columns need about 237mm and the page has about 175mm, so the schedule ran off
+            // the paper (Net worth cut, Notes invisible). Two tables at the same size instead: what comes in
+            // and goes out each year, then where the money sits. Year and the ages repeat in both.
+            const part=(title, idx, fixed)=>{
+              const rest=CW-fixed.reduce((s2,v)=>s2+v,0), flex=idx.length-fixed.length;
+              const cs={}; idx.forEach((ci,k)=>{ cs[k]={cellWidth:k<fixed.length?fixed[k]:rest/flex, halign:A2[ci]}; });
+              checkY(42);   // the heading (about 11mm) never sits alone at a page foot: tbl() needs 24mm more
+              subBar(title, {size:9.5});
+              tbl(idx.map(ci=>head2[ci]), rows2.map(row=>idx.map(ci=>row[ci])), cfOpts(cs));
+            };
+            const ageFixed=two?ageW:[13], lead=[0].concat(ageIdx), leadW=[10].concat(ageFixed);
+            part("Income and spending", lead.concat([2,3,4,5,6,7,8,9].map(i=>i+o)), leadW.concat([16]));
+            // Notes take what the four balances leave
+            const leadSum=leadW.reduce((s2,v)=>s2+v,0), nW=Math.max(40, CW-leadSum-4*20), bW=(CW-leadSum-nW)/4;
+            part("Savings and net worth", lead.concat([10,11,12,13,14].map(i=>i+o)), leadW.concat([bW,bW,bW,bW]));
+          }
         } else {
           para("Run the simulation to populate the cash-flow table.");
         }
@@ -34664,8 +35275,20 @@ function drawFanChart(){
           if(_sw) para("Swiss pillars (for each Swiss client, whichever client they are): while the client works, the pension fund is credited each year with the BVG minimum retirement credits on the coordinated salary (the salary up to CHF 90,720 less the coordination deduction (Koordinationsabzug) of CHF 26,460, nothing below the CHF 22,680 entry threshold; 7%, 10%, 15% or 18% by age) or with the savings contributions from the client's pension certificate (moving with the salary and the BVG age bands until 65), and with the client's pillar 3a payments up to the legal limit (CHF 7,258 a year with a pension fund). The employee's half of the pension-fund credit and the 3a payments come out of the surplus and are deducted from taxable income. The pension fund and vested benefits earn the interest the fund credits (the BVG minimum of 1.25% unless the fund's rate is entered), pillar 3a 3.5%. At retirement (60 to 70, or the planned withdrawal age set in the panel) the pension fund pays its capital in one tranche and pillar 3a and vested benefits in up to the yearly tranches chosen (staggering: one account closed per year, ending in the withdrawal year and never before 60); each calendar year is taxed at the canton's capital-withdrawal rate (a married couple's same-year withdrawals together) and the net is invested. There is no annual drawdown from the pillars. Pillars belong to the client named as owner on each account (joint accounts half each). A client not resident in Switzerland gets this treatment for their Swiss pillar accounts only; their other retirement accounts follow their own country's rules.");
           if(chIncomeTaxOn() && getApplyTax()) para("Income tax (Switzerland): each year's federal, cantonal, communal and church income tax comes from the official ESTV tax tables (tax year "+CH_TAX_YEAR+", "+chMuniLabel()+"; "+(_chHasC2() && chTariff()!=="m" ? assetOwnerName("c1")+": "+chTaxDesc(1)+"; "+assetOwnerName("c2")+": "+chTaxDesc(2) : chTaxDesc(1))+"): salaries after the employee's AHV/IV/EO, unemployment and accident-insurance contributions and the pension-fund and 3a contributions, with the work-expense, second-earner and child deductions; pensions after the pensioner deductions. Amounts are taken in today's money, as Swiss tariffs are indexed for inflation.");
           if(!_swAll) para("Retirement drawdown"+(_sw?" (retirement accounts other than Swiss pillars, of a client not resident in Switzerland)":"")+": a voluntary 4% drawdown from the client's retirement accounts begins at that client's own retirement age. The pool is split between the clients by each account's owner (joint accounts half each). "+(householdMinRule().rule.pdf||"")+""); }
-        para("Pensions are entered in today's money; an indexed pension keeps pace with inflation until it starts and adjusts by its indexation setting afterwards. "+(chHouseholdSwiss()?"An estimated AHV pension uses the official scale (full contribution record, 13 payments a year incl. the 13th pension); a married couple's two AHV pensions, estimated or entered, are capped at 150% of the maximum once both are paid (applied at the reference age, before each spouse's own early-draw cut or deferral supplement), and drawing an estimated pension early or late applies the AHV reduction or supplement. A pension-fund annuity already in payment is added as a fixed amount. ":"")+"Each client's salary stops at their own retirement age.");
+        para("Pensions are entered in today's money; an indexed pension keeps pace with inflation until it starts and adjusts by its indexation setting afterwards. "+((chHouseholdSwiss() || val("c1co")==="CH" || val("c2co")==="CH")?"An estimated AHV pension uses the official scale (full contribution record, 13 payments a year incl. the 13th pension); a married couple's two AHV pensions, estimated or entered, are capped at 150% of the maximum once both are paid (applied at the reference age, before each spouse's own early-draw cut or deferral supplement), and drawing an estimated pension early or late applies the AHV reduction or supplement. ":"")+(chHouseholdSwiss() || (!chFxOk() && (val("c1co")==="CH" || val("c2co")==="CH")) ? "A pension-fund annuity already in payment is added as a fixed amount. ":"")+"Each client's salary stops at their own retirement age.");
         para("Inflation: All expenses, retirement spend, and pension indexation compound at the configured annual inflation rate.");
+        { const used=fxInUse();
+          para("Currency: every figure in this report is in "+CURRENT_CCY+", the household currency."+(used.length
+            ? " "+(function(){ const own=a=>(Array.isArray(a)?a:[]).some(x=>{ const c=fxCode(x && x.ccy); return c && c!==CURRENT_CCY; }), k=[];
+                if(own(assets)) k.push("accounts"); if(own(loans)) k.push("loans");
+                if(own(investments) || (portfolios||[]).some(p=>own(p && p.investments))) k.push("holdings");
+                if(own(insurances)) k.push("insurance policies"); if(own(equityComp)) k.push("equity grants");
+                const s=fxJoin(k)||"items"; return s.charAt(0).toUpperCase()+s.slice(1); })()+" held in "+fxJoin(used)+" keep their own amounts and are converted to "+CURRENT_CCY+" at the rates below. Future exchange-rate moves are not simulated: a foreign-currency holding is projected on the "+CURRENT_CCY+" return assumptions, as if its currency risk were hedged."
+            : ""));
+          if(CURRENT_CCY!=="CHF" && (val("c1co")==="CH" || taxCountry()==="CH")) para("With "+CURRENT_CCY+" as the household currency, Swiss income tax uses the general Swiss brackets and the pillar accounts are projected as ordinary retirement savings; the official Swiss tax tables and the pillar payout model are used for a CHF household.");
+          if(used.length) tbl(["Currency","1 unit in "+CURRENT_CCY,"Source","Rate date"],
+            used.map(c=>{ const i=fxInfo(c); return [c, i.missing?"no rate (counted 1:1)":fxFmtRate(i.rate), FX_SRC_LABEL[i.src]||i.src, fxFmtDate(i.asOf)||"-"]; }),
+            { columnStyles:{0:{cellWidth:28},1:{halign:"right"}} }); }
       },
       // ─── INVESTOR EDUCATION CHARTS (advisor-selected) ──
       educharts: () => {
@@ -35622,7 +36245,12 @@ function _chEmpOn(canton, x, tp, k, fedOnly){
 // Read once per run: whether Swiss income tax applies (tax jurisdiction Switzerland, tax mode
 // Auto), the canton, the tax profiles, whether a couple is assessed together, and the children's
 // ages today. null otherwise.
-function chIncomeTaxOn(){ return !!window.__chTaxReady && taxCountry()==="CH" && (($("taxMode")||{}).value||"auto")==="auto"; }
+// The official Swiss tables and the pillar payout model (two-earner deductions, social charges, BVG
+// limits, lump-sum and wealth tax, typed CHF panel figures) work in CHF throughout. With another
+// household currency the plan uses the general Swiss brackets, converted, and treats the pillar
+// accounts as ordinary retirement savings (converted too); the rates panel says so.
+function chFxOk(){ return CURRENT_CCY==="CHF"; }
+function chIncomeTaxOn(){ return !!window.__chTaxReady && chFxOk() && taxCountry()==="CH" && (($("taxMode")||{}).value||"auto")==="auto"; }
 function chIncomeTaxSetup(){
   if(!chIncomeTaxOn()) return null;
   const hasC2=_chHasC2(), tariff=chTariff();
@@ -35868,6 +36496,7 @@ function chResident(n){
   return (n === 2 ? (val("c2co") || val("c1co") || "") : (val("c1co") || "")) === "CH";
 }
 function chSwissClient(n){
+  if(!chFxOk()) return false;
   if(n === 2 && !_chHasC2()) return false;
   if(chResident(n)) return true;
   const o = chOwnerPillars()["c" + n]; return (o.bvg + o.fz + o.p3) > 0;
@@ -36852,7 +37481,7 @@ function _refreshTopMetricsNow(simPaths, simYrs){
   const debtRatio=totA>0?(debt/totA*100):0;
   setT("m-nw",fmtMoney(netW));
   setT("m-assets",fmtMoney(totA));
-  setT("m-debt",debt>0?fmtMoney(debt):"$0");
+  setT("m-debt",debt>0?fmtMoney(debt):fmtMoney(0));
   setT("m-surplus",fmtMoney(annualSurplus/12)+"/mo");
   setT("m-savrate",grossIncome>0?savRate.toFixed(1)+"%":"-");
   setT("m-debtratio",totA>0?debtRatio.toFixed(1)+"%":"-");
@@ -36927,15 +37556,17 @@ function _maxIdSeq(arr){ return (arr||[]).reduce((m,x)=>Math.max(m, +String(x&&x
 
 function saveProfile(){
   _pfEnsure(); _pfSnapshotActive();   // fold the live holdings into the active portfolio before serialising
+  fxRebase();
   const fields={};
   PROFILE_FIELDS.forEach(id=>{if($(id)) fields[id]=$(id).value;});
   PROFILE_CHECKBOXES.forEach(id=>{if($(id)) fields["chk_"+id]=$(id).checked;});
   const profile={
-    v:"1.1",savedAt:new Date().toISOString(),
+    v:"1.2",savedAt:new Date().toISOString(),
     fields,
     c2visible:$("c2card").style.display!=="none",
     bandMode:(typeof bandMode!=="undefined"?bandMode:"standard"),
     ccy:CURRENT_CCY, ccyManual:(typeof _ccyManual!=="undefined"?_ccyManual:false),
+    fx:fxSnapshot(),   // the rates the figures used, and any pinned rate
     assets,loans,goals,children,investments,proposals,insurances,equityComp,beneficiaries,whatIfScenarios,
     assetSeq,loanSeq,goalSeq,childSeq,invSeq,propSeq,insSeq,eqSeq,benSeq,whatIfSeq,pfLinkedAccountId,
     portfolios,activePfId,pfSeq,
@@ -36965,9 +37596,12 @@ function loadProfile(){
 
 // Account types corrected from locked to liquid in COUNTRY_ACCOUNTS (Canadian TFSA, 20 Oct 2026).
 const _LIQUID_CORRECTED=new Set(["tfsa"]);
-function restoreProfile(p){
+// While a profile loads, its items keep the currencies it saved (nothing is relabelled).
+function restoreProfile(p){ _fxRestoring=true; try{ return _restoreProfileInner(p); } finally { _fxRestoring=false; } }
+function _restoreProfileInner(p){
   profileGen++;
   const f=p.fields||{};
+  portfolios=[]; activePfId="";   // the previous client's portfolios must not be walked (or listed) while this one loads
   try{ const tf=$("taxFlat"); if(tf) delete tf.dataset.statedTotal; }catch(_){}   // a previous import's stated total must not re-derive this client's flat rate
   ["penAnnual","penAnnual2"].forEach(id=>{ const e=$(id); if(e) delete e.dataset.fromTypes; });
   // Swiss panels: the previous client's pillar balances / canton / assumptions must never
@@ -36980,12 +37614,13 @@ function restoreProfile(p){
     else if(PROFILE_DEFAULTS[id]!==undefined) $(id).value=PROFILE_DEFAULTS[id]; });
   { const e=$("c2co"); if(e){ if(f.c2co) e.dataset.touched="1"; else delete e.dataset.touched; } }   // saved: as saved; older profiles: follows client 1
   PROFILE_CHECKBOXES.forEach(id=>{if(f["chk_"+id]!=null && $(id)) $(id).checked=!!f["chk_"+id];});
-  // Currency (persisted with the profile; ccyManual preserves an explicit override)
-  if(p.ccy && typeof CURRENCIES!=="undefined" && CURRENCIES[p.ccy]){
-    CURRENT_CCY=p.ccy; _ccyManual=!!p.ccyManual;
-    const cs=$("m-ccy-tag"); if(cs) cs.value=p.ccy;
-    try{ syncCcySym(); popCcyDropdown("accy"); }catch(_){}
-  }
+  // Currency (persisted with the profile; ccyManual preserves an explicit override). A profile saved
+  // without one is in its residence currency: the previous client's override must not carry over.
+  const _pBase=(p.ccy && CURRENCIES[p.ccy]) ? p.ccy : (COUNTRY_CURRENCIES[f.c1co]||"USD");
+  { CURRENT_CCY=_pBase; _ccyManual=!!(p.ccy && CURRENCIES[p.ccy] && p.ccyManual);
+    const cs=$("m-ccy-tag"); if(cs) cs.value=_pBase;
+    try{ syncCcySym(); fxPopItemCcySelects(); }catch(_){}
+    fxRestore(p.fx); }
   try{ applyCmaForCurrency(CURRENT_CCY); }catch(e){ console.warn("[restore] CMA set",e); }   // before any figure below is rendered
   // A loaded profile invalidates any previous client's simulation results —
   // they must never feed this client's report, metrics or retirement number.
@@ -36994,6 +37629,7 @@ function restoreProfile(p){
   // Coerce values/labels so a loaded or imported profile can never carry a
   // non-numeric balance or non-string label into the math or the PDF charts.
   assets=(p.assets||[]).map(a=>{ const o={...a, value:(+a.value||0), label:String(a.label!=null?a.label:(a.baseLabel||a.type||"Account"))};
+    o.ccy=fxCode(o.ccy)||_pBase;   // an account saved without a currency is in the plan's currency
     // Accounts imported before 2026-09 carry no withdrawAge, which kept pensions out
     // of the retirement pool (projected as spendable cash) — take it from the account type.
     if(o.withdrawAge==null && !o.liquid && typeof _acctDef==="function"){ const d=_acctDef(o.country||(f.c1co||"US"), o.type); if(d && d.withdrawAge!=null) o.withdrawAge=d.withdrawAge; }
@@ -37001,13 +37637,16 @@ function restoreProfile(p){
     // correction carries the old flag, which since 20 Oct 2026 keeps it from ever being spent.
     if(!o.liquid && _LIQUID_CORRECTED.has(o.type) && typeof _acctDef==="function"){ const d=_acctDef(o.country||(f.c1co||"US"), o.type); if(d && d.liquid) o.liquid=true; }
     return o; }); assetSeq=p.assetSeq||_maxIdSeq(assets);
-  loans=(p.loans||[]).map(l=>({...l, bal:(+l.bal||0), rate:(+l.rate||0), yrs:(+l.yrs||0), label:String(l.label!=null?l.label:"Loan")})); loanSeq=p.loanSeq||_maxIdSeq(loans);
-  insurances=p.insurances||[]; insSeq=p.insSeq||_maxIdSeq(insurances);
-  equityComp=p.equityComp||[]; eqSeq=p.eqSeq||_maxIdSeq(equityComp);
+  loans=(p.loans||[]).map(l=>({...l, bal:(+l.bal||0), rate:(+l.rate||0), yrs:(+l.yrs||0), label:String(l.label!=null?l.label:"Loan"), ccy:fxCode(l.ccy)||_pBase})); loanSeq=p.loanSeq||_maxIdSeq(loans);
+  const _withCcy=(arr,c)=>(Array.isArray(arr)?arr:[]).map(x=>(x && typeof x==="object") ? {...x, ccy:fxCode(x.ccy)||c} : x);
+  // Holdings saved without a currency are in their linked account's (the account they are the positions of).
+  const _pfCcyFor=id=>{ const a=id && assets.find(x=>x.id===id); return (a && fxCode(a.ccy)) || _pBase; };
+  insurances=_withCcy(p.insurances, _pBase); insSeq=p.insSeq||_maxIdSeq(insurances);
+  equityComp=_withCcy(p.equityComp, _pBase); eqSeq=p.eqSeq||_maxIdSeq(equityComp);
   beneficiaries=p.beneficiaries||[]; benSeq=p.benSeq||_maxIdSeq(beneficiaries);
   goals=p.goals||[]; goalSeq=p.goalSeq||_maxIdSeq(goals);
   children=p.children||[]; childSeq=p.childSeq||_maxIdSeq(children);
-  investments=p.investments||[]; invSeq=p.invSeq||_maxIdSeq(investments);
+  investments=_withCcy(p.investments, _pfCcyFor(p.pfLinkedAccountId)); invSeq=p.invSeq||_maxIdSeq(investments);
   // Builder lines saved before class pricing carry the fund's USD mu in exp. Notes read
   // "Built by ..." since 28 Sep 2026 and "AI-generated" before (when mu was also jittered
   // by a ticker hash, so it no longer equals today's fund.mu): price them by class.
@@ -37050,7 +37689,7 @@ function restoreProfile(p){
   if(Array.isArray(p.portfolios) && p.portfolios.length){
     portfolios=p.portfolios.map((pf,i)=>({
       id:pf.id||("pf"+(i+1)), name:String(pf.name||("Portfolio "+(i+1))),
-      investments:(pf.investments||[]).map(h=>({...h,val:(+h.val||0)})),
+      investments:(pf.investments||[]).map(h=>({...h,val:(+h.val||0),ccy:fxCode(h.ccy)||_pfCcyFor(pf.pfLinkedAccountId)})),
       invSeq:pf.invSeq||_maxIdSeq(pf.investments||[]),
       pfLinkedAccountId:pf.pfLinkedAccountId||""
     }));
@@ -37060,6 +37699,13 @@ function restoreProfile(p){
     portfolios=[]; activePfId=""; pfSeq=0;   // fall through to migration from the single `investments` set
   }
   _pfEnsure(); _pfLoadInto(activePfId);
+  fxRebase(); fxPopItemCcySelects();   // the account country, linked account and items are this client's now
+  // A plan saved before exchange rates (no fx block) summed every item at face value: say which ones
+  // now convert, so a figure that moves is explained, and a wrong currency tag can be fixed.
+  let _fxNote="";
+  try{ if(!p.fx){ const fxIt=[]; fxEachItem((it,fields)=>{ if(fxCode(it.ccy)!==CURRENT_CCY) fxIt.push([it, fields.find(k=>+it[k]>0)||fields[0]]); });
+    if(fxIt.length){ const ex=fxIt.slice(0,3).map(([it,f])=>String(it.label||it.name||it.tkr||"Item")+": "+fmtMoneyIn(+fxNat(it,f)||0, it.ccy, true)+" = "+fmtMoneyFull(+it[f]||0));
+      _fxNote=fxIt.length+(fxIt.length===1?" item is":" items are")+" held in another currency and now convert to "+CURRENT_CCY+" ("+ex.join("; ")+(fxIt.length>3?"; and "+(fxIt.length-3)+" more":"")+"). This plan was saved before exchange rates were applied, when they counted at face value. If one was entered in "+CURRENT_CCY+", edit it and pick "+CURRENT_CCY+"."; } } }catch(_){}
   // EU sub-selects: repopulate dependent options for the saved EU country, then
   // re-apply the saved region/city picks on top.
   if(f.c1eu && $("c1eu")){
@@ -37090,9 +37736,15 @@ function restoreProfile(p){
   try{ updateTaxPanel(); }catch(_){}
   try{ updateExpTotal(); }catch(_){}          // insPremExp checkbox affects total expenses
   try{ if(typeof renderProposalMetrics==="function") renderProposalMetrics(); }catch(_){}
+  // The estate allowance's "typed" flag is not saved: a figure away from the country default (allowing
+  // for rates having moved since) counts as typed, so a rate refresh or currency switch leaves it alone.
+  { const e=$("estExemption"); if(e){ delete e.dataset.userset;
+      try{ const auto=estateExemptionDisplay(estateRegimeFor(val("c1co"))); if(String(e.value).trim()!=="" && Math.abs((+e.value||0)-auto)>Math.max(1, auto*0.02)) e.dataset.userset="1"; }catch(_){} } }
   refreshTopMetrics();
   _topStatus("✓ Profile loaded");
-  if(_spMoved.length) showInfoToast("Moved from Assets to the Income tab. "+_spMoved.join(" "));
+  { const msgs=[]; if(_spMoved.length) msgs.push("Moved from Assets to the Income tab. "+_spMoved.join(" ")); if(_fxNote) msgs.push(_fxNote);
+    if(_fxNote) fxInfoToast(msgs.join(" ")); else if(msgs.length) showInfoToast(msgs.join(" ")); }
+  try{ fxRefresh(); }catch(_){}   // rates for a currency this plan brought in
 }
 
 function _topStatus(msg){
@@ -37110,10 +37762,12 @@ function _buildShareProfile(){
   // must carry exactly what a saved profile carries (incl. What-If scenarios).
   const fields={}; PROFILE_FIELDS.forEach(id=>{if($(id)) fields[id]=$(id).value;});
   PROFILE_CHECKBOXES.forEach(id=>{if($(id)) fields["chk_"+id]=$(id).checked;});
+  fxRebase();
   return {
-    v:"1.1", savedAt:new Date().toISOString(),
+    v:"1.2", savedAt:new Date().toISOString(),
     fields,
     c2visible: $("c2card") && $("c2card").style.display!=="none",
+    ccy:CURRENT_CCY, ccyManual:(typeof _ccyManual!=="undefined"?_ccyManual:false), fx:fxSnapshot(),   // a shared plan opens in its own currency
     assets, loans, goals, children, investments, proposals, insurances, equityComp, beneficiaries, whatIfScenarios,
     assetSeq, loanSeq, goalSeq, childSeq, invSeq, propSeq, insSeq, eqSeq, benSeq, whatIfSeq, pfLinkedAccountId,
     chPanel:(typeof chPanelState==="function"?chPanelState():{})
@@ -37651,8 +38305,10 @@ document.addEventListener("DOMContentLoaded",function(){
   popRisk("c1r"); popRisk("c2r");
   popHorizon("c1h"); popHorizon("c2h");
   popRegion(); popRetLoc();
-  popCcyDropdown("accy");
+  fxPopItemCcySelects();
   popCurrencyTag();
+  _fxLoadCache();
+  setTimeout(()=>{ try{ fxRefresh(); }catch(_){} }, 400);   // live ECB rates; the cached / built-in ones until then
   // Restore AV key
   const k=avGetKey();
   if(k){

@@ -1394,7 +1394,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261020-2231";
+const APP_VERSION = "20261023-1626";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -5270,12 +5270,17 @@ function renderProfile(){
   const assets = loadedProfile.assets||[];
   const loans = loadedProfile.loans||[];
   const goals = loadedProfile.goals||[];
+  // A plan saved since exchange rates (v1.2) stores every amount converted into its household
+  // currency, so the sums are right; an older one summed mixed currencies at face value.
+  const pc = String(loadedProfile.ccy||"USD").toUpperCase();
+  const fm = n => { const s=fmt$(n); return pc==="USD" ? s : s.replace("$", pc+" "); };
+  const foreign = assets.concat(loans).filter(x=>x && x.ccy && String(x.ccy).toUpperCase()!==pc).length;
   const totA = assets.reduce((s,a)=>s+(+a.value||0),0);
   const totL = loans.reduce((s,l)=>s+(+l.bal||0),0);
   let h = '';
-  h += kpiCard("Total Assets",fmt$(totA),assets.length+" on file","tone-blue");
-  h += kpiCard("Total Liabilities",fmt$(totL),loans.length+" loans","tone-red");
-  h += kpiCard("Net Worth",fmt$(totA-totL),"","tone-green");
+  h += kpiCard("Total Assets",fm(totA),assets.length+" on file"+(foreign?(loadedProfile.fx?" · "+foreign+" converted":" · "+foreign+" in other currencies, at face value"):""),"tone-blue");
+  h += kpiCard("Total Liabilities",fm(totL),loans.length+" loans","tone-red");
+  h += kpiCard("Net Worth",fm(totA-totL),"","tone-green");
   h += kpiCard("Goals",goals.length,"");
   $("pfStats").innerHTML = h;
   $("pfTree").innerHTML = '<pre style="margin:0;font-family:var(--font-mono);font-size:11px">'+escapeHtml(JSON.stringify(loadedProfile,null,2))+'</pre>';
