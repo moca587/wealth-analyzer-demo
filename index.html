@@ -1991,7 +1991,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="intro-feats">
       <span class="intro-feat">Market simulation</span>
       <span class="intro-feat">Goals-based funding</span>
-      <span class="intro-feat">39-country accounts</span>
+      <span class="intro-feat">48-country accounts</span>
       <span class="intro-feat" id="introFeatAI">Portfolio builder</span>
     </div>
     <button class="intro-launch" onclick="launchApp()" autofocus>
@@ -2008,7 +2008,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <!-- Below-the-fold: what the app does, how it works -->
   <div class="intro-more">
     <div class="intro-more-h">Your whole financial picture, simulated</div>
-    <p class="intro-more-sub">Wealth Analyzer turns your income, assets, and goals into thousands of possible futures, so you can plan with probabilities, not guesses.</p>
+    <p class="intro-more-sub">Wealth Analyzer turns your income, assets, and goals into up to 1,000 possible futures, so you can plan with probabilities, not guesses.</p>
 
     <div class="intro-cards">
       <div class="intro-card">
@@ -2019,12 +2019,12 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="intro-card">
         <div class="intro-card-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></svg></div>
         <div class="intro-card-t">Goals-based planning</div>
-        <div class="intro-card-d">Fund retirement, education, and life goals with Essential / Important / Aspirational priorities and per-goal confidence levels.</div>
+        <div class="intro-card-d">Fund retirement, education, and life goals with Essential / Important / Aspirational / Legacy priorities and per-goal confidence levels.</div>
       </div>
       <div class="intro-card">
         <div class="intro-card-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 2.6 15.4 0 18M12 3c-2.6 2.6-2.6 15.4 0 18"/></svg></div>
         <div class="intro-card-t">Built for the whole world</div>
-        <div class="intro-card-d">39 countries, 500+ account types, local tax brackets, pensions, and 50-year inflation presets, plus stocks, funds, hedge funds & private equity.</div>
+        <div class="intro-card-d">48 countries, 600+ account types, tax brackets and state pensions for 39 of them, and 50-year inflation presets, plus stocks, funds, hedge funds & private equity.</div>
       </div>
       <div class="intro-card">
         <div class="intro-card-ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
@@ -2192,7 +2192,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="set-sec-h">Display</div>
       <div class="set-row">
         <div class="set-row-lbl">Household currency<small>Set from Client 1's country of residence, or override here. Amounts in other currencies are converted (Exchange rates, under Data &amp; integrations)</small></div>
-        <div class="ccy-picker" title="Display currency">
+        <div class="ccy-picker" title="Household currency">
           <span class="ccy-picker-sym" id="ccy-sym">$</span>
           <select id="m-ccy-tag" onchange="onCurrencyManualChange()"></select>
         </div>
@@ -2335,7 +2335,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <div id="mdKeysBody" style="display:none;padding-top:12px">
           <div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:12px">Paste free API keys to enable richer market data. Keys are stored only in your browser and are shared with the Admin console below. Get keys from each provider's link.</div>
           <div id="mdKeysGrid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
-          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Yahoo Finance and OpenFIGI (ticker/ISIN lookup) block direct browser requests, so the app routes those through your data proxy (set its URL in Admin console → Market Data). Keyed providers that also block browsers (CoinMarketCap, FRED, NewsAPI, Marketstack) can't be reached from the browser app.</div>
+          <div style="margin-top:12px;padding:10px 12px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.6"><strong>CORS note:</strong> Yahoo Finance and OpenFIGI (ticker/ISIN lookup) block direct browser requests, so the app routes those through the data proxy (a built-in one, unless you set your own in Admin console → Market Data). Keyed providers that also block browsers (CoinMarketCap, FRED, NewsAPI, Marketstack) can't be reached from the browser app.</div>
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button class="btn-secondary" onclick="quickLoadMdKeys()" title="Load keys from dev-api.key (gitignored) next to this page" style="font-size:12px;padding:7px 14px"><i data-lucide="file-key" class="icon" aria-hidden="true"></i> Quick load</button>
             <button class="btn-secondary" onclick="testAllMdKeys()" style="font-size:12px;padding:7px 14px"><i data-lucide="zap" class="icon" aria-hidden="true"></i> Test all keys</button>
@@ -2344,13 +2344,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         </div>
       </div>
       <!-- Admin console — full key manager + advanced tools -->
-      <a class="set-link" href="admin.html" target="_blank" style="margin-top:10px"><i data-lucide="settings" class="icon" aria-hidden="true"></i> Admin Console <span class="set-link-ext">full manager ↗</span></a>
+      <a class="set-link" href="admin.html" target="_blank" style="margin-top:10px"><i data-lucide="settings" class="icon" aria-hidden="true"></i> Admin Console <span class="set-link-ext">↗</span></a>
       <div class="set-note">Keys you set here and in the Admin console are the same, as long as both are open on the same site in the same browser (keys are saved per browser and per site, so a copy opened from a file or on another address keeps its own).</div>
     </div>
 
     <div class="set-sec">
       <div class="set-sec-h">About</div>
-      <div class="set-note"><strong style="color:var(--text2)">WealthAnalyzer</strong> by Private Wealth Intelligence · market-simulation financial planner.<br>Version <span id="setVersion">-</span> · Beta version.<br>Calculations run in your browser and documents are read on this device. Data leaves it only for features that need a service: exchange rates (no client data is sent), live prices and ticker lookups (ticker symbols only), custodian feeds and order routing if you set them up (an order ticket carries the account, the positions and, in some formats, the client's name), and, only if your firm turns AI features on, the uploads you choose to have Claude read and the Portfolio Builder's plan figures (to Anthropic's API). See Privacy and AI above for this session's activity.</div>
+      <div class="set-note"><strong style="color:var(--text2)">WealthAnalyzer</strong> by Private Wealth Intelligence · market-simulation financial planner.<br>Version <span id="setVersion">-</span> · Beta version.<br>Calculations run in your browser and documents are read on this device. Data leaves it only for features that need a service: exchange rates (no client data is sent), live prices and ticker lookups (only the ticker, identifier or name of the security looked up), custodian feeds and order routing if you set them up (an order ticket carries the account, the positions and, in some formats, the client's name), and, only if your firm turns AI features on, the uploads you choose to have Claude read and the Portfolio Builder's plan figures (to Anthropic's API). See Privacy and AI above for this session's activity.</div>
     </div>
 
   </div>
@@ -2402,7 +2402,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
           <option value="pension">Pension / retirement statement → pensions, retirement accounts</option>
           <option value="insurance">Insurance policy → protection &amp; insurance</option>
         </select>
-        <div style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5">Tells the reader which fields to prioritise and routes the extracted values there. It still captures anything else it finds, but nothing is written until you review each row.</div>
+        <div style="font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.5">On this device the reader handles the Wealth Analyzer questionnaire, bank and custody statements, and Swiss pension certificates; tax forms, pay slips and insurance policies need Claude, once your firm turns AI features on. Nothing is written until you review each row.</div>
       </div>
 
       <div id="uploadDocDrop" class="drop-zone" style="background:var(--bg3);border:1px dashed var(--border2);border-radius:var(--rs);padding:14px 16px">
@@ -2799,7 +2799,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <!-- Annual savings -->
   <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px">
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Annual Savings</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5">Committed annual contribution to investments. The simulation guarantees at least this amount is funneled into the investment portfolio each year (drawn from surplus, then cash if needed).</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.5">Committed annual saving while working. The simulation adds it to cash each year as far as the surplus allows; any surplus above it counts as spending. With rebalancing on (Settings), cash and investments are brought back to the invested allocation %.</div>
     <div class="frow"><label class="flbl">Annual savings (<span id="savAnnualCcy">$</span>/yr)</label><input type="number" id="savAnnual" value="0" step="500" class="w160" oninput="updateSavingsPanel()"></div>
     <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-secondary" onclick="suggestSavings()" type="button">Suggest from current cash flow</button>
@@ -3053,7 +3053,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div class="dropdown-body" id="invParamsBody">
     <div class="frow" style="margin-top:10px"><label class="flbl">Return mean %</label><input type="number" id="retM" value="7" step="0.5" class="w120"></div>
     <div class="frow"><label class="flbl">Return volatility %</label><input type="number" id="retV" value="12" step="0.5" class="w120"></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:10px;margin-bottom:6px;font-style:italic">Derived from the selected risk profiles (and portfolio holdings when entered). Editable as a manual override only when no risk profile is chosen on the Household tab.</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;margin-bottom:6px;font-style:italic">Derived from the selected risk profiles (and portfolio holdings when entered). Editable as a manual override only when no risk profile is chosen on the Household tab and no holdings are entered. The risk-profile table below applies to every currency except the Swiss franc, whose profiles are priced on the CHF assumptions.</div>
 
     <div style="font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">By risk profile</div>
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
@@ -3092,7 +3092,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <tr><td style="padding:4px 8px;border:1px solid var(--border)">Cash</td><td style="text-align:right;padding:4px 8px;border:1px solid var(--border);font-variant-numeric:tabular-nums">0</td><td style="text-align:right;padding:4px 8px;border:1px solid var(--border);font-variant-numeric:tabular-nums">0</td></tr>
       </tbody>
     </table>
-    <div style="font-size:10px;color:var(--text3);margin-top:6px;font-style:italic">Long-run historical approximations. The portfolio tab auto-weights these by holding value when positions are entered. Override the fields above to use your own capital market assumptions.</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px;font-style:italic">Reference figures only: with holdings entered, the simulation uses the capital market assumptions shown under Goals-Based Analysis on the Simulation tab.</div>
     </div><!-- /invParamsBody -->
   </div>
 </div>
@@ -3470,8 +3470,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body open" id="mcChartBody">
-    <div style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:12px">Your projected portfolio wealth from today until age 90, in <strong style="color:var(--text2)">today's money</strong> (inflation-adjusted), at three likelihood levels: <strong style="color:#1b6841">80%</strong> (conservative), <strong style="color:#0057b8">50%</strong> (expected) and <strong style="color:#7c3aed">30%</strong> (optimistic).</div>
-    <div class="chart-wrap"><canvas id="simWealthChart" role="img" aria-label="Annual potential wealth to age 90 at 80/50/30% likelihood"></canvas></div>
+    <div style="font-size:12px;color:var(--text3);margin-top:8px;margin-bottom:12px">Your projected portfolio wealth from today to the end of the projection (Projection years in Settings), in <strong style="color:var(--text2)">today's money</strong> (inflation-adjusted), at three likelihood levels: <strong style="color:#1b6841">80%</strong> (conservative), <strong style="color:#0057b8">50%</strong> (expected) and <strong style="color:#7c3aed">30%</strong> (optimistic).</div>
+    <div class="chart-wrap"><canvas id="simWealthChart" role="img" aria-label="Annual potential wealth over the projection at 80/50/30% likelihood"></canvas></div>
 
     <div class="panel">
     <div class="ptitle">Potentially Achievable Annual Lifestyle</div>
@@ -3489,8 +3489,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 
     <!-- Annual Potential Wealth table (to age 90, 80/50/30% likelihood) -->
     <div class="panel">
-      <div class="ptitle">Annual Potential Wealth to Age 90</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Projected portfolio value each year from today until age 90 (today's money), at <strong style="color:#1b6841">80%</strong> / <strong style="color:#0057b8">50%</strong> / <strong style="color:#7c3aed">30%</strong> likelihood (the data behind the chart above).</div>
+      <div class="ptitle">Annual Potential Wealth</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Projected portfolio value each year from today to the end of the projection (today's money), at <strong style="color:#1b6841">80%</strong> / <strong style="color:#0057b8">50%</strong> / <strong style="color:#7c3aed">30%</strong> likelihood (the data behind the chart above).</div>
       <div id="simPotWealthTbl"><div class="empty">Run the simulation to populate.</div></div>
     </div>
   </div>
@@ -3540,7 +3540,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span><span class="fund-tag fund-warn">Partly funded</span> 50-79% / 60-89%</span>
     <span><span class="fund-tag fund-warn">At risk</span> 25-49%</span>
     <span><span class="fund-tag fund-bad">Underfunded</span> &lt; 25% / &lt; 60%</span>
-    <span style="color:var(--text3)">Simulated success reads the percentile of simulated net worth in the goal's calendar year against the amount needed. Note: "net worth" here includes all simulated wealth (investments, cash, property, retirement accounts minus debt). For goals needing liquid funds quickly, actual availability may be lower if a significant portion of wealth is in illiquid assets. The PV funding ratio discounts each goal's cost at a rate matched to its priority tier (Essential 95% / Important 75% / Aspirational 55% confidence), grossed for tax, and compares it to current assets plus reachable future savings, using the capital-market-assumption covariance engine.</span>
+    <span style="color:var(--text3)">Simulated success is the share of simulated futures in which cash and investments pay the goal in full in every year it is due, with goals paid in priority order. Property and locked pension accounts are not sold to pay goals; pension money counts once it is paid out. The PV funding ratio discounts each goal's cost at a rate matched to its priority tier (Essential 95% / Important 75% / Aspirational 55% / Legacy 75% confidence), grossed for tax, and compares it to current assets plus reachable future savings, using the capital-market-assumption covariance engine.</span>
   </div>
   </div>
 </div>
@@ -3624,7 +3624,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
   <div class="rn-hero" id="rnHero">
     <div class="rn-card"><div class="rn-lbl">Retirement Number<span class="info-ic">i<span class="info-pop"><strong>Retirement Number</strong>: the lump sum you'd need on the day you retire. Your annual retirement spending is grown by inflation to the retirement date, then priced as an inflation-adjusted annuity paying every year from your retirement age to the planning age shown above (your country's life expectancy plus a longevity buffer), using a 6.8% discount rate.</span></span></div><div class="rn-val" id="rn-target">-</div><div class="rn-sub">lump sum needed at retirement</div></div>
-    <div class="rn-card"><div class="rn-lbl">Present Value Today<span class="info-ic">i<span class="info-pop"><strong>Present Value Today</strong>: the Retirement Number discounted back from your retirement date to today at the same 6.8% rate: the amount that, invested today at that return, would grow into the full lump sum by the day you retire. This is the figure your net worth is compared against.</span></span></div><div class="rn-val" id="rn-today">-</div><div class="rn-sub">discounted to today's dollars</div></div>
+    <div class="rn-card"><div class="rn-lbl">Present Value Today<span class="info-ic">i<span class="info-pop"><strong>Present Value Today</strong>: the Retirement Number discounted back from your retirement date to today at the same 6.8% rate: the amount that, invested today at that return, would grow into the full lump sum by the day you retire. This is the figure your net worth is compared against.</span></span></div><div class="rn-val" id="rn-today">-</div><div class="rn-sub">discounted to today's money</div></div>
     <div class="rn-card"><div class="rn-lbl">Current Net Worth<span class="info-ic">i<span class="info-pop"><strong>Current Net Worth</strong>: everything you own today minus everything you owe: all accounts (plus portfolio holdings, de-duplicated against any linked account), property, other assets and insurance cash value, less outstanding loan balances.</span></span></div><div class="rn-val" id="rn-nw">-</div><div class="rn-sub">vs. target above</div></div>
     <div class="rn-card"><div class="rn-lbl">Funding Gap / Surplus<span class="info-ic">i<span class="info-pop"><strong>Funding Gap / Surplus</strong>: Current Net Worth minus Present Value Today. Positive (green): you're ahead of the actuarial target; today's wealth, compounding at the assumed rate, would cover retirement. Negative (red): the additional amount you'd need today; future savings and investment growth above the assumption can still close it.</span></span></div><div class="rn-val" id="rn-gap">-</div><div class="rn-sub" id="rn-gap-sub">vs. present-value target</div></div>
   </div>
@@ -3696,7 +3696,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <span class="ptitle-line"></span>
   </div>
   <div class="dropdown-body" id="nwCompBody">
-    <div style="font-size:12px;color:var(--text3);margin:8px 0 12px">How each part of your wealth (cash, investments, retirement pool, property, insurance cash value) evolves along the deterministic projection. The dashed line is total net worth after liabilities. Retirement pool = locked retirement/pension accounts growing at a fixed 3.5%/yr independent of your risk profile. Property & other = real estate plus any other/miscellaneous assets. Insurance cash value is held flat at today's value (no growth or decay modeled).</div>
+    <div style="font-size:12px;color:var(--text3);margin:8px 0 12px">How each part of your wealth (cash, investments, retirement pool, property, insurance cash value) evolves along the deterministic projection. The dashed line is total net worth after liabilities. Retirement pool = locked retirement/pension accounts growing at a fixed 3.5%/yr independent of your risk profile (a Swiss pension fund at the interest it credits, 1.25% unless entered). Property & other = real estate plus any other/miscellaneous assets. Insurance cash value is held flat at today's value (no growth or decay modeled).</div>
     <div class="chart-wrap" style="height:300px"><canvas id="nwCompChart" role="img" aria-label="Net worth by component stacked chart"></canvas></div>
   </div>
 </div>
@@ -3952,12 +3952,12 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
         <tr><td style="padding:5px 10px 5px 0">Very aggressive</td><td style="padding:5px 10px">12.0%</td><td style="padding:5px 0">22%</td></tr>
       </tbody>
     </table>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px">When two clients are in the household, the mean and volatility are averaged.</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">When two clients are in the household, the mean and volatility are averaged. These figures apply to every household currency except the Swiss franc, whose profiles are priced on the CHF assumptions (Moderate: 4.7% and 9.1%). With holdings entered, the holdings' asset classes are used instead.</div>
   </div>
 
   <div class="slbl">Stochastic engine: what happens each year</div>
   <div style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:14px">
-    Investment return is sampled log-normally via Box-Muller as <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">(μ &minus; 0.5σ²) + σ × N(0,1)</code>. Property appreciates by a random <strong style="color:var(--text)">3% ± 2%</strong> each year. Income grows by your raise %, expenses grow by inflation. Each loan amortizes with its real interest math. When the year ends with a positive surplus, <strong style="color:var(--text)">30% goes to investments and 70% to cash</strong>. Initial investment allocation is <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">max(actual investment-account balances, 30% of total account assets)</code>. Net worth at each step is <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">cash + investments + property + other &minus; remaining loan balances</code>.
+    Investment return is sampled log-normally via Box-Muller, one correlated draw per asset class in the portfolio (a single blended draw when no holdings are entered), as <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">(μ &minus; 0.5σ²) + σ × N(0,1)</code>. Property appreciates by a random <strong style="color:var(--text)">3% ± 2%</strong> each year. Income grows by your raise %, expenses grow by inflation. Each loan amortizes with its real interest math. The annual savings target goes to cash while the surplus allows; <strong style="color:var(--text)">any surplus beyond it counts as spending</strong>, except the unneeded part of a retirement-account withdrawal, which is reinvested. A deficit is drawn from cash first, then investments. Without portfolio holdings the simulation starts with <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">30% of liquid account balances invested, the rest in cash at 0%</code>. Net worth at each step is <code style="color:var(--text);background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">cash + investments + retirement pool + property + other &minus; remaining loan balances &minus; unmet needs</code>.
   </div>
 
   <div class="slbl">How goals are scored</div>
@@ -4016,7 +4016,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 <!-- Live prices — free, via a user-deployed Cloudflare Worker proxy (no API key) -->
 <div class="panel">
   <div class="ptitle">Live Prices <span style="font-size:11px;color:var(--text3);font-weight:500">(free, no API key)</span></div>
-  <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.6">Pulls live quotes from Yahoo Finance with no API key, through a free proxy you deploy once (Yahoo can't be called directly from a browser). Paste your Cloudflare Worker URL below. Prices are cached, so the last-known value still shows if a fetch fails.</div>
+  <div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.6">Pulls live quotes from Yahoo Finance with no API key, through a data proxy (Yahoo can't be called directly from a browser). The demo uses a built-in proxy; paste your own Cloudflare Worker URL below to replace it. Prices are cached, so the last-known value still shows if a fetch fails.</div>
   <div class="frow"><label class="flbl">Data proxy URL</label>
     <input id="pfProxyUrl" placeholder="https://your-worker.workers.dev" onchange="savePfProxy(this.value)" style="min-width:280px;flex:1">
   </div>
@@ -4024,7 +4024,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <button class="btn-primary" onclick="refreshAllPrices()"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh live prices</button>
     <span id="pfRefreshStatus" style="font-size:12px;color:var(--text3)"></span>
   </div>
-  <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6">No key means keyless free sources (Yahoo, Stooq); brokerage-account linking (Fidelity/Vanguard/Schwab holdings) needs a licensed aggregator and belongs in the server-side product.</div>
+  <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6">No key means the keyless free source (Yahoo); brokerage-account linking (Fidelity/Vanguard/Schwab holdings) needs a licensed aggregator and belongs in the server-side product.</div>
 </div>
 
 
@@ -4153,13 +4153,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <button class="btn-primary" onclick="runDataAgent()">Extract data</button>
       <button class="btn-secondary" onclick="daCancelAgent()">Cancel</button>
       <span id="aiAgentStatus" style="font-size:12px;color:var(--text3);margin-left:6px"></span>
-      <button class="btn-secondary" onclick="daCopyReport(this)" title="Copy a report of the last AI read (no key included)" style="font-size:11px;padding:4px 10px;margin-left:auto">Copy report</button>
+      <button class="btn-secondary" onclick="daCopyReport(this)" title="Copy a report of the last read (no key included)" style="font-size:11px;padding:4px 10px;margin-left:auto">Copy report</button>
     </div>
   </div>
   <!-- Statement Importer panel (hidden by default) — deterministic CSV/OFX/QFX parse, no AI key -->
   <div id="siPanel" class="panel" style="display:none;background:var(--bg3);border:1px solid rgba(76,175,125,.28);margin-bottom:14px">
-    <div class="ptitle" style="margin:0 0 6px"><i data-lucide="file-down" class="icon ptitle-icon" aria-hidden="true"></i>Import statement (CSV / OFX / QFX)</div>
-    <div class="da-note">Import a bank or brokerage statement export with its columns mapped exactly, on this device. Reads CSV exports, OFX, and QFX (Quicken) files, lets you map the columns, and shows the same review screen before anything is added. For PDFs, scans and photos, use Read a statement.</div>
+    <div class="ptitle" style="margin:0 0 6px"><i data-lucide="file-down" class="icon ptitle-icon" aria-hidden="true"></i>Import statement (CSV / Excel / OFX / QFX)</div>
+    <div class="da-note">Import a bank or brokerage statement export with its columns mapped exactly, on this device. Reads CSV and Excel exports, OFX, and QFX (Quicken) files, lets you map the columns, and shows the same review screen before anything is added. For PDFs, scans and photos, use Read a statement.</div>
     <div class="frow" style="margin-top:8px">
       <label class="flbl">Files <span style="color:var(--text3)">(CSV, OFX, QFX, XLSX)</span></label>
       <input type="file" id="siFiles" multiple onchange="siRenderFileList()" accept=".csv,.tsv,.txt,.ofx,.qfx,.xls,.xlsx" style="font-size:12px;color:var(--text2)">
@@ -4426,7 +4426,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   </div>
 
   <div class="pf-summary" id="prSummary">
-    <div class="pf-mc"><div class="pf-mc-lbl">Target amount<span class="info-ic">i<span class="info-pop">the dollar amount you plan to invest in this proposal, entered above in Proposal Setup. Position weights are applied against this figure to compute dollar amounts per holding.</span></span></div><div class="pf-mc-val" id="pr-total">-</div></div>
+    <div class="pf-mc"><div class="pf-mc-lbl">Target amount<span class="info-ic">i<span class="info-pop">the amount you plan to invest in this proposal, entered above in Proposal Setup. Position weights are applied against this figure to compute the amount per holding.</span></span></div><div class="pf-mc-val" id="pr-total">-</div></div>
     <div class="pf-mc"><div class="pf-mc-lbl">Positions<span class="info-ic">i<span class="info-pop">the count of positions added to this proposal.</span></span></div><div class="pf-mc-val" id="pr-count">0</div></div>
     <div class="pf-mc"><div class="pf-mc-lbl">Allocation<span class="info-ic">i<span class="info-pop">sum of each position's weight %, should total 100%.</span></span></div><div class="pf-mc-val" id="pr-alloc">0%</div></div>
     <div class="pf-mc"><div class="pf-mc-lbl">Target match<span class="info-ic">i<span class="info-pop">status derived from total allocation: 100% = fully allocated, over 100% = over-allocated, 50-100% = under-allocated, under 50% = awaiting allocation.</span></span></div><div class="pf-mc-val" id="pr-match">-</div></div>
@@ -4601,7 +4601,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">
         <strong>Production note.</strong> A browser-held credential and a direct cross-origin POST
         suit an internal PM system on your own network. For a bank-hosted OMS, route through the
-        server-side relay instead, which keeps the credential off the browser and out of reach of
+        server-side product instead, which keeps the credential off the browser and out of reach of
         anyone with access to this machine.
       </div>
     </div>
@@ -4853,13 +4853,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div class="panel" style="background:linear-gradient(135deg,#fff,#f0f7f2);border-left:4px solid #1b6841">
     <div class="ptitle" style="border:none">Plan Recommendations</div>
     <div style="font-size:12.5px;color:var(--text2);line-height:1.6">
-      Automated checks across your whole plan (concentration risk, IPS drift, cash buffer, goal funding, retirement success probability, and asset-location efficiency), surfaced here and ranked by severity.
+      Automated checks across your whole plan (single-holding concentration, deficit and savings rate, cash buffer, and goal funding), surfaced here and ranked by severity.
     </div>
   </div>
 
   <div class="panel" id="recPanel">
     <div class="ptitle">Flags</div>
-    <div id="recList"><div class="empty">Coming soon.</div></div>
+    <div id="recList"><div class="empty">The checks run when this tab opens.</div></div>
   </div>
 </div>
 
@@ -5050,7 +5050,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="frow"><label class="flbl">Household profile</label>
         <select id="rptIncHH" class="w180"><option value="yes" selected>Yes</option><option value="no">No</option></select>
       </div>
-      <div class="frow"><label class="flbl">Income, expenses &amp; tax</label>
+      <div class="frow"><label class="flbl">Income &amp; expenses</label>
         <select id="rptIncInc" class="w180"><option value="yes" selected>Yes</option><option value="no">No</option></select>
       </div>
       <div class="frow"><label class="flbl">Equity compensation</label>
@@ -5074,7 +5074,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="frow"><label class="flbl">Portfolio detail</label>
         <select id="rptIncPort" class="w180"><option value="yes" selected>Yes (if holdings added)</option><option value="no">No</option></select>
       </div>
-      <div class="frow"><label class="flbl">Fund fact sheets<span class="info-ic">i<span class="info-pop">Live fact sheets need a Morningstar Direct proxy (admin, API Keys). Without one, each proposal position gets a short summary from the proposal entry instead.</span></span></label>
+      <div class="frow"><label class="flbl">Fund fact sheets<span class="info-ic">i<span class="info-pop">Live Morningstar fact sheets need a Morningstar Direct connection, which the demo does not set up. Each proposal position gets a short summary from the proposal entry instead.</span></span></label>
         <select id="rptIncFactsheets" class="w180"><option value="yes">Yes (1 per proposal position)</option><option value="no" selected>No</option></select>
       </div>
     </div>
@@ -5156,7 +5156,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261024-1900";
+const APP_VERSION = "20261024-1951";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -9231,12 +9231,12 @@ function updateHouseRisk(){
   if(profiles.length===0){ el.innerHTML="-"; return; }
   if(profiles.length===1){
     const p=profiles[0];
-    el.innerHTML=`${p.label}<span class="info-ic">i<span class="info-pop">${p.note} Expected return μ ${p.retMean}%, volatility σ ${p.retVol}%. These are the assumptions this risk profile feeds into the market simulation.</span></span>`;
+    el.innerHTML=`${p.label}<span class="info-ic">i<span class="info-pop">${p.note} Expected return μ ${p.retMean}%, volatility σ ${p.retVol}%. These are the assumptions this risk profile feeds into the market simulation when no portfolio holdings are entered; with holdings, their own asset-class mix is used.</span></span>`;
     return;
   }
   const mu=(profiles.reduce((a,p)=>a+p.retMean,0)/profiles.length).toFixed(1);
   const sig=(profiles.reduce((a,p)=>a+p.retVol,0)/profiles.length).toFixed(1);
-  el.innerHTML=`Blended (${profiles.map(p=>p.label).join(" / ")})<span class="info-ic">i<span class="info-pop">Household risk profile is the average of both clients' selected profiles. Blended expected return μ ${mu}%, volatility σ ${sig}%. These are the assumptions this feeds into the market simulation.</span></span>`;
+  el.innerHTML=`Blended (${profiles.map(p=>p.label).join(" / ")})<span class="info-ic">i<span class="info-pop">Household risk profile is the average of both clients' selected profiles. Blended expected return μ ${mu}%, volatility σ ${sig}%. These are the assumptions this feeds into the market simulation when no portfolio holdings are entered; with holdings, their own asset-class mix is used.</span></span>`;
 }
 // Each risk profile's equity share, the midpoint of what its own description says; the rest is
 // fixed income. Used to price the profile on the Swiss franc assumption set (riskProfileRV).
@@ -10371,7 +10371,7 @@ function renderEstate(){
     }
     h+='</tbody></table>';
   }
-  h+='<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Simplified estimate: '+(e.fromProjection?'uses the median simulated net worth at the end of the projection':'run the simulation to use the projected estate')+' plus life-insurance death benefits; ignores probate, state/inheritance taxes, trusts, basis step-up, and exemption portability. Default exemption reflects the 2024 US federal level - adjust for your jurisdiction.</div>';
+  h+='<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.6">Simplified estimate: '+(e.fromProjection?'uses the median simulated net worth at the end of the projection':'run the simulation to use the projected estate')+' plus life-insurance death benefits; ignores probate, state/inheritance taxes, trusts, basis step-up, and exemption portability. The exemption and rate are preset from the country of client 1 (about 2024 levels); adjust them for your situation.</div>';
   host.innerHTML=h;
 }
 window.addBeneficiary=addBeneficiary; window.delBeneficiary=delBeneficiary;
@@ -10514,7 +10514,7 @@ function renderGoals(){
     }
     return `<div class="goal-item">
       <span class="goal-icon" style="background:${icon.bg};color:${icon.color}" title="${icon.label}">${lucideIcon(icon.icon)}</span>
-      <span class="gtag tcat" style="background:${icon.bg};color:${icon.color};border-color:${icon.bg}">${icon.label.toLowerCase()}</span><span class="info-ic">i<span class="info-pop">Goal category: <strong>${icon.label}</strong>. Categorizes the goal for icon display and drives category-specific analysis (e.g. education funding gap and retirement success checks look for goals tagged with the matching category). Priority weighting in funding-shortfall alerts is set separately by the goal's tier (essential/important/aspirational), shown in the tag next to this one.</span></span>
+      <span class="gtag tcat" style="background:${icon.bg};color:${icon.color};border-color:${icon.bg}">${icon.label.toLowerCase()}</span><span class="info-ic">i<span class="info-pop">Goal category: <strong>${icon.label}</strong>. Categorizes the goal for icon display and drives category-specific analysis (e.g. education funding gap and retirement success checks look for goals tagged with the matching category). Priority weighting in funding-shortfall alerts is set separately by the goal's tier (essential/important/aspirational/legacy), shown in the tag next to this one.</span></span>
       <span class="gtag ${tierClass}">${g.tier||"important"}</span><span class="info-ic">i<span class="info-pop"><strong>Goal priority tier.</strong> Controls funding order when assets and savings are limited: <strong>essential</strong> goals draw from the shared assets/savings pool first and are flagged high-severity if underfunded; <strong>important</strong> goals are funded next (medium severity if short); <strong>aspirational</strong> and <strong>legacy</strong> goals are funded last, from whatever assets/savings remain, and are flagged low-severity if underfunded.</span></span>
       <span style="flex:1;font-weight:600;color:var(--text)">${_daEsc(g.name)}</span>
       <span style="font-variant-numeric:tabular-nums;font-weight:600">${amtDisplay}${extraNote}</span>
@@ -16973,7 +16973,7 @@ function refreshPrivacyUI(){
   const st=$("privStatus");
   if(st){
     let cls="ok", txt;
-    if(!on) txt="<strong>Local mode.</strong> Documents are read on this device and nothing is sent to an AI service. Other outside requests: fonts and code libraries, public market data (ticker symbols only), and, if set up, your data proxy, custodian feeds and order routing. The list below shows each one.";
+    if(!on) txt="<strong>Local mode.</strong> Documents are read on this device and nothing is sent to an AI service. Other outside requests: fonts and code libraries, the day's exchange rates (no client data), public market data, directly or through the data proxy (only the ticker, identifier or name of the security looked up), and, if set up, custodian feeds and order routing. The list below shows each one.";
     else if(rel){ cls="warn"; txt="<strong>AI was turned on in another window.</strong> Reload this page to use it here. Until then this page stays in local mode."; }
     else if(!key){ cls="warn"; txt="<strong>AI features are allowed, but no AI key is set,</strong> so everything is still read on this device."; }
     else { cls="ai"; txt="<strong>AI features on.</strong> Upload Document still reads on this device unless you choose Claude for an upload; the Portfolio Builder sends the plan's figures (goal labels as typed; not the clients' names) to Claude. Everything else runs on this device."; }
@@ -16988,7 +16988,7 @@ function refreshPrivacyUI(){
 }
 // What each kind of request carries, for the activity list.
 const WA_NET_KIND={ ai:"AI service: a document or plan figures", order:"Order routing: the order ticket", feed:"Custodian feed: your credential (data comes back)",
-  proxy:"Your data proxy: ticker symbols or identifiers", "data-proxy":"Enterprise data service: ticker symbols", data:"Public market data: ticker symbols or identifiers",
+  proxy:"Your data proxy: ticker symbols or identifiers", "data-proxy":"Enterprise data service: ticker symbols", data:"Public market data and exchange rates: security identifiers at most",
   library:"Code library download (no client data)", self:"This app's own files (update check)", other:"Other" };
 function renderNetLog(){
   const el=$("netLog"); if(!el) return;
@@ -20606,7 +20606,7 @@ function pfDelete(){
 // Save the free market-data proxy (Cloudflare Worker) URL used for live prices.
 function savePfProxy(v){
   try{ localStorage.setItem("wa_cors_proxy", String(v||"").trim()); }catch(_){}
-  const s=$("pfRefreshStatus"); if(s) s.textContent = (v&&String(v).trim()) ? (waReloadOffer(String(v).trim()) ? "Proxy saved. Reload the page to start using it (your plan is kept)." : "Proxy saved. Live prices will route through it.") : "Proxy cleared. Yahoo prices and ticker lookups are off until a proxy is set.";
+  const s=$("pfRefreshStatus"); if(s) s.textContent = (v&&String(v).trim()) ? (waReloadOffer(String(v).trim()) ? "Proxy saved. Reload the page to start using it (your plan is kept)." : "Proxy saved. Live prices will route through it.") : "Proxy cleared. The built-in proxy is used (reload the page if another proxy was in use).";
 }
 
 // Swiss pension is retirement content, not portfolio analytics — relocate the two
@@ -23140,7 +23140,7 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
   if(m.ucits && (val("c1co")||"US") === "CH"){
     whyBits.push(`<strong>UCITS fund</strong> (domiciled in ${m.dom}): offered to Swiss residents under FinSA once approved by FINMA. US 40-Act funds are not offered to Swiss retail clients.`);
   } else if(m.ucits){
-    whyBits.push(`<strong>UCITS-passportable</strong> (domiciled in ${m.dom}), legally tradeable for EU/UK/Swiss/Asian/MENA residents under PRIIPs. US 40-Act funds are not.`);
+    whyBits.push(`<strong>UCITS fund</strong> (domiciled in ${m.dom}): the EU retail fund format, bought by EU and UK clients under PRIIPs and registered for sale in many other markets. US 40-Act funds are not offered to EU and UK retail clients.`);
   } else if(m.dom === "CH"){
     whyBits.push(`<strong>Swiss fund</strong> (domiciled in CH, Swiss fund law): not a UCITS, offered to Swiss residents under FinSA.`);
   }
@@ -23197,7 +23197,7 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
       ? `A Swiss-domiciled fund priced in CHF.`
       : `Chosen over a US-listed equivalent, which is not offered to Swiss retail clients.`);
   } else if(m.ucits && country !== "US" && country !== "CA"){
-    fitBits.push(`Required for ${country} residents: direct US-listed equivalents (e.g. VOO for CSPX) are not legally distributable to retail under PRIIPs.`);
+    fitBits.push(`Chosen for ${country} residents over a US-listed equivalent (e.g. CSPX rather than VOO); EU and UK retail rules (PRIIPs) keep US-listed ETFs from retail clients.`);
   }
   if(fitBits.length === 0) fitBits.push("Fits your overall portfolio construction: diversification, cost, and risk fit are all consistent with your stated preferences.");
   const fit = fitBits.join(" ");
@@ -23637,7 +23637,7 @@ function getDomicilePolicy(country){
   return {
     type: "UCITS",
     label: `UCITS-passportable funds for ${c} resident`,
-    note: `${c} retail investors fall under PRIIPs: only UCITS (Ireland/Luxembourg-domiciled) and local-listed funds are eligible. US 40-Act ETFs cannot be sold to retail.`
+    note: `${c} retail investors: the builder uses UCITS funds (Ireland/Luxembourg-domiciled) and local-listed funds. In the EU and UK, PRIIPs keeps US 40-Act ETFs from retail clients; elsewhere, check local distribution rules.`
   };
 }
 
@@ -23956,7 +23956,7 @@ function runDeterministicEngine(brief){
       // resident is under FinSA, not PRIIPs.
       if(f.dom === "CH") rationaleParts.push(`Swiss fund (CH-domiciled, Swiss fund law), not a UCITS`);
       else if(f.ucits && String(brief.country||"").toUpperCase() === "CH") rationaleParts.push(`UCITS fund (${f.dom}-domiciled), offered to CH residents under FinSA once approved by FINMA`);
-      else if(f.ucits) rationaleParts.push(`UCITS-passportable (${f.dom}-domiciled), eligible for ${brief.country||"non-US"} resident under PRIIPs`);
+      else if(f.ucits) rationaleParts.push(`UCITS fund (${f.dom}-domiciled), in the eligible universe for ${brief.country||"non-US"} residents`);
       else if(f.dom && f.dom !== "US") rationaleParts.push(`${f.dom}-listed, locally accessible for ${brief.country} resident`);
       // Which overweighted buckets this fund sits in — why this one and not
       // another in the same sleeve
@@ -24051,7 +24051,7 @@ function runDeterministicEngine(brief){
   // Domicile / regulatory note (appended last so it doesn't suppress the alignment message above)
   if(domicilePolicy.type === "UCITS"){
     if(String(brief.country||"").toUpperCase() === "CH") risks.push(`Universe restricted to ${eligibleUniverse.length} non-US funds (of ${totalUniverse}), mostly UCITS, for a CH resident under FinSA: confirm each fund's Swiss registration before use`);
-    else risks.push(`Universe restricted to ${eligibleUniverse.length} UCITS-passportable funds (of ${totalUniverse}), required for ${brief.country} resident under PRIIPs`);
+    else risks.push(`Universe restricted to ${eligibleUniverse.length} UCITS and local-listed funds (of ${totalUniverse}) for ${brief.country||"non-US"} residents: check local distribution rules`);
   }
   // Cash held in a currency other than the client's is an FX exposure in the one
   // sleeve that is supposed to carry none — say so rather than leaving it implied.
@@ -24204,7 +24204,7 @@ function renderAIGenResult(rec, brief){
       h += `<div class="ai-pos-card" tabindex="0" style="position:relative;border-left:3px solid #7c3aed;padding:11px 14px;margin-bottom:10px;background:rgba(124,58,237,.03);border-radius:0 6px 6px 0;transition:background .2s,box-shadow .2s;cursor:pointer">
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap">
           <strong style="font-size:14px">${escapeForHTML(p.ticker)}</strong>
-          <span style="color:var(--text3);font-size:11.5px">${escapeForHTML(m.name||fund?.name||"")}${m.sponsor||fund?.sponsor?' · '+escapeForHTML(m.sponsor||fund.sponsor):''}${flags?' · <span style="background:rgba(124,58,237,.1);color:#7c3aed;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">'+flags+'<span class="info-ic">i<span class="info-pop">UCITS: an EU-regulated fund structure legally distributable to non-US retail investors (EU/UK/Swiss/Asian/MENA) under PRIIPs. ESG: the fund applies an environmental/social/governance screen to its holdings. A country code (e.g. IE, LU) shows the fund\'s domicile when it is not the US.</span></span></span>':''}</span>
+          <span style="color:var(--text3);font-size:11.5px">${escapeForHTML(m.name||fund?.name||"")}${m.sponsor||fund?.sponsor?' · '+escapeForHTML(m.sponsor||fund.sponsor):''}${flags?' · <span style="background:rgba(124,58,237,.1);color:#7c3aed;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">'+flags+'<span class="info-ic">i<span class="info-pop">UCITS: the EU fund format sold to retail investors in the EU and UK (PRIIPs) and, once registered, in Switzerland (FinSA) and many other markets. ESG: the fund applies an environmental/social/governance screen to its holdings. A country code (e.g. IE, LU) shows the fund\'s domicile when it is not the US.</span></span></span>':''}</span>
           <span style="margin-left:auto;font-size:13px;font-weight:700;color:#7c3aed">${p.weight.toFixed(1)}%</span>
         </div>
         <div style="font-size:11.5px;color:var(--text3);font-style:italic;display:flex;align-items:center;gap:6px">
@@ -24442,7 +24442,7 @@ function renderProposalSourceBanner(){
     + '<div style="font-size:11.5px;color:var(--text2);line-height:1.5">'
     + 'Market simulation, "What could your wealth look like", Cash Flow (Investments column), and Portfolio Comparison '
     + 'all use the Investment Proposal\'s return parameters (' + info.detail + '). '
-    + '<strong>The Retirement pool is intentionally kept on a fixed 3.5%/yr conservative profile</strong> and never moves with this setting. '
+    + '<strong>The Retirement pool is intentionally kept on its own fixed rate</strong> (3.5%/yr, or the interest a Swiss pension fund credits) and never moves with this setting. '
     + 'Switch back to your household risk profile to compare.'
     + '</div></div>'
     + '<button onclick="switchSimSourceToHousehold()" '
@@ -27708,7 +27708,7 @@ function buildSimInputsSummary(){
   html+=row("Expected return (net of fees)",`${(_cw.mu*100).toFixed(2)}%/yr`,returnSrc);
   html+=row("Volatility",`${(_cw.sig*100).toFixed(2)}%/yr`);
   if(propParams) html+=row("Proposal return",`${(propParams.mu*100).toFixed(2)}%/yr`,`${proposals.length} positions`);
-  html+=row("Retirement age",retAge+"",`pool rate → 3.5%/yr in retirement`);
+  html+=row("Retirement age",retAge+"",`pool rate → 3.5%/yr (Swiss pension fund: its credited rate)`);
 
   // Goals & loans
   if(goals.length>0){
@@ -27837,10 +27837,10 @@ function renderCombinedGoalFunding(paths,yrs){
   }
 
   // Per-goal cards, sorted the same way computeGoalFundingStatus sorts (tier, then start year)
-  const prioOrder = {essential:0, important:1, aspirational:2};
+  const prioOrder = GOAL_TIER_ORDER;
   const sortedGoals = [...goals].sort((a,b)=>(prioOrder[a.tier]??1)-(prioOrder[b.tier]??1) || a.startYear-b.startYear);
-  const tierColor={essential:"var(--red)",important:"var(--amber)",aspirational:"#7c3aed"};
-  const tierLabel={essential:"Essential",important:"Important",aspirational:"Aspirational"};
+  const tierColor={essential:"var(--red)",important:"var(--amber)",aspirational:"#7c3aed",legacy:"#0f766e"};
+  const tierLabel={essential:"Essential",important:"Important",aspirational:"Aspirational",legacy:"Legacy"};
   let h = '';
   sortedGoals.forEach(g=>{
     const pv = pvById[g.id];
@@ -27999,7 +27999,7 @@ function checkCashBuffer(){
   if(monthlyExp <= 0) return flags;
 
   const liquidCash = assets
-    .filter(a => a.liquid && (a.type === "checking" || a.type === "savings" || a.type === "current" || a.type === "cash"))
+    .filter(a => a.liquid && (a.type === "checking" || a.type === "savings" || a.type === "current" || a.type === "cash" || /^(cash & )?banking$/i.test(a.group || "")))
     .reduce((s,a) => s + (+a.value||0), 0); // coerce a.value into a number
 
   const months = liquidCash / monthlyExp;
@@ -28237,7 +28237,7 @@ function renderSimPotentialWealth(){
         plugins:{ legend:{display:true, labels:{boxWidth:12, font:{size:11}}},
           tooltip:{callbacks:{ title:items=>"Year "+items[0].label+" · age "+(a1+(+items[0].label - cy)), label:c=>c.dataset.label+": "+fmtMoney(c.parsed.y) }} },
         scales:{ x:{ticks:{maxTicksLimit:10}},
-          y:{ title:{display:true, text:"Today's dollars", font:{size:10}}, ticks:{callback:v=>fmtMoney(v)} } } },
+          y:{ title:{display:true, text:"Today's money", font:{size:10}}, ticks:{callback:v=>fmtMoney(v)} } } },
       plugins:[retMarker]
     });
   }
@@ -28283,7 +28283,7 @@ function computeGoalFundingStatus(){
   const liquidAssets = (typeof investableAssetsValue==="function" ? investableAssetsValue()
     : (typeof totalAccountValue==="function" ? totalAccountValue() : 0));
   const annualSavings = num("savAnnual", 0);
-  const prioOrder = {essential:0, important:1, aspirational:2};
+  const prioOrder = GOAL_TIER_ORDER;
   const sorted = [...goals].sort((a,b)=>(prioOrder[a.tier]??1)-(prioOrder[b.tier]??1) || a.startYear-b.startYear);
   let remainingAssets = liquidAssets, totalGoalPV=0, totalFundedPV=0;
   // Shared future-savings budget (PV of the savings stream to retirement), drawn
@@ -31364,7 +31364,7 @@ const RPT_SECTION_DESC = {
   performance:     "Hypothetical CMA-based growth of the allocation vs individual asset classes and inflation, with a results table.",
   about:           "Your custom 'About the client' narrative.",
   hh:              "Client(s) and dependants: names, ages and residence.",
-  inc:             "Gross income, expenses and the income-tax breakdown (brackets, child benefits, net).",
+  inc:             "Gross income and expenses, money in versus money out, and the yearly surplus or shortfall.",
   assets:          "Accounts and holdings by type, plus loans/liabilities and net worth. Includes equity compensation (grants, vesting and projected value).",
   insurance:       "Life and other policies: cover, premiums and cash value.",
   goals:           "Each goal with target year, cost and priority, plus retirement parameters.",
@@ -31378,7 +31378,7 @@ const RPT_SECTION_DESC = {
   goalfunding:     "Present-value funding ratio per goal: assets and savings vs cost.",
   lifestyle:       "Sustainable annual spending by retirement age (bar chart + table).",
   wealthframework: "Personal / Market / Aspirational bucket allocation.",
-  potentialwealth: "Projected portfolio value each year to age 90 (chart + table).",
+  potentialwealth: "Projected portfolio value each year of the projection (chart + table).",
   cf:              "Year-by-year cash-flow projection.",
   pension:         "State/occupational pensions, claiming-age comparison, plus Swiss pillar lump-sum tax and annuity-vs-lump-sum for CH residents.",
   whatif:          "Each saved what-if scenario re-simulated against the current plan, with a verdict on whether it fits.",
@@ -31400,7 +31400,7 @@ const RPT_GLOSSARY = [
   ["Confidence Level", "The probability that an outcome is achieved at or above the stated value. An amount at 80% confidence is reached in at least 8 of 10 simulated futures."],
   ["Correlation", "How closely two asset classes move together (−1 to +1). Combining assets with low correlation lowers total portfolio risk."],
   ["Diversification", "Spreading investments across asset classes so portfolio volatility is lower than the weighted average of its parts; computed here via the full correlation matrix."],
-  ["Essential / Important / Aspirational", "Goal priorities: Essential goals are needs and are tested at 95% confidence; Important goals at 75%; Aspirational goals (wants) at 55%."],
+  ["Essential / Important / Aspirational", "Goal priorities: Essential goals are needs and are tested at 95% confidence; Important goals at 75%; Aspirational goals (wants) at 55%; Legacy goals (for heirs) at 75%."],
   ["Expected Return (Arithmetic)", "The simple average annual return assumed for an asset class or portfolio. Used as the input mean for the simulation."],
   ["Expense Ratio", "A fund's internal annual operating cost as a percentage of assets, charged by the fund issuer and already reflected in fund performance."],
   ["Geometric (Compound) Return", "The constant annual growth rate that produces the same cumulative result over time; approximately the arithmetic mean minus half the variance."],
@@ -31412,7 +31412,7 @@ const RPT_GLOSSARY = [
   ["Percentile (Pessimistic / Optimistic)", "A ranking within the simulated outcomes. The 10th percentile (pessimistic) is beaten by 90% of paths; the 90th (optimistic) by only 10%."],
   ["Potentially Achievable Lifestyle", "The sustainable, inflation-adjusted annual spending the portfolio could support through retirement at a given confidence level."],
   ["Present Value (PV)", "The today's-money equivalent of future cash flows, discounted at a risk- and confidence-adjusted return."],
-  ["Retirement Pool", "The combined locked retirement accounts. Grown at a fixed conservative 3.5%/yr in this analysis, intentionally insulated from the household's investment risk choices."],
+  ["Retirement Pool", "The combined locked retirement accounts. Grown at a fixed conservative 3.5%/yr in this analysis (a Swiss pension fund and vested-benefits account at the interest the fund credits, 1.25% unless entered), insulated from the household's investment risk choices."],
   ["Risk Profile", "Your investor categorization, from conservative to aggressive. Sets the expected-return and volatility assumptions when no explicit portfolio drives the simulation."],
   ["Standard Deviation (Volatility, σ)", "The dispersion of returns around the average, the core measure of investment risk. Higher σ means wider swings in outcomes."],
   ["Time Horizon", "How long until the money is needed. Longer horizons can support more volatility because there is more time to recover from downturns."],
@@ -33163,7 +33163,7 @@ function drawFanChart(){
       { title:"Your Investments", divider:true, keys:["ips","port","proposal","totalportfolio","efficiency","performance","wealthframework","riskcategories","riskstatus"],
         summary:"How your money is invested: the policy that governs the portfolio, what you hold today, how efficiently it is allocated, and the framework used to balance risk against your goals." },
       { title:"Retirement", divider:true, keys:["sim","potentialwealth","cf","pension","whatif"],
-        summary:"What retirement could look like in numbers: your projected wealth to age 90 across many simulated futures, the year-by-year figures behind that chart, your cash flow over time, the pensions your plan counts on (including the Swiss pillar choices where they apply) and the what-if scenarios you asked us to test." },
+        summary:"What retirement could look like in numbers: your projected wealth across many simulated futures, the year-by-year figures behind that chart, your cash flow over time, the pensions your plan counts on (including the Swiss pillar choices where they apply) and the what-if scenarios you asked us to test." },
       { title:"Investment Fact Sheets", divider:true, keys:["factsheets"],
         summary:"Detailed reference sheets for each proposed investment vehicle: historical and expected returns, risk and fees." },
       { title:"Appendix", divider:true, keys:["educharts","cma","method","glossary","disc"],
@@ -34048,7 +34048,7 @@ function drawFanChart(){
         if(typeof glidepathEnabled === "function" && glidepathEnabled())
           bullets.push("Investing: de-risk the portfolio gradually over the " + num("gpYears",10) + " years before retirement (glidepath).");
         else
-          bullets.push("Investing: maintain the " + (RISK_PROFILES[val("c1r")]?.label || "selected") + " allocation; the retirement pool stays conservative at a fixed 3.5%/yr.");
+          bullets.push("Investing: maintain the " + (RISK_PROFILES[val("c1r")]?.label || "selected") + " allocation; the retirement pool grows at its own fixed rate (" + (chHouseholdSwiss() ? "3.5%/yr, or the interest a Swiss pension fund credits" : "3.5%/yr") + ").");
         if(typeof insurances !== "undefined" && insurances.length > 0)
           bullets.push("Protection: " + insurances.length + " polic" + (insurances.length>1?"ies":"y") + " in force with " + fmt(insuranceDeathBenefit()) + " total life cover; premiums " + fmt(insurancePremiumAnnual()) + "/yr.");
         bullets.forEach(b => para("•  " + b, [50,50,50]));
@@ -34372,7 +34372,7 @@ function drawFanChart(){
         if(val("rptIncSim") === "no") return;
         checkY(30);
         sectionH2("Wealth Projection");
-        plainLead("We replayed your financial life "+(lastSimPaths&&lastSimPaths.length?lastSimPaths.length.toLocaleString():"1,000")+" times with different market ups and downs. These pages show the range of where you could end up - not one prediction, but the realistic spread.");
+        plainLead((lastSimPaths&&lastSimPaths.length?"We replayed your financial life "+lastSimPaths.length.toLocaleString()+" times with different market ups and downs. ":"Run the simulation to replay your financial life with different market ups and downs. ")+"These pages show the range of where you could end up - not one prediction, but the realistic spread.");
         if(lastSimPaths&&lastSimPaths.length>0){
           const yrs=lastSimYrs;
           const inf=num("inf",3.8)/100;
@@ -34392,7 +34392,7 @@ function drawFanChart(){
           const _bL=(typeof band!=="undefined"&&band&&isFinite(band.low ))?band.low :10;
           const _bM=(typeof band!=="undefined"&&band&&isFinite(band.mid ))?band.mid :50;
           const _bH=(typeof band!=="undefined"&&band&&isFinite(band.high))?band.high:90;
-          para("The fan chart below runs thousands of randomized market scenarios and plots the range of outcomes over time. The dark line is the "+(_bM===50?"median (50th percentile)":wiOrd(_bM)+"-percentile")+" result; the shaded bands show the spread: the outer band is the "+wiOrd(_bL)+"-"+wiOrd(_bH)+" percentile range (matching the probability band selected in the app), so there is roughly a "+Math.max(0,_bH-_bL)+"% chance your wealth lands inside it. A wider fan means more uncertainty the further out you look.");
+          para("The fan chart below plots the range of outcomes across these simulated market scenarios over time. The dark line is the "+(_bM===50?"median (50th percentile)":wiOrd(_bM)+"-percentile")+" result; the shaded bands show the spread: the outer band is the "+wiOrd(_bL)+"-"+wiOrd(_bH)+" percentile range (matching the probability band selected in the app), so there is roughly a "+Math.max(0,_bH-_bL)+"% chance your wealth lands inside it. A wider fan means more uncertainty the further out you look.");
           drawFanChart();
 
           // ── Scenario cards — what your wealth could look like at the horizon
@@ -34484,7 +34484,7 @@ function drawFanChart(){
         let st;
         try { st = computeGoalFundingStatus(); }
         catch(e){ para("Goal funding analysis unavailable. Define goals and run the analysis."); return; }
-        para("This overview compares the present-value (PV) cost of your goals, grossed up for tax, against the assets and future savings allocated to them in priority order. Each goal is discounted at a return matched to its confidence level (Essential 95%, Important 75%, Aspirational 55%).");
+        para("This overview compares the present-value (PV) cost of your goals, grossed up for tax, against the assets and future savings allocated to them in priority order. Each goal is discounted at a return matched to its confidence level (Essential 95%, Important 75%, Aspirational 55%, Legacy 75%).");
         // institutional two-column layout: assets-vs-goals stacked bar + per-goal cards
         // Design tokens (were section-local colors that drifted from the house set).
         const _ink=INK, _mut=MUTED, _grid=CARD_LN;
@@ -34619,7 +34619,7 @@ function drawFanChart(){
           return [c.lbl, basis, fmt(Math.max(0,wealth)), fmt(Math.max(0,spend))+" / yr"];
         });
         tbl(["Scenario","Market assumption","Investable wealth at retirement","Sustainable spend (today's money)"], rows);
-        para("Sustainable spend is shown in today's money and includes your projected pension / state-benefit income; the portfolio only funds spending above what pensions cover. It targets a 90% probability of the money lasting to age 90 (a simulated drawdown: cash earns nothing and is spent first, the invested part earns the portfolio's expected return and volatility). This is the same solver the app's lifestyle panel uses (current age "+a1+" → retirement "+retAge+" → age 90). Wealth at retirement is shown in future (at-retirement) dollars.", MUTED);
+        para("Sustainable spend is shown in today's money and includes your projected pension / state-benefit income; the portfolio only funds spending above what pensions cover. It targets a 90% probability of the money lasting to age 90 (a simulated drawdown: cash earns nothing and is spent first, the invested part earns the portfolio's expected return and volatility). This is the same solver the app's lifestyle panel uses (current age "+a1+" → retirement "+retAge+" → age 90). Wealth at retirement is shown in nominal terms (money of the retirement year).", MUTED);
       },
       // ─── WEALTH ALLOCATION FRAMEWORK (Personal / Market / Aspirational) ──
       wealthframework: () => {
@@ -34911,7 +34911,7 @@ function drawFanChart(){
       potentialwealth: () => {
         if(val("rptIncPotWealth") === "no") return;
         sectionH2("Annual Potential Wealth");
-        para("Projected portfolio value each year from today to age 90, in today's money, at three likelihood levels: 80% is a conservative floor (80% chance of doing at least this well), 50% is the expected path and 30% is an optimistic outcome. The shaded cone spans the conservative-to-optimistic range.");
+        para("Projected portfolio value each year from today to the end of the projection, in today's money, at three likelihood levels: 80% is a conservative floor (80% chance of doing at least this well), 50% is the expected path and 30% is an optimistic outcome. The shaded cone spans the conservative-to-optimistic range.");
         // chart — same series as the app (MC percentiles when a sim has run)
         drawWealthLineChart();
         // table on the SAME series source, so chart, table and app all agree
@@ -35293,8 +35293,8 @@ function drawFanChart(){
         checkY(30);
         sectionH2("Methodology & Assumptions");
         para("Model version: Wealth Analyzer build "+APP_VERSION+", "+(CMA_ACTIVE==="CHF"?"Swiss franc":"US dollar")+" capital market assumptions, "+((Array.isArray(lastSimPaths)&&lastSimPaths.length)?lastSimPaths.length.toLocaleString()+" simulated paths":"no simulation run")+". Every model change is recorded against the build in which it took effect.");
-        para("Return simulation: Log-normal returns sampled via Box-Muller transform. Each annual return is drawn as (μ − 0.5σ²) + σ×N(0,1), producing the full distribution of outcomes rather than a single deterministic path.");
-        para("Asset growth: Investment accounts grow at the sampled portfolio return. Property appreciates stochastically at 3% ± 2% per year. Retirement pool grows at a fixed 3.5% nominal across both accumulation and retirement, decoupled from household risk and the Investment Proposal, with no new contributions credited"+(chHouseholdSwiss()?" (Swiss pillars differ: see below)":"")+". Cash earns no explicit return. Locked accounts with no withdrawal age (term deposits, structured products, private-equity interests and the like) are held at their value with other assets and are never spent.");
+        para("Return simulation: Log-normal returns sampled via Box-Muller transform, one draw per asset class in the portfolio each year, correlated through the assumption set's correlation matrix (a single blended draw when no holdings are entered). Each annual return is drawn as (μ − 0.5σ²) + σ×N(0,1), producing the full distribution of outcomes rather than a single deterministic path.");
+        para("Asset growth: Portfolio holdings grow at the sampled return of their asset classes; without holdings, 30% of liquid account balances are invested and the rest is held as cash. Property appreciates stochastically at 3% ± 2% per year. Retirement pool grows at a fixed 3.5% nominal across both accumulation and retirement, decoupled from household risk and the Investment Proposal, with no new contributions credited"+(chHouseholdSwiss()?" (Swiss pillars differ: see below)":"")+". Cash earns no explicit return. Locked accounts with no withdrawal age (term deposits, structured products, private-equity interests and the like) are held at their value with other assets and are never spent.");
         para("Savings & surplus: The annual savings target is deposited to cash each year if surplus allows. Positive residual surplus (above savings) is treated as discretionary spending, except the part of a retirement-account withdrawal that the year's spending did not need, which is reinvested. Deficits draw from cash first, then investments.");
         para("Debt amortisation: Each loan amortises annually using standard mortgage math. Interest and principal separation is computed per loan at each simulation step.");
         para("Net figures: Projections apply prevailing income and investment taxes internally so that surplus, cash flow and net worth stay realistic. This report does not itemise, display or advise on tax. Consult a qualified tax professional for tax matters.");
@@ -35372,7 +35372,7 @@ function drawFanChart(){
         const bottom = PAGE_BOTTOM;
         let contentTop = y, col = 0, gy = contentTop;
         RPT_GLOSSARY.forEach(g => {
-          const term = g[0], def = g[1];
+          const term = g[0], def = (term==="Retirement Pool" && !chHouseholdSwiss()) ? g[1].replace(/ \(a Swiss[^)]*\)/,"") : g[1];
           doc.setFont("helvetica","bold"); doc.setFontSize(8.6);
           const termLines = doc.splitTextToSize(pdfSafe(term), colW);
           doc.setFont("helvetica","normal"); doc.setFontSize(7.3);
@@ -35422,7 +35422,7 @@ function drawFanChart(){
       sectionH2("How to Read This Report");
       para("This report looks at your finances from many angles, but the core ideas are simple. This page explains them in plain terms so every chart that follows makes sense.");
       subBar("What is a market simulation?");
-      para("Instead of assuming one fixed rate of return, we replay your financial life across a thousand simulated futures, each with a different, randomly drawn sequence of good and bad market years based on long-term market behaviour. The result is not one prediction but a RANGE of realistic outcomes - some strong, some average, some poor.");
+      para("Instead of assuming one fixed rate of return, we replay your financial life across "+((Array.isArray(lastSimPaths)&&lastSimPaths.length)?lastSimPaths.length.toLocaleString():"many")+" simulated futures, each with a different, randomly drawn sequence of good and bad market years based on long-term market behaviour. The result is not one prediction but a RANGE of realistic outcomes - some strong, some average, some poor.");
       subBar("How to read the fan chart");
       bullets([
         "The dark middle line is the MEDIAN: half of the simulated futures end above it, half below.",
@@ -36881,8 +36881,8 @@ function cfLegendHtml(){
     : "the state pension"+(us ? " / Social Security" : "")+" is credited from the configured start age (with the chosen COLA treatment)";
   const col=allCH ? "<strong>"+hdr+"</strong> combines the pensions in payment."
     : "<strong>"+hdr+"</strong> combines pensions and withdrawals from locked retirement accounts: a voluntary 4% a year from retirement"+(r.clause ? ", "+r.clause : "")+".";
-  return "Deterministic projection at the household's mean return; investment growth assumes reinvested surplus and a 30/70 cash/invest split during accumulation. In retirement, earned income → 0 and expenses swap to the inflation-adjusted retirement spend; "+pen+". "+col
-    +" <strong>Ret. pool</strong> shows the remaining retirement-account balance after each year's withdrawal. It grows at a <strong>fixed 3.5%/yr</strong> (fixed, intentionally decoupled from the household risk profile, the Portfolio Builder, and the Investment Proposal so an aggressive investment stance never affects the retirement reserve). <strong>Income tax</strong> is recomputed each year on gross earned income + pensions + withdrawals (Switzerland: the official ESTV tables, in today's money, after social and pension contributions); <strong>savings target</strong> is funded first each year from net cash flow before remaining surplus is split.";
+  return "Deterministic projection at the household's mean return; the annual savings target goes to cash when the surplus allows; surplus above it counts as spending, except an unneeded retirement-account withdrawal, which is reinvested. In retirement, earned income → 0 and expenses swap to the inflation-adjusted retirement spend; "+pen+". "+col
+    +" <strong>Ret. pool</strong> shows the remaining retirement-account balance after each year's withdrawal. It grows at a <strong>fixed 3.5%/yr</strong> (fixed, intentionally decoupled from the household risk profile, the Portfolio Builder, and the Investment Proposal so an aggressive investment stance never affects the retirement reserve)."+(chHouseholdSwiss()?" A Swiss pension fund grows at the interest it credits instead (1.25% a year unless entered).":"")+" <strong>Income tax</strong> is recomputed each year on gross earned income + pensions + withdrawals (Switzerland: the official ESTV tables, in today's money, after social and pension contributions); the <strong>savings target</strong> is funded first each year from net cash flow.";
 }
 var _usOnlyKey=null;
 function updateUSOnlyVisibility(){

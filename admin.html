@@ -475,7 +475,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 <div class="tab active" id="tab-dashboard">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="layout-dashboard" class="icon" aria-hidden="true"></i><span class="wh-title-text">Admin Console Dashboard</span></h1>
-    <p class="wh-sub">Connected to your local Wealth Analyzer app, sharing localStorage for profile, keys, and configuration. No backend required.</p>
+    <p class="wh-sub">Shares this browser's localStorage with the Wealth Analyzer app for keys, configuration, research and proposals; plans move between them as saved files. No backend required.</p>
   </div></div>
   <div class="kpi-grid" id="dashKpis"></div>
   <div class="grid2">
@@ -494,7 +494,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
 <div class="tab" id="tab-users">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="users" class="icon" aria-hidden="true"></i><span class="wh-title-text">User Management</span></h1>
-    <p class="wh-sub">Track every user who creates a financial plan. When a user saves their plan in the main app, it appears here automatically. Click <strong>Build Portfolio</strong> on any user to send their plan to the AI Agent (Claude, needs an AI key) and draft a recommendation for advisor review.</p>
+    <p class="wh-sub">Track the clients registered in this console. The demo has no server and the main app saves plans as files, so plans never appear here on their own: to add a client, load their saved plan file in Profile Manager and press Inject, or use + Add User. Click <strong>Build Portfolio</strong> on any user to send their plan to the AI Agent (Claude, needs an AI key) and draft a recommendation for advisor review.</p>
   </div></div>
 
   <div class="kpi-grid" id="userStats"></div>
@@ -503,13 +503,13 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
     <div class="ptitle">All Users</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
       <button class="btn" data-action="addUser">+ Add User</button>
-      <button class="btn-ghost" data-action="captureFromMainApp"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Capture from Main App</button>
+      <button class="btn-ghost" data-action="captureFromMainApp"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Capture injected profile</button>
       <button class="btn-ghost" data-action="buildAllPortfolios"><i data-lucide="zap" class="icon" aria-hidden="true"></i> Build Portfolios for All</button>
       <input type="text" id="userSearch" placeholder="Search by name or email..." style="margin-left:auto;width:240px" oninput="renderUserTable()">
     </div>
     <div id="userTable"></div>
     <div style="font-size:11px;color:var(--color-text-muted);margin-top:14px;line-height:1.6;padding:10px 12px;background:rgba(0,87,184,.04);border-radius:6px">
-      <strong style="color:var(--color-primary)"><i data-lucide="lightbulb" class="icon" aria-hidden="true"></i> How users get added:</strong> the admin automatically watches the main app's <code>wa_pending_profile</code> localStorage key. When a user saves their profile in the main app and clicks Capture from Main App here, the latest profile is registered as a user. You can also manually add users via the + Add User button.
+      <strong style="color:var(--color-primary)"><i data-lucide="lightbulb" class="icon" aria-hidden="true"></i> How users get added:</strong> this console watches its <code>wa_pending_profile</code> localStorage key, which Profile Manager's Inject fills from a saved plan file (the main app saves plans as files and never writes this key). The profile found there is registered as a user; Capture injected profile does the same on demand. You can also manually add users via the + Add User button.
     </div>
   </div>
 
@@ -542,10 +542,10 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
   <div class="panel">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:240px">
-        <div class="ptitle" style="margin:0 0 4px">Client-app feature · AI Portfolio Builder</div>
-        <div class="pdesc" style="margin:0">Controls whether the <strong>AI Portfolio Builder</strong> tab appears in the client-facing Wealth Analyzer app. Switch it off to ship the clean, advisor-only edition. Current state: <strong id="aiBuilderSwitchState">…</strong></div>
+        <div class="ptitle" style="margin:0 0 4px">Client-app feature · Portfolio Builder</div>
+        <div class="pdesc" style="margin:0">Controls whether the <strong>Portfolio Builder</strong> tab (rules engine; AI only if the firm turns it on) appears in the client-facing Wealth Analyzer app. Switch it off to ship the clean, advisor-only edition. Current state: <strong id="aiBuilderSwitchState">…</strong></div>
       </div>
-      <button class="wa-switch" id="aiBuilderSwitch" role="switch" aria-checked="true" data-action="toggleAIBuilderFeature" title="Toggle AI Portfolio Builder in the client app"><span class="wa-on">ON</span><span class="wa-off">OFF</span><span class="wa-knob"></span></button>
+      <button class="wa-switch" id="aiBuilderSwitch" role="switch" aria-checked="true" data-action="toggleAIBuilderFeature" title="Show or hide the Portfolio Builder in the client app"><span class="wa-on">ON</span><span class="wa-off">OFF</span><span class="wa-knob"></span></button>
     </div>
     <div class="pdesc" style="margin-top:10px;font-size:11px;color:var(--color-text-muted)">Applies on the client app's next load, or instantly when its browser tab regains focus (same site / shared browser).</div>
   </div>
@@ -553,7 +553,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
   <div class="panel">
     <div class="ptitle">① Client Brief</div>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      <button class="btn-ghost" data-action="loadProfile"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh from main app</button>
+      <button class="btn-ghost" data-action="loadProfile"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Refresh from injected profile</button>
       <button class="btn-ghost" data-action="loadProfileFile">⬆ Load JSON</button>
       <input type="file" id="profileFile" accept=".json" style="display:none">
     </div>
@@ -561,13 +561,13 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
       <div>
         <div class="row"><label class="lbl">Risk profile</label>
           <select id="agRisk" class="fw">
-            <option value="very_conservative">Very Conservative (3.5/4)</option>
-            <option value="conservative">Conservative (4.5/7)</option>
-            <option value="moderately_conservative">Mod. Conservative (5.5/9)</option>
-            <option value="moderate" selected>Moderate (7/12)</option>
-            <option value="moderately_aggressive">Mod. Aggressive (8.5/15)</option>
-            <option value="aggressive">Aggressive (10/18)</option>
-            <option value="very_aggressive">Very Aggressive (12/22)</option>
+            <option value="very_conservative">Very Conservative</option>
+            <option value="conservative">Conservative</option>
+            <option value="moderately_conservative">Mod. Conservative</option>
+            <option value="moderate" selected>Moderate</option>
+            <option value="moderately_aggressive">Mod. Aggressive</option>
+            <option value="aggressive">Aggressive</option>
+            <option value="very_aggressive">Very Aggressive</option>
           </select>
         </div>
         <div class="row"><label class="lbl">Horizon</label>
@@ -624,7 +624,7 @@ Down payment | 2028 | 150000</textarea>
   </div>
 
   <div class="panel">
-    <div class="ptitle">② Research Sources <span style="color:var(--color-success);font-weight:600">(all <span class="js-prov-count">16</span> enabled by default)</span></div>
+    <div class="ptitle">② Research Sources <span style="color:var(--color-success);font-weight:600">(all <span class="js-prov-count">19</span> enabled by default)</span></div>
     <div class="pdesc">Sources refresh when you open this tab and <strong style="color:var(--color-success)">every 5 minutes</strong>. Live items need the data proxy (Market Data tab); without it each source shows only the curated baseline catalogue (as of <span class="js-curated-asof">2026-07-31</span>). Uncheck any you want to exclude.</div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
       <button class="btn-ghost" data-action="manualResearchRefresh"><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Pull latest now</button>
@@ -682,14 +682,14 @@ Down payment | 2028 | 150000</textarea>
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #0057b8;border-radius:8px;padding:16px 20px;margin-bottom:12px">
         <div style="font-weight:700;font-size:14px;color:#0057b8;margin-bottom:8px">STAGE 1: Signal Extraction from Research</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
-          For each cached research item (typically 100+ per provider, 1,600+ total), the engine parses the title + summary against keyword lexicons:
+          For each cached research item (about 60 per source in the curated baseline, up to 150 with live feeds), the engine parses the title + summary against keyword lexicons:
           <ul style="margin:8px 0 0 20px">
-            <li><strong>Sentiment lexicons:</strong> 18 bullish phrases (overweight, bullish, favor, top pick, overperform, attractive, compelling, upside, tailwind, constructive, accumulate…) weighted +1 to +4. 16 bearish phrases (underweight, bearish, avoid, cautious, stretched, headwind, exit, trim…) weighted −1 to −4.</li>
+            <li><strong>Sentiment lexicons:</strong> 31 bullish phrases (overweight, bullish, favor, top pick, outperform, attractive, compelling, upside, tailwind, constructive, accumulate…) weighted +1 to +3. 31 bearish phrases (underweight, bearish, avoid, cautious, stretched, headwind, exit, trim…) weighted −1 to −4.</li>
             <li><strong>Asset class detection:</strong> 6 classes scanned for phrases (equity, fixed income, real estate, commodity, cash, alternative). Item sentiment is applied to the class as a signed vote.</li>
             <li><strong>Sector detection:</strong> 11 sectors with specific ticker tags (Tech: NVDA/MSFT/QQQ/XLK; Healthcare: LLY/NOVO/XLV; Financials: JPM/XLF; Energy: XOM/CVX/XLE; etc.).</li>
             <li><strong>Region detection:</strong> 7 regions (US, Europe, Japan, China, India, EM, Developed Intl).</li>
             <li><strong>Theme detection:</strong> 11 themes (AI, decarbonization, GLP-1, defense, reshoring, cybersecurity, demographics, water, crypto, dividend growth, quality factor).</li>
-            <li><strong>Ticker extraction:</strong> regex against the full fund universe (<span class="js-fund-count">942</span> funds) + 30 common stocks. Each mention recorded with the provider name for conviction scoring.</li>
+            <li><strong>Ticker extraction:</strong> regex against the full fund universe (<span class="js-fund-count">979</span> funds) + 30 common stocks. Each mention recorded with the provider name for conviction scoring.</li>
           </ul>
         </div>
       </div>
@@ -698,7 +698,7 @@ Down payment | 2028 | 150000</textarea>
       <div style="background:#fff;border:1px solid var(--color-border);border-left:4px solid #00875a;border-radius:8px;padding:16px 20px;margin-bottom:12px">
         <div style="font-weight:700;font-size:14px;color:#00875a;margin-bottom:8px">STAGE 2: Cross-Provider Consensus Aggregation</div>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
-          Net votes summed across all <span class="js-prov-count">16</span> providers. For each signal (e.g. "overweight Equity"), the engine tracks:
+          Net votes summed across all <span class="js-prov-count">19</span> providers. For each signal (e.g. "overweight Equity"), the engine tracks:
           <ul style="margin:8px 0 0 20px">
             <li><strong>Total net votes</strong>: sum of all signed sentiments across all items mentioning this signal</li>
             <li><strong>Provider count</strong>: number of sources that mention the signal, and how many of them lean the net direction (the figure the rationale cites)</li>
@@ -735,7 +735,7 @@ Down payment | 2028 | 150000</textarea>
             tilt = max(-8, min(+8, netVotes / 4))<br>
             allocation[class] = baseline[class] + tilt
           </div>
-          So a class with +24 net votes gets +6% above baseline; a class with −16 net votes gets −4%. Final allocation normalized to sum exactly 100%.
+          So +24 net votes adds 6 points to a class and −16 removes 4, before the whole allocation is rescaled to sum to exactly 100%, which shrinks the shifts when most classes tilt the same way.
         </div>
       </div>
 
@@ -748,7 +748,7 @@ Down payment | 2028 | 150000</textarea>
             <li><strong>Filter candidates by class:</strong> only funds where <code>fund.cls === targetClass</code></li>
             <li><strong>Apply hard constraints:</strong>
               <ul style="margin-top:4px">
-                <li>Domicile: only funds eligible for the client's country (e.g. UCITS-passportable funds for EU/CH/UK residents)</li>
+                <li>Domicile: only funds eligible for the client's country (e.g. US-listed funds for US and Canadian residents, UCITS funds for EU and UK residents, Swiss and UCITS funds for Swiss residents)</li>
                 <li>If <code>ESG = strict</code> → keep only funds with <code>esg: true</code> flag</li>
                 <li>If <code>liquidity = high</code> → keep only ETFs, money-market funds and exchange-traded commodity vehicles (unless that would leave the sleeve empty)</li>
               </ul>
@@ -790,7 +790,7 @@ Down payment | 2028 | 150000</textarea>
         <div style="font-size:12.5px;line-height:1.7;color:var(--color-text-secondary)">
           Every fund pick gets a multi-part rationale:
           <ul style="margin:8px 0 0 20px">
-            <li><strong>Consensus citation:</strong> "<em>N/<span class="js-prov-count">16</span> providers overweight [class] (+X net votes)</em>"</li>
+            <li><strong>Consensus citation:</strong> "<em>N/<span class="js-prov-count">19</span> providers overweight [class] (+X net votes)</em>"</li>
             <li><strong>Specific ticker mentions:</strong> if applicable, "<em>VTI explicitly mentioned by BlackRock, Vanguard + 2 more</em>"</li>
             <li><strong>Cost rationale:</strong> "<em>Low expense ratio (0.03%)</em>"</li>
             <li><strong>Constraint match:</strong> "<em>ETF wrapper preferred for high tax sensitivity</em>" or "<em>ESG-flagged matches preference</em>"</li>
@@ -805,14 +805,14 @@ Down payment | 2028 | 150000</textarea>
         <div style="font-size:11.5px;line-height:1.6;color:#92400e;margin-bottom:10px">Illustrative only: the research counts are invented, and the fund scores below use an older, simplified formula (cost + ticker mentions − sponsor repeat). They do not reproduce the full Stage 4 score, so a real run can rank funds differently.</div>
         <div style="font-size:11.5px;line-height:1.8;color:var(--color-text-secondary);font-family:var(--font-mono)">
 <strong>Brief:</strong> risk = moderate · NW = $500k · ESG = none · tax = medium · liquidity = medium · max pos = 20%<br>
-<strong>Research scanned:</strong> 1,420 items across 16 providers<br><br>
+<strong>Research scanned:</strong> 1,420 items across 19 providers<br><br>
 
 <strong>Signals extracted:</strong><br>
 • Equity: +28 net votes from 14 providers (overweight consensus)<br>
 • Fixed Income: +8 net votes from 11 providers<br>
 • Real Estate: −2 net votes (mixed views)<br>
 • Cash: −12 net votes (underweight)<br>
-• Top theme: AI (16/16 providers, 67 votes)<br>
+• Top theme: AI (19/19 providers, 67 votes)<br>
 • Ticker mentions: VTI 4x, IVV 6x, AGG 5x, QQQ 8x<br><br>
 
 <strong>Allocation (Moderate baseline tilted by research):</strong><br>
@@ -828,7 +828,7 @@ Down payment | 2028 | 150000</textarea>
 • <strong>VXUS</strong> 22%: score = 0.93 + 0 − 0.2 = 0.73 (no mention, but good for diversification)<br><br>
 
 <strong>Rationale for IVV:</strong><br>
-14/16 providers overweight Equity (+28 net votes) ·<br>
+14/19 providers overweight Equity (+28 net votes) ·<br>
 IVV explicitly mentioned by BlackRock, BofA, JPM + 3 more ·<br>
 Low expense ratio (0.03%)<br>
 Citations:<br>
@@ -845,7 +845,7 @@ Citations:<br>
 
       <!-- Differences from AI agent version -->
       <div style="margin-top:10px;padding:12px 16px;background:var(--color-primary-tint-1);border-radius:6px;font-size:12px;color:var(--color-text-secondary);line-height:1.6">
-        <strong style="color:var(--color-primary)"><i data-lucide="bot" class="icon" aria-hidden="true"></i> How the AI agent differs:</strong> the AI version receives the same client brief + research items + fund universe as the deterministic engine, but uses an LLM to reason narratively over the inputs. It may suggest weights that deviate from the deterministic baseline (e.g. tactical overweights based on theme strength), and can produce richer prose rationale. Both produce the same JSON shape and feed the same Export-to-Proposal button, and the export records which one built it. Pick deterministic for auditability, AI for narrative reasoning.
+        <strong style="color:var(--color-primary)"><i data-lucide="bot" class="icon" aria-hidden="true"></i> How the AI agent differs:</strong> the AI version receives the same client brief, the first 20 cached research items from each ticked source and the same eligible fund list, but uses an LLM to reason narratively over the inputs. It may suggest weights that deviate from the deterministic baseline (e.g. tactical overweights based on theme strength), and can produce richer prose rationale. Both produce the same JSON shape and feed the same Export-to-Proposal button, and the export records which one built it. Pick deterministic for auditability, AI for narrative reasoning.
       </div>
     </div>
   </div>
@@ -936,7 +936,7 @@ Citations:<br>
   <!-- Sensitivity Sweeps -->
   <div class="panel">
     <div class="ptitle"><i data-lucide="sliders-vertical" class="icon" aria-hidden="true"></i> Sensitivity Sweeps</div>
-    <div class="pdesc">Run the engine 5-7 times with one parameter varied. See how allocation shifts in response. Useful for finding edge cases or verifying expected behavior.</div>
+    <div class="pdesc">Run the engine 3-7 times with one parameter varied. See how allocation shifts in response. Useful for finding edge cases or verifying expected behavior.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px">
       <button class="btn-ghost" data-action="sweepRisk" style="text-align:left;padding:12px 16px;height:auto">
         <div style="font-weight:700;font-size:13px;color:var(--color-primary)"><i data-lucide="target" class="icon" aria-hidden="true"></i> Risk Profile Sweep</div>
@@ -960,7 +960,7 @@ Citations:<br>
       </button>
       <button class="btn-ghost" data-action="sweepResearch" style="text-align:left;padding:12px 16px;height:auto">
         <div style="font-weight:700;font-size:13px;color:var(--color-primary)"><i data-lucide="library" class="icon" aria-hidden="true"></i> Research Source Count Sweep</div>
-        <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px">1 · 4 · 8 · 16 sources</div>
+        <div style="font-size:11px;color:var(--color-text-muted);margin-top:2px">1 · 4 · 8 · all enabled sources</div>
       </button>
     </div>
     <div id="sweepResult"></div>
@@ -1020,7 +1020,7 @@ Citations:<br>
 <div class="tab" id="tab-testbench">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="flask-conical" class="icon" aria-hidden="true"></i><span class="wh-title-text">Calculation Test Bench</span></h1>
-    <p class="wh-sub">Run any internal financial calculation with custom inputs, or run the full automated test suite to verify all math.</p>
+    <p class="wh-sub">Run the console's own copies of the core formulas (present and future value, annuities, mortgage payments, RMDs, bracket tax, a basic Monte Carlo) with custom inputs, or run their automated checks. The main app's full engine is not tested here.</p>
   </div></div>
   <div class="panel">
     <div class="ptitle">Automated Test Suite</div>
@@ -1050,7 +1050,7 @@ Citations:<br>
 <div class="tab" id="tab-constants">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="settings" class="icon" aria-hidden="true"></i><span class="wh-title-text">Constants Editor</span></h1>
-    <p class="wh-sub">Edit financial constants used throughout the main app. Export edited values as JSON for deployment.</p>
+    <p class="wh-sub">Edit and export a copy of the main app's financial constants. Edits stay in this console and do not change the main app; export them as JSON for a deployment.</p>
   </div></div>
   <div class="panel">
     <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -1106,20 +1106,20 @@ Citations:<br>
 <div class="tab" id="tab-profiles">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="user" class="icon" aria-hidden="true"></i><span class="wh-title-text">Profile Manager</span></h1>
-    <p class="wh-sub">Load any <code>wealth-profile.json</code> from the main app, inspect it, edit fields, and push back to the main app's localStorage.</p>
+    <p class="wh-sub">Load any <code>wealth-profile.json</code> saved from the main app, inspect it, edit fields, and inject it into this console's client list and Portfolio Agent brief (the main app itself loads plan files through Settings, Load profile).</p>
   </div></div>
   <div class="panel">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-ghost" data-action="loadProfileFile2">⬆ Load JSON</button>
       <button class="btn-ghost" data-action="saveProfile" id="pfSaveBtn" disabled>⬇ Save JSON</button>
-      <button class="btn" data-action="injectProfile" id="pfInjectBtn" disabled><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Inject into Main App</button>
+      <button class="btn" data-action="injectProfile" id="pfInjectBtn" disabled><i data-lucide="refresh-cw" class="icon" aria-hidden="true"></i> Inject</button>
       <input type="file" id="profileFile2" accept=".json" style="display:none">
     </div>
     <div class="kpi-grid" id="pfStats" style="margin-top:14px"></div>
   </div>
   <div class="panel" id="questionnairePanel">
     <div class="ptitle"><i data-lucide="file-text" class="icon" aria-hidden="true"></i> Client Intake Questionnaire</div>
-    <p style="color:var(--color-text-muted);font-size:13px;margin:6px 0 12px;line-height:1.6">The blank 4-page client questionnaire (household, income, expenses, assets, goals, retirement, risk, tax, disclosure). Download it to send to a client, or print and have them fill it in, then transcribe into the main app.</p>
+    <p style="color:var(--color-text-muted);font-size:13px;margin:6px 0 12px;line-height:1.6">The blank 4-page client questionnaire (household, income, expenses, assets, goals, retirement, risk, tax, disclosure). Download it to send to a client, or print and have them fill it in, then upload the completed form in the main app (Upload Document reads it on the device) or type it in.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn" data-action="downloadQuestionnaire">⬇ Download questionnaire (PDF)</button>
       <button class="btn-ghost" data-action="toggleQuestionnairePreview" id="qPreviewBtn"><i data-lucide="eye" class="icon" aria-hidden="true"></i> Preview</button>
@@ -1147,7 +1147,7 @@ Citations:<br>
         <input id="mdProxyUrl" placeholder="https://your-worker.workers.dev" class="w260" style="min-width:300px" onchange="saveMdProxy(this.value)">
         <span id="mdProxyStatus" style="font-size:11px;color:var(--color-text-muted)"></span>
       </div>
-      <div style="font-size:11px;color:var(--color-text-muted);line-height:1.5">Your free Cloudflare Worker (<code>wa-price-proxy.worker.js</code>). Required for Yahoo prices, ticker/ISIN lookups (OpenFIGI) and Research Library feeds, which block direct browser calls. There is no public fallback any more, because corsproxy.io now refuses anonymous requests. Set it once here: the client app and the tests below share it (per browser). Prices are cached, so a last-known value still shows if a fetch fails.</div>
+      <div style="font-size:11px;color:var(--color-text-muted);line-height:1.5">Your free Cloudflare Worker (<code>wa-price-proxy.worker.js</code>). Optional: it replaces the built-in proxy that the demo uses when this field is empty, for Yahoo prices, ticker/ISIN lookups (OpenFIGI) and Research Library feeds, which block direct browser calls (corsproxy.io no longer accepts anonymous requests). The client app and the tests below share it (per browser). Prices are cached, so a last-known value still shows if a fetch fails.</div>
       <script>(function(){var e=document.getElementById('mdProxyUrl');if(e){try{e.value=localStorage.getItem('wa_cors_proxy')||'';}catch(_){}}})();</script>
     </div>
     <div class="row">
@@ -1238,7 +1238,7 @@ Citations:<br>
   </div>
 
   <div class="panel" style="padding:12px 16px">
-    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed, but both only work through your data proxy, set on the Market Data tab). <strong>API keys for enhanced data are managed here</strong>; market-data keys are auto-checked every 2 minutes, the AI key only when you press Test.</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Enter a ticker (VOO, AAPL), ISIN/UCIT number (IE00B3RBWM25), exchange symbol (VUSA.L, IWDA.AS), or fund name to search in the main app's Add Investment box. Data fills automatically from Yahoo Finance &amp; OpenFIGI (no key needed; both go through the data proxy, built in unless you set your own on the Market Data tab). <strong>This tab holds the AI key</strong>, tested only when you press Test. Market-data keys are entered in the client app (Settings, Provider API keys).</div>
   </div>
   <div class="panel">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px">
@@ -1290,12 +1290,11 @@ Citations:<br>
       <br><br>
       <strong style="color:var(--color-success)">No key needed (verified 2026-09-25):</strong>
       CoinGecko · Coinbase Spot · Frankfurter (ECB) · Open ER API · Treasury.gov.
-      Yahoo Finance needs no key but only works through your data proxy (Market Data tab).
+      Yahoo Finance needs no key; it works through the data proxy (built in, or your own on the Market Data tab).
       <br>
       <strong style="color:var(--color-warning)">No longer usable from the browser:</strong>
       Stooq (CSV endpoint retired) · CryptoCompare (now key-required) · ExchangeRate.host (now key-required) ·
-      SEC EDGAR filings (data.sec.gov blocks browser requests; ticker&rarr;CIK lookup still works) ·
-      OpenFIGI (rate-limited without a key)
+      SEC EDGAR filings (data.sec.gov blocks browser requests; ticker&rarr;CIK lookup still works)
     </div>
   </div>
 </div>
@@ -1304,7 +1303,7 @@ Citations:<br>
 <div class="tab" id="tab-logs">
   <div class="wealth-hero"><div class="wh-left">
     <h1 class="wh-title"><i data-lucide="clipboard-list" class="icon" aria-hidden="true"></i><span class="wh-title-text">System Logs</span></h1>
-    <p class="wh-sub">Action audit trail, browser environment, and full localStorage inspector.</p>
+    <p class="wh-sub">Action log kept in this browser (last 200 entries, can be cleared), browser environment, and full localStorage inspector.</p>
   </div></div>
   <div class="panel">
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1333,13 +1332,13 @@ Citations:<br>
       <thead><tr><th>localStorage key</th><th>Direction</th><th>Description</th></tr></thead>
       <tbody>
         <tr><td><code>wa_app_version</code></td><td>shared</td><td>Current app version stamp</td></tr>
-        <tr><td><code>wa_pending_profile</code></td><td>admin → main</td><td>Profile injected by Profile Manager</td></tr>
+        <tr><td><code>wa_pending_profile</code></td><td>admin only</td><td>Profile injected by Profile Manager, read by User Management and the Portfolio Agent brief (the main app does not read it)</td></tr>
         <tr><td><code>wa_pending_proposal</code></td><td>admin → main</td><td>Recommendation exported from the Portfolio Agent tab (Research Engine or AI Agent; the payload's <code>engine</code> field says which)</td></tr>
         <tr><td><code>wa_ai_key</code></td><td>shared</td><td>AI assistant key</td></tr>
         <tr><td><code>fhKey</code>, <code>avKey</code>, <code>wa_polygon_key</code>, etc.</td><td>shared</td><td>Market data provider API keys</td></tr>
-        <tr><td><code>wa_research_config</code></td><td>admin only</td><td>Provider feed URLs, enabled state, cached items</td></tr>
+        <tr><td><code>wa_research_config</code></td><td>admin → main</td><td>Provider feed URLs, enabled state, cached items (the client app's Portfolio Builder reads the cache)</td></tr>
         <tr><td><code>wa_admin_constants</code></td><td>admin only</td><td>Edited RISK_PROFILES, REGIONS, LOAN_DEFAULTS</td></tr>
-        <tr><td><code>wa_admin_logs</code></td><td>admin only</td><td>Action audit log (last 200 entries)</td></tr>
+        <tr><td><code>wa_admin_logs</code></td><td>admin only</td><td>Action log (last 200 entries, clearable)</td></tr>
       </tbody>
     </table>
     <h2 style="font-size:17px;margin:18px 0 10px">Tab guide</h2>
@@ -1347,14 +1346,14 @@ Citations:<br>
       <li><strong>Dashboard</strong>: KPI grid + provider status + recent activity</li>
       <li><strong>Portfolio Agent</strong>: deterministic Research Engine, or the AI Agent (Claude, needs a key), over the cached research</li>
       <li><strong>Research Library</strong>: Configure RSS feeds for each institutional source</li>
-      <li><strong>Calc Test Bench</strong>: Verify every internal financial calculation</li>
-      <li><strong>Constants Editor</strong>: Live-edit RISK_PROFILES, REGIONS, LOAN_DEFAULTS</li>
+      <li><strong>Calc Test Bench</strong>: Check the console's copies of the core formulas</li>
+      <li><strong>Constants Editor</strong>: Edit and export copies of RISK_PROFILES, REGIONS, LOAN_DEFAULTS (the main app keeps its own)</li>
       <li><strong>Monte Carlo Stress</strong>: Parameter sweep with p10/p50/p90 chart</li>
       <li><strong>Profile Manager</strong>: Load, edit, inject user profiles</li>
-      <li><strong>Market Data</strong>: Test 18 provider APIs live</li>
-      <li><strong>Tax Database</strong>: 9 countries, ZIP → state lookup</li>
+      <li><strong>Market Data</strong>: Test the 5 free market-data sources live</li>
+      <li><strong>Tax Database</strong>: the client app's 39 countries, plus a US ZIP → state lookup</li>
       <li><strong>API Keys</strong>: Central credential management</li>
-      <li><strong>System Logs</strong>: Audit trail + diagnostics</li>
+      <li><strong>System Logs</strong>: Action log + diagnostics</li>
     </ul>
   </div>
 </div>
@@ -1394,7 +1393,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261024-1900";
+const APP_VERSION = "20261024-1951";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3954,7 +3953,7 @@ function renderDashboard(){
   h += kpiCard("Fund Universe",FUND_UNIVERSE.length+" vehicles","Metrics as of "+FUND_DATA_AS_OF+" ("+fundDataAgeLabel()+")",
     fundDataAgeMonths() >= 12 ? "tone-amber" : "");
   const _taxReg=(function(){try{return JSON.parse(localStorage.getItem("wa_tax_registry")||"null");}catch(_){return null;}})();
-  h += kpiCard("Tax Countries",(_taxReg&&_taxReg.countries)?_taxReg.countries.length:Object.keys(LOCAL_TAX).length,"national + sub-national");
+  h += kpiCard("Tax Countries",(_taxReg&&_taxReg.countries)?_taxReg.countries.length:"Not synced",(_taxReg&&_taxReg.countries)?"national + sub-national":"open the client app once to load its tax tables");
   $("dashKpis").innerHTML = h;
 
   // Provider status — grouped by data class
@@ -4108,8 +4107,8 @@ function toggleAIBuilderFeature(){
   const next = !aiBuilderEnabled();
   localStorage.setItem("wa_ai_builder_enabled", next ? "true" : "false");
   renderAIBuilderSwitch();
-  try { toast(next ? "AI Portfolio Builder shown in client app" : "AI Portfolio Builder hidden in client app", "ok"); } catch(_){}
-  try { addLog("info", "AI Portfolio Builder feature " + (next ? "ENABLED" : "DISABLED") + " in client app"); } catch(_){}
+  try { toast(next ? "Portfolio Builder shown in client app" : "Portfolio Builder hidden in client app", "ok"); } catch(_){}
+  try { addLog("info", "Portfolio Builder tab " + (next ? "shown" : "hidden") + " in client app"); } catch(_){}
 }
 window.toggleAIBuilderFeature = toggleAIBuilderFeature;
 
@@ -4169,7 +4168,7 @@ function renderAgent(){
 function loadProfile(){
   try {
     const pending = localStorage.getItem("wa_pending_profile");
-    if(!pending) return toast("No main-app profile cached. Save a profile in the main app first.","err");
+    if(!pending) return toast("No injected profile yet. Use Load JSON, or inject a plan file from Profile Manager.","err");
     const p = JSON.parse(pending);
     const f = p.fields||{};
     if(f.c1r && $("agRisk")) $("agRisk").value = f.c1r;
@@ -4181,7 +4180,7 @@ function loadProfile(){
     if($("agInc")) $("agInc").value = (+f.inc1||0)+(+f.inc2||0)+(+f.inc1b||0)+(+f.inc2b||0);
     const goalsTxt = (p.goals||[]).map(g => `${g.name} | ${g.endYear} | ${g.amt}`).join("\n");
     if(goalsTxt && $("agGoals")) $("agGoals").value = goalsTxt;
-    toast("Loaded from main app's pending profile","ok");
+    toast("Loaded the injected profile","ok");
   } catch(e){ toast("Load failed: "+e.message,"err"); }
 }
 function loadProfileFile(){ $("profileFile").click(); }
@@ -5295,7 +5294,7 @@ function saveProfile(){
 function injectProfile(){
   if(!loadedProfile) return;
   localStorage.setItem("wa_pending_profile", JSON.stringify(loadedProfile));
-  toast("Injected into main app","ok");
+  toast("Injected: User Management and the Portfolio Agent brief can now use it","ok");
   addLog("ok","Profile injected to wa_pending_profile");
 }
 
@@ -6852,12 +6851,12 @@ function getDomicilePolicy(country){
   };
   return {
     type: "UCITS",
-    label: `UCITS-passportable funds for ${c} resident`,
-    note: `${c} retail investors are subject to PRIIPs / KID requirements: only UCITS (Ireland or Luxembourg-domiciled) and local-listed funds are eligible. US 40-Act ETFs cannot be purchased.`
+    label: c === "CH" ? "UCITS and Swiss funds for CH resident" : `UCITS-passportable funds for ${c} resident`,
+    note: c === "CH" ? "Swiss residents buy under FinSA and the Swiss fund law (CISA): Swiss-domiciled funds, and UCITS funds (Ireland/Luxembourg-domiciled) approved by FINMA for Swiss distribution; confirm each fund's Swiss registration before use. US 40-Act ETFs are not offered to Swiss retail clients." : `${c} retail investors: UCITS (Ireland or Luxembourg-domiciled) and local-listed funds only. In the EU and UK, PRIIPs / KID rules keep US 40-Act ETFs from retail clients; elsewhere, check local distribution rules.`
   };
 }
 
-function isFundEligibleForCountry(fund, country){
+function isFundEligibleForCountry(fund, country){ if(fund.dom === "CH" && String(country || "").toUpperCase() !== "CH") return false;
   const policy = getDomicilePolicy(country);
   if(policy.type === "US_LISTED"){
     // Accept only funds with no UCITS flag AND no foreign domicile
@@ -7200,7 +7199,7 @@ function buildPortfolioFromEngine(brief, signals){
       if(fund.esg && brief.esg !== "none") rationaleParts.push("ESG-flagged matches preference");
       if(brief.taxSensitivity === "high" && fund.vehicle === "etf") rationaleParts.push("ETF wrapper preferred for high tax sensitivity");
       // Domicile-based regulatory rationale
-      if(fund.ucits) rationaleParts.push(`UCITS-passportable (${fund.dom}-domiciled), eligible for ${brief.country || "non-US"} resident under PRIIPs`);
+      if(fund.dom === "CH") rationaleParts.push(`Swiss fund (CH-domiciled, Swiss fund law), not a UCITS`); else if(fund.ucits && String(brief.country || "").toUpperCase() === "CH") rationaleParts.push(`UCITS fund (${fund.dom}-domiciled), offered to CH residents under FinSA once approved by FINMA`); else if(fund.ucits) rationaleParts.push(`UCITS fund (${fund.dom}-domiciled), in the eligible universe for ${brief.country || "non-US"} residents`);
       else if(fund.dom && fund.dom !== "US") rationaleParts.push(`${fund.dom}-listed, locally accessible for ${brief.country} resident`);
       // Bucket alignment — why this fund rather than another in the same sleeve
       const _bk = fundBucketKeys(fund);
@@ -7383,7 +7382,7 @@ function buildPortfolioFromEngine(brief, signals){
   const eligibleUniverse = FUND_UNIVERSE.filter(f => isFundEligibleForCountry(f, brief.country)).length;
   // If UCITS required, also enrich the risks bucket
   if(domicilePolicy.type === "UCITS"){
-    risks.unshift(`Universe restricted to ${eligibleUniverse} UCITS-passportable funds (of ${totalUniverse}) due to ${brief.country} residency`);
+    risks.unshift(String(brief.country || "").toUpperCase() === "CH" ? `Universe restricted to ${eligibleUniverse} non-US funds (of ${totalUniverse}), mostly UCITS, for a CH resident under FinSA: confirm each fund's Swiss registration before use` : `Universe restricted to ${eligibleUniverse} UCITS and local-listed funds (of ${totalUniverse}) for ${brief.country} residents: check local distribution rules`);
   }
   return {
     brief,
@@ -7425,7 +7424,7 @@ function buildSummaryNarrative(brief, allocation, signals, eligibleCount){
   const topTheme = Object.entries(signals.themes).sort((a,b) => b[1].votes - a[1].votes)[0];
   const providerCount = signals.providerCount;
   const scored = signals.scoredItems != null ? signals.scoredItems : signals.totalItems;   // distinct items that scored (shared duplicates skipped)
-  return `Rules-engine recommendation from ${scored} distinct research items cached from ${providerCount} sources (a curated baseline unless live feeds are configured): the engine recommends a ${brief.risk.replace(/_/g," ")} portfolio with ${topClass[1].toFixed(0)}% in ${prettyClass(topClass[0])}. ${topTheme ? "Dominant theme: " + prettyTheme(topTheme[0]) + " cited by " + topTheme[1].providerCount + " providers." : ""} All positions chosen from the ${FUND_UNIVERSE.length}-fund universe (${eligibleCount || FUND_UNIVERSE.filter(f => isFundEligibleForCountry(f, brief.country)).length} eligible for ${brief.country||"US"}) matching your ${brief.esg} ESG preference, ${brief.taxSensitivity} tax sensitivity, and ${brief.liquidity} liquidity needs.`;
+  return `Rules-engine recommendation from ${scored} distinct research items cached from ${providerCount} sources (a curated baseline unless live feeds are configured): the engine recommends a ${brief.risk.replace(/_/g," ")} portfolio with ${topClass[1].toFixed(0)}% in ${prettyClass(topClass[0])}. ${topTheme ? "Dominant theme: " + prettyTheme(topTheme[0]) + " cited by " + topTheme[1].providerCount + " providers." : ""} All positions chosen from the ${FUND_UNIVERSE.length}-fund universe (${eligibleCount || FUND_UNIVERSE.filter(f => isFundEligibleForCountry(f, brief.country)).length} eligible for ${brief.country||"US"}) matching your ESG setting (${({none:"no preference",prefer:"prefer ESG",strict:"ESG only"})[brief.esg] || brief.esg}), ${brief.taxSensitivity} tax sensitivity, and ${brief.liquidity} liquidity needs.`;
 }
 
 // ── ENGINE BUTTON HANDLER ─────────────────────────────────────
@@ -7667,8 +7666,8 @@ function renderEngineResult(r){
     <ol style="margin-left:20px;color:var(--color-text-secondary)">
       <li><strong>Signal extraction:</strong> Scanned ${r.signals.totalItems} research items via keyword lexicons across asset classes, sectors, regions, themes, and ticker mentions. Each item parsed for sentiment direction (overweight/underweight phrases).</li>
       <li><strong>Aggregation:</strong> Net votes computed per signal, with provider count and total votes tracked. A fund whose ticker is named in the research gets a conviction bonus (+2, plus 0.3 per mention).</li>
-      <li><strong>Allocation:</strong> Started with your ${prettyRisk(r.signals.providerCount ? '' : '')}<strong>${$("agRisk").value.replace(/_/g," ")}</strong> baseline (${Object.entries(RISK_TO_ALLOCATION[$("agRisk").value]||{}).map(([k,v]) => `${k}:${v}%`).slice(0,4).join(", ")}). Tilted ±8% based on net research votes.</li>
-      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">942</span>-fund universe is scored and ranked; the top 1-3 are taken and split equally (sleeve weight / N). Scoring: cost (1 − ER); the fund's curated Sharpe, 5-year return, AUM, holdings and drawdown (the sleeve median where none is on file); a bonus for a ticker named in the research; region, sector and theme alignment with the research; currency fit; a sponsor-repeat penalty; a risk-fit penalty; and +0.5 for ETFs when tax sensitivity is high. Filtered for domicile, ESG-strict and liquidity needs. Full formula: "How the Research Engine Selects Funds", further down this tab.</li>
+      <li><strong>Allocation:</strong> Started with your ${prettyRisk(r.signals.providerCount ? '' : '')}<strong>${$("agRisk").value.replace(/_/g," ")}</strong> baseline (${Object.entries(RISK_TO_ALLOCATION[$("agRisk").value]||{}).map(([k,v]) => `${k}:${v}%`).slice(0,4).join(", ")}). Tilted by up to 8 points per class from net research votes, then rescaled to 100%.</li>
+      <li><strong>Fund selection:</strong> For each class with weight ≥2%, every eligible fund in the <span class="js-fund-count">${FUND_UNIVERSE.length}</span>-fund universe is scored and ranked; the top 1-3 are taken and split equally (sleeve weight / N). Scoring: cost (1 − ER); the fund's curated Sharpe, 5-year return, AUM, holdings and drawdown (the sleeve median where none is on file); a bonus for a ticker named in the research; region, sector and theme alignment with the research; currency fit; a sponsor-repeat penalty; a risk-fit penalty; and +0.5 for ETFs when tax sensitivity is high. Filtered for domicile, ESG-strict and liquidity needs. Full formula: "How the Research Engine Selects Funds", further down this tab.</li>
       <li><strong>Rationale:</strong> Each position's "Why selected" cites the specific consensus vote count + matched research items. Fully deterministic: same inputs always produce same output.</li>
     </ol>
   </div>`;
@@ -8114,7 +8113,7 @@ function summarizeProfile(profile){
 function captureFromMainApp(){
   const pending = localStorage.getItem("wa_pending_profile");
   if(!pending){
-    toast("No profile in main app's localStorage. Save one in the main app first.","err");
+    toast("No injected profile yet. Load a plan file in Profile Manager and press Inject first.","err");
     return;
   }
   let profile;
@@ -8304,7 +8303,7 @@ function renderUserTable(){
   const q = ($("userSearch")?.value || "").toLowerCase().trim();
   const filtered = q ? users.filter(u => (u.name||"").toLowerCase().includes(q) || (u.email||"").toLowerCase().includes(q)) : users;
   if(filtered.length === 0){
-    $("userTable").innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-muted)">' + icon("user","icon-lg") + '<div style="margin-top:8px">No users yet. Click <strong>+ Add User</strong> or <strong>Capture from Main App</strong> to get started.</div>'; refreshIcons();
+    $("userTable").innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-muted)">' + icon("user","icon-lg") + '<div style="margin-top:8px">No users yet. Click <strong>+ Add User</strong> or <strong>Capture injected profile</strong> to get started.</div>'; refreshIcons();
     return;
   }
   let h = '<div class="tbl-wrap"><table class="tbl">';
