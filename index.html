@@ -2837,6 +2837,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:2px 0"><span>− Income tax</span><span id="exp-link-tax" style="font-variant-numeric:tabular-nums">-</span></div>
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:2px 0"><span>− Total expenses</span><span id="exp-link-exp" style="font-variant-numeric:tabular-nums">-</span></div>
     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:2px 0"><span>− Debt service</span><span id="exp-link-debt" style="font-variant-numeric:tabular-nums">-</span></div>
+    <div id="exp-link-cpf-row" style="display:none;justify-content:space-between;font-size:12px;color:var(--text2);padding:2px 0"><span>− CPF and SRS from pay</span><span id="exp-link-cpf" style="font-variant-numeric:tabular-nums">-</span></div>
     <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600;padding:6px 0 0;margin-top:4px;border-top:1px solid var(--border)"><span>= Annual surplus</span><span id="exp-link-surplus" style="font-variant-numeric:tabular-nums;color:var(--green)">-</span></div>
     <div style="font-size:11px;color:var(--text3);margin-top:6px" id="exp-link-note">This surplus feeds the savings panel on the <strong>Income</strong> tab and the simulation.</div>
   </div>
@@ -3827,6 +3828,37 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <div id="chAnnuityResult" style="margin-top:6px"></div>
   <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:12px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
     <strong style="color:var(--text2)">Illustrative comparison, not financial or tax advice.</strong> It does not capture the annuity's survivor pension (typically ~60% to a spouse), inflation indexing (BVG pensions are only partly indexed), your fund's exact terms, or your health. Taxes use the canton, municipality, tariff and church membership selected in the panel above, from the ESTV tax calculator (tax year 2026); the annuity's income tax is the first year's. The annuity-vs-lump-sum decision is significant and often irreversible, so review it with a licensed pension advisor.
+  </div>
+  </div>
+</div>
+
+<!-- Singapore: CPF and CPF LIFE (shown for a Singapore resident or anyone holding CPF or SRS accounts) -->
+<div class="panel" id="sgPensionPanel" style="display:none">
+  <div class="ptitle section-dropdown" onclick="toggleDropdown('sgPensionWrap')" style="margin:0">
+    🇸🇬 Singapore: CPF and CPF LIFE <span class="dropdown-hint">OA, SA, MediSave, RA · CPF LIFE · SRS · click to expand</span>
+    <span class="ptitle-line"></span>
+  </div>
+  <div class="dropdown-body" id="sgPensionWrap">
+  <div style="font-size:12px;color:var(--text3);margin:10px 0 14px;line-height:1.6">
+    Singapore has no state pension. Citizens and permanent residents save for retirement in the <strong style="color:var(--text2)">CPF</strong>: employer and employee contributions go to the Ordinary, Special and MediSave accounts, which earn guaranteed interest (2.5% and 4%, plus extra interest on the first SGD 60,000). At 55 a <strong style="color:var(--text2)">Retirement Account</strong> is set aside; from 65 (or as late as 70) it pays <strong style="color:var(--text2)">CPF LIFE</strong>, a lifelong annuity, tax-free. Savings above the set-aside can be withdrawn from 55. The voluntary <strong style="color:var(--text2)">SRS</strong> gives tax relief on contributions, and half of each withdrawal is taxed. The same model runs in the projection, the cash flow and the report.
+  </div>
+  <div class="frow" id="sgStatus1Row"><label class="flbl"><span id="sgStatus1Lbl">CPF status, client 1</span><span class="info-ic">i<span class="info-pop"><strong>Citizens and permanent residents</strong> employed in Singapore pay CPF on wages up to SGD 8,000 a month (SGD 102,000 a year): 37% up to 55 (20% from pay, 17% from the employer), less from 55 (2026: 34%, 25%, 16.5%, 12.5%; from 2027 35.5% and 26% for 55-65). A new PR pays graduated rates in the first two years. <strong>Foreigners</strong> on an Employment Pass, S Pass or Work Permit cannot contribute; their Singapore option is SRS. Wages are the primary income (ordinary wages) and the secondary income (additional wages, such as a bonus) on the Income tab. <strong>Automatic</strong>: a citizen or PR when the client has CPF accounts on the Assets tab, otherwise a foreigner (no CPF).</span></span></label><select id="sgStatus1" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="">Automatic</option><option value="sc">Citizen or PR (full CPF rates)</option><option value="pr1">PR, first year (graduated rates)</option><option value="pr2">PR, second year (graduated rates)</option><option value="fr">Foreigner on a work pass (no CPF)</option></select></div>
+  <div class="frow" id="sgStart1Row"><label class="flbl"><span id="sgStart1Lbl">CPF LIFE payout start, client 1</span><span class="info-ic">i<span class="info-pop">Payouts can start at any age from <strong>65</strong> (the payout eligibility age, unchanged by the 2026 rise in the retirement age) to <strong>70</strong>, when they start automatically. Each year of deferral adds up to about 7% for life. Just before payouts start, the Ordinary Account tops the Retirement Account up to the Full Retirement Sum. The start age of the pension field on the Goals tab is the same setting; when a CPF LIFE payout is typed there, its start age is used.</span></span></label><input type="number" id="sgStart1" step="1" min="65" max="70" value="65" class="w120" oninput="sgPanelChanged(this)"></div>
+  <div class="frow" id="sgSex1Row"><label class="flbl"><span id="sgSex1Lbl">Sex, client 1 (CPF LIFE)</span><span class="info-ic">i<span class="info-pop">CPF LIFE pays women less for the same premium, because they live longer on average. CPF publishes its 2026 payout estimates for men only; women's payouts are taken as about 7% lower (CPF's 2025 ranges).</span></span></label><select id="sgSex1" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="m">Male (CPF's published basis)</option><option value="f">Female (about 7% lower payouts)</option></select></div>
+  <div class="frow" id="sgStatus2Row" style="display:none"><label class="flbl"><span id="sgStatus2Lbl">CPF status, client 2</span><span class="info-ic">i<span class="info-pop"><strong>Citizens and permanent residents</strong> employed in Singapore pay CPF on wages up to SGD 8,000 a month (SGD 102,000 a year): 37% up to 55 (20% from pay, 17% from the employer), less from 55 (2026: 34%, 25%, 16.5%, 12.5%; from 2027 35.5% and 26% for 55-65). A new PR pays graduated rates in the first two years. <strong>Foreigners</strong> on an Employment Pass, S Pass or Work Permit cannot contribute; their Singapore option is SRS. Wages are the primary income (ordinary wages) and the secondary income (additional wages, such as a bonus) on the Income tab. <strong>Automatic</strong>: a citizen or PR when the client has CPF accounts on the Assets tab, otherwise a foreigner (no CPF).</span></span></label><select id="sgStatus2" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="">Automatic</option><option value="sc">Citizen or PR (full CPF rates)</option><option value="pr1">PR, first year (graduated rates)</option><option value="pr2">PR, second year (graduated rates)</option><option value="fr">Foreigner on a work pass (no CPF)</option></select></div>
+  <div class="frow" id="sgStart2Row" style="display:none"><label class="flbl"><span id="sgStart2Lbl">CPF LIFE payout start, client 2</span><span class="info-ic">i<span class="info-pop">Payouts can start at any age from <strong>65</strong> (the payout eligibility age, unchanged by the 2026 rise in the retirement age) to <strong>70</strong>, when they start automatically. Each year of deferral adds up to about 7% for life. Just before payouts start, the Ordinary Account tops the Retirement Account up to the Full Retirement Sum. The start age of the pension field on the Goals tab is the same setting; when a CPF LIFE payout is typed there, its start age is used.</span></span></label><input type="number" id="sgStart2" step="1" min="65" max="70" value="65" class="w120" oninput="sgPanelChanged(this)"></div>
+  <div class="frow" id="sgSex2Row" style="display:none"><label class="flbl"><span id="sgSex2Lbl">Sex, client 2 (CPF LIFE)</span><span class="info-ic">i<span class="info-pop">CPF LIFE pays women less for the same premium, because they live longer on average. CPF publishes its 2026 payout estimates for men only; women's payouts are taken as about 7% lower (CPF's 2025 ranges).</span></span></label><select id="sgSex2" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="m">Male (CPF's published basis)</option><option value="f">Female (about 7% lower payouts)</option></select></div>
+  <div class="frow"><label class="flbl">Retirement sum at 55<span class="info-ic">i<span class="info-pop">At 55 the Special Account closes and a <strong>Retirement Account</strong> is set aside from it, then from the Ordinary Account, up to the member's cohort <strong>Full Retirement Sum</strong> (SGD 220,400 for those turning 55 in 2026, 228,200 in 2027, then taken to rise 3.5% a year). A property owner can pledge the property and keep only the <strong>Basic</strong> sum (half), withdrawing the rest. Topping up to the <strong>Enhanced</strong> sum (twice the current FRS) raises CPF LIFE; the transfer cannot be undone. Whatever the RA does not take can be withdrawn.</span></span></label><select id="sgTarget" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="frs">Full Retirement Sum (FRS)</option><option value="brs">Basic (BRS), property pledged</option><option value="ers">Enhanced (ERS), OA topped up</option></select></div>
+  <div class="frow"><label class="flbl">CPF LIFE plan<span class="info-ic">i<span class="info-pop"><strong>Standard</strong>: a level payout for life. <strong>Escalating</strong>: starts about 22% lower and rises 2% a year (it overtakes Standard around 77-78). <strong>Basic</strong>: a smaller premium, about 10% lower payouts that can fall in the late 80s. The whole Retirement Account buys the annuity when payouts start; unused premium goes to the nominees.</span></span></label><select id="sgPlan" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="std">Standard: level for life</option><option value="esc">Escalating: lower start, +2% a year</option><option value="basic">Basic: about 10% lower</option></select></div>
+  <div class="frow"><label class="flbl">Ordinary Account withdrawal<span class="info-ic">i<span class="info-pop">From 55, what the Retirement Account does not take can be withdrawn. The projection pays it into the plan's own investments at retirement (or at 55 if chosen), then sweeps later inflows each year. Left in CPF it would earn 2.5%; housing use of the OA (refunded on sale) is not modelled.</span></span></label><select id="sgOaWd" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="ret">At retirement (not before 55)</option><option value="55">At 55</option></select></div>
+  <div class="frow" id="sgSrsC1Row"><label class="flbl"><span id="sgSrsC1Lbl">SRS contributions a year, client 1</span><span class="info-ic">i<span class="info-pop">The Supplementary Retirement Scheme: contributions are deductible up to <strong>SGD 15,300</strong> a year (citizens and PRs) or <strong>SGD 35,700</strong> (foreigners), paid from the surplus while working, until withdrawals start. The account grows at the retirement-pool rate.</span></span></label><input type="number" id="sgSrsC1" step="100" min="0" placeholder="none" class="w160" oninput="sgPanelChanged(this)"><span style="font-size:11px;color:var(--text3);margin-left:6px">SGD</span></div>
+  <div class="frow" id="sgSrsAge1Row"><label class="flbl"><span id="sgSrsAge1Lbl">SRS prescribed retirement age, client 1</span><span class="info-ic">i<span class="info-pop">Fixed by the date of the FIRST contribution: 62 before July 2022, 63 from July 2022 to June 2026, 64 from July 2026. From then, withdrawals can be spread over up to 10 years and half of each is taxable; earlier, all of it is taxable plus a 5% penalty. The projection withdraws it over 10 years from that age or retirement, whichever is later.</span></span></label><select id="sgSrsAge1" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="">Automatic</option><option value="62">62 (first contribution before Jul 2022)</option><option value="63">63 (Jul 2022 to Jun 2026)</option><option value="64">64 (from Jul 2026)</option></select></div>
+  <div class="frow" id="sgSrsC2Row" style="display:none"><label class="flbl"><span id="sgSrsC2Lbl">SRS contributions a year, client 2</span><span class="info-ic">i<span class="info-pop">The Supplementary Retirement Scheme: contributions are deductible up to <strong>SGD 15,300</strong> a year (citizens and PRs) or <strong>SGD 35,700</strong> (foreigners), paid from the surplus while working, until withdrawals start. The account grows at the retirement-pool rate.</span></span></label><input type="number" id="sgSrsC2" step="100" min="0" placeholder="none" class="w160" oninput="sgPanelChanged(this)"><span style="font-size:11px;color:var(--text3);margin-left:6px">SGD</span></div>
+  <div class="frow" id="sgSrsAge2Row" style="display:none"><label class="flbl"><span id="sgSrsAge2Lbl">SRS prescribed retirement age, client 2</span><span class="info-ic">i<span class="info-pop">Fixed by the date of the FIRST contribution: 62 before July 2022, 63 from July 2022 to June 2026, 64 from July 2026. From then, withdrawals can be spread over up to 10 years and half of each is taxable; earlier, all of it is taxable plus a 5% penalty. The projection withdraws it over 10 years from that age or retirement, whichever is later.</span></span></label><select id="sgSrsAge2" class="w220" style="max-width:100%" onchange="sgPanelChanged(this)"><option value="">Automatic</option><option value="62">62 (first contribution before Jul 2022)</option><option value="63">63 (Jul 2022 to Jun 2026)</option><option value="64">64 (from Jul 2026)</option></select></div>
+  <div id="sgPenFillNote" style="font-size:10.5px;color:var(--text3);margin:-2px 0 10px"></div>
+  <div id="sgPenResult"></div>
+  <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-top:12px;padding:8px 12px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border)">
+    <strong style="color:var(--text2)">Illustrative estimate, not financial or tax advice.</strong> CPF rules as of 2026 (CPF Board, IRAS, MOM), in SGD. CPF publishes no payout formula: CPF LIFE is fitted to CPF's 2026 Standard-plan estimates for men (within about SGD 5 a month), and the Escalating, Basic and female factors are approximations. The 4% floor on Special, MediSave and Retirement Account interest is guaranteed to the end of 2027 and assumed to continue; retirement sums after 2027 are taken to rise 3.5% a year, the Basic Healthcare Sum 4.6%, and the wage ceilings to stay at their 2026 levels. Housing use of the Ordinary Account, the extra withdrawal from 65 and withdrawals on leaving Singapore are not modelled. Confirm with the member's CPF statement and the CPF calculators.
   </div>
   </div>
 </div>
@@ -5156,7 +5188,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261024-1951";
+const APP_VERSION = "20261025-0837";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -6674,7 +6706,7 @@ const CURRENCIES={
   SGD:{sym:"S$",code:"SGD",name:"Singapore Dollar",fxToUSD:0.7822},
   HKD:{sym:"HK$",code:"HKD",name:"Hong Kong Dollar",fxToUSD:0.1275},
   CNY:{sym:"¥",code:"CNY",name:"Chinese Yuan",fxToUSD:0.1499},
-  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.03068},
+  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.03069},
   KRW:{sym:"₩",code:"KRW",name:"Korean Won",fxToUSD:0.000755},
   INR:{sym:"₹",code:"INR",name:"Indian Rupee",fxToUSD:0.01053},
   IDR:{sym:"Rp",code:"IDR",name:"Indonesian Rupiah",fxToUSD:0.00005522},
@@ -6690,7 +6722,7 @@ const CURRENCIES={
   THB:{sym:"฿",code:"THB",name:"Thai Baht",fxToUSD:0.02963},
   MYR:{sym:"RM ",code:"MYR",name:"Malaysian Ringgit",fxToUSD:0.2448},
   AED:{sym:"AED ",code:"AED",name:"UAE Dirham",fxToUSD:0.2723},
-  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.0007549},
+  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.0007543},
   ILS:{sym:"₪",code:"ILS",name:"Israeli Shekel",fxToUSD:0.3204},
   TRY:{sym:"₺",code:"TRY",name:"Turkish Lira",fxToUSD:0.02011},
   // Statement currencies with no residence country in the app: an account can be held in them.
@@ -6875,6 +6907,7 @@ function fxRuleCodes(){
   try{ const tb=getCountryBrackets(), t=fxCode(tb && tb.sym); if(t) s.add(t); }catch(_){}
   try{ [val("c1co"), (typeof _chHasC2==="function" && _chHasC2()) ? val("c2co") : ""].forEach(c=>{ const k=c && COUNTRY_CURRENCIES[c]; if(k) s.add(k); }); }catch(_){}
   try{ const reg=estateRegimeFor(val("c1co")); if(reg && reg.exUSD>0) s.add("USD"); }catch(_){}
+  try{ if(typeof sgHousehold==="function" && sgHousehold()) s.add("SGD"); }catch(_){}   // CPF rules are in SGD
   s.delete(CURRENT_CCY); return [...s].sort();
 }
 // The rates the figures on screen depend on: a What-If or report result goes stale when it changes.
@@ -7241,7 +7274,8 @@ function computeRMDSchedule(){
     (typeof assets!=="undefined" ? assets : []).forEach(a=>{ if(a.liquid || !(a.withdrawAge>0) || !RMD_EXEMPT.has(a.type)) return;
       const v=Math.max(0,+a.value||0), o=a.owner||"c1"; x+=!hasC2 ? (n===1 ? v : 0) : o==="joint" ? v/2 : ((o==="c2")===(n===2) ? v : 0); });
     return x; };
-  const owners=[{n:1,share:sh.c1,age0:a1,rule:rule1,bal0:Math.max(0,base*sh.c1-pil(1)-exempt(1,rule1))},{n:2,share:sh.c2,age0:a2,rule:rule2,bal0:Math.max(0,base*sh.c2-pil(2)-exempt(2,rule2))}]
+  const sgO=n=>(typeof _sgOut==="function") ? _sgOut(n) : 0;   // CPF and SRS follow the CPF schedule, not a minimum drawdown
+  const owners=[{n:1,share:sh.c1,age0:a1,rule:rule1,bal0:Math.max(0,base*sh.c1-pil(1)-exempt(1,rule1)-sgO(1))},{n:2,share:sh.c2,age0:a2,rule:rule2,bal0:Math.max(0,base*sh.c2-pil(2)-exempt(2,rule2)-sgO(2))}]
     .filter(o=>o.share>0 && o.bal0>0 && o.rule.kind!=="none");
   const byYear={};
   owners.forEach(o=>{
@@ -7715,7 +7749,7 @@ const TAX_BRACKETS={
   CH:{name:"Switzerland", sym:"CHF",bands:[[19000,0],[33500,0.77],[88500,2.64],[207000,11.5],[Infinity,13.2]]},
   EU:{name:"Eurozone (avg)",    sym:"EUR",bands:[[12000,0],[28000,15],[55000,30],[100000,42],[Infinity,45]]},
   JP:{name:"Japan",             sym:"JPY",bands:[[1950000,5],[3900000,10],[9100000,20],[18300000,23],[27300000,33],[Infinity,40]]},
-  SG:{name:"Singapore",         sym:"SGD",bands:[[15000,0],[22500,2],[30000,3.5],[60000,7],[120000,11.5],[240000,15],[Infinity,22]]},
+  SG:{name:"Singapore",         sym:"SGD",bands:[[20000,0],[30000,2],[40000,3.5],[80000,7],[120000,11.5],[160000,15],[200000,18],[240000,19],[280000,19.5],[320000,20],[500000,22],[1000000,23],[Infinity,24]]},
   HK:{name:"Hong Kong",         sym:"HKD",bands:[[50000,2],[100000,6],[150000,10],[Infinity,17]]},
   CN:{name:"China",             sym:"CNY",bands:[[36000,3],[144000,10],[300000,20],[420000,25],[660000,30],[960000,35],[Infinity,45]]},
   TW:{name:"Taiwan",            sym:"TWD",bands:[[560000,5],[1260000,12],[2520000,20],[4720000,30],[Infinity,40]]},
@@ -7813,7 +7847,7 @@ const TAX_SOURCES={
   CH:{authority:"Federal Tax Administration (ESTV), official tax calculator", url:"https://swisstaxcalculator.estv.admin.ch/", taxYear:"2026", note:"Income tax from the official ESTV tables (federal, cantonal, communal and church, per canton, tariff and children); the bands shown are an approximate federal scale for reference. Private capital gains tax-free. VAT 8.1%."},
   EU:{authority:"Eurozone blended proxy (no single authority)", url:"https://europa.eu/youreurope/citizens/work/taxes/income-taxes-abroad/index_en.htm", taxYear:"2024", note:"Average proxy: pick a member state (DE/FR/IT/ES/NL/BE/IE/PT/AT/GR/FI) for accuracy."},
   JP:{authority:"National Tax Agency (NTA)", url:"https://www.nta.go.jp/english/", taxYear:"2024", note:"National tax; local inhabitant tax ~10% extra. Securities ~20.315%. Consumption tax 10%."},
-  SG:{authority:"Inland Revenue Authority of Singapore (IRAS)", url:"https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-residency-and-tax-rates/individual-income-tax-rates", taxYear:"2024", note:"To 24%. No capital gains tax. GST 9%."},
+  SG:{authority:"Inland Revenue Authority of Singapore (IRAS)", url:"https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-residency-and-tax-rates/individual-income-tax-rates", taxYear:"2026", note:"Resident rates from YA 2024: 0% on the first SGD 20,000, up to 24% above SGD 1 million. No capital gains tax. GST 9%."},
   HK:{authority:"Inland Revenue Department (IRD)", url:"https://www.ird.gov.hk/eng/tax/ind_sttr.htm", taxYear:"2024/25", note:"Salaries tax to 17% (or 15% standard). No CGT. No VAT."},
   CN:{authority:"State Taxation Administration (STA)", url:"https://www.chinatax.gov.cn/eng/", taxYear:"2024", note:"Comprehensive income to 45%. Listed A-share gains generally exempt. VAT 13%."},
   TW:{authority:"Ministry of Finance (Taiwan)", url:"https://www.mof.gov.tw/eng/", taxYear:"2024", note:"To 40%. Securities transaction tax in lieu of CGT. Business tax 5%."},
@@ -9348,10 +9382,12 @@ function updateExpTotal(){
 function updateExpSurplusLink(){
   if(!$("exp-link-surplus")) return;
   const inc=getGrossIncome();
-  const tax=getApplyTax()?computeIncomeTax(inc):0;
+  const sg=(typeof sgTodayAdj==="function") ? sgTodayAdj() : {emp:0, ded:0};   // Singapore: as getNetSurplus
+  const tax=getApplyTax()?computeIncomeTax(sg.ded>0 ? Math.max(0, inc-sg.ded) : inc):0;
   const exp=getTotalExpenses();
   const debt=sumDebtServiceAnnual();
-  const surp=inc-tax-exp-debt;
+  const surp=inc-tax-exp-debt-sg.emp;
+  { const r=$("exp-link-cpf-row"); if(r) r.style.display=sg.emp>0 ? "flex" : "none"; setT("exp-link-cpf", sg.emp>0 ? "−"+fmtMoneyFull(sg.emp) : ""); }
   setT("exp-link-inc",fmtMoneyFull(inc));
   setT("exp-link-tax",tax>0?"−"+fmtMoneyFull(tax):fmtMoneyFull(0));
   setT("exp-link-exp","−"+fmtMoneyFull(exp));
@@ -9371,10 +9407,11 @@ function updateExpSurplusLink(){
 window.updateExpSurplusLink=updateExpSurplusLink;
 function getNetSurplus(){
   const inc=getGrossIncome();
-  const tax=getApplyTax()?computeIncomeTax(inc):0;
+  const sg=(typeof sgTodayAdj==="function") ? sgTodayAdj() : {emp:0, ded:0};   // Singapore: CPF and SRS from pay, and their relief
+  const tax=getApplyTax()?computeIncomeTax(sg.ded>0 ? Math.max(0, inc-sg.ded) : inc):0;
   const exp=getTotalExpenses();
   const debt=sumDebtServiceAnnual();
-  return inc-tax-exp-debt;
+  return inc-tax-exp-debt-sg.emp;
 }
 function updateSavingsPanel(){
   const surp=getNetSurplus();
@@ -10612,6 +10649,20 @@ function pensionSetup(ageNow1, ageNow2){
     // Without the pillar model (a non-CHF household) a Swiss resident's annuity in payment still counts, from CHF.
     const sw=n=>chSwissClient(n) || (!chFxOk() && typeof chResident==="function" && chResident(n));
     S.pk1=sw(1)?toBase(pk[1]||0,"CHF"):0; S.pk2=(showC2 && sw(2))?toBase(pk[2]||0,"CHF"):0; }
+  // Singapore: CPF LIFE from the CPF model. For a Singapore resident it IS the pension field:
+  // estimated, the model's payout (level, or rising 2% a year on the Escalating plan); typed, the
+  // advisor's figure from the CPF statement. A client living elsewhere who holds CPF savings gets it
+  // on top of their own country's pension. Tax-free in Singapore (sg / x1, x2 below).
+  if(typeof sgCpfSetup==="function"){ const G=sgCpfSetup(S.ageNow1, S.ageNow2, Math.max(2, 71-Math.min(S.ageNow1, S.ageNow2)));
+    if(G) [1,2].forEach(n=>{ if(!G["on"+n] || (n===2 && !showC2)) return; const L=G.life[n], on=L && L.kind!=="none", r=S["c"+n];
+      if(sgResident(n)){ const mem=G.I.c[n].status!=="fr";   // a CPF member; a foreigner's typed pension is a home-country one
+        if(mem || (r.src==="auto" && on)) r.sg=true;
+        // A foreigner's typed pension is a home-country one: CPF LIFE from any CPF they hold is paid on top.
+        else if(on && r.src==="manual") S["sgl"+n]={annual:L.annual*G.kx, start:L.start, esc:L.esc, end:L.end};
+        // A typed CPF LIFE payout starts at 65-70, as the Retirement Account leaves (unless already in payment).
+        if(r.src==="manual" && mem && !(G.p[n] && G.p[n].inPayment)) r.start=G.I.c[n].start;
+        if(r.src==="auto"){ r.base=on ? L.annual*G.kx : 0; r.start=on ? L.start : G.I.c[n].start; r.cola="none"; r.esc=on ? L.esc : 0; r.end=on ? L.end : Infinity; } }
+      else if(on) S["sgl"+n]={annual:L.annual*G.kx, start:L.start, esc:L.esc, end:L.end}; }); }
   return S;
 }
 // Pensions paid when the clients are age1 / age2 (nominal).
@@ -10621,9 +10672,15 @@ function householdPensionAt(S, age1, age2, inf){
   else if(S.capCut && S.showC2 && age1>=S.c1.start && age2>=S.c2.start){ b1=Math.max(0,b1-S.capCut[1]); b2=Math.max(0,b2-S.capCut[2]); }
   let p1=calcPension(S.c1.src,b1,S.c1.start,S.c1.cola,age1,inf,S.ageNow1);
   let p2=S.showC2?calcPension(S.c2.src,b2,S.c2.start,S.c2.cola,age2,inf,S.ageNow2):0;
+  // CPF LIFE: the Escalating plan rises 2% a year; a Retirement Sum Scheme payout ends when the savings do.
+  const sgAdj=(r,p,age)=>{ if(!(p>0)) return p; if(r.end!=null && age>=r.end) return 0; return r.esc ? p*Math.pow(1+r.esc, Math.max(0, age-r.start)) : p; };
+  p1=sgAdj(S.c1,p1,age1); p2=sgAdj(S.c2,p2,age2);
+  let x1=S.c1.sg?p1:0, x2=S.c2.sg?p2:0;   // the tax-free part (CPF LIFE)
+  const sgl=(L,age)=>(L && age>=L.start && age<L.end) ? L.annual*(L.esc ? Math.pow(1+L.esc, age-L.start) : 1) : 0;
+  { const v1=sgl(S.sgl1,age1), v2=S.showC2?sgl(S.sgl2,age2):0; p1+=v1; x1+=v1; p2+=v2; x2+=v2; }
   if(S.pk1 && age1>=S.ageNow1) p1+=S.pk1;
   if(S.pk2 && S.showC2 && age2>=S.ageNow2) p2+=S.pk2;
-  return {p1, p2, total:p1+p2};
+  return {p1, p2, total:p1+p2, x1, x2};
 }
 // ── Income-based state-pension estimate (per residence country) ─────────────
 // Estimate = min(income × public replacement-rate, country benefit cap). Falls
@@ -10682,32 +10739,57 @@ function _penNote(c,p,est){
     : (typeof p.repl==="number" ? ("~"+Math.round(p.repl)+"% of income"+(capped?" (at cap)":"")) : "estimate");
   return "Auto-estimated "+cn+" "+(p.name||"state pension")+": "+basis+" ≈ "+fmtMoney(est)+"/yr from age "+(p.age||67);
 }
+// A CPF LIFE payout typed for a Singapore CPF member: the start the projection uses when the typed age is
+// outside CPF LIFE's 65-70 (no note otherwise, as for any typed pension).
+function _sgTypedNote(n){ try{ const sfx=n===2?"2":"";
+  if(!sgResident(n) || (val("penSrc"+sfx)||"auto")!=="manual") return "";
+  const I=sgPensionInputs(), C=I.c[n], t=num("penStartAge"+sfx, 65); if(!C || !C.startTyped || t===C.start) return "";
+  const e=sgPensionEstimate(n); if(e && e.q && e.q.inPayment) return "";   // already in payment: paid from today as typed
+  return "CPF LIFE starts between 65 and 70: the projection pays this figure from "+C.start+".";
+  }catch(_){ return ""; } }
+// The pension field's note for a Singapore resident: what the CPF model pays and from what.
+function _sgPenNote(sg, est){
+  const L=sg.life;
+  if(L && L.kind==="rss") return "CPF Retirement Sum Scheme from the CPF model (the Retirement Account is below the CPF LIFE threshold): "+fmtMoneyIn(L.monthly,"SGD",true)+" a month from "+L.start+" until the savings run out, about age "+L.end+" = "+fmtMoney(est)+"/yr, tax-free in Singapore";
+  if(sg.q && sg.q.inPayment) return "CPF LIFE is already being paid (past 65 with no Retirement Account balance on the Assets tab): type the monthly payout from the CPF statement, times 12, here.";
+  if(!L || L.kind==="none") return "Singapore has no state pension: CPF LIFE is paid from the CPF Retirement Account. None is projected for this client (no CPF savings yet, or a foreigner on a work pass). Add the CPF balances on the Assets tab, or type the payout from the CPF statement here.";
+  const plan={std:"Standard", esc:"Escalating", basic:"Basic"}[sg.I.plan]||"Standard";
+  return "CPF LIFE "+plan+" from the CPF model (Simulation tab, Singapore CPF panel): "+fmtMoneyIn(L.monthly,"SGD",true)+" a month from "+L.start
+    +(L.kind==="rss" ? " (Retirement Sum Scheme, until the savings run out)" : (L.esc ? ", rising 2% a year" : ", level"))+" = "+fmtMoney(est)+"/yr, tax-free in Singapore";
+}
 function refreshPensionEstimates(){
   // client 1 — benefit amount + claiming age
   if(!_penEdited && (val("penSrc")||"auto")==="auto"){
-    const c=val("c1co")||"US", p=penDefaultsFor(c), est=estStatePension(c, clientIncomeFor(1));
+    const c=val("c1co")||"US", p=penDefaultsFor(c), sg=c==="SG" ? sgPensionEstimate(1) : null, est=sg ? Math.round(sg.annual) : estStatePension(c, clientIncomeFor(1));
     if($("penAnnual")) $("penAnnual").value=est;
-    if($("penStartAge") && !_penAgeEdited) $("penStartAge").value=p.age||67;
-    setT("penNote", _penNote(c,p,est)+_claimNote(c, num("penStartAge",p.age||67)));
+    if(sg){ _penAgeEdited=false; _colaEdited=false; }   // Singapore: the start and the indexation are the CPF model's
+    if($("penStartAge") && (sg ? $("penStartAge")!==document.activeElement : !_penAgeEdited)) $("penStartAge").value=sg ? sg.start : (p.age||67);
+    setT("penNote", sg ? _sgPenNote(sg, est) : _penNote(c,p,est)+_claimNote(c, num("penStartAge",p.age||67)));
   }
-  else if((val("penSrc")||"auto")!=="auto") setT("penNote","");
+  else if((val("penSrc")||"auto")!=="auto") setT("penNote", _sgTypedNote(1));
   // client 1 — COLA / indexation (auto unless the user changed it)
   if(!_colaEdited && (val("penSrc")||"auto")==="auto" && $("penCola")){
-    const p=penDefaultsFor(val("c1co")||"US"); $("penCola").value=p.cola||"full";
+    const p=penDefaultsFor(val("c1co")||"US"); $("penCola").value=(val("c1co")==="SG") ? "none" : (p.cola||"full");
   }
+  // Singapore: an estimated CPF LIFE is the model's nominal payout, so it is never indexed.
+  if($("penCola") && val("c1co")==="SG" && (val("penSrc")||"auto")==="auto") $("penCola").value="none";
   // client 2 — benefit amount + claiming age
   if($("penAnnual2") && !_pen2Edited && (val("penSrc2")||"auto")==="auto"){
-    const c=val("c2co")||val("c1co")||"US", p=penDefaultsFor(c), est=estStatePension(c, clientIncomeFor(2));
+    const c=val("c2co")||val("c1co")||"US", p=penDefaultsFor(c), sg=c==="SG" ? sgPensionEstimate(2) : null, est=sg ? Math.round(sg.annual) : estStatePension(c, clientIncomeFor(2));
     $("penAnnual2").value=est;
-    if($("penStartAge2") && !_pen2AgeEdited) $("penStartAge2").value=p.age||67;
-    setT("penNote2", _penNote(c,p,est)+_claimNote(c, num("penStartAge2",p.age||67)));
+    if(sg){ _pen2AgeEdited=false; _cola2Edited=false; }
+    if($("penStartAge2") && (sg ? $("penStartAge2")!==document.activeElement : !_pen2AgeEdited)) $("penStartAge2").value=sg ? sg.start : (p.age||67);
+    setT("penNote2", sg ? _sgPenNote(sg, est) : _penNote(c,p,est)+_claimNote(c, num("penStartAge2",p.age||67)));
   }
-  else if((val("penSrc2")||"auto")!=="auto") setT("penNote2","");
+  else if((val("penSrc2")||"auto")!=="auto") setT("penNote2", _sgTypedNote(2));
   // client 2 — COLA / indexation
   if($("penCola2") && !_cola2Edited && (val("penSrc2")||"auto")==="auto"){
-    const p=penDefaultsFor(val("c2co")||val("c1co")||"US"); $("penCola2").value=p.cola||"full";
+    const c=val("c2co")||val("c1co")||"US", p=penDefaultsFor(c); $("penCola2").value=c==="SG" ? "none" : (p.cola||"full");
   }
+  if($("penCola2") && (val("c2co")||val("c1co"))==="SG" && (val("penSrc2")||"auto")==="auto") $("penCola2").value="none";
   _ahvCoupleCheck();
+  // The Singapore panel shows what the pension fields now say (source, typed payout, start age).
+  try{ if(typeof sgHousehold==="function" && sgHousehold()) renderSGPension(); }catch(_){}
 }
 // Swiss married couple (or registered partners): the two AHV pensions together are
 // capped at 150% of the maximum pension. Auto estimates are scaled to the cap;
@@ -10772,7 +10854,10 @@ function onPensionSourceChange(){
 function markPenEdited(){_penEdited=true; if($("penSrc") && $("penSrc").value==="auto") $("penSrc").value="manual"; if($("penAnnual")) delete $("penAnnual").dataset.fromTypes; try{ refreshPensionEstimates(); }catch(_){} }
 // A start age typed on an ESTIMATED pension keeps it estimated — in Switzerland the AHV
 // early-draw cut / deferral supplement then applies. Only typing the AMOUNT makes it manual.
-function markPenAgeEdited(n){ if(n===2) _pen2AgeEdited=true; else _penAgeEdited=true; try{ refreshPensionEstimates(); }catch(_){} }
+function markPenAgeEdited(n){
+  // Singapore resident, CPF LIFE estimated: the start age belongs to the CPF panel (65-70), set from here.
+  if(typeof sgStartFromGoals==="function" && sgStartFromGoals(n===2 ? 2 : 1)) return;
+  if(n===2) _pen2AgeEdited=true; else _penAgeEdited=true; try{ refreshPensionEstimates(); }catch(_){} }
 window.markPenAgeEdited=markPenAgeEdited;
 function markColaEdited(){_colaEdited=true;}
 function markCola2Edited(){_cola2Edited=true;}
@@ -16924,7 +17009,7 @@ function _profileSnapshot(){
     assets,loans,goals,children,investments,proposals,insurances,equityComp,beneficiaries,whatIfScenarios,
     assetSeq,loanSeq,goalSeq,childSeq,invSeq,propSeq,insSeq,eqSeq,benSeq,whatIfSeq,pfLinkedAccountId,
     portfolios,activePfId,pfSeq,
-    chPanel:(typeof chPanelState==="function"?chPanelState():{})   // the advisor's own Swiss-panel inputs
+    chPanel:(typeof chPanelState==="function"?chPanelState():{}), sgPanel:(typeof sgPanelState==="function"?sgPanelState():{})   // the advisor's own Swiss-panel inputs
   };
 }
 // Reload the page without losing the plan on screen (there is no autosave): the plan
@@ -19021,10 +19106,10 @@ function applyDataAgent(){
     if(parseInt(r.client2RetirementAge,10)>0 && $("retAge2")){ _daSet("retAge2",parseInt(r.client2RetirementAge,10)); touched=true; }
     // Client 1 pension: switch source to Manual, then set the benefit + start age
     if(p1>0){ _daSetSel("penSrc","manual"); _daSet("penAnnual",p1); try{ if(typeof markPenEdited==="function") markPenEdited(); }catch(_){} touched=true; }
-    if(parseInt(r.client1PensionStartAge,10)>0){ _daSet("penStartAge",parseInt(r.client1PensionStartAge,10)); _penAgeEdited=true; touched=true; }
+    if(parseInt(r.client1PensionStartAge,10)>0){ _daSet("penStartAge",parseInt(r.client1PensionStartAge,10)); _penAgeEdited=true; touched=true; try{ if(typeof sgStartFromGoals==="function") sgStartFromGoals(1, true); }catch(_){} }
     // Client 2 pension
     if(p2>0){ _daSetSel("penSrc2","manual"); _daSet("penAnnual2",p2); try{ if(typeof markPen2Edited==="function") markPen2Edited(); }catch(_){} touched=true; }
-    if(parseInt(r.client2PensionStartAge,10)>0){ _daSet("penStartAge2",parseInt(r.client2PensionStartAge,10)); _pen2AgeEdited=true; touched=true; }
+    if(parseInt(r.client2PensionStartAge,10)>0){ _daSet("penStartAge2",parseInt(r.client2PensionStartAge,10)); _pen2AgeEdited=true; touched=true; try{ if(typeof sgStartFromGoals==="function") sgStartFromGoals(2, true); }catch(_){} }
     // A combined state + pension-fund income is NOT the state pension: the pension fund is
     // modelled from its balance, so writing the total here would count the fund twice.
     [[1,_daNum(r.client1CombinedPensionAnnual),p1],[2,_daNum(r.client2CombinedPensionAnnual),p2]].forEach(([n,c,p])=>{ if(!(c>0) || p>0) return;
@@ -20620,6 +20705,7 @@ function relocateSwissPensionPanels(){
   if(!cashDiv || !cashDiv.parentNode) return;
   cashDiv.parentNode.insertBefore(cp, cashDiv);
   cashDiv.parentNode.insertBefore(ap, cashDiv);
+  const sp=document.getElementById("sgPensionPanel"); if(sp) cashDiv.parentNode.insertBefore(sp, cashDiv);
   cp.dataset.relocated="1";
 }
 
@@ -26895,7 +26981,7 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
   // Starting balance sheet values. Locked accounts with no withdrawal age are held flat with
   // Other assets: in net worth, never spent (nonRetirementAccountSplit).
   const acctSplit=nonRetirementAccountSplit();
-  const propVal=num("aProp",0), other=num("aOther",0)+acctSplit.locked;
+  const propVal=num("aProp",0); let other=num("aOther",0)+acctSplit.locked;
 
   // Portfolio builder values (re-split by the proposal's cash share when running it)
   let pfCash=portfolioCashSeed();      // cash holdings — never compound
@@ -26950,6 +27036,16 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
   const chOwnNow=chPay?chOwnerPillars():null;
   const chIT=getApplyTax()?chIncomeTaxSetup():null;   // Swiss income tax from the official tables (null: the country's brackets)
   const retAge2=showC2?retAgeFor(2):retAge;     // client 2 retires at their own age
+  // Singapore clients: CPF and SRS follow one deterministic schedule outside the retirement pool.
+  const sgP=sgCpfSetup(c1Age0, c2Age0, years);
+  const sgTx=!!(sgP && taxCountry()==="SG");    // Singapore tax: CPF LIFE tax-free, half of SRS withdrawals, CPF and SRS relief
+  // MediSave is in the CPF schedule, out of the flat other assets (the year-0 total stays as before).
+  if(sgP){ const lk=acctSplit.locked, m=Math.max(0, sgP.flat-lk);
+    other=num("aOther",0)+Math.max(0, lk-sgP.flat);
+    // A portfolio entered on its own and larger than the liquid accounts is taken to sit partly in the locked
+    // accounts; the part of it netted against MediSave is MediSave, which the schedule now carries, so it
+    // leaves the portfolio rather than growing twice.
+    if(m>0){ const fi=Math.min(investSeed, m); investSeed-=fi; cashSeed=Math.max(0, cashSeed-(m-fi)); } }
   const rebalFreq=val("rebalFreq")||"none";
   const tgtEq=num("tgtEquity",60)/100;
   // Pre-build goal outflow map: calendar year → goals active that year (id,
@@ -26989,7 +27085,7 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
 
     // Retirement pool per simulation path, split per owner (from the accounts'
     // owner field) so each client's share follows their own age for RMD timing.
-    let retPot1=retSeed*retSh.c1, retPot2=retSeed*retSh.c2, retPot=retSeed;
+    let retPot1=Math.max(0, retSeed*retSh.c1-(sgP?sgP.out1:0)), retPot2=Math.max(0, retSeed*retSh.c2-(sgP?sgP.out2:0)), retPot=retPot1+retPot2;
     const chSt=chPay?chPillarParts(chPay, retPot1, retPot2, chOwnNow):null;   // each Swiss client's pillar parts, this path
     // Each client's earnings stop at their own retirement age.
     let inc1Y=num("inc1",0)+num("inc2",0), inc2Y=showC2?(num("inc1b",0)+num("inc2b",0)):0, expense=baseExp;
@@ -27038,16 +27134,17 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
       // );
 
       const debtTotal = loanState.reduce((s, l) => s + l.bal, 0);
+      const sgBal = sgP ? sgP.bal[y] : 0, sgSp = sgP ? sgP.spend[y] : 0;   // CPF and SRS; the part that comes back as capital
       path.push(
-        Math.max(0, cash + inv) + prop + other + retPot - debtTotal - unfunded
+        Math.max(0, cash + inv) + prop + other + retPot + sgBal - debtTotal - unfunded
       );
-      const _pools = chPay ? chPoolsNet(chPay, retPot1, retPot2, y, inf, c1Age0+y, c2Age0+y, chSt) : retPot;
+      const _pools = (chPay ? chPoolsNet(chPay, retPot1, retPot2, y, inf, c1Age0+y, c2Age0+y, chSt) : retPot) + sgSp;
       spendable.push(Math.max(0, cash + inv) + _pools - debtTotal - unfunded);
       // Its make-up, for the retirement solvers. Cash earns nothing, and debt and unfunded
       // needs are settled from it first. A Swiss client's pillars are paid into the invested
       // pool at retirement, so only another client's locked pool keeps the RET_POOL_MU rate.
       spCash.push(Math.max(0, Math.max(0, cash) - debtTotal - unfunded));
-      spLock.push((chPay && chPay.on1 ? 0 : retPot1) + (chPay && chPay.on2 ? 0 : retPot2));
+      spLock.push((chPay && chPay.on1 ? 0 : retPot1) + (chPay && chPay.on2 ? 0 : retPot2) + sgSp);
 
       if (y === years) break;
 
@@ -27097,16 +27194,28 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
       // in cash. Kept OUT of income so income tax doesn't double-tax it — the
       // one-time capital tax + any penalty is the cutPct the advisor entered.
       if(typeof _wiPensionDraw!=="undefined" && _wiPensionDraw && age===_wiPensionDraw.age){
+        // Singapore: the part the SRS and the CPF Ordinary Account cover is already out of the CPF schedule
+        // (sgCpfSetup); the rest comes out of the other retirement accounts.
+        const cut=1-Math.min(100,Math.max(0,+_wiPensionDraw.cutPct||0))/100, sgT=sgP ? (sgP.wiTake[y]||0) : 0;
+        if(sgT>0) cash+=sgT*cut;
         const potNow=retPot1+retPot2;
-        const take=Math.min(+_wiPensionDraw.amt||0, potNow);
+        const take=Math.min(Math.max(0, (+_wiPensionDraw.amt||0)-sgT), potNow);
         if(take>0 && potNow>0){
           retPot1-=take*(retPot1/potNow); retPot2-=take*(retPot2/potNow);
-          cash+=take*(1-Math.min(100,Math.max(0,+_wiPensionDraw.cutPct||0))/100);
+          cash+=take*cut;
           retPot=retPot1+retPot2;
         }
       }
       // A what-if withdrawal from a Swiss client's pillars comes out of every part alike.
       if(chSt){ [[sw1,1,retPot1],[sw2,2,retPot2]].forEach(([on,n,pot])=>{ if(!on) return; const t=chPillarAll(chSt[n]); if(t>0 && pot<t-0.5) chPillarScale(chSt[n], pot/t); }); }
+      // Singapore: the CPF Ordinary Account paid out to the plan's accounts (tax-free capital, invested)
+      // and an SRS tranche (a drawdown, credited as income like one; half of it taxable in Singapore).
+      let sgOff=0;
+      if(sgP){ const wd=sgP.wd[y]||0;
+        if(wd>0){ inv+=wd; assetBuckets=scaleBucketsToTotal(assetBuckets, inv); inv=sumBuckets(assetBuckets); }
+        const s1=sgP.srsW1[y]||0, s2=sgP.srsW2[y]||0; rmd+=s1+s2; rmdC1+=s1;
+        if(sgTx) sgOff=(_hp.x1||0)+(_hp.x2||0)+(1-SG_RULES.srsTaxable)*(s1+s2)+(sgP.ded[y]||0); }
+      const sgEmp=sgP ? (sgP.emp[y]||0) : 0;   // employee CPF and SRS contributions: out of pay
       const totalPen=pen1+pen2+rmd; // drawdown credited as income
       const c2Retired=!showC2 || c2AgeY>=retAge2;
       const vestY=equityVestIncomeYear(y);
@@ -27150,8 +27259,8 @@ function runMC(years,sims,muOverride,sigOverride,splitOverride){
       const chTx=chIT?chIncomeTaxYearCached(chIT, y, {sal:[(retired?0:inc1Y)*incF, (c2Retired?0:inc2Y)*incF],
           ded:[chC?chC.bvg1*BVG_EMPLOYEE_SHARE+chC.p31:0, chC?chC.bvg2*BVG_EMPLOYEE_SHARE+chC.p32:0],
           inc:[pen1+rmdC1+vestY*incF, pen2+rmd-rmdC1], age:[age, c2AgeY], kids:chKidsAt(chIT, y), d:Math.pow(1+inf, y)}):null;
-      const tax=!getApplyTax()?0:chTx?chTx.total:computeIncomeTax(Math.max(0,totalInc-chEmp));
-      const surplus=totalInc-tax-curExp-debtPaid-chEmp;
+      const tax=!getApplyTax()?0:chTx?chTx.total:computeIncomeTax(Math.max(0,totalInc-chEmp-sgOff));
+      const surplus=totalInc-tax-curExp-debtPaid-chEmp-sgEmp;
 
       // Lock in savings target (only while working)
       let savDone=retired?0:Math.min(savAnnual, Math.max(surplus,0));
@@ -27323,8 +27432,13 @@ function _drawdownSeed(){
   // Swiss pillars are spendable only after the one-time capital-withdrawal tax.
   const chP=(typeof chPayoutSetup==="function")?chPayoutSetup():null;
   const sh=retirementOwnerShares();
-  const pool=chP ? chPoolsNet(chP, retSeed*sh.c1, retSeed*sh.c2, 0, 0, _chAgeNow(1), _chAgeNow(2)) : retSeed;
-  const lock=chP ? (chP.on1?0:retSeed*sh.c1)+(chP.on2?0:retSeed*sh.c2) : retSeed;
+  // Singapore: CPF and SRS outside the pool; their capital part (OA, SRS) is locked until paid out.
+  const sgP=(typeof sgCpfSetup==="function")?sgCpfSetup(_chAgeNow(1), _chAgeNow(2), 1):null, sgSp=sgP?sgP.spend[0]:0;
+  const r1=Math.max(0, retSeed*sh.c1-(sgP?sgP.out1:0)), r2=Math.max(0, retSeed*sh.c2-(sgP?sgP.out2:0));
+  // A portfolio netted against MediSave: that part is MediSave (in the schedule, not spendable), as in runMC.
+  { const m=sgP ? Math.max(0, sgP.flat-nonRetirementAccountSplit().locked) : 0; if(m>0){ const fi=Math.min(investSeed, m); investSeed-=fi; cashSeed=Math.max(0, cashSeed-(m-fi)); } }
+  const pool=(chP ? chPoolsNet(chP, r1, r2, 0, 0, _chAgeNow(1), _chAgeNow(2)) : r1+r2)+sgSp;
+  const lock=(chP ? (chP.on1?0:r1)+(chP.on2?0:r2) : r1+r2)+sgSp;
   const total=Math.max(0, investSeed+cashSeed+pool), cash=Math.min(total, cashSeed);
   return {total, cash, lock:Math.min(total-cash, lock)};
 }
@@ -27682,7 +27796,10 @@ function buildSimInputsSummary(){
   // Income & tax
   html+=section("Income & Tax");
   html+=row("Gross household income",fmtMoney(inc)+"/yr");
-  html+=row("Income tax",fmtMoney(tax)+"/yr",`Effective ${inc>0?(tax/inc*100).toFixed(1):"0"}%`+(getApplyTax()?"":"  (tax off)"));
+  const _sgT=(typeof sgTodayAdj==="function") ? sgTodayAdj() : {emp:0, ded:0};   // Singapore: tax after the CPF relief, CPF from pay
+  const _taxS=(_sgT.ded>0 && getApplyTax()) ? computeIncomeTax(Math.max(0, inc-_sgT.ded)) : tax;
+  html+=row("Income tax",fmtMoney(_taxS)+"/yr",`Effective ${inc>0?(_taxS/inc*100).toFixed(1):"0"}%`+(getApplyTax()?"":"  (tax off)")+(_sgT.ded>0 && getApplyTax()?", after CPF and SRS relief":""));
+  if(_sgT.emp>0) html+=row("CPF and SRS from pay",fmtMoney(_sgT.emp)+"/yr","employee CPF and SRS contributions");
   if(childSaving>0) html+=row("Child tax benefit",`− ${fmtMoney(childSaving)}/yr`,`${children.length} child${children.length!==1?"ren":""}`);
   html+=row("Expenses",fmtMoney(exp)+"/yr");
   html+=row("Annual surplus",fmtMoney(surplus)+"/yr",surplus<0?"⚠ Deficit":"");
@@ -27693,7 +27810,7 @@ function buildSimInputsSummary(){
   // Assets & wealth
   html+=section("Assets & Starting Wealth");
   html+=row("Accounts (assets tab)",fmtMoney(totalAcc),`incl. ${fmtMoney(retSeed)} retirement pool`);
-  const _lockedNA=nonRetirementAccountSplit().locked;
+  const _lockedNA=Math.max(0, nonRetirementAccountSplit().locked-(typeof _sgFlat==="function" ? _sgFlat() : 0));   // MediSave is in the CPF schedule
   if(_lockedNA>0) html+=row("Locked, no withdrawal age",fmtMoney(_lockedNA),"held at its value, not spent");
   if(propV>0) html+=row("Property / real estate",fmtMoney(propV));
   if(otherV>0) html+=row("Other assets",fmtMoney(otherV));
@@ -28733,7 +28850,7 @@ function cfPensionHeader(){ const cc=val("c1co")||"US";
   // paid). Anyone else's accounts are drawn down under their own country's rules.
   const allRes=(typeof chAllResident==="function") && chHouseholdSwiss() && chAllResident();
   let pk=false; try{ const k=chPillarSettings().pkAnn; pk=((k[1]||0)+(k[2]||0))>0; }catch(_){}
-  return allRes ? (pk?"Pensions (AHV + pension fund)":"Pensions (AHV)") : usHousehold() ? "Pension / SS / RMD" : "Pensions / withdrawals"; }
+  return allRes ? (pk?"Pensions (AHV + pension fund)":"Pensions (AHV)") : usHousehold() ? "Pension / SS / RMD" : (typeof sgAllResident==="function" && sgAllResident()) ? "CPF LIFE / SRS / withdrawals" : "Pensions / withdrawals"; }
 function renderCashFlow(){
   const tbody=$("cfBody"); if(!tbody) return;
   setT("cfPenHdr", cfPensionHeader());
@@ -28771,6 +28888,8 @@ function renderCashFlow(){
   const chIT=getApplyTax()?chIncomeTaxSetup():null;   // Swiss income tax from the official tables (null: the country's brackets)
   const retAge2=showC2?retAgeFor(2):retAge;
   const sav=num("savAnnual",0);
+  const sgP=sgCpfSetup(a1, c2Age0, horizon+1);  // Singapore: CPF and SRS, the same schedule as the Monte Carlo
+  const sgTx=!!(sgP && taxCountry()==="SG");
 
   // Retirement account pool (tracked separately from liquid/invested pools)
   const country=val("c1co")||"US";
@@ -28881,8 +29000,11 @@ function renderCashFlow(){
   const retMuRetired = RET_POOL_MU;
 
   const cy=currentYear();
-  const other=num("aOther",0)+acctSplit.locked;   // locked accounts with no withdrawal age: held flat, never spent
-  if(acctSplit.locked>0) cfModeNote+=`<br>Locked accounts with no withdrawal age (${fmtMoney(acctSplit.locked)}: term deposits, structured products and the like) are held at their value with other assets and are not spent.`;
+  const other=num("aOther",0)+Math.max(0, acctSplit.locked-(sgP?sgP.flat:0));   // locked accounts with no withdrawal age: held flat, never spent (MediSave is in the CPF schedule, as in runMC)
+  // The part of a portfolio entered on its own that was netted against MediSave leaves it (as in runMC).
+  { const m=sgP ? Math.max(0, sgP.flat-acctSplit.locked) : 0; if(m>0){ const fi=Math.min(inv, m); inv-=fi; cash=Math.max(0, cash-(m-fi)); } }
+  { const _lk=Math.max(0, acctSplit.locked-(sgP?sgP.flat:0));   // MediSave is in the CPF schedule
+    if(_lk>0) cfModeNote+=`<br>Locked accounts with no withdrawal age (${fmtMoney(_lk)}: term deposits, structured products and the like) are held at their value with other assets and are not spent.`; }
 
   // ── Breakdown captures for tooltips ─────────────────────────────────────────
   const c1Sal=num("inc1",0), c1Bon=num("inc2",0);
@@ -28898,7 +29020,7 @@ function renderCashFlow(){
   //   initCash — starting cash balance
   //   loopMu   — annual investment return (geometric mean = mu − 0.5σ², matching MC median)
   function runLoop(initInv, initCash, loopMu){
-    let iv=initInv, ca=initCash, rp=retSeed, rp1=retSeed*retShCF.c1, rp2=retSeed*retShCF.c2;
+    let rp1=Math.max(0, retSeed*retShCF.c1-(sgP?sgP.out1:0)), rp2=Math.max(0, retSeed*retShCF.c2-(sgP?sgP.out2:0)), iv=initInv, ca=initCash, rp=rp1+rp2;
     const chSt=chPay?chPillarParts(chPay, rp1, rp2):null;   // each Swiss client's pillar parts
     let unfundedShortfall = 0;
     // Retirement pool: fixed extremely conservative rate — never tied to
@@ -28942,6 +29064,8 @@ function renderCashFlow(){
         if(po.a1+po.a2>0){ iv+=po.net; chLump={gross:po.a1+po.a2, tax:po.t1+po.t2, pen:po.pen, net:po.net, c1:po.a1>0, c2:po.a2>0}; }
         if(sw1) rp1=chPillarAll(chSt[1]); if(sw2) rp2=chPillarAll(chSt[2]);
       }
+      // Singapore: the CPF Ordinary Account paid out to the plan's accounts at the start of the year, as in runMC.
+      const sgWd=sgP ? (sgP.wd[y]||0) : 0; if(sgWd>0) iv+=sgWd;
       const rpPre=rp1+rp2;
       const e1=sw1?chSt[1].ext:0, e2=sw2?chSt[2].ext:0;   // a non-resident's other accounts: prior year-end, the drawdown base
       if(chPay){ chPillarGrow(chPay, chSt); if(sw1) rp1=chPillarAll(chSt[1]); if(sw2) rp2=chPillarAll(chSt[2]); }
@@ -28955,15 +29079,19 @@ function renderCashFlow(){
       }
       if(!sw1 && rp1Before>0 && retired){ rmd1=Math.max(calcRMD(rp1Before,age,country),rp1Before*0.04); rp1=Math.max(0,rp1-rmd1); }
       if(!sw2 && rp2Before>0 && showC2 && c2AgeY>=retAge2){ rmd2=Math.max(calcRMD(rp2Before,c2AgeY,country2),rp2Before*0.04); rp2=Math.max(0,rp2-rmd2); }
+      const sgS1=sgP ? (sgP.srsW1[y]||0) : 0, sgS2=sgP ? (sgP.srsW2[y]||0) : 0;   // SRS tranches: drawdowns, half taxable in Singapore
+      rmd1+=sgS1; rmd2+=sgS2;
       rmd=rmd1+rmd2;
       rp=rp1+rp2;
       const pen=pen1+pen2+rmd;
       const chEmp=chC?chC.emp:0;   // Swiss pillar contributions from pay: out of the cash flow, tax-deductible
+      const sgEmp=sgP ? (sgP.emp[y]||0) : 0;   // Singapore: employee CPF and SRS contributions from pay
+      const sgOff=sgTx ? (_hp.x1||0)+(_hp.x2||0)+(1-SG_RULES.srsTaxable)*(sgS1+sgS2)+(sgP.ded[y]||0) : 0;
       // Switzerland: the official tables, as in runMC.
       const chTx=chIT?chIncomeTaxYearCached(chIT, y, {sal:[retired?0:ic1, c2Retired?0:ic2],
           ded:[chC?chC.bvg1*BVG_EMPLOYEE_SHARE+chC.p31:0, chC?chC.bvg2*BVG_EMPLOYEE_SHARE+chC.p32:0],
           inc:[pen1+rmd1+vestY, pen2+rmd2], age:[age, c2AgeY], kids:chKidsAt(chIT, y), d:Math.pow(1+inf, y)}):null;
-      const tax=!getApplyTax()?0:chTx?chTx.total:computeIncomeTax(Math.max(0,earnedInc+pen-chEmp));
+      const tax=!getApplyTax()?0:chTx?chTx.total:computeIncomeTax(Math.max(0,earnedInc+pen-chEmp-sgOff));
       const livingExp=retired?retSpend*Math.pow(1+inf,y):ex;
       // Capture cash balance before any inflows/outflows this year
       const caOpen=ca;
@@ -28982,7 +29110,7 @@ function renderCashFlow(){
         debt+=m;
         loanPayments.push({label:loanLabels[i]||"Loan",annual:Math.round(m),balBefore:Math.round(lBefore),balAfter:Math.round(l.bal)});
       });
-      const surp=earnedInc+pen-tax-livingExp-debt-chEmp;
+      const surp=earnedInc+pen-tax-livingExp-debt-chEmp-sgEmp;
       // Goals fired this year
       const goalsFired=[];
       goals.forEach(g=>{if(cy+y>=g.startYear&&cy+y<=g.endYear) goalsFired.push({name:g.name,amt:g.amt});});
@@ -29062,14 +29190,18 @@ function renderCashFlow(){
       // const nw=ca+iv+pr+other+rp-debtTotal;
       const scheduledDebtTotal=lb.reduce((s,l)=>s+l.bal,0);
       const debtTotal=scheduledDebtTotal+unfundedShortfall;
-      const nw=ca+iv+pr+other+rp-debtTotal;
+      // CPF and SRS at the end of the year, shown with the retirement pool.
+      const sgEnd=sgP ? (sgP.bal[y+1]||0) : 0, sgRow=sgP ? {open:sgP.bal[y]||0, close:sgEnd, cpfC:sgP.cpfC[y]||0, srsC:sgP.srsC[y]||0,
+        out:sgWd+sgS1+sgS2, srsW:sgS1+sgS2, prem:sgP.prem[y]||0, emp:sgEmp, ev:sgP.ev[y]||[], off:sgOff,
+        cpf1:sgResident(1) ? 0 : (_hp.x1||0), cpf2:sgResident(2) ? 0 : (_hp.x2||0)} : null;
+      const nw=ca+iv+pr+other+rp+sgEnd-debtTotal;
 
       if(nw<=0&&y>0) dep=true;
       data.push({y,age,retired,phase,earnedInc,pen,pen1,pen2,rmd,rmd1,rmd2,tax,livingExp,debt,
         taxParts:chTx?{fed:chTx.fed0, cant:chTx.cant0, child:Math.max(0, chTx.fed0+chTx.cant0-chTx.total)}:null,
         surp,effectiveSav,actualSav,surpAfterSav,goalOut,
         invOpen,invReturn,surpToInv,deficitDrain,goalDrain,
-        inv:iv,cash:ca,retPot:rp,nw,depleted:dep,
+        inv:iv,cash:ca,retPot:rp+sgEnd,nw,depleted:dep,
         prop:pr,
         otherAssets:other,
         debtBal:debtTotal,
@@ -29081,7 +29213,7 @@ function renderCashFlow(){
         rpGrowth,
         retMu,
         loanPayments,
-        goalsFired, chLump, chContrib:chC});
+        goalsFired, chLump, chContrib:chC, sg:sgRow});
       if(y===0) lastCfComponents=[];
       // lastCfComponents.push({y,age,cash:ca,inv:iv,retPot:rp,prop:pr,otherAssets:other,debtBal:debtTotal,nw});
       lastCfComponents.push({
@@ -29089,7 +29221,7 @@ function renderCashFlow(){
         age,
         cash:ca,
         inv:iv,
-        retPot:rp,
+        retPot:rp+sgEnd,
         prop:pr,
         otherAssets:other,
         debtBal:debtTotal,
@@ -29162,7 +29294,8 @@ function renderCashFlow(){
     if(age===PS.c1.start&&PS.c1.src!=="none"&&PS.c1.base>0){cls=cls+" cf-pen"; tags+='<span class="cf-tag cf-tag-pen">'+(showC2?_daEsc(_n1)+"'s pension starts":"pension starts")+'</span>';}
     if(showC2&&c2AgeRow===PS.c2.start&&PS.c2.src!=="none"&&PS.c2.base>0){cls=cls+" cf-pen"; tags+='<span class="cf-tag cf-tag-pen">'+_daEsc(_n2)+"'s pension starts"+'</span>';}
     if(d.chLump){tags+='<span class="cf-tag cf-tag-pen">pillars paid out '+fmtMoney(d.chLump.gross)+' · tax '+fmtMoney(d.chLump.tax)+(d.chLump.pen>0?' · penalty '+fmtMoney(d.chLump.pen):'')+'</span>';}   // Switzerland: one-time taxed lump sum
-    else if(!(chPay&&chPay.on1) && age===retAge&&retSeed>0){tags+='<span class="cf-tag cf-tag-pen">acct. drawdown starts</span>';}   // client 1 not Swiss: drawdown rules
+    else if(!(chPay&&chPay.on1) && age===retAge&&retSeed-(sgP?sgP.out1+sgP.out2:0)>0.5){tags+='<span class="cf-tag cf-tag-pen">acct. drawdown starts</span>';}   // client 1 not Swiss: drawdown rules
+    if(d.sg) d.sg.ev.forEach(t=>{ tags+='<span class="cf-tag cf-tag-pen">'+_daEsc(t)+'</span>'; });   // Singapore: CPF milestones
     if(age===rmdStartAge&&rmdStartAge>retAge&&retSeed>0&&rmd>0){tags+='<span class="cf-tag cf-tag-pen">'+(rmdRuleFor(val("c1co")||"").tag||"Minimum withdrawals start")+'</span>';}
     if(goalOut>0){cls=cls+" cf-goal"; tags+='<span class="cf-tag cf-tag-goal">goal</span>';}
     if(depleted){cls=cls+" cf-depleted"; tags+='<span class="cf-tag" style="background:#7a1a1a;color:#ffaaaa;font-weight:600">DEPLETED</span>';}
@@ -29174,7 +29307,9 @@ function renderCashFlow(){
     const c2BonY=Math.round(c2Bon*Math.pow(1+raise,y));
     const tipEarned=JSON.stringify({type:"earned",c1sal:c1SalY,c1bon:c1BonY,c2sal:c2SalY,c2bon:c2BonY,raise:Math.round(raise*1000)/10,y,total:Math.round(earnedInc)});
 
-    const tipPen=JSON.stringify({type:"pension",pen1:Math.round(pen1),pen2:Math.round(pen2),rmd1:Math.round(rmd1),rmd2:Math.round(rmd2),rmd:Math.round(rmd),total:Math.round(pen)});
+    const _srsW=d.sg ? d.sg.srsW : 0;
+    const tipPen=JSON.stringify({type:"pension",pen1:Math.round(pen1),pen2:Math.round(pen2),rmd1:Math.round(rmd1),rmd2:Math.round(rmd2),rmd:Math.round(rmd),srs:Math.round(_srsW),total:Math.round(pen),
+      cpf1:Math.round(d.sg?d.sg.cpf1:0), cpf2:Math.round(d.sg?d.sg.cpf2:0)});
 
     const taxInc=Math.round(earnedInc+pen);
     const taxTotal=Math.round(tax);
@@ -29184,7 +29319,7 @@ function renderCashFlow(){
     const chTp=d.taxParts;
     const taxFed=chTp?Math.round(chTp.fed):Math.round(tax*0.67);
     const taxState=chTp?Math.round(chTp.cant):Math.round(tax*0.33);
-    const tipTax=JSON.stringify({type:"tax",fed:taxFed,state:taxState,child:chTp?Math.round(chTp.child):0,childLbl:chTp?"Child deductions saving":"",
+    const tipTax=JSON.stringify({type:"tax",fed:taxFed,state:taxState,child:chTp?Math.round(chTp.child):0,childLbl:chTp?"Child deductions saving":"",free:Math.round(d.sg?d.sg.off:0),
       stateLbl:chTp?((chChurchOf(1)||chChurchOf(2))?"Cantonal, communal and church tax":"Cantonal and communal tax"):"",inc:taxInc,rate:taxEff,total:taxTotal});
 
     const livY=Math.round(baseLivingExp*Math.pow(1+inf,y));
@@ -29206,10 +29341,13 @@ function renderCashFlow(){
     const tipCash=JSON.stringify({type:"cash",open:Math.round(caOpen),sav:Math.round(actualSav),surpNeg,goalDrain:goalCashDrain,close:Math.round(cash)});
 
     const _cc=d.chContrib;
-    const tipRet=JSON.stringify({type:"ret",open:Math.round(rpBefore),rate:Math.round((rpPre>0?rpGrowth/rpPre:retMu)*1000)/10,growth:Math.round(rpGrowth),rmd:Math.round(rmd),close:Math.round(retPot),phase,
-      paid:Math.round(d.chLump?d.chLump.gross:0), bvgC:Math.round(_cc?_cc.bvg1+_cc.bvg2:0), p3C:Math.round(_cc?_cc.p31+_cc.p32:0)});
+    const _sg=d.sg;
+    const tipRet=JSON.stringify({type:"ret",open:Math.round(rpBefore+(_sg?_sg.open:0)),rate:Math.round((rpPre>0?rpGrowth/rpPre:retMu)*1000)/10,growth:Math.round(rpGrowth),rmd:Math.round(rmd-_srsW),close:Math.round(retPot),phase,
+      paid:Math.round(d.chLump?d.chLump.gross:0), bvgC:Math.round(_cc?_cc.bvg1+_cc.bvg2:0), p3C:Math.round(_cc?_cc.p31+_cc.p32:0),
+      sgC:Math.round(_sg?_sg.cpfC+_sg.srsC:0), sgOut:Math.round(_sg?_sg.out:0), sgPrem:Math.round(_sg?_sg.prem:0),
+      sgInt:Math.round(_sg?_sg.close-_sg.open-_sg.cpfC-_sg.srsC+_sg.out+_sg.prem:0)});
 
-    const tipSurp=JSON.stringify({type:"surp",earned:Math.round(earnedInc),pen:Math.round(pen),tax:Math.round(tax),exp:Math.round(livingExp),debt:Math.round(debt),pc:Math.round(d.chContrib?d.chContrib.emp:0),gross:Math.round(d.surp),sav:Math.round(actualSav),net:Math.round(surpAfterSav),reinv:Math.round(surpToInv)});
+    const tipSurp=JSON.stringify({type:"surp",earned:Math.round(earnedInc),pen:Math.round(pen),tax:Math.round(tax),exp:Math.round(livingExp),debt:Math.round(debt),pc:Math.round(d.chContrib?d.chContrib.emp:0),cpf:Math.round(d.sg?d.sg.emp:0),gross:Math.round(d.surp),sav:Math.round(actualSav),net:Math.round(surpAfterSav),reinv:Math.round(surpToInv)});
 
     html+=`<tr class="${cls}">
       <td class="cf-l">${yearLabel}</td>
@@ -29225,7 +29363,7 @@ function renderCashFlow(){
       <td class="cf-tip-cell" data-cf-tip='${tipGoal.replace(/'/g,"&#39;")}'>${goalOut>0?fmtMoney(goalOut):"-"}</td>
       <td class="cf-tip-cell" data-cf-tip='${tipCash.replace(/'/g,"&#39;")}'>${fmtMoney(cash)}</td>
       <td class="inv-cell" data-inv='{"open":${Math.round(invOpen)},"ret":${Math.round(invReturn)},"sav":0,"surp":${Math.round(surpToInv)},"def":${Math.round(deficitDrain)},"goal":${Math.round(goalDrain)},"close":${Math.round(inv)},"mu":${(cfMu*100).toFixed(1)}}'>${fmtMoney(inv)}</td>
-      <td class="cf-tip-cell" data-cf-tip='${tipRet.replace(/'/g,"&#39;")}'>${retSeed>0?fmtMoney(retPot):"-"}</td>
+      <td class="cf-tip-cell" data-cf-tip='${tipRet.replace(/'/g,"&#39;")}'>${(retSeed>0||sgP)?fmtMoney(retPot):"-"}</td>
       <td><strong class="${nw<0?'cf-neg':''}">${fmtMoney(nw)}</strong></td>
       <td class="cf-l">${tags}</td>
     </tr>`;
@@ -29886,7 +30024,7 @@ function wiAutoCut(amt, age){
   try{ if(chOk && typeof chHouseholdSwiss==="function" && chHouseholdSwiss()){
     const own=chOwnerPillars(), sh=retirementOwnerShares(), seed=retirementAccountSeed();
     const swiss=[1,2].reduce((s,n)=>{ if(!chSwissClient(n)) return s; const o=own["c"+n];
-      return s+(chResident(n) ? seed*(sh["c"+n]||0) : o.bvg+o.fz+o.p3); },0);
+      return s+(chResident(n) ? seed*(sh["c"+n]||0)-(typeof _sgOut==="function" ? _sgOut(n) : 0) : o.bvg+o.fz+o.p3); },0);
     if(seed>0 && swiss>=0.5*seed) country="CH";
     else if(country==="CH") country=(_chHasC2() && val("c2co"))||country;
   } }catch(_){}
@@ -29897,6 +30035,32 @@ function wiAutoCut(amt, age){
       const t=(computeFederalTax(inc+amt)+computeStateTax(inc+amt))-(computeFederalTax(inc)+computeStateTax(inc));
       return Math.max(0,t/amt*100);
     }catch(_){ return null; } };
+  // Singapore: the withdrawal comes out of the SRS and the CPF Ordinary Account first (the CPF schedule):
+  // SRS before its prescribed retirement age fully taxable plus a 5% penalty, from it half taxable; the
+  // Ordinary Account (from 55, above the Retirement Account's set-aside) tax-free; any rest from the other
+  // retirement accounts at the income-tax rate. In Singapore tax.
+  if(typeof sgHousehold==="function" && sgHousehold() && taxCountry()==="SG"){ try{
+    const a1=ageFromDOB(val("c1d"))||30, prev=_wiPensionDraw; let G=null;
+    try{ _wiPensionDraw={age, amt}; G=sgCpfSetup(a1, ageFromDOB(val("c2d"))||a1, Math.max(1, age-a1+1)); } finally { _wiPensionDraw=prev; }
+    const y=age-a1;
+    if(G && y>=0){
+      let srsE=0, srsL=0, oaP=0;
+      [1,2].forEach(n=>{ const q=G.p[n]; if(!q) return; const s=(q.wiSrs[y]||0)*G.kx, o=(q.wiOa[y]||0)*G.kx;
+        if(G.age[n]+y<G.I.c[n].srsAge) srsE+=s; else srsL+=s; oaP+=o; });
+      const sgT=srsE+srsL+oaP, other=Math.max(0, retirementAccountSeed()-_sgOut(1)-_sgOut(2))*Math.pow(1+RET_POOL_MU, Math.max(0, y));   // as runMC holds them at that age
+      if(sgT<0.5 && other<0.5) return {pct:0, note:"nothing can be withdrawn at "+age+": CPF savings only from 55 (the Ordinary Account above the Retirement Account's set-aside), and there is no SRS"};
+      if(sgT>=0.5){
+        const m=marginalPct(); if(m==null) return null;
+        const rest=Math.min(Math.max(0, amt-sgT), other), got=sgT+rest, pct=got>0 ? (srsE*(m+5)+srsL*m*0.5+rest*m)/got : 0, parts=[];
+        if(oaP>0.5) parts.push(fmtMoney(oaP)+" from the CPF Ordinary Account, tax-free");
+        if(srsL>0.5) parts.push(fmtMoney(srsL)+" from SRS, half taxable");
+        if(srsE>0.5) parts.push(fmtMoney(srsE)+" from SRS before its prescribed retirement age, fully taxable + 5% penalty");
+        if(rest>0.5) parts.push(fmtMoney(rest)+" from other retirement accounts, taxed as income");
+        if(amt>got+0.5) parts.push("only "+fmtMoney(got)+" of the "+fmtMoney(amt)+" can be withdrawn at "+age);
+        return {pct:+pct.toFixed(1), note:parts.join("; ")+(srsE+srsL+rest>0.5 ? " (about "+m.toFixed(1)+"% income tax on the taxable part)" : "")};
+      }
+    }
+  }catch(_){} }
   if(country==="CH" && chOk){
     // The household's canton (the panel's explicit pick, else the address) — the
     // panel select could hold a previous client's canton or none at all.
@@ -30382,7 +30546,7 @@ function wiInputSig(){
       (typeof pfLinkedAccountId!=="undefined"?pfLinkedAccountId:null),
       // the return and risk the engine will actually use (CMA set, proposal source, holdings)
       (function(){ try{ const p=getSimEngineParams(); return p?[p.mu,p.sig,p.cashShare,p.tpl&&JSON.stringify(p.tpl)]:null; }catch(_){ return null; } })(),
-      (typeof chPanelState==="function"?chPanelState():null),
+      (typeof chPanelState==="function"?chPanelState():null), (typeof sgPanelState==="function"?sgPanelState():null),
       (typeof getSimUsesProposal==="function"?getSimUsesProposal():null)]);
     let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0;
     return s.length+":"+(h>>>0).toString(36);
@@ -33121,7 +33285,8 @@ function drawFanChart(){
       cf:             () => val("rptIncCF") !== "no",
       pension:        () => val("rptIncPension") !== "no" && ((((val("penSrc")||"none")!=="none") && num("penAnnual",0)>0)
                             || ($("c2card") && $("c2card").style.display!=="none" && ((val("penSrc2")||"none")!=="none") && num("penAnnual2",0)>0)
-                            || (chHouseholdSwiss() && (()=>{ try{ const I=chPensionInputs(), k=chPillarSettings().pkAnn; return I.p2+I.p3>0 || (k[1]||0)+(k[2]||0)>0; }catch(_){ return false; } })())),
+                            || (chHouseholdSwiss() && (()=>{ try{ const I=chPensionInputs(), k=chPillarSettings().pkAnn; return I.p2+I.p3>0 || (k[1]||0)+(k[2]||0)>0; }catch(_){ return false; } })())
+                            || (typeof sgHousehold==="function" && sgHousehold())),
       whatif:         () => val("rptIncWhatIf") !== "no" && (typeof whatIfScenarios!=="undefined") && whatIfScenarios.length>0,
       method:         () => val("rptIncMethod") !== "no",
       educharts:       () => getSelectedEduCharts().length > 0,
@@ -33968,14 +34133,15 @@ function drawFanChart(){
         // named for what they are — never the input mode ("manual" / "auto").
         const _PS = pensionSetup(_chAgeNow(1), _chAgeNow(2));
         const _penName = k => { const s=k===1?_PS.c1:_PS.c2, c=k===1?(val("c1co")||"US"):(val("c2co")||val("c1co")||"US");
-          return s.src==="auto" ? ((penDefaultsFor(c).name||"State pension")+" (estimated)") : "Pension (as entered)"; };
+          return s.src==="auto" ? (((s.sg && s.end!=null && isFinite(s.end)) ? "CPF Retirement Sum Scheme" : (penDefaultsFor(c).name||"State pension"))+" (estimated)") : "Pension (as entered)"; };
         const paramRows=[["Retirement savings pool (today)", fmt(retirementAccountSeed())]];
         if(_PS.c1.src!=="none" && _PS.c1.base>0)
           paramRows.push([(showC2?(val("c1f")||"Client 1")+": ":"")+_penName(1),
-            fmt(_PS.c1.base)+" / yr in today's money, from age "+_PS.c1.start]);
+            fmt(sgPenTodayBase(_PS,1))+" / yr in today's money, from age "+_PS.c1.start]);
         if(showC2 && _PS.c2.src!=="none" && _PS.c2.base>0)
           paramRows.push([(val("c2f")||"Client 2")+": "+_penName(2),
-            fmt(_PS.c2.base)+" / yr in today's money, from age "+_PS.c2.start]);
+            fmt(sgPenTodayBase(_PS,2))+" / yr in today's money, from age "+_PS.c2.start]);
+        [1,2].forEach(n=>{ const L=_PS["sgl"+n]; if(L && L.annual>0) paramRows.push([(showC2?(val(n===2?"c2f":"c1f")||("Client "+n))+": ":"")+((L.end!=null && isFinite(L.end)) ? "CPF Retirement Sum Scheme" : "CPF LIFE")+" (Singapore)", fmt(sgLifeToday(_PS,n))+" / yr in today's money, from age "+L.start]); });
         kv(paramRows);
         // ── Retirement income stack — where a typical retirement year's money
         //    comes from vs the spending need (stage 3, today's dollars).
@@ -34036,11 +34202,12 @@ function drawFanChart(){
         const rAge = num("retAge",65);
         bullets.push("Lifestyle: " + ((val("c1f")||"Client 1")) + " plans to retire at age " + rAge + " (" + (cy2 + Math.max(0, rAge-(ageFromDOB(val("c1d"))||40))) + "), spending " + fmt(num("retSpend",0)) + " per year in retirement (today's money).");
         { const PSb=pensionSetup(_chAgeNow(1), _chAgeNow(2));
-          const nm=k=>{ const s=k===1?PSb.c1:PSb.c2, c=k===1?(val("c1co")||"US"):(val("c2co")||val("c1co")||"US"); return s.src==="auto"?((penDefaultsFor(c).name||"state pension")+" (estimated)"):"a pension (as entered)"; };
+          const nm=k=>{ const s=k===1?PSb.c1:PSb.c2, c=k===1?(val("c1co")||"US"):(val("c2co")||val("c1co")||"US"); return s.src==="auto"?(((s.sg && s.end!=null && isFinite(s.end)) ? "CPF Retirement Sum Scheme" : (penDefaultsFor(c).name||"state pension"))+" (estimated)"):"a pension (as entered)"; };
           if(PSb.c1.src!=="none" && PSb.c1.base>0)
-            bullets.push("Income: " + (val("c1f")||"Client 1") + " receives " + nm(1) + " of " + fmt(PSb.c1.base) + "/yr (today's money) from age " + PSb.c1.start + ".");
+            bullets.push("Income: " + (val("c1f")||"Client 1") + " receives " + nm(1) + " of " + fmt(sgPenTodayBase(PSb,1)) + "/yr (today's money) from age " + PSb.c1.start + ".");
           if(showC2 && PSb.c2.src!=="none" && PSb.c2.base>0)
-            bullets.push("Income: " + (val("c2f")||"Client 2") + " receives " + nm(2) + " of " + fmt(PSb.c2.base) + "/yr (today's money) from age " + PSb.c2.start + "."); }
+            bullets.push("Income: " + (val("c2f")||"Client 2") + " receives " + nm(2) + " of " + fmt(sgPenTodayBase(PSb,2)) + "/yr (today's money) from age " + PSb.c2.start + ".");
+          [1,2].forEach(n=>{ const L=PSb["sgl"+n]; if(L && L.annual>0) bullets.push("Income: " + (val(n===2?"c2f":"c1f")||("Client "+n)) + " receives "+((L.end!=null && isFinite(L.end)) ? "CPF Retirement Sum Scheme payouts" : "CPF LIFE")+" from Singapore of " + fmt(sgLifeToday(PSb,n)) + "/yr (today's money) from age " + L.start + "."); }); }
         if(sav>0) bullets.push("Saving: set aside " + fmt(sav) + " per year while working" + (num("raise",0)>0 ? ", with income growing " + num("raise",0).toFixed(1) + "%/yr." : "."));
         goals.forEach(g => {
           bullets.push("Goal: fund \"" + (g.name||"goal") + "\" at " + fmt(g.amt) + "/yr from " + g.startYear + " to " + g.endYear + (g.tier ? " (" + g.tier + ")." : "."));
@@ -34558,12 +34725,17 @@ function drawFanChart(){
             if(inc2t>0) rows.push(["Salary income ("+((val("c2f")||"Client 2"))+")", cyNow+" until retirement ("+(cyNow+Math.max(0,retAgeFor(2)-c2a))+")", fmt(inc2t)]);
           }
           const PSf=pensionSetup(a1age, ageFromDOB(val("c2d"))||a1age);
-          const _pLbl=c=>c==="CH" ? "AHV / state pension" : c==="US" ? "Social Security" : "State pension", penLbl=_pLbl(val("c1co")||"");
-          if(PSf.c1.src!=="none" && PSf.c1.base>0) rows.push([penLbl+" ("+((val("c1f")||"Client 1"))+")", (cyNow+Math.max(0,PSf.c1.start-a1age))+" through rest of life", fmt(PSf.c1.base)+" (today's money)"]);
+          const _pLbl=c=>c==="CH" ? "AHV / state pension" : c==="US" ? "Social Security" : c==="SG" ? "CPF LIFE" : "State pension", penLbl=_pLbl(val("c1co")||"");
+          const _till=r=>(r.end!=null && isFinite(r.end)) ? " until about age "+r.end : " through rest of life";   // a Retirement Sum Scheme payout ends
+          const _rss=r=>(r.sg && r.end!=null && isFinite(r.end));   // a Retirement Sum Scheme payout
+          if(PSf.c1.src!=="none" && PSf.c1.base>0) rows.push([(_rss(PSf.c1) ? "CPF Retirement Sum Scheme" : penLbl)+" ("+((val("c1f")||"Client 1"))+")", (cyNow+Math.max(0,PSf.c1.start-a1age))+_till(PSf.c1), fmt(sgPenTodayBase(PSf,1))+" (today's money)"]);
           if(showC2 && PSf.c2.src!=="none" && PSf.c2.base>0){
             const c2a=ageFromDOB(val("c2d"))||a1age;
-            rows.push([_pLbl(val("c2co")||val("c1co")||"")+" ("+((val("c2f")||"Client 2"))+")", (cyNow+Math.max(0,PSf.c2.start-c2a))+" through rest of life", fmt(PSf.c2.base)+" (today's money)"]);
+            rows.push([(_rss(PSf.c2) ? "CPF Retirement Sum Scheme" : _pLbl(val("c2co")||val("c1co")||""))+" ("+((val("c2f")||"Client 2"))+")", (cyNow+Math.max(0,PSf.c2.start-c2a))+_till(PSf.c2), fmt(sgPenTodayBase(PSf,2))+" (today's money)"]);
           }
+          [1,2].forEach(n=>{ const L=PSf["sgl"+n]; if(L && L.annual>0){ const a0=n===2 ? (ageFromDOB(val("c2d"))||a1age) : a1age;
+            const _e=(L.end!=null && isFinite(L.end));
+            rows.push([(_e ? "CPF Retirement Sum Scheme (" : "CPF LIFE (")+(val(n===2?"c2f":"c1f")||("Client "+n))+")", (cyNow+Math.max(0,L.start-a0))+(_e ? " until about age "+L.end : " through rest of life"), fmt(sgLifeToday(PSf,n))+" (today's money)"]); } });
           if(sav>0) rows.push(["Committed annual savings", cyNow+" until retirement ("+retYear+")", fmt(sav)]);
           const surplusExtra=Math.max(0,surplus-sav);
           if(surplusExtra>1000) rows.push(["Additional cash-flow surplus (unallocated)", cyNow+" until retirement", fmt(surplusExtra)]);
@@ -34953,9 +35125,10 @@ function drawFanChart(){
         // Swiss pillars follow the CLIENTS (a Swiss spouse behind a non-Swiss client 1 included).
         const chSw=chHouseholdSwiss();
         const I=chSw?chPensionInputs():null, plan=I?chLumpPlan(I):null, pillarTot=plan?plan.real:0;
+        const sgOn=typeof sgHousehold==="function" && sgHousehold();   // Singapore: CPF and CPF LIFE
         const on1=PSr.c1.src!=="none" && PSr.c1.base>0, on2=hasC2 && PSr.c2.src!=="none" && PSr.c2.base>0;
         const pkAny=(PSr.pk1||0)+(PSr.pk2||0)>0;   // a pension-fund annuity already in payment
-        if(!(on1 || on2 || pkAny || (chSw&&pillarTot>0))) return;
+        if(!(on1 || on2 || pkAny || (chSw&&pillarTot>0) || sgOn)) return;
         newPage();
         sectionH2("Retirement Pensions");
         const cn=(COUNTRY_ACCOUNTS[cc]&&COUNTRY_ACCOUNTS[cc].name)||cc;
@@ -34963,15 +35136,17 @@ function drawFanChart(){
         const colaLbl={full:"Rises with inflation",partial:"Rises with half of inflation",none:"Fixed amount - not indexed"};
         const n1=(val("c1f")||"Client 1"), n2=(val("c2f")||"Client 2"), cyNow=currentYear();
         const penName=(k)=>{ const s=k===1?PSr.c1:PSr.c2; const c=k===1?cc:(val("c2co")||cc);
-          return s.src==="auto" ? ((penDefaultsFor(c).name||"State pension")+" (estimated)") : "Pension as entered by the adviser"; };
+          return s.src==="auto" ? (((s.sg && s.end!=null && isFinite(s.end)) ? "CPF Retirement Sum Scheme" : (penDefaultsFor(c).name||"State pension"))+" (estimated)") : "Pension as entered by the adviser"; };
         const prows=[];
         [[1,on1,n1],[2,on2,n2]].forEach(([k,on,nm])=>{ if(!on) return; const s=k===1?PSr.c1:PSr.c2;
           const startYr=cyNow+Math.max(0,s.start-_chAgeNow(k));
-          prows.push([nm, penName(k), fmt(s.base)+"/yr", "age "+s.start+" ("+startYr+")", colaLbl[s.cola]||""]); });
+          prows.push([nm, penName(k), fmt(s.base)+"/yr", "age "+s.start+" ("+startYr+")", s.esc ? "Rises 2% a year (Escalating plan)" : (colaLbl[s.cola]||"")]); });
         [[1,PSr.pk1,n1],[2,PSr.pk2,n2]].forEach(([k,pk,nm])=>{ if(!(pk>0)) return;
           prows.push([nm, "Pension-fund annuity (2nd pillar)", fmt(pk)+"/yr", "already in payment", colaLbl.none]); });
+        [[1,PSr.sgl1,n1],[2,PSr.sgl2,n2]].forEach(([k,L,nm])=>{ if(!L || !(L.annual>0)) return;   // CPF LIFE of a client living outside Singapore
+          prows.push([nm, "CPF LIFE (Singapore)", fmt(L.annual)+"/yr", "age "+L.start+" ("+(cyNow+Math.max(0,L.start-_chAgeNow(k)))+")", L.esc ? "Rises 2% a year (Escalating plan)" : colaLbl.none]); });
         if(prows.length){
-          para("Pensions credited in the simulation from each start age - amounts in today's money (an indexed pension also keeps pace with inflation until it starts):");
+          para("Pensions credited in the simulation from each start age - amounts in today's money (an indexed pension also keeps pace with inflation until it starts)"+(sgOn?"; CPF LIFE is the model's payout in the money of its start year":"")+":");
           tbl(["Client","Pension","Annual benefit","Starts","Indexation"], prows);
           if(isCH && PSr.couple){
             para("Married couple, both AHV pensions estimated: each draws on their own record until both pensions are in payment ("+n1+" "+fmt(PSr.couple.solo1)+" / "+n2+" "+fmt(PSr.couple.solo2)+" a year), then the split, capped amounts above apply - together at most "+fmt(ahvCoupleCap())+" a year (150% of the maximum pension, 13 payments incl. the 13th AHV pension).", INK_SOFT);
@@ -35045,8 +35220,39 @@ function drawFanChart(){
             para("The annuity insures against outliving the money and typically carries a survivor pension (~60%); the lump sum keeps capital flexible and inheritable but carries the market and longevity risk, and once invested it pays wealth tax (included above) and income tax on its dividends and interest (the return used is after that tax; capital gains are tax-free for private investors). Many funds allow a partial split - confirm the fund's rules. The projection in this report assumes the lump sum.", INK_SOFT);
           }
           para("Illustrative - federal, cantonal, communal and church taxes from the official ESTV tax calculator (tax year "+CH_TAX_YEAR+", "+chMuniRates(plan.canton)+"): capital withdrawals at age 65, the annuity as pension income after the standard pensioner deductions, wealth after the cantonal tax-free allowances; "+chTaxDesc(f0)+". Actual tax also depends on other deductions and the year. Not tax or financial advice.", MUTED);
-        } else if(prows.length){
+        } else if(prows.length && !(sgOn && sgAllResident())){
           para("Pension benefits are generally taxed as ordinary income; the simulation credits them from each configured start age with the selected indexation. Not tax advice.", MUTED);
+        }
+        if(sgOn){
+          // The same model as the Singapore panel and the projections (sgPensionInputs / sgClientProject).
+          const G=sgPensionInputs(), S=v=>fmtMoneyIn(v,"SGD",true), Bx=v=>CURRENT_CCY==="SGD" ? "" : " ("+fmt(toBase(v,"SGD"))+")";
+          const infR=Math.max(0, num("inf",2.8))/100, planL={std:"Standard", esc:"Escalating", basic:"Basic"};
+          para("Singapore - CPF and CPF LIFE. Singapore has no state pension: citizens and permanent residents save in the CPF, whose Retirement Account (set aside at 55) buys CPF LIFE, a lifelong annuity paid from 65 (or as late as 70), tax-free in Singapore. Each client's CPF is projected year by year from today with the same model as the simulation: the 2026 and 2027 contribution and allocation rates on wages up to SGD 102,000 a year, 2.5% interest on the Ordinary Account and 4% on the Special, MediSave and Retirement Accounts plus extra interest, and the cohort retirement sums. Amounts in SGD"+(CURRENT_CCY!=="SGD"?", with "+CURRENT_CCY+" at today's rate in brackets":"")+".");
+          [1,2].forEach(n=>{ const C=G.c[n]; if(!C) return;
+            const age=_chAgeNow(n), q=sgClientProject(G, n, age, Math.max(2, 100-age)); if(!q) return;
+            const r0=q.rows[0], L=q.life, rows=[];
+            rows.push([C.name+" - CPF status", (SG_STATUS_LBL[C.status]||C.status)+(C.resident?"":"; lives outside Singapore, so no new contributions")]);
+            rows.push(["CPF today: Ordinary / Special / MediSave / Retirement", [r0.oa,r0.sa,r0.ma,r0.ra].map(S).join(" / ")]);
+            if((q.cpfC[0]||0)>0) rows.push(["CPF contributions this year", S(q.cpfC[0])+": "+S(q.emp[0])+" from pay"+(taxCountry()==="SG"?" (tax-deductible)":"")+", "+S(q.cpfC[0]-q.emp[0])+" from the employer"]);
+            if(q.at55 && (q.at55.ra>0 || q.at55.free>0)) rows.push(["At 55 ("+q.at55.year+")", "Retirement Account set aside "+S(q.at55.ra)+" (Full Retirement Sum "+S(q.at55.frs)+(G.target==="brs"?", Basic with a property pledge":G.target==="ers"?", topped up towards the Enhanced sum":"")+"); "+S(q.at55.free)+" can be withdrawn"+(q.at55.met?"":" (the retirement sum is not met: "+((q.topUp && q.topUp.t>0.5) ? "the rest of the Ordinary Account tops the Retirement Account up when CPF LIFE starts" : "the rest becomes withdrawable once later contributions meet it")+")")]);
+            const wy=q.wd.findIndex(x=>x>0);
+            if(wy>=0) rows.push(["Ordinary Account paid out", S(q.wd[wy])+Bx(q.wd[wy])+" at "+(age+wy)+" ("+(cyNow+wy)+"), tax-free, into the plan's investments"]);
+            if(L && L.kind!=="none"){
+              rows.push([(L.kind==="life"?"CPF LIFE "+planL[G.plan]:"Retirement Sum Scheme")+" from "+L.start+" ("+L.year+")",
+                S(L.monthly)+" a month = "+S(L.annual)+" a year"+Bx(L.annual)+(L.kind==="life"?(L.esc?", rising 2% a year":", level for life"):", until the savings run out")
+                +"; "+S(L.annual/Math.pow(1+infR, Math.max(0, L.year-cyNow)))+" a year in today's money"]);
+              if(L.kind==="life"){
+                const alt=["std","esc","basic"].map(p=>planL[p]+" "+S(sgLifePayout(L.P, L.start, q.born, C.sex, p).monthly));
+                const d70=L.start<70 ? {life:sgLifeDeferred(L.P, L.start, 70, q.born, C.sex, G.plan)} : null;   // the same premium, left in the RA to 70
+                rows.push(["Premium "+S(L.P)+": the plans compared (a month at "+L.start+")", alt.join(", ")+(d70 && d70.life && d70.life.kind==="life" ? "; "+planL[G.plan]+" deferred to 70: "+S(d70.life.monthly) : "")]);
+              }
+              if(C.startTyped){ const sr=n===2 ? PSr.c2 : PSr.c1; rows.push(["Payout used in the projection", "the CPF LIFE payout typed on the Goals tab: "+fmt(sr.base)+" a year from age "+sr.start+" (the modelled payout above is for comparison)"]); }
+            } else rows.push(["CPF LIFE", q.inPayment ? ((C.resident && (n===2 ? on2 : on1) && (n===2 ? PSr.c2 : PSr.c1).src==="manual") ? "already being paid (the pension table above holds the payout typed from the CPF statement)" : C.resident ? "already being paid; type the payout from the CPF statement on the Goals tab to include it" : "already being paid; add the payout from the CPF statement to the pension field on the Goals tab") : C.status==="fr" && !(r0.oa+r0.sa+r0.ma+r0.ra>0) ? "none (foreigners on a work pass do not contribute to CPF)" : "none projected"]);
+            const sy=q.srsW.findIndex(x=>x>0);
+            if(sy>=0) rows.push(["SRS (prescribed retirement age "+C.srsAge+")", "withdrawn from "+(age+sy)+" over "+q.srsW.filter(x=>x>0).length+" years, "+S(q.srsW[sy])+" in the first"+(taxCountry()==="SG"?"; half of each withdrawal is taxable":"; taxed under the rules of the tax country")+((q.srsC[0]||0)>0?"; contributions "+S(q.srsC[0])+" a year while working"+(taxCountry()==="SG"?" (tax-deductible)":""):"")]);
+            kv(rows);
+          });
+          para("CPF publishes no payout formula: CPF LIFE is fitted to CPF's 2026 Standard-plan estimates for men (within about SGD 5 a month); the Escalating (about 78% of Standard at the start, then +2% a year), Basic (about 90%) and female (about 93%) factors are approximations. The 4% interest floor is guaranteed to the end of 2027 and assumed to continue; retirement sums after 2027 are taken to rise 3.5% a year and the wage ceilings to stay at 2026 levels. Housing use of the Ordinary Account is not modelled. Illustrative, not financial or tax advice; confirm with the member's CPF statement.", MUTED);
         }
       },
       // ─── WHAT-IF SCENARIOS ──
@@ -35301,8 +35507,9 @@ function drawFanChart(){
         { const _sw=chHouseholdSwiss(), _swAll=_sw && chAllResident();
           if(_sw) para("Swiss pillars (for each Swiss client, whichever client they are): while the client works, the pension fund is credited each year with the BVG minimum retirement credits on the coordinated salary (the salary up to CHF 90,720 less the coordination deduction (Koordinationsabzug) of CHF 26,460, nothing below the CHF 22,680 entry threshold; 7%, 10%, 15% or 18% by age) or with the savings contributions from the client's pension certificate (moving with the salary and the BVG age bands until 65), and with the client's pillar 3a payments up to the legal limit (CHF 7,258 a year with a pension fund). The employee's half of the pension-fund credit and the 3a payments come out of the surplus and are deducted from taxable income. The pension fund and vested benefits earn the interest the fund credits (the BVG minimum of 1.25% unless the fund's rate is entered), pillar 3a 3.5%. At retirement (60 to 70, or the planned withdrawal age set in the panel) the pension fund pays its capital in one tranche and pillar 3a and vested benefits in up to the yearly tranches chosen (staggering: one account closed per year, ending in the withdrawal year and never before 60); each calendar year is taxed at the canton's capital-withdrawal rate (a married couple's same-year withdrawals together) and the net is invested. There is no annual drawdown from the pillars. Pillars belong to the client named as owner on each account (joint accounts half each). A client not resident in Switzerland gets this treatment for their Swiss pillar accounts only; their other retirement accounts follow their own country's rules.");
           if(chIncomeTaxOn() && getApplyTax()) para("Income tax (Switzerland): each year's federal, cantonal, communal and church income tax comes from the official ESTV tax tables (tax year "+CH_TAX_YEAR+", "+chMuniLabel()+"; "+(_chHasC2() && chTariff()!=="m" ? assetOwnerName("c1")+": "+chTaxDesc(1)+"; "+assetOwnerName("c2")+": "+chTaxDesc(2) : chTaxDesc(1))+"): salaries after the employee's AHV/IV/EO, unemployment and accident-insurance contributions and the pension-fund and 3a contributions, with the work-expense, second-earner and child deductions; pensions after the pensioner deductions. Amounts are taken in today's money, as Swiss tariffs are indexed for inflation.");
-          if(!_swAll) para("Retirement drawdown"+(_sw?" (retirement accounts other than Swiss pillars, of a client not resident in Switzerland)":"")+": a voluntary 4% drawdown from the client's retirement accounts begins at that client's own retirement age. The pool is split between the clients by each account's owner (joint accounts half each). "+(householdMinRule().rule.pdf||"")+""); }
-        para("Pensions are entered in today's money; an indexed pension keeps pace with inflation until it starts and adjusts by its indexation setting afterwards. "+((chHouseholdSwiss() || val("c1co")==="CH" || val("c2co")==="CH")?"An estimated AHV pension uses the official scale (full contribution record, 13 payments a year incl. the 13th pension); a married couple's two AHV pensions, estimated or entered, are capped at 150% of the maximum once both are paid (applied at the reference age, before each spouse's own early-draw cut or deferral supplement), and drawing an estimated pension early or late applies the AHV reduction or supplement. ":"")+(chHouseholdSwiss() || (!chFxOk() && (val("c1co")==="CH" || val("c2co")==="CH")) ? "A pension-fund annuity already in payment is added as a fixed amount. ":"")+"Each client's salary stops at their own retirement age.");
+          if(typeof sgHousehold==="function" && sgHousehold()) para("Singapore CPF (for each client resident in Singapore or holding CPF or SRS accounts): the CPF and SRS accounts are projected outside the retirement pool, year by year from today and the same in every simulated path. A citizen or PR employed in Singapore contributes on wages up to SGD 8,000 a month and SGD 102,000 a year at the 2026 rates (from 2027 the higher rates for 55-65), allocated to the Ordinary, Special and MediSave accounts by age; the employee's share comes out of pay"+(taxCountry()==="SG"?" and is tax-deductible":"")+". Interest is 2.5% on the Ordinary Account and 4% on the others, plus extra interest on the first SGD 60,000. At 55 the Special Account closes and the Retirement Account is set aside up to the cohort's retirement sum; the Ordinary Account above it is paid into the plan's investments, tax-free, "+(sgPensionInputs().oaWd==="55"?"at 55":"at retirement (not before 55)")+". From the CPF LIFE start age the Retirement Account buys the annuity, credited as a pension"+(taxCountry()==="SG"?", tax-free":"")+". SRS grows at the retirement-pool rate and is withdrawn over 10 years from the later of its prescribed retirement age and retirement"+(taxCountry()==="SG"?", half of each withdrawal taxable":"")+"."+(taxCountry()==="SG"?" Singapore income tax uses the resident rates from YA 2024, after CPF and SRS relief; CPF LIFE and CPF withdrawals are not taxed.":""));
+          if(!_swAll) para("Retirement drawdown"+(_sw?" (retirement accounts other than Swiss pillars, of a client not resident in Switzerland)":"")+": a voluntary 4% drawdown from the client's retirement accounts begins at that client's own retirement age. The pool is split between the clients by each account's owner (joint accounts half each). "+(householdMinRule().rule.pdf||"")+(typeof sgHousehold==="function" && sgHousehold()?" CPF and SRS accounts are not drawn this way: they follow the CPF rules above.":"")); }
+        para("Pensions are entered in today's money; an indexed pension keeps pace with inflation until it starts and adjusts by its indexation setting afterwards. "+((typeof sgHousehold==="function" && sgHousehold())?"CPF LIFE comes from the CPF model as a nominal amount at its start age (level, or rising 2% a year on the Escalating plan). ":"")+((chHouseholdSwiss() || val("c1co")==="CH" || val("c2co")==="CH")?"An estimated AHV pension uses the official scale (full contribution record, 13 payments a year incl. the 13th pension); a married couple's two AHV pensions, estimated or entered, are capped at 150% of the maximum once both are paid (applied at the reference age, before each spouse's own early-draw cut or deferral supplement), and drawing an estimated pension early or late applies the AHV reduction or supplement. ":"")+(chHouseholdSwiss() || (!chFxOk() && (val("c1co")==="CH" || val("c2co")==="CH")) ? "A pension-fund annuity already in payment is added as a fixed amount. ":"")+"Each client's salary stops at their own retirement age.");
         para("Inflation: All expenses, retirement spend, and pension indexation compound at the configured annual inflation rate.");
         { const used=fxInUse();
           para("Currency: every figure in this report is in "+CURRENT_CCY+", the household currency."+(used.length
@@ -35313,6 +35520,8 @@ function drawFanChart(){
                 const s=fxJoin(k)||"items"; return s.charAt(0).toUpperCase()+s.slice(1); })()+" held in "+fxJoin(used)+" keep their own amounts and are converted to "+CURRENT_CCY+" at the rates below. Future exchange-rate moves are not simulated: a foreign-currency holding is projected on the "+CURRENT_CCY+" return assumptions, as if its currency risk were hedged."
             : ""));
           if(CURRENT_CCY!=="CHF" && (val("c1co")==="CH" || taxCountry()==="CH")) para("With "+CURRENT_CCY+" as the household currency, Swiss income tax uses the general Swiss brackets and the pillar accounts are projected as ordinary retirement savings; the official Swiss tax tables and the pillar payout model are used for a CHF household.");
+          if(CURRENT_CCY!=="SGD" && typeof sgHousehold==="function" && sgHousehold()){ const i=fxInfo("SGD");
+            para("The CPF and SRS rules are set in SGD and converted to "+CURRENT_CCY+" at 1 SGD = "+(i.missing?"1 (no rate)":fxFmtRate(i.rate))+" "+CURRENT_CCY+" ("+(FX_SRC_LABEL[i.src]||i.src)+(i.asOf?", "+fxFmtDate(i.asOf):"")+")."); }
           if(used.length) tbl(["Currency","1 unit in "+CURRENT_CCY,"Source","Rate date"],
             used.map(c=>{ const i=fxInfo(c); return [c, i.missing?"no rate (counted 1:1)":fxFmtRate(i.rate), FX_SRC_LABEL[i.src]||i.src, fxFmtDate(i.asOf)||"-"]; }),
             { columnStyles:{0:{cellWidth:28},1:{halign:"right"}} }); }
@@ -36697,7 +36906,7 @@ function chPillarRun(I, canton, spread, opts){
     else { bvg = n === first ? I.p2 : 0; fz = 0; }
     const p3 = opts.bvgToday ? 0 : (I.aP3 > 0 ? _chShare(o.p3, I.aP3, I.p3, n) : (n === first ? I.p3 : 0));
     // A Swiss resident's other locked accounts are paid with the pension fund, as in the projection.
-    const oth = (!opts.bvgToday && chResident(n)) ? Math.max(0, seed * (shares["c" + n] || 0) - o.bvg - o.fz - o.p3) : 0;
+    const oth = (!opts.bvgToday && chResident(n)) ? Math.max(0, seed * (shares["c" + n] || 0) - o.bvg - o.fz - o.p3 - (typeof _sgOut === "function" ? _sgOut(n) : 0)) : 0;
     return { bvg, fz, p3, oth, ext:0, n3:Math.max(1, o.n3 || 0), nfz:Math.max(1, o.nfz || 0), cc:"CH",
       hasPF: o.bvg > 0 || P.bvgCert[n] != null || (I.aP2 <= 0 && bvg > 0), bvgDone:false, p3Start:null }; };
   const st = { 1: part(1), 2: part(2) };
@@ -36846,6 +37055,482 @@ function _chSyncInputs(I){
 // A panel field left empty shows the automatic figure again once it loses focus.
 document.addEventListener("focusout", e=>{ const id=e.target && e.target.id;
   if(id && CH_PANEL_IDS.includes(id) && !_chTouched(id)) setTimeout(()=>{ try{ renderCHLumpSum(); }catch(_){} }, 0); });
+// ═══════════════════════════════════════════════════════════════════════════
+// SINGAPORE: CPF, CPF LIFE AND SRS (begin)
+// Singapore has no pay-as-you-go state pension. Retirement income rests on the CPF:
+// mandatory, fully funded accounts for citizens and permanent residents (Ordinary,
+// Special, MediSave and, from 55, Retirement Account), whose Retirement Account buys
+// the CPF LIFE national annuity from 65 (deferrable to 70); and the voluntary SRS.
+// Rules as of 2026 in SGD (CPF, IRAS, MOF and MOM pages). The engines use one
+// deterministic projection per client (sgCpfProject), run from today, so the panel,
+// the PDF, the Monte Carlo and the cash-flow table show the same numbers.
+// ═══════════════════════════════════════════════════════════════════════════
+const SG_RULES={
+  year:2026,
+  owCeilM:8000, annualCeil:102000,              // ordinary-wage ceiling a month, annual salary ceiling (OW + AW)
+  // Contribution rates (total, employee) by age band: 55 and below, above 55-60, 60-65, 65-70, above 70.
+  rates:{2026:[[.37,.20],[.34,.18],[.25,.125],[.165,.075],[.125,.05]],
+         2027:[[.37,.20],[.355,.19],[.26,.13],[.165,.075],[.125,.05]]},
+  // Permanent residents in their first two years: graduated employer and employee rates (G/G).
+  pr1:[[.09,.05],[.09,.05],[.085,.05],[.085,.05],[.085,.05]],
+  pr2:[[.24,.15],[.185,.125],[.11,.075],[.085,.05],[.085,.05]],
+  // Allocation of each contribution: below 55 OA/SA/MA (35 and below, 35-45, 45-50, 50-55); from 55 OA/RA/MA.
+  allocLt55:[[35,[.6217,.1621,.2162]],[45,[.5677,.1891,.2432]],[50,[.5136,.2162,.2702]],[55,[.4055,.3108,.2837]]],
+  alloc55:{2026:[[60,[.353,.3382,.3088]],[65,[.14,.44,.42]],[70,[.0607,.303,.6363]],[999,[.08,.08,.84]]],
+           2027:[[60,[.3382,.3661,.2957]],[65,[.1347,.4615,.4038]],[70,[.0607,.303,.6363]],[999,[.08,.08,.84]]]},
+  rOA:.025, rSMRA:.04,                          // OA legislated minimum; SA, MA and RA floor (extended to end-2027)
+  // Full Retirement Sum by the year a member turns 55 (the Minimum Sum before 2016; the Basic is half; the
+  // Enhanced, for top-ups, twice the current year's FRS since 2025). Fixed for life at the cohort value;
+  // 3.5% a year assumed after 2027.
+  frs:{2013:148000,2014:155000,2015:161000,2016:161000,2017:166000,2018:171000,2019:176000,2020:181000,2021:186000,2022:192000,2023:198800,2024:205800,2025:213000,2026:220400,2027:228200},
+  frsGrowth:.035,
+  // Basic Healthcare Sum (MediSave cap), fixed at the value of the year a member turns 65; 4.6% a year assumed after 2026.
+  bhs:{2021:63000,2022:66000,2023:68500,2024:71500,2025:75500,2026:79000}, bhsGrowth:.046,
+  // CPF LIFE: payout eligibility 65, start deferrable to 70. Standard plan, male, 2026 basis: a fit to CPF's
+  // published estimates (monthly = 62.5 + 0.0050938 x RA at 65; CPF publishes no formula). Deferral adds
+  // about 6.7% a year. Escalating starts about 22% lower and rises 2% a year; Basic about 10% lower.
+  lifeA:62.5, lifeB:.0050938, lifeDefer:.067, lifeMin:60000, lifeBornFrom:1958,
+  planF:{std:1, esc:.78, basic:.90}, escRate:.02, femaleF:.93,
+  srsCap:{res:15300, fr:35700}, srsTaxable:.5, srsYears:10,
+  reliefCap:80000,
+  minWd55:5000
+};
+function sgFrs(y){ const t=SG_RULES.frs, k=Object.keys(t).map(Number), lo=Math.min(...k), hi=Math.max(...k);
+  if(t[y]) return t[y];
+  return Math.round(y>hi ? t[hi]*Math.pow(1+SG_RULES.frsGrowth, y-hi)/100 : t[lo]/Math.pow(1+SG_RULES.frsGrowth, lo-y)/100)*100; }
+function sgBhs(y){ const t=SG_RULES.bhs, k=Object.keys(t).map(Number), lo=Math.min(...k), hi=Math.max(...k);
+  if(t[y]) return t[y];
+  return y>hi ? t[hi]*Math.pow(1+SG_RULES.bhsGrowth, y-hi) : t[lo]/Math.pow(1+SG_RULES.bhsGrowth, lo-y); }
+function _sgBand(a){ return a<55?0 : a<60?1 : a<65?2 : a<70?3 : 4; }
+// A year's contribution on TW (yearly wages subject to CPF): total, employee share, employer share.
+function sgContribution(tw, a, cy, status, y){
+  if(!(tw>0) || status==="fr") return {c:0, ee:0, er:0};
+  const b=_sgBand(a), full=SG_RULES.rates[cy>=2027?2027:2026][b];
+  const r=(status==="pr1" && y===0) ? SG_RULES.pr1[b] : ((status==="pr1" && y===1) || (status==="pr2" && y===0)) ? SG_RULES.pr2[b] : full;
+  const twm=tw/12, erR=r[0]-r[1];
+  if(twm<=50) return {c:0, ee:0, er:0};
+  if(twm<=500) return {c:erR*tw, ee:0, er:erR*tw};
+  if(twm<=750){ const k=3*r[1], ee=k*(tw-6000); return {c:erR*tw+ee, ee, er:erR*tw}; }
+  return {c:r[0]*tw, ee:r[1]*tw, er:(r[0]-r[1])*tw};
+}
+function _sgAlloc(a, cy){ const t=a<55 ? SG_RULES.allocLt55 : SG_RULES.alloc55[cy>=2027?2027:2026];
+  for(const [top,v] of t) if(a<top) return v; return t[t.length-1][1]; }
+// Extra interest: below 55, 1% on the first 60,000 (OA counts up to 20,000); from 55, 2% on the
+// first 30,000 and 1% on the next 30,000.
+function _sgExtra(a, oa, sa, ma, ra){ const base=Math.min(60000, Math.min(oa,20000)+sa+ma+ra);
+  return a<55 ? .01*base : .02*Math.min(base,30000)+.01*Math.max(0,base-30000); }
+// The CPF LIFE payout for a premium P paid at age `start`: monthly amount at the start, how it moves.
+// Below the 60,000 inclusion threshold, or born before 1958, the Retirement Sum Scheme pays instead:
+// at least 350 a month until the savings run out (taken as a level payout of the RA to 90 at 4%, over
+// at least 10 years for a late start, and over the whole years the floor lasts; CPF states only the floor).
+function sgLifePayout(P, start, born, sex, plan){
+  const R=SG_RULES, d=Math.max(0, Math.min(5, start-65));
+  if(!(P>0)) return {kind:"none", monthly:0, annual:0, esc:0, end:start, P:0, std:0};
+  if(born<R.lifeBornFrom || P<R.lifeMin){
+    const r=R.rSMRA, af=n=>P*r/(1-Math.pow(1+r,-n));
+    let n=Math.max(10, 90-start);
+    // At the 350 floor the savings last fewer years: over the whole years they last at the floor, a level
+    // payout that uses them up exactly (at least 350 a month, and never more than the RA holds).
+    if(af(n)<4200) n=Math.max(1, Math.floor(-Math.log(1-r*P/4200)/Math.log(1+r)));
+    const pay=af(n);
+    return {kind:"rss", monthly:pay/12, annual:pay, esc:0, end:start+n, P, std:pay/12};
+  }
+  // The fitted rate is for the RA at 65: a later start is taken back to its 65 equivalent first.
+  let p65=P; for(let i=0;i<d;i++) p65=(p65-_sgExtra(65,0,0,0,p65))/(1+R.rSMRA);
+  const std=(R.lifeA+R.lifeB*p65)*(1+R.lifeDefer*d)*(sex==="f"?R.femaleF:1);
+  const f=R.planF[plan]||1, m=std*f;
+  return {kind:"life", monthly:m, annual:m*12, esc:plan==="esc"?R.escRate:0, end:Infinity, P, std, p65};
+}
+// The same premium left in the RA until `to` (4% plus extra interest), then paid out: the deferral
+// comparison, with nothing else in the plan changed.
+function sgLifeDeferred(P, start, to, born, sex, plan){
+  let p=P; for(let a=start; a<to; a++) p=p*(1+SG_RULES.rSMRA)+_sgExtra(a,0,0,0,p);
+  return Object.assign(sgLifePayout(p, to, born, sex, plan), {start:to});
+}
+// One client's CPF and SRS, year by year from today (SGD, nominal). Year y runs from the client's
+// birthday at age age0+y (age-years, as CPF's bands do). Each year: events at its start (the RA formed
+// at 55, CPF LIFE starting, the OA withdrawn to the plan's own accounts, an SRS tranche, a What-If
+// withdrawal), then the year's contributions and interest. Arrays are indexed by y; bal[y] is the
+// balance at the start of year y.
+//   c = {age0, cy0, born, sex, status:"sc"|"pr1"|"pr2"|"fr", oa, sa, ma, ra, srs,
+//        wages(y) -> {ow, aw} yearly SGD while employed in Singapore (0 otherwise), working(y),
+//        target:"frs"|"brs"|"ers", plan:"std"|"esc"|"basic", start (65-70), oaAge (OA withdrawn from),
+//        payout (false: no CPF LIFE, the RA is kept), srsC, srsAge (prescribed), srsFrom, srsCap,
+//        srsMu (growth), draw ({y, amt}: a What-If withdrawal, SRS first, then the OA that can be
+//        withdrawn), years}
+function sgCpfProject(c){
+  const R=SG_RULES, Y=Math.max(1, c.years|0);
+  let oa=Math.max(0,+c.oa||0), sa=Math.max(0,+c.sa||0), ma=Math.max(0,+c.ma||0), ra=Math.max(0,+c.ra||0), srs=Math.max(0,+c.srs||0);
+  // Cohort sums by the year the client turns 55; labels by the app's own year convention (year y is today's
+  // year + y, as in the cash-flow table).
+  const A=c.age0, yr=a=>c.cy0+(a-A), frsC=sgFrs(c.born+55), brsC=frsC/2;
+  // What the RA must hold before the OA can be withdrawn: the FRS, or the Basic sum with a property pledge.
+  const setAside=c.target==="brs" ? brsC : frsC;
+  const out={born:c.born, bal:[], cpf:[], spend:[], wd:[], emp:[], er:[], cpfC:[], srsC:[], srsW:[], wiTake:[], wiSrs:[], wiOa:[], wiLeft:0,
+    rows:[], at55:null, at65:null, life:null, inPayment:false, frsC, brsC};
+  const start=Math.max(65, Math.min(70, Math.round(+c.start||65)));
+  const payAge=Math.max(start, A>70 ? A : start);
+  // Past 65 with an empty Retirement Account: CPF LIFE is already being paid (the premium was taken when
+  // it started), so nothing is projected; the payout is the figure on the CPF statement.
+  let formed=A>55, paid=false, five=false, srsOn=false;
+  // Already past 55: the Special Account is closed, its savings go to the RA up to the FRS, then the OA
+  // (at exactly 55 the RA is formed in year 0, with the SGD 5,000 set aside first).
+  if(A>55 && sa>0){ const x=Math.min(sa, Math.max(0, frsC-ra)); ra+=x; oa+=sa-x; sa=0; }
+  if(A>=65 && !(ra>0) && c.status!=="fr" && (oa+sa+ma)>0){ paid=true; out.inPayment=true; }
+  // The retirement-sum choice: an OA top-up to the Enhanced sum, or the RA above the Basic sum released
+  // with a property pledge. At 55, or today for a client already past it (transfers are allowed any time).
+  const target=ersNow=>{ if(paid) return;
+    if(c.target==="ers"){ const t=Math.min(oa, Math.max(0, ersNow-ra)); ra+=t; oa-=t; }
+    else if(c.target==="brs" && ra>brsC){ oa+=ra-brsC; ra=brsC; } };
+  if(formed) target(2*sgFrs(c.cy0));
+  const keep=[], pre=[];   // years the OA is kept for the top-up at the payout start (their capital is fixed below)
+  // The OA that can be withdrawn now: above what the RA still needs to reach its set-aside, and in any
+  // case up to SGD 5,000 once from 55 (CPF's minimum right when the FRS is not met).
+  const free=()=>{ const need=paid ? 0 : Math.max(0, setAside-ra); return Math.max(Math.max(0, oa-need), five ? 0 : Math.min(oa, R.minWd55)); };
+  const sweepAge=Math.max(55, c.oaAge||55), topCap=a=>c.target==="ers" ? 2*sgFrs(c.born+a) : frsC;
+  for(let y=0;y<=Y;y++){
+    const a=A+y, cy=c.cy0+y;
+    const cpf=oa+sa+ma+ra;
+    out.bal.push(cpf+srs); out.cpf.push(cpf);
+    // What will come back as capital: before the RA is formed, the OA and SA above the sum it will take
+    // (at least the SGD 5,000); once formed, the OA that can be withdrawn (if it is paid out before CPF LIFE
+    // starts) or what the top-up at the payout start leaves; and the SRS. The RA buys CPF LIFE; MediSave is
+    // for healthcare only.
+    let sp;
+    if(!formed){ const tgt=c.target==="ers" ? 2*sgFrs(c.born+55) : setAside; sp=Math.max(c.target==="ers" ? 0 : Math.min(oa+sa, R.minWd55), oa+sa+ra-tgt);
+      if(sweepAge>=payAge && c.payout!==false) pre.push([y, sp]); }
+    else if(paid) sp=oa;
+    else if(sweepAge<payAge || c.payout===false) sp=free();
+    else { sp=oa; keep.push(y); }
+    out.spend.push(Math.max(0, sp)+srs);
+    out.rows.push({y, age:a, year:cy, oa, sa, ma, ra, srs});
+    if(y===Y) break;
+    let wd=0, srsW=0;
+    // ── at the start of the year ──
+    if(!formed && a>=55){
+      const keepOA=Math.min(oa, R.minWd55), keepSA=Math.min(sa, R.minWd55-keepOA);   // set aside in the OA first
+      const x=Math.min(sa-keepSA, Math.max(0, frsC-ra)); ra+=x; sa-=x;
+      const z=Math.min(oa-keepOA, Math.max(0, frsC-ra)); ra+=z; oa-=z;
+      oa+=sa; sa=0;   // the Special Account closes at 55
+      target(2*sgFrs(c.born+55));
+      formed=true;
+      out.at55={age:a, year:yr(55), frs:frsC, brs:brsC, ers:2*sgFrs(c.born+55), ra, oa, free:free(), met:ra>=setAside-0.5};
+    }
+    if(a===65 && !paid) out.at65={age:a, year:yr(65), ra, oa, ma};
+    if(!paid && c.payout!==false && a>=payAge){
+      // Just before payouts start the OA tops the RA up to the FRS (born 1958 or later), to the ERS if chosen.
+      if(c.born>=R.lifeBornFrom){ const t=Math.min(oa, Math.max(0, topCap(a)-ra)); ra+=t; oa-=t; out.topUp={y, t}; }
+      out.life=Object.assign(sgLifePayout(ra, a, c.born, c.sex, c.plan), {start:a, year:yr(a)});
+      ra=0; paid=true;
+    }
+    if(formed && a>=sweepAge){ const f=free(); if(f>0){ wd=f; oa-=f; five=true; } }
+    if(srs>0 && a>=c.srsFrom){ srsOn=true; srsW=srs/Math.max(1, c.srsFrom+R.srsYears-a); srs-=srsW; }
+    // A What-If withdrawal in this year: the OA that can already be withdrawn (from 55, tax-free), then the
+    // SRS (penalty-free only from its prescribed age). Whatever they cannot cover is left for the other
+    // retirement accounts.
+    let wiS=0, wiO=0;
+    if(c.draw && c.draw.y===y && c.draw.amt>0){
+      if(formed && a>=55){ wiO=Math.min(free(), c.draw.amt); oa-=wiO; if(wiO>0) five=true; }
+      wiS=Math.min(srs, c.draw.amt-wiO); srs-=wiS;
+      out.wiLeft=c.draw.amt-wiS-wiO;
+    }
+    // ── during the year: contributions and interest ──
+    const w=(c.wages && c.status!=="fr") ? c.wages(y) : {ow:0, aw:0};
+    const owY=Math.min(Math.max(0,+w.ow||0), 12*R.owCeilM), awY=Math.min(Math.max(0,+w.aw||0), Math.max(0, R.annualCeil-owY));
+    const k=sgContribution(owY+awY, a, cy, c.status, y);
+    const al=_sgAlloc(a, cy), cMA=k.c*al[2], cSR=k.c*al[1], cOA=k.c-cMA-cSR;
+    const rO=R.rOA, rS=R.rSMRA;
+    if(a<55){
+      const ei=_sgExtra(a, oa, sa, ma, 0);
+      oa=oa*(1+rO)+cOA*(1+rO/2); sa=sa*(1+rS)+cSR*(1+rS/2)+ei; ma=ma*(1+rS)+cMA*(1+rS/2);
+      const bhs=sgBhs(cy); if(ma>bhs){ const of=ma-bhs, x=Math.min(of, Math.max(0, sgFrs(cy)-sa)); ma=bhs; sa+=x; oa+=of-x; }
+    } else {
+      // After payouts start, later inflows go to the OA (taken as the premium already covering the FRS).
+      const toRA=paid ? 0 : Math.min(cSR, Math.max(0, frsC-ra)), ei=paid ? 0 : _sgExtra(a, oa, 0, ma, ra);
+      if(!paid) ra=ra*(1+rS)+toRA*(1+rS/2)+ei;
+      oa=oa*(1+rO)+(cOA+cSR-toRA)*(1+rO/2); ma=ma*(1+rS)+cMA*(1+rS/2);
+      const bhs=sgBhs(a>=65 ? c.born+65 : cy);
+      if(ma>bhs){ const of=ma-bhs, x=paid ? 0 : Math.min(of, Math.max(0, frsC-ra)); ma=bhs; ra+=x; oa+=of-x; }
+    }
+    let sc=0;
+    if(!srsOn && c.srsC>0 && c.working && c.working(y)) sc=Math.min(c.srsC, c.srsCap||R.srsCap.res);
+    srs=srs*(1+(c.srsMu||0))+sc;
+    out.wd.push(wd); out.srsW.push(srsW); out.emp.push(k.ee); out.er.push(k.er); out.cpfC.push(k.c); out.srsC.push(sc);
+    out.wiTake.push(wiS+wiO); out.wiSrs.push(wiS); out.wiOa.push(wiO);
+  }
+  // The OA kept until CPF LIFE starts: what comes back as capital is the OA less the top-up it will actually
+  // pay into the RA at the start (taken back to each year at the OA rate), not less a cap the RA may reach
+  // by itself.
+  const tAt=y=>{ const T=out.topUp; return (T && T.y>=y) ? T.t/Math.pow(1+R.rOA, T.y-y) : 0; };
+  keep.forEach(y=>{ const r=out.rows[y]; out.spend[y]=Math.max(0, r.oa-tAt(y))+r.srs; });
+  pre.forEach(([y, sp])=>{ const r=out.rows[y], t=tAt(y); out.spend[y]=Math.max(t>0 || c.target==="ers" ? 0 : Math.min(r.oa+r.sa, R.minWd55), sp-t)+r.srs; });
+  return out;
+}
+// ── Who gets the Singapore treatment: per CLIENT ─────────────────────────────
+// A Singapore resident (citizen, PR or foreigner: the CPF status in the panel decides whether CPF
+// is paid), or anyone holding CPF or SRS accounts. Those accounts leave the engines' retirement
+// pool and follow this model instead; any other locked account keeps its own country's rules.
+const SG_ACCT_KEYS={cpf_oa:"oa", cpf_sa:"sa", cpf_ma:"ma", cpf_ra:"ra", srs:"srs"};
+function _sgSgd(a){ return fxCode(a.ccy)==="SGD" ? (+fxNat(a,"value")||0) : fromBase(+a.value||0, "SGD"); }
+// Today's CPF and SRS balances per owner, in SGD (joint split 50/50; no owner: client 1), and the
+// household-currency value of the same accounts in the engines' pools (ret: with a withdrawal age,
+// flat: held at their value, MediSave).
+function sgOwnerCpf(){
+  const hasC2=_chHasC2(), z=()=>({oa:0,sa:0,ma:0,ra:0,srs:0,ret:0,flat:0,n:0,cpfN:0}), o={c1:z(), c2:z()};
+  (typeof assets!=="undefined" ? assets : []).forEach(a=>{ const k=SG_ACCT_KEYS[a.type]; if(!k || a.liquid) return;
+    const v=Math.max(0,+a.value||0), s=Math.max(0,_sgSgd(a)), inRet=a.withdrawAge>0;
+    const add=(t,f)=>{ t[k]+=s*f; t[inRet?"ret":"flat"]+=v*f; if(s>0){ t.n++; if(k!=="srs") t.cpfN++; } };   // cpfN: CPF accounts (SRS is open to foreigners)
+    if(hasC2 && a.owner==="c2") add(o.c2,1); else if(hasC2 && a.owner==="joint"){ add(o.c1,.5); add(o.c2,.5); } else add(o.c1,1); });
+  return o;
+}
+function sgResident(n){ if(n===2 && !_chHasC2()) return false; return (n===2 ? (val("c2co")||val("c1co")||"") : (val("c1co")||""))==="SG"; }
+function sgClient(n){ if(n===2 && !_chHasC2()) return false; return sgResident(n) || sgOwnerCpf()["c"+n].n>0; }
+function sgHousehold(){ return sgClient(1) || sgClient(2); }
+// The household-currency value of client n's CPF and SRS accounts in the retirement pool, for the
+// views that split that pool themselves (the Swiss pillar plan, the minimum-withdrawal schedule).
+function _sgFlat(){ if(typeof assets==="undefined" || !sgHousehold()) return 0; const o=sgOwnerCpf(); return (sgClient(1) ? o.c1.flat : 0)+(sgClient(2) ? o.c2.flat : 0); }
+function _sgOut(n){ return (typeof assets!=="undefined" && sgClient(n)) ? sgOwnerCpf()["c"+n].ret : 0; }
+function sgAllResident(){ return sgResident(1) && (!_chHasC2() || sgResident(2)); }
+// Panel inputs: the automatic choice until the advisor changes one (saved with the client).
+const SG_PANEL_IDS=["sgStatus1","sgStatus2","sgSex1","sgSex2","sgTarget","sgPlan","sgStart1","sgStart2","sgOaWd","sgSrsC1","sgSrsC2","sgSrsAge1","sgSrsAge2"];
+const SG_PANEL_DEFAULTS={}; SG_PANEL_IDS.forEach(id=>{ const e=$(id); if(e) SG_PANEL_DEFAULTS[id]=e.value; });
+function _sgNum(id){ if(!_chTouched(id)) return null; const v=num(id, NaN); return (isFinite(v) && v>=0) ? v : null; }
+// Everything the panel, the PDF and the engines compute from: the same numbers in all of them.
+function sgPensionInputs(){
+  const own=sgOwnerCpf(), hasC2=_chHasC2();
+  const sel=(id,ok,d)=>{ const v=_chTouched(id) ? val(id) : d; return ok.includes(v) ? v : d; };
+  const I={own, hasC2, target:sel("sgTarget",["frs","brs","ers"],"frs"), plan:sel("sgPlan",["std","esc","basic"],"std"),
+    oaWd:sel("sgOaWd",["ret","55"],"ret"), c:{1:null, 2:null}};
+  [1,2].forEach(n=>{ if(!sgClient(n)) return; const o=own["c"+n];
+    // Without any CPF account on the Assets tab (SRS does not count: foreigners may hold one) a resident is
+    // taken as a foreigner on a work pass (no CPF): projecting contributions nobody entered would invent
+    // money. The panel says so.
+    const statusAuto=o.cpfN>0 ? "sc" : "fr", status=sel("sgStatus"+n,["sc","pr1","pr2","fr"],statusAuto);
+    const srsAuto=o.srs>0 ? 63 : 64, sa=_chTouched("sgSrsAge"+n) ? Math.round(+val("sgSrsAge"+n)) : srsAuto;
+    // The CPF LIFE start (65-70): the panel's, or for a Singapore resident with a CPF LIFE payout typed
+    // on the Goals tab, the start age typed there (the Retirement Account must leave at that age).
+    const resident=sgResident(n), sfx=n===2 ? "2" : "", typed=resident && status!=="fr" && (val("penSrc"+sfx)||"auto")==="manual";   // a foreigner's typed pension is a home-country one
+    const st=Math.round(typed ? num("penStartAge"+sfx,65) : (_chTouched("sgStart"+n) ? num("sgStart"+n,65) : 65));
+    I.c[n]={n, name:assetOwnerName("c"+n), resident, status, statusAuto, sex:sel("sgSex"+n,["m","f"],"m"), o,
+      start:isFinite(st) ? Math.min(70, Math.max(65, st)) : 65, startTyped:typed,
+      srsC:Math.max(0, _sgNum("sgSrsC"+n)||0), srsAge:[62,63,64].includes(sa) ? sa : srsAuto, srsAuto,
+      srsCap:status==="fr" ? SG_RULES.srsCap.fr : SG_RULES.srsCap.res, retAge:retAgeFor(n)}; });
+  return I;
+}
+// One client's projection from their age in the calling engine's year 0. Wages are the client's
+// primary income (ordinary wages) and secondary income (additional wages, e.g. a bonus), growing as the
+// engines grow them; CPF is paid only by a citizen or PR employed in Singapore, until retirement.
+// opts: incF(y), a What-If income factor for year y; draw {y, amt}, a What-If withdrawal.
+function sgClientProject(I, n, age0, years, opts){
+  const C=I.c[n]; if(!C) return null; opts=opts||{};
+  const k=fxRate(CURRENT_CCY,"SGD"), raise=num("raise",3)/100, cy0=currentYear();
+  const dob=String(val(n===2?"c2d":"c1d")||""), born=/^\d{4}/.test(dob) ? +dob.slice(0,4) : cy0-age0;
+  const ow0=n===2 ? num("inc1b",0) : num("inc1",0), aw0=n===2 ? num("inc2b",0) : num("inc2",0);
+  const works=y=>age0+y<C.retAge, cpf=C.resident && C.status!=="fr";
+  return sgCpfProject({age0, cy0, born, sex:C.sex, status:C.status, oa:C.o.oa, sa:C.o.sa, ma:C.o.ma, ra:C.o.ra, srs:C.o.srs,
+    wages:y=>{ if(!(cpf && works(y))) return {ow:0, aw:0}; const f=Math.pow(1+raise,y)*(opts.incF ? opts.incF(y) : 1); return {ow:ow0*k*f, aw:aw0*k*f}; },
+    working:y=>C.resident && works(y),
+    target:I.target, plan:I.plan, start:C.start, oaAge:I.oaWd==="55" ? 55 : Math.max(55, C.retAge), draw:opts.draw||null,
+    payout:!(C.resident && (val(n===2?"penSrc2":"penSrc")||"auto")==="none"),
+    srsC:C.srsC, srsCap:C.srsCap, srsFrom:Math.max(C.srsAge, C.retAge), srsMu:RET_POOL_MU, years});
+}
+// Everything the year-by-year engines need, read once per run, in the household currency
+// (null: nobody in the household has CPF or SRS). One deterministic schedule: CPF earns its
+// guaranteed rates and SRS the retirement-pool rate in every simulated path.
+function sgCpfSetup(age1, age2, years){
+  if(!sgHousehold()) return null;
+  const I=sgPensionInputs(), kx=toBase(1,"SGD"), Y=Math.max(2, (years|0)+2), cy0=currentYear();
+  // A What-If run: its timed income changes reach the wages CPF is paid on (the factor runMC applies,
+  // while client 1 works), and a pension withdrawal comes out of the SRS and the OA that can be
+  // withdrawn first (client 1's, then client 2's); runMC takes any rest from the other accounts.
+  const ev=(typeof _wiTimedEvents!=="undefined" && _wiTimedEvents) ? _wiTimedEvents.filter(e=>e.kind==="incomePct") : [];
+  const incF=ev.length ? (y=>{ if(age1+y>=retAgeFor(1)) return 1; let f=1; ev.forEach(e=>{ if(cy0+y>=e.startYear && cy0+y<=e.endYear) f*=1+(+e.value||0)/100; }); return f; }) : null;
+  const dr=(typeof _wiPensionDraw!=="undefined" && _wiPensionDraw) ? _wiPensionDraw : null;
+  const dy=dr ? (+dr.age||0)-age1 : -1, damt=dr ? Math.max(0, +dr.amt||0)/kx : 0, hasDraw=dy>=0 && dy<Y && damt>0;
+  const p={1:sgClientProject(I, 1, age1, Y, {incF, draw:hasDraw ? {y:dy, amt:damt} : null})};
+  const left1=!hasDraw ? 0 : p[1] ? p[1].wiLeft : damt;
+  p[2]=I.hasC2 ? sgClientProject(I, 2, age2==null ? age1 : age2, Y, {incF, draw:left1>0.005 ? {y:dy, amt:left1} : null}) : null;
+  if(!p[1] && !p[2]) return null;
+  const G={I, kx, p, on1:!!p[1], on2:!!p[2], age:{1:age1, 2:age2==null?age1:age2},
+    life:{1:p[1] ? p[1].life : null, 2:p[2] ? p[2].life : null},
+    out1:p[1] ? I.own.c1.ret : 0, out2:p[2] ? I.own.c2.ret : 0, flat:(p[1] ? I.own.c1.flat : 0)+(p[2] ? I.own.c2.flat : 0),
+    bal:[], spend:[], wd:[], emp:[], ded:[], srsW1:[], srsW2:[], srsC:[], cpfC:[], prem:[], ev:[], wiTake:[]};
+  const at=(q,f,y)=>q && q[f][y]!=null ? q[f][y] : (q && q[f].length && (f==="bal"||f==="spend") ? q[f][q[f].length-1] : 0);
+  for(let y=0;y<=Y;y++){
+    G.bal.push((at(p[1],"bal",y)+at(p[2],"bal",y))*kx); G.spend.push((at(p[1],"spend",y)+at(p[2],"spend",y))*kx);
+    G.wd.push((at(p[1],"wd",y)+at(p[2],"wd",y))*kx); G.srsW1.push(at(p[1],"srsW",y)*kx); G.srsW2.push(at(p[2],"srsW",y)*kx);
+    G.emp.push((at(p[1],"emp",y)+at(p[2],"emp",y)+at(p[1],"srsC",y)+at(p[2],"srsC",y))*kx);
+    G.srsC.push((at(p[1],"srsC",y)+at(p[2],"srsC",y))*kx); G.cpfC.push((at(p[1],"cpfC",y)+at(p[2],"cpfC",y))*kx);
+    // Tax relief: the employee's compulsory CPF and the SRS contributions, within SGD 80,000 a person.
+    G.ded.push([1,2].reduce((s,n)=>s+Math.min(SG_RULES.reliefCap, at(p[n],"emp",y)+at(p[n],"srsC",y))*kx, 0));
+    G.wiTake.push((at(p[1],"wiTake",y)+at(p[2],"wiTake",y))*kx);
+    G.prem.push(0); G.ev.push([]);
+  }
+  [1,2].forEach(n=>{ const q=p[n]; if(!q) return; const a0=G.age[n], who=G.on1 && G.on2 ? I.c[n].name+": " : "";
+    if(q.at55 && q.at55.age>=a0 && q.at55.ra>0){ const y=q.at55.age-a0; if(y<=Y) G.ev[y].push(who+"CPF RA formed, "+fmtMoneyIn(q.at55.ra,"SGD",true)+" set aside"); }
+    if(q.life && q.life.kind!=="none"){ const y=q.life.start-a0; if(y>=0 && y<=Y){ G.prem[y]+=q.life.P*kx;
+      G.ev[y].push(who+(I.c[n].startTyped ? "CPF LIFE starts (the payout typed on the Goals tab)" : (q.life.kind==="life" ? "CPF LIFE starts, " : "CPF retirement payouts start, ")+fmtMoneyIn(q.life.monthly,"SGD",true)+" a month")); } }
+    const w=q.wd.findIndex(x=>x>0); if(w>=0 && w<=Y) G.ev[w].push(who+"CPF OA paid out "+fmtMoneyIn(q.wd[w],"SGD",true));
+    const s=q.srsW.findIndex(x=>x>0); if(s>=0 && s<=Y) G.ev[s].push(who+"SRS withdrawals start");
+  });
+  return G;
+}
+// Client n's CPF LIFE estimate for the Goals tab's pension field (household currency, a year).
+function sgPensionEstimate(n){
+  const I=sgPensionInputs(); if(!I.c[n]) return null;
+  const a=n===2 ? (ageFromDOB(val("c2d"))||ageFromDOB(val("c1d"))||35) : (ageFromDOB(val("c1d"))||35);
+  const q=sgClientProject(I, n, a, Math.max(2, 71-a)), L=q && q.life;
+  return {annual:L && L.kind!=="none" ? L.annual*toBase(1,"SGD") : 0, start:L && L.kind!=="none" ? L.start : I.c[n].start, life:L, q, I, n};
+}
+// Today's employee CPF and SRS contributions (out of pay) and, in Singapore tax, the relief on them,
+// in the household currency: the year-1 surplus figures agree with the cash-flow table's first row.
+function sgTodayAdj(){
+  if(typeof sgHousehold!=="function" || !sgHousehold()) return {emp:0, ded:0};
+  // Today's figures, never a What-If scenario's timed income change or withdrawal (its surplus readout is
+  // today's, as for every other income line).
+  const a1=ageFromDOB(val("c1d"))||30, ev=_wiTimedEvents, dr=_wiPensionDraw; let G=null;
+  try{ _wiTimedEvents=null; _wiPensionDraw=null; G=sgCpfSetup(a1, ageFromDOB(val("c2d"))||a1, 1); } finally { _wiTimedEvents=ev; _wiPensionDraw=dr; }
+  return G ? {emp:G.emp[0]||0, ded:taxCountry()==="SG" ? (G.ded[0]||0) : 0} : {emp:0, ded:0};
+}
+// A Singapore resident's estimated CPF LIFE is the model's nominal payout at its start: the report's
+// summaries, which speak in today's money, show it taken back to today at the plan's inflation.
+function sgLifeToday(S, n){ const L=S && S["sgl"+n]; if(!L) return 0;   // a non-resident's CPF LIFE, in today's money
+  const inf=Math.max(0, num("inf",2.8))/100, a0=n===2 ? S.ageNow2 : S.ageNow1; return L.annual/Math.pow(1+inf, Math.max(0, L.start-a0)); }
+function sgPenTodayBase(S, n){ const r=S && S["c"+n]; if(!r) return 0; if(!r.sg || r.src!=="auto") return r.base;
+  const inf=Math.max(0, num("inf",2.8))/100, a0=n===2 ? S.ageNow2 : S.ageNow1; return r.base/Math.pow(1+inf, Math.max(0, r.start-a0)); }
+// ── The Singapore panel (Simulation tab): inputs, results, saved with the client ──
+function sgPanelState(){ const s={}; SG_PANEL_IDS.forEach(id=>{ if(_chTouched(id)) s[id]=$(id).value; }); return s; }
+function resetSGPanels(saved){
+  SG_PANEL_IDS.forEach(id=>{ const e=$(id); if(!e) return; delete e.dataset.touched; e.disabled=false; e.value=(SG_PANEL_DEFAULTS[id]!=null ? SG_PANEL_DEFAULTS[id] : ""); });
+  if(saved && typeof saved==="object") SG_PANEL_IDS.forEach(id=>{ const v=saved[id], e=$(id); if(v==null || !e) return;
+    if(e.tagName==="SELECT" && ![...e.options].some(o=>o.value===String(v))) return;
+    e.value=v; e.dataset.touched="1"; });
+}
+window.resetSGPanels=resetSGPanels;
+// A panel choice moves the CPF LIFE estimate on the Goals tab and every projection.
+function sgPanelChanged(el){
+  _chMark(el);
+  try{ refreshPensionEstimates(); }catch(_){}
+  renderSGPension();
+  try{ refreshTopMetrics(); }catch(_){}
+}
+window.sgPanelChanged=sgPanelChanged;
+// A start age typed on the Goals tab for a Singapore resident's ESTIMATED CPF LIFE is the panel's
+// start age (65-70), so the two never disagree; the field then shows the age the model uses.
+// While typing, only a complete age of 65-70 is taken (a first digit is left alone); on commit (change)
+// anything else is clamped into 65-70.
+function sgStartFromGoals(n, commit){
+  if(!sgResident(n) || (val(n===2 ? "penSrc2" : "penSrc")||"auto")!=="auto") return false;
+  const id=n===2 ? "penStartAge2" : "penStartAge", e=$("sgStart"+n), v=Math.round(num(id, NaN));
+  if(n===2) _pen2AgeEdited=false; else _penAgeEdited=false;   // the start age is the panel's, not a typed one
+  if(!isFinite(v) || ((v<65 || v>70) && !commit)) return true;
+  const c=Math.min(70, Math.max(65, v));
+  if(e){ e.value=c; e.dataset.touched="1"; }
+  if(commit && $(id)) $(id).value=c;
+  try{ refreshPensionEstimates(); }catch(_){}
+  try{ renderSGPension(); }catch(_){}
+  return true;
+}
+document.addEventListener("change", e=>{ const id=e.target && e.target.id;
+  if(id==="penStartAge" || id==="penStartAge2") try{ sgStartFromGoals(id==="penStartAge2" ? 2 : 1, true); }catch(_){} });
+// Untouched inputs show the automatic choice; rows per client, named.
+function _sgSyncInputs(I){
+  const set=(id,v)=>{ const e=$(id); if(e && !_chTouched(id) && e!==document.activeElement) e.value=v; };
+  [1,2].forEach(n=>{ const C=I.c[n];
+    ["sgStatus","sgSex","sgStart","sgSrsC","sgSrsAge"].forEach(p=>{ const r=$(p+n+"Row"); if(r) r.style.display=C ? "" : "none"; });
+    if(!C) return;
+    setT("sgStatus"+n+"Lbl","CPF status, "+C.name); setT("sgSex"+n+"Lbl","Sex, "+C.name+" (CPF LIFE)");
+    setT("sgStart"+n+"Lbl","CPF LIFE payout start, "+C.name+(C.startTyped ? " (typed on the Goals tab)" : ""));
+    setT("sgSrsC"+n+"Lbl","SRS contributions a year, "+C.name); setT("sgSrsAge"+n+"Lbl","SRS prescribed retirement age, "+C.name);
+    const st=$("sgStart"+n); if(st){ st.disabled=!!C.startTyped;
+      // typed on the Goals tab, untouched, or an out-of-range entry: show the age the model uses (today's age
+      // for a client already past it with a Retirement Account still to annuitise)
+      const a=_chAgeNow(n), eff=(C.o.ra>0 && a>C.start && a<=70) ? a : C.start;
+      if(st!==document.activeElement && (C.startTyped || !_chTouched("sgStart"+n) || +st.value!==eff)) st.value=eff; }
+    const s0=$("sgStatus"+n); if(s0 && s0.options[0]) s0.options[0].textContent="Automatic: "+(C.statusAuto==="sc" ? "Citizen or PR (CPF accounts entered)" : "Foreigner, no CPF (no CPF accounts entered)");
+    const q=$("sgSrsC"+n); if(q) q.placeholder="up to "+Math.round(C.srsCap).toLocaleString();
+    const a=$("sgSrsAge"+n); if(a && a.options[0]) a.options[0].textContent="Automatic: "+C.srsAuto+(C.o.srs>0 ? " (an existing account)" : " (a new account)");
+  });
+}
+// Leaving a panel field shows what the model uses (the automatic figure, or an entry clamped into range).
+document.addEventListener("focusout", e=>{ const id=e.target && e.target.id;
+  if(id && SG_PANEL_IDS.includes(id)) setTimeout(()=>{ try{ renderSGPension(); }catch(_){} }, 0); });
+function updateSGPensionVisibility(){
+  const panel=$("sgPensionPanel"); if(!panel) return;
+  const on=sgHousehold(); panel.style.display=on ? "" : "none";
+  if(!on) return;
+  // The Goals tab's CPF LIFE estimate follows the CPF balances, salary and ages (the engines recompute it
+  // themselves; the field would otherwise show the figure of the last refresh).
+  if([1,2].some(n=>sgResident(n) && (val(n===2 ? "penSrc2" : "penSrc")||"auto")==="auto")){ try{ refreshPensionEstimates(); }catch(_){} }
+  try{ renderSGPension(); }catch(e){ console.warn("renderSGPension", e); }
+}
+window.updateSGPensionVisibility=updateSGPensionVisibility;
+const SG_STATUS_LBL={sc:"Citizen or PR", pr1:"PR, first year", pr2:"PR, second year", fr:"Foreigner (no CPF)"};
+const SG_PLAN_LBL={std:"Standard", esc:"Escalating", basic:"Basic"};
+const SG_SUM_LBL={frs:"Full Retirement Sum", brs:"Basic Retirement Sum", ers:"Full Retirement Sum"};
+function renderSGPension(){
+  const host=$("sgPenResult"); if(!host) return;
+  const I=sgPensionInputs(); _sgSyncInputs(I);
+  const S=v=>fmtMoneyIn(v,"SGD",true), B=v=>CURRENT_CCY==="SGD" ? "" : ' <span style="font-size:10.5px;color:var(--text3)">('+fmtMoney(toBase(v,"SGD"))+')</span>';
+  const inf=Math.max(0, num("inf",2.8))/100, cy0=currentYear();
+  const box='padding:12px 14px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)';
+  const cap='font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';
+  const line=(l,v)=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><span style="color:var(--text3)">'+l+'</span><span style="font-variant-numeric:tabular-nums;color:var(--text2)">'+v+'</span></div>';
+  const note=$("sgPenFillNote"); if(note) note.textContent="Balances from the client's CPF and SRS accounts on the Assets tab"+(CURRENT_CCY!=="SGD" ? " (in SGD; household figures at today's rate)" : "")+". CPF LIFE goes to the pension field on the Goals tab.";
+  let h="";
+  [1,2].forEach(n=>{ const C=I.c[n]; if(!C) return;
+    const age=_chAgeNow(n), q=sgClientProject(I, n, age, Math.max(2, 100-age)); if(!q) return;
+    const L=q.life, r0=q.rows[0], defl=yr=>Math.pow(1+inf, Math.max(0, yr-cy0)), yrAt=a=>cy0+(a-age);   // the app's year convention
+    h+='<div style="margin-bottom:14px">';
+    h+='<div style="font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:8px">'+_daEsc(C.name)+' · '+SG_STATUS_LBL[C.status]+' · age '+age+(C.resident ? '' : ' · lives outside Singapore')+'</div>';
+    h+='<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;margin-bottom:10px">';
+    // CPF LIFE
+    h+='<div style="flex:1;min-width:220px;'+box+'"><div style="'+cap+'">'+(L && L.kind==="rss" ? "Retirement Sum Scheme" : "CPF LIFE "+SG_PLAN_LBL[I.plan])+(L && L.kind!=="none" ? " from "+L.start+" ("+L.year+")" : "")+'</div>';
+    if(L && L.kind!=="none"){
+      h+='<div style="font-size:28px;font-weight:800;color:var(--text)">'+S(L.monthly)+'<span style="font-size:13px;font-weight:600;color:var(--text3)"> a month</span></div>';
+      h+='<div style="font-size:12px;color:var(--text3);margin-top:3px">'+S(L.annual)+' a year'+B(L.annual)+', tax-free in Singapore · '+S(L.annual/defl(L.year))+' a year in today\'s money'
+        +(L.kind==="life" ? (L.esc ? ' · rising 2% a year' : ' · level for life') : ' · until the savings run out (about age '+Math.min(110,L.end)+')')+'</div>';
+      h+='<div style="font-size:11px;color:var(--text3);margin-top:5px">Premium: the Retirement Account of '+S(L.P)+B(L.P)+(L.kind==="life" ? ' · payout '+(L.annual/L.P*100).toFixed(2)+'% of it a year' : '')+'</div>';
+      if(C.startTyped) h+='<div style="font-size:11px;color:var(--text3);margin-top:5px">The pension field on the Goals tab holds a typed CPF LIFE payout: that figure is what the projection pays from '+C.start+'.</div>';
+    } else h+='<div style="font-size:13px;color:var(--text3);line-height:1.6">'+(q.inPayment
+        ? 'CPF LIFE is already being paid (past 65 with no Retirement Account balance). '+(C.resident ? 'Type the monthly payout from the CPF statement, times 12, in the pension field on the Goals tab.' : 'Add the payout from the CPF statement to the pension field on the Goals tab.')
+        : C.status==="fr" && !(r0.oa+r0.sa+r0.ma+r0.ra>0) ? 'None: foreigners on an Employment Pass, S Pass or Work Permit do not contribute to CPF. If '+_daEsc(C.name)+' is a citizen or PR, choose that status above and add the CPF balances on the Assets tab.'
+        : (C.resident && (val(n===2 ? "penSrc2" : "penSrc")||"auto")==="none" && (r0.oa+r0.sa+r0.ma+r0.ra)>0) ? 'Excluded: the pension programme on the Goals tab is set to None, so no CPF LIFE is paid and the Retirement Account is kept as a balance.'
+        : 'None projected: add the CPF balances on the Assets tab.')+'</div>';
+    h+='</div>';
+    // Today and this year
+    h+='<div style="flex:1;min-width:220px;'+box+';font-size:12px"><div style="'+cap+'">CPF and SRS today</div>';
+    [["Ordinary Account (OA)",r0.oa],["Special Account (SA)",r0.sa],["MediSave (MA)",r0.ma],["Retirement Account (RA)",r0.ra],["SRS",r0.srs]].forEach(([l,v])=>{ if(v>0.5 || l.indexOf("OA")>0) h+=line(l, S(v)); });
+    const c0=q.cpfC[0]||0, e0=q.emp[0]||0;
+    h+='<div style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px">'+(c0>0
+      ? line("CPF contributions this year", S(c0))+line("of which from pay (employee)", S(e0))+line("employer, on top of pay", S(c0-e0))
+      : '<div style="color:var(--text3);line-height:1.5">'+(C.status==="fr" ? 'No CPF contributions (foreigner).' : !C.resident ? 'No contributions: not employed in Singapore.' : age>=C.retAge ? 'Retired: no further contributions.' : 'No contributions: no salary entered.')+'</div>')
+      +((q.srsC[0]||0)>0 ? line("SRS contribution this year", S(q.srsC[0])) : '')+'</div>';
+    h+='</div></div>';
+    // Milestones
+    h+='<div style="font-size:11.5px;color:var(--text3);line-height:1.6;'+box+'">';
+    if(q.at55 && (q.at55.ra>0 || q.at55.free>0)) h+='<div><strong style="color:var(--text2)">At 55 ('+q.at55.year+')</strong>: Retirement Account set aside '+S(q.at55.ra)+' (cohort Full Retirement Sum '+S(q.at55.frs)+', Basic '+S(q.at55.brs)+')'
+      +(q.at55.met ? '' : ' <span style="color:var(--amber)">below the '+SG_SUM_LBL[I.target]+': only SGD 5,000 of the Ordinary Account can be withdrawn until '+((q.topUp && q.topUp.t>0.5) ? 'the rest tops the Retirement Account up when CPF LIFE starts' : 'later contributions bring the Retirement Account up to it')+'</span>')
+      +'; '+S(q.at55.free)+' can be withdrawn.</div>';
+    else if(age>=55 && !q.inPayment && (r0.ra>0 || r0.oa>0)) h+='<div><strong style="color:var(--text2)">Retirement Account</strong> already formed (cohort Full Retirement Sum '+S(q.frsC)+(I.target==="ers" ? '; the Ordinary Account tops it up towards today\'s Enhanced sum now' : I.target==="brs" ? '; with a property pledge, the part above the Basic sum is released to the Ordinary Account' : '')+').</div>';
+    const wy=q.wd.findIndex(x=>x>0), wTot=q.wd.reduce((s,x)=>s+x,0);
+    if(wy>=0) h+='<div><strong style="color:var(--text2)">Ordinary Account paid out</strong> at '+(age+wy)+' ('+yrAt(age+wy)+'): '+S(q.wd[wy])+B(q.wd[wy])+(wTot>q.wd[wy]+1 ? ', then later inflows each year ('+S(wTot)+' in all)' : '')+', tax-free, into the plan\'s own investments.</div>';
+    if(L && L.kind==="life"){
+      const alt=["std","esc","basic"].map(p=>{ const x=sgLifePayout(L.P, L.start, q.born, C.sex, p); return SG_PLAN_LBL[p]+' '+S(x.monthly)+(p==="esc" ? ' rising' : ''); });
+      const d70=L.start<70 ? {life:sgLifeDeferred(L.P, L.start, 70, q.born, C.sex, I.plan)} : null;   // the same premium, left in the RA to 70
+      h+='<div><strong style="color:var(--text2)">Plans at '+L.start+'</strong> (same premium): '+alt.join(' · ')+(d70 && d70.life && d70.life.kind==="life" ? ' · '+SG_PLAN_LBL[I.plan]+' deferred to 70: '+S(d70.life.monthly) : '')+' a month.</div>';
+    }
+    const sy=q.srsW.findIndex(x=>x>0);
+    if(sy>=0){ const sTot=q.srsW.reduce((s,x)=>s+x,0); h+='<div><strong style="color:var(--text2)">SRS</strong>: withdrawn from '+(age+sy)+' over '+q.srsW.filter(x=>x>0).length+' years, '+S(q.srsW[sy])+' in the first ('+S(sTot)+' in all, prescribed retirement age '+C.srsAge+'); half of each withdrawal is taxable in Singapore.</div>'; }
+    else if(r0.srs>0 || C.srsC>0) h+='<div><strong style="color:var(--text2)">SRS</strong>: withdrawals from '+Math.max(C.srsAge, C.retAge)+' over 10 years; half of each is taxable.</div>';
+    if(!C.resident && (r0.oa+r0.sa+r0.ma+r0.ra)>0) h+='<div>Lives outside Singapore: no new contributions; the balances keep earning CPF interest and CPF LIFE is paid on top of the pension of the country of residence.</div>';
+    h+='</div></div>';
+  });
+  if(!h) h='<div style="font-size:12px;color:var(--text3);padding:10px 0">Add the client\'s CPF accounts (OA, SA, MediSave, RA) or SRS on the Assets tab to project CPF LIFE.</div>';
+  host.innerHTML=h;
+}
+window.renderSGPension=renderSGPension;
+// SINGAPORE: CPF, CPF LIFE AND SRS (end)
 // ── US-only features: Social Security, Roth conversions, IRS minimum distributions ──────────
 // Shown only for a US household (either client resident in the US; a blank country is not US).
 // Canada's RRIF and Australia's super minimums are those countries' own rules and appear under
@@ -36860,6 +37545,7 @@ function householdMinRule(){
 // The state pension in the household's own terms.
 function statePensionName(){
   if(usHousehold()) return (usResident(1) && (!_chHasC2() || usResident(2))) ? "Social Security" : "State pension / Social Security";
+  if(typeof sgAllResident==="function" && sgAllResident()) return "CPF LIFE (Singapore)";
   return (typeof chAllResident==="function" && chAllResident()) ? "AHV/AVS (1st pillar)" : "State pension";
 }
 // What the retirement-pool drawdown is, in the tooltips.
@@ -36867,7 +37553,7 @@ function _drawLbl(){ const r=householdMinRule().rule; return r.kind==="rmd" ? "R
 // Tax-wrapper examples for the tax-efficiency boxes, in the household's own terms.
 function taxWrapperNames(){
   const T={US:["Roth IRA, Roth 401(k), HSA","401(k), IRA, 403(b)"], CH:["None in Switzerland","Pension fund, vested benefits, pillar 3a"],
-    GB:["ISA, Lifetime ISA","SIPP, workplace pension"], CA:["TFSA","RRSP, RRIF"], JP:["NISA","iDeCo"]};
+    GB:["ISA, Lifetime ISA","SIPP, workplace pension"], CA:["TFSA","RRSP, RRIF"], JP:["NISA","iDeCo"], SG:["CPF (interest and CPF LIFE tax-free); no capital gains tax","SRS (half of withdrawals taxed)"]};
   const c1=val("c1co")||"", cs=[...new Set([c1, _chHasC2() ? (val("c2co")||c1) : ""].filter(Boolean))];
   const ts=cs.map(c=>T[c]||["Tax-free wrappers","Pensions and retirement accounts"]);
   // a couple in two countries: both sets of names; Switzerland's "none" only when nobody else has one
@@ -36877,12 +37563,14 @@ function taxWrapperNames(){
 // The cash-flow legend, in the household's own terms.
 function cfLegendHtml(){
   const hdr=cfPensionHeader(), H=householdMinRule(), r=H.rule, allCH=(typeof chAllResident==="function") && chHouseholdSwiss() && chAllResident(), us=usHousehold();
-  const pen=allCH ? "the AHV pension is credited from the claim age (with the chosen COLA treatment); the Swiss pillars are paid out as lump sums taxed at the capital-withdrawal rate (see the Notes column)"
+  const sgAll=(typeof sgAllResident==="function") && sgAllResident() && sgHousehold();
+  const pen=sgAll ? "CPF LIFE is paid from its start age (65-70) from the CPF model; the CPF Ordinary Account is paid out to the plan's accounts and SRS is withdrawn over 10 years (see the Notes column)"
+    : allCH ? "the AHV pension is credited from the claim age (with the chosen COLA treatment); the Swiss pillars are paid out as lump sums taxed at the capital-withdrawal rate (see the Notes column)"
     : "the state pension"+(us ? " / Social Security" : "")+" is credited from the configured start age (with the chosen COLA treatment)";
   const col=allCH ? "<strong>"+hdr+"</strong> combines the pensions in payment."
     : "<strong>"+hdr+"</strong> combines pensions and withdrawals from locked retirement accounts: a voluntary 4% a year from retirement"+(r.clause ? ", "+r.clause : "")+".";
   return "Deterministic projection at the household's mean return; the annual savings target goes to cash when the surplus allows; surplus above it counts as spending, except an unneeded retirement-account withdrawal, which is reinvested. In retirement, earned income → 0 and expenses swap to the inflation-adjusted retirement spend; "+pen+". "+col
-    +" <strong>Ret. pool</strong> shows the remaining retirement-account balance after each year's withdrawal. It grows at a <strong>fixed 3.5%/yr</strong> (fixed, intentionally decoupled from the household risk profile, the Portfolio Builder, and the Investment Proposal so an aggressive investment stance never affects the retirement reserve)."+(chHouseholdSwiss()?" A Swiss pension fund grows at the interest it credits instead (1.25% a year unless entered).":"")+" <strong>Income tax</strong> is recomputed each year on gross earned income + pensions + withdrawals (Switzerland: the official ESTV tables, in today's money, after social and pension contributions); the <strong>savings target</strong> is funded first each year from net cash flow.";
+    +" <strong>Ret. pool</strong> shows the remaining retirement-account balance after each year's withdrawal"+(sgHousehold() ? ", with the CPF and SRS balances (CPF at its guaranteed rates)" : "")+". It grows at a <strong>fixed 3.5%/yr</strong> (fixed, intentionally decoupled from the household risk profile, the Portfolio Builder, and the Investment Proposal so an aggressive investment stance never affects the retirement reserve)."+(chHouseholdSwiss()?" A Swiss pension fund grows at the interest it credits instead (1.25% a year unless entered).":"")+" <strong>Income tax</strong> is recomputed each year on gross earned income + pensions + withdrawals (Switzerland: the official ESTV tables, in today's money, after social and pension contributions); the <strong>savings target</strong> is funded first each year from net cash flow.";
 }
 var _usOnlyKey=null;
 function updateUSOnlyVisibility(){
@@ -36910,6 +37598,7 @@ function updateUSOnlyVisibility(){
 window.updateUSOnlyVisibility=updateUSOnlyVisibility; window.usHousehold=usHousehold; window.usResident=usResident;
 function updateCHPensionVisibility(){
   try{ updateUSOnlyVisibility(); }catch(e){ console.warn("updateUSOnlyVisibility", e); }
+  try{ updateSGPensionVisibility(); }catch(e){ console.warn("updateSGPensionVisibility", e); }
   const panel=document.getElementById("chPensionPanel");
   const anPanel=document.getElementById("chAnnuityPanel");
   if(!panel&&!anPanel) return;
@@ -37597,7 +38286,7 @@ function saveProfile(){
     assets,loans,goals,children,investments,proposals,insurances,equityComp,beneficiaries,whatIfScenarios,
     assetSeq,loanSeq,goalSeq,childSeq,invSeq,propSeq,insSeq,eqSeq,benSeq,whatIfSeq,pfLinkedAccountId,
     portfolios,activePfId,pfSeq,
-    chPanel:(typeof chPanelState==="function"?chPanelState():{})   // the advisor's own Swiss-panel inputs
+    chPanel:(typeof chPanelState==="function"?chPanelState():{}), sgPanel:(typeof sgPanelState==="function"?sgPanelState():{})   // the advisor's own Swiss-panel inputs
   };
   const blob=new Blob([JSON.stringify(profile,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
@@ -37634,6 +38323,7 @@ function _restoreProfileInner(p){
   // Swiss panels: the previous client's pillar balances / canton / assumptions must never
   // reach this client's panel or report — reset, then apply this client's own saved inputs.
   try{ if(typeof resetSwissPanels==="function") resetSwissPanels(p.chPanel); }catch(_){}
+  try{ if(typeof resetSGPanels==="function") resetSGPanels(p.sgPanel); }catch(_){}   // Singapore panel: the same
   // Missing keys (older profiles) reset to app defaults so the previous client's
   // values never leak into a newly loaded profile.
   PROFILE_FIELDS.forEach(id=>{ if(!$(id)) return;
@@ -37695,10 +38385,14 @@ function _restoreProfileInner(p){
   // Pension override flags belong to THIS profile (a previous client's manual edit must
   // not freeze this client's auto estimate, nor the reverse).
   try{ _penEdited=f.penSrc==="manual"; _pen2Edited=f.penSrc2==="manual";
-    _penAgeEdited=(f.penSrc||"auto")==="auto" && f.penStartAge!=null && +f.penStartAge!==(penDefaultsFor(f.c1co||"US").age||67);
-    _pen2AgeEdited=(f.penSrc2||"auto")==="auto" && f.penStartAge2!=null && +f.penStartAge2!==(penDefaultsFor(f.c2co||f.c1co||"US").age||67);
+    _penAgeEdited=(f.penSrc||"auto")==="auto" && f.penStartAge!=null && +f.penStartAge!==(penDefaultsFor(f.c1co||"US").age||67) && f.c1co!=="SG";   // Singapore: the CPF panel's start
+    _pen2AgeEdited=(f.penSrc2||"auto")==="auto" && f.penStartAge2!=null && +f.penStartAge2!==(penDefaultsFor(f.c2co||f.c1co||"US").age||67) && (f.c2co||f.c1co)!=="SG";
     _colaEdited=f.penCola!=null && f.penCola!==(penDefaultsFor(f.c1co||"US").cola||"full");
     _cola2Edited=f.penCola2!=null && f.penCola2!==(penDefaultsFor(f.c2co||f.c1co||"US").cola||"full"); }catch(_){}
+  // Singapore: a file saved before the CPF panel existed keeps an estimated CPF LIFE start typed on the Goals tab
+  // (66 or later, clamped to 70) as the panel's start. A newer file's start age is the model's, never pinned.
+  try{ [1,2].forEach(n=>{ const sfx=n===2?"2":"", st=+f["penStartAge"+sfx], co=n===2 ? (f.c2co||f.c1co) : f.c1co;
+    if(co==="SG" && (f["penSrc"+sfx]||"auto")==="auto" && st>65 && !p.sgPanel){ const e=$("sgStart"+n); if(e){ e.value=Math.min(70, st); e.dataset.touched="1"; } } }); }catch(_){}
   refreshAssetTypes(); onRegion(); syncAssetCountry();
   // Re-apply state selections after dropdowns are populated
   if(f.c1st){const s=$("c1st"); if(s&&[...s.options].some(o=>o.value===f.c1st)) s.value=f.c1st;}
@@ -37797,7 +38491,7 @@ function _buildShareProfile(){
     ccy:CURRENT_CCY, ccyManual:(typeof _ccyManual!=="undefined"?_ccyManual:false), fx:fxSnapshot(),   // a shared plan opens in its own currency
     assets, loans, goals, children, investments, proposals, insurances, equityComp, beneficiaries, whatIfScenarios,
     assetSeq, loanSeq, goalSeq, childSeq, invSeq, propSeq, insSeq, eqSeq, benSeq, whatIfSeq, pfLinkedAccountId,
-    chPanel:(typeof chPanelState==="function"?chPanelState():{})
+    chPanel:(typeof chPanelState==="function"?chPanelState():{}), sgPanel:(typeof sgPanelState==="function"?sgPanelState():{})
   };
 }
 function _b64uEncode(bytes){
@@ -38510,14 +39204,17 @@ document.addEventListener("DOMContentLoaded",function(){
       }
       if(d.type==="pension"){
         let h=title(cfPensionHeader());
-        const _pl=n=>"Client "+n+(usResident(n) ? " pension / Social Security" : chResident(n) ? " AHV" : " pension");
-        if(d.pen1) h+=row(_pl(1),fmtNN(d.pen1));
-        if(d.pen2) h+=row(_pl(2),fmtNN(d.pen2));
-        if(d.rmd1&&d.rmd2){
+        const _pl=n=>"Client "+n+(usResident(n) ? " pension / Social Security" : chResident(n) ? " AHV" : sgResident(n) ? " CPF LIFE" : " pension");
+        if(d.pen1-(d.cpf1||0)>0.5) h+=row(_pl(1),fmtNN(d.pen1-(d.cpf1||0)));
+        if(d.cpf1) h+=row("Client 1 CPF LIFE (Singapore)",fmtNN(d.cpf1));
+        if(d.pen2-(d.cpf2||0)>0.5) h+=row(_pl(2),fmtNN(d.pen2-(d.cpf2||0)));
+        if(d.cpf2) h+=row("Client 2 CPF LIFE (Singapore)",fmtNN(d.cpf2));
+        if(d.srs) h+=row("SRS withdrawal (half taxable in Singapore)",fmtNN(d.srs));
+        if(d.rmd1&&d.rmd2&&!d.srs){
           h+=row("Client 1 ret. pool drawdown",fmtNN(d.rmd1));
           h+=row("Client 2 ret. pool drawdown",fmtNN(d.rmd2));
-        } else if(d.rmd){
-          h+=row("Ret. pool drawdown ("+_drawLbl()+")",fmtNN(d.rmd));
+        } else if(d.rmd-(d.srs||0)>0.5){
+          h+=row("Ret. pool drawdown ("+_drawLbl()+")",fmtNN(d.rmd-(d.srs||0)));
         }
         if(d.total===0) h+=row("Not yet in receipt","-","ineu");
         h+=total("Total pension income",d.total);
@@ -38525,7 +39222,11 @@ document.addEventListener("DOMContentLoaded",function(){
       }
       if(d.type==="tax"){
         let h=title("Income tax breakdown");
-        h+=row(d.stateLbl?"Income before tax":"Taxable income",fmtNN(d.inc));
+        if(d.free>0){   // Singapore: CPF relief, tax-free CPF LIFE and half of the SRS withdrawals
+          h+=row("Income before tax",fmtNN(d.inc));
+          h+=row("Not taxed: CPF and SRS relief, CPF LIFE, half of SRS",fmtS(-d.free));
+          h+=row("Taxable income",fmtNN(Math.max(0,d.inc-d.free)));
+        } else h+=row(d.stateLbl?"Income before tax":"Taxable income",fmtNN(d.inc));
         if(d.fed)  h+=row("Federal income tax",fmtA(d.fed),"ineg");
         if(d.state)h+=row(d.stateLbl||"State / local tax",fmtA(d.state),"ineg");
         if(d.child)h+=row(d.childLbl||"Child benefit saving","+"+fmtA(d.child),"ipos");
@@ -38573,6 +39274,7 @@ document.addEventListener("DOMContentLoaded",function(){
         h+=row("Expenses",fmtS(-d.exp));
         if(d.debt) h+=row("Debt service",fmtS(-d.debt));
         if(d.pc) h+=row("Pillar contributions from pay (employee half + 3a)",fmtS(-d.pc));
+        if(d.cpf) h+=row("CPF (employee share) and SRS contributions from pay",fmtS(-d.cpf));
         h+='<div class="itr" style="border-top:1px solid rgba(255,255,255,.08);margin-top:4px;padding-top:4px"><span class="ilabel">Gross surplus (before savings)</span>'+fmtS(d.gross)+'</div>';
         if(d.sav) h+=row("Savings target deducted",fmtS(-d.sav));
         h+=total(isDeficit?"Net deficit":"Net surplus / deficit",Math.abs(d.net));
@@ -38608,6 +39310,10 @@ document.addEventListener("DOMContentLoaded",function(){
         if(d.bvgC) h+=row("Pension-fund contributions",fmtS(d.bvgC));
         if(d.p3C) h+=row("Pillar 3a payments",fmtS(d.p3C));
         if(d.rmd) h+=row("Drawdown ("+_drawLbl()+")",fmtS(-d.rmd));
+        if(d.sgInt) h+=row("CPF and SRS interest and growth",fmtS(d.sgInt));
+        if(d.sgC) h+=row("CPF contributions (employee + employer) and SRS",fmtS(d.sgC));
+        if(d.sgOut) h+=row("Paid out to the plan's accounts (CPF OA, SRS)",fmtS(-d.sgOut));
+        if(d.sgPrem) h+=row("Retirement Account used for CPF LIFE",fmtS(-d.sgPrem));
         h+='<div class="itr itotal"><span class="ilabel">Closing balance</span>'+fmtNN(d.close)+'</div>';
         return h;
       }
