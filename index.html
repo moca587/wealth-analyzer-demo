@@ -4682,7 +4682,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
       <div class="aib-step-chip"><i data-lucide="file-search" class="icon" aria-hidden="true"></i></div>
       <div class="aib-step-num">Step 2</div>
       <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:4px">Uses the research on file</div>
-      <div style="font-size:11.5px;color:var(--text3);line-height:1.5">Views loaded in the Research Library (Admin) tilt the mix; with none loaded you get the risk-profile baseline</div>
+      <div style="font-size:11.5px;color:var(--text3);line-height:1.5">House views in the Research Library (Admin) tilt the mix, wirehouses weighted highest and headlines left out; with none loaded you get the risk-profile baseline</div>
     </div>
     <div style="padding:14px">
       <div class="aib-step-chip"><i data-lucide="chart-pie" class="icon" aria-hidden="true"></i></div>
@@ -4742,8 +4742,11 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
   <button class="aib-go" onclick="runSimpleAIBuilder()" style="background:linear-gradient(135deg,#7c3aed,#0057b8);color:#fff;border:none;padding:18px 48px;border-radius:50px;font-size:17px;font-weight:800;cursor:pointer;font-family:var(--fb);letter-spacing:.01em;box-shadow:0 10px 28px rgba(124,58,237,.35);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 36px rgba(124,58,237,.45)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 10px 28px rgba(124,58,237,.35)'">
     <i data-lucide="bot" class="icon" aria-hidden="true"></i>Build my portfolio now
   </button>
-  <div style="font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6">A second or two with the rules engine; about <strong style="color:var(--text2)">15 seconds</strong> when Claude builds it</div>
-  <div id="aibDataNote" style="display:none;font-size:11.5px;color:var(--text3);margin-top:8px;line-height:1.6">AI features are on and an AI key is set, so Claude drafts the portfolio: the plan's figures (net worth, income, holdings, and goals with their labels as entered; not the clients' names) are sent to Anthropic's API. Turn AI features off in Settings, Privacy and AI, to build with the rules engine only, on this device.</div>
+  <div style="font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6">Built by the rules engine on this device in a second or two, from the research houses' views with wirehouses weighted highest</div>
+  <div id="aibDataNote" style="display:none;margin-top:14px">
+    <button class="btn-secondary" onclick="runSimpleAIBuilder('claude')" style="font-size:12.5px;padding:8px 18px;border-radius:50px"><i data-lucide="sparkles" class="icon" aria-hidden="true"></i> Second opinion from Claude (about 15 seconds)</button>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:8px;line-height:1.6">Optional. Claude starts from the rules-engine mix and the same weighted research, and its citations are checked against the research on file. This sends the plan's figures (net worth, income, holdings, and goals with their labels as entered; not the clients' names) to Anthropic's API. The main button never does.</div>
+  </div>
   <div id="aiSimpleStatus" style="font-size:13px;color:var(--text2);margin-top:14px;font-weight:600"></div>
 </div>
 
@@ -5188,7 +5191,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261101-1857";
+const APP_VERSION = "20261101-1951";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -22654,11 +22657,12 @@ function fundWeighted(positions, key, weightField, lookup){
   return { value: w > 0 ? s / w : null, coverage: W > 0 ? w / W : 0 };
 }
 
-async function runAIPortfolioGenerator(){
+async function runAIPortfolioGenerator(opts){
   const status = $("aiGenStatus");
   const resultPanel = $("aiGenResult");
-  // Claude only when the firm has turned AI features on (and a key is set); otherwise the rules engine.
-  const aiKey = aiActive() ? getAIKey() : "";
+  // The rules engine builds the portfolio. Claude runs only when asked for a
+  // second opinion explicitly, and only when the firm has turned AI on (and a key is set).
+  const aiKey = (opts && opts.useClaude && aiActive()) ? getAIKey() : "";
   try{ window._lastAIGenError = null; }catch(_){}   // reset so a stale error can't linger on the next run
 
   // ─── 1. Gather client data from the main app's current state ───
@@ -22689,21 +22693,39 @@ async function runAIPortfolioGenerator(){
   const holdingsLines = investments.length > 0 ?
     investments.map(i => `${i.tkr||"?"} ${i.name||""} — ${(i.val/totalAssets*100).toFixed(1)}% of NW`).slice(0,15) : ["(no existing holdings)"];
 
-  // ─── 2. Pull research from admin's localStorage cache ───
-  let researchSnippets = "(no research cache — open admin → Research Library and pull sources)";
-  let researchProviderCount = 0;
-  try {
-    const cfg = JSON.parse(localStorage.getItem("wa_research_config") || "{}");
-    const blocks = [];
-    Object.entries(cfg).forEach(([providerId, c]) => {
-      if(c.enabled === false) return;
-      const items = (c.items || []).slice(0, 6);
-      if(items.length === 0) return;
-      researchProviderCount++;
-      blocks.push(`## ${providerId.toUpperCase()}\n${items.map(it => "  • " + (it.title||"")).join("\n")}`);
-    });
-    if(blocks.length > 0) researchSnippets = blocks.join("\n\n");
-  } catch(_){}
+  // ─── 2. Research: the same tier-weighted house views the rules engine uses ───
+  // Claude gets the scored signal (each house's stance, the weighted net view
+  // and the rules-engine mix) plus the counted items under ids it must cite, not
+  // a pile of raw headlines.
+  const signals = engAggregateSignals();
+  const researchProviderCount = signals.houseCount;
+  const _ta = researchTiltedAllocation(risk, signals);
+  let researchSnippets = "(no house views on file: open admin, Research Library, and refresh the sources)";
+  if(signals.scoredItems > 0){
+    const _cl = k => BUILDER_CLASS_LABEL[k] || k;
+    const _hl = signals.houses.filter(h => h.counted > 0).map(h =>
+      `- ${h.name} (${h.tierLabel}, weight ${h.weight}, ${h.counted} views): ` +
+      (Object.entries(h.classes).map(([c, v]) => _cl(c) + " " + researchStanceWord(v)).join(", ") || "no asset-class stance"));
+    const _net = Object.entries(_ta.classTilts).map(([c, t]) => `${_cl(c)} ${t.net >= 0 ? "+" : ""}${(+t.net).toFixed(2)} (${t.pts >= 0 ? "+" : ""}${t.pts} pts)`);
+    const _ev = signals.evidence.slice(0, 40).map(e => `[${e.id}] ${e.houseName} | ${e.tierLabel} | ${RESEARCH_KIND_LABEL[e.kind]} | ${e.date} | ${e.title}`);
+    researchSnippets = `Weights: one vote per house per topic, by tier: Wirehouse 3, Private bank / AM 1.5, Independent 0.75, News 0.25. A view halves in weight every ${RESEARCH_HALF_LIFE_DAYS} days. Company-news headlines and generic themes are already removed.
+
+## House stances by asset class
+${_hl.join("\n")}
+
+## Weighted net view per asset class (-1 to +1) and the shift it makes
+${_net.join("; ") || "none"}
+
+## Rules-engine asset mix (your starting point, % of portfolio)
+${Object.entries(_ta.alloc).filter(([, v]) => v > 0).map(([c, v]) => _cl(c) + " " + v).join(", ")}
+
+## Firm rules
+- Asset classes left out because the houses are net underweight (hold NONE of them): ${(_ta.excluded || []).map(e => _cl(e.cls)).join(", ") || "none"}
+- Commodities are a thematic satellite only: hold them only when the research view is net positive, at most ${COMMODITY_THEMATIC_CAP}% of the portfolio
+
+## Research items (cite ONLY these ids, in square brackets, e.g. [R3])
+${_ev.join("\n")}`;
+  }
 
   // ─── 3. UI: show loading state ───
   resultPanel.style.display = "block";
@@ -22756,7 +22778,7 @@ ${holdingsLines.join("\n")}
 ## Goals
 ${goalLines.length > 0 ? goalLines.join("\n") : "(no goals specified)"}
 
-# INSTITUTIONAL RESEARCH (from ${researchProviderCount} sources)
+# INSTITUTIONAL RESEARCH (${signals.scoredItems} house views from ${researchProviderCount} research houses)
 ${researchSnippets}
 
 # ELIGIBLE FUND UNIVERSE (pick ONLY from this: ${eligibleUniverse.length} of ${AI_FUND_UNIVERSE.length} vehicles, filtered for ${country} domicile rules)
@@ -22765,19 +22787,19 @@ ${researchSnippets}
 ${universeStr}
 
 # YOUR TASK
-Construct a portfolio matching the client's risk profile + horizon + goals + the research above.
+Give a second opinion on the firm's rules-engine portfolio: construct a portfolio matching the client's risk profile, horizon, goals and the research above. Start from the rules-engine asset mix, move any asset class by at most 5 percentage points, and follow the firm rules (no left-out asset class; commodities only as a capped thematic satellite). Wirehouse house views (Merrill / Bank of America, Goldman Sachs, J.P. Morgan, Morgan Stanley, UBS) outrank every other source; where houses disagree, follow the tier weights.
 
 Output STRICT JSON only, no surrounding prose:
 {
   "summary": "2-3 sentence executive summary referencing client situation, top research themes, and key portfolio metrics",
   "allocationByClass": {"equity":0,"fixed_income":0,"real_estate":0,"commodity":0,"cash":0,"mixed":0,"alternative":0},
   "positions": [
-    {"ticker":"VTI","weight":25.0,"rationale":"why, citing at least one quantitative metric that is present in the table (never an n/a one; ER is always present) AND one research source"}
+    {"ticker":"VTI","weight":25.0,"rationale":"why, citing at least one quantitative metric that is present in the table (never an n/a one; ER is always present) AND the research item ids it relies on, e.g. [R3]"}
   ],
   "expectedReturn": 0.07,
   "expectedVolatility": 0.12,
   "expectedSharpe": 0.45,
-  "researchCitations": ["Source: insight"],
+  "researchCitations": ["[R1] one line on what that item says and how it shaped the portfolio"],
   "risks": ["risk 1","risk 2"],
   "rebalancingGuidance": "1-2 sentences"
 }
@@ -22798,7 +22820,7 @@ Constraints:
 - Pick only from the eligible fund universe above (no fabrication)
 - No single position above 25%
 - 6-12 positions total
-- Each rationale cites ≥1 quantitative metric that is present in the table AND ≥1 research source when available; never quote an n/a figure or a (class) assumption as the fund's own`;
+- Each rationale cites ≥1 quantitative metric that is present in the table AND ≥1 research item id (e.g. [R3]) when research is available; cite only ids from the research list and never invent one; never quote an n/a figure or a (class) assumption as the fund's own`;
 
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -22868,9 +22890,42 @@ Constraints:
         coverage: { maxDD:_dd.coverage, aum:_au.coverage, holdings:_hkCov }
       };
     }
+    // ─── Check Claude's work against the research on file ───
+    // Every cited id must be a counted item; the mix may move at most 5 points
+    // from the rules engine; every ticker must be in the fund list.
+    {
+      const evById = Object.fromEntries(signals.evidence.map(e => [e.id, e]));
+      const refs = t => Array.from(new Set(String(t || "").match(/\bR\d{1,4}\b/g) || []));
+      const all = new Set();
+      (rec.positions || []).forEach(p => {
+        p.research = {engine:"claude", cited:refs(p.rationale).map(id => ({id, ev:evById[id] || null}))};
+        p.research.cited.forEach(c => all.add(c.id));
+        p.citations = p.research.cited.filter(c => c.ev).map(c => researchCiteLine(c.ev));
+      });
+      (rec.researchCitations || []).forEach(c => refs(c).forEach(id => all.add(id)));
+      const mix = {};
+      (rec.positions || []).forEach(p => { if(p.cls) mix[p.cls] = (mix[p.cls] || 0) + (+p.weight || 0); });
+      const deviations = Object.keys({..._ta.alloc, ...mix})
+        .map(c => ({cls:c, rules:_ta.alloc[c] || 0, claude:+(mix[c] || 0).toFixed(1)}))
+        .filter(d => Math.abs(d.claude - d.rules) > 5);
+      const _outCls = (_ta.excluded || []).map(e => e.cls);
+      rec.researchCheck = {
+        hasResearch: signals.scoredItems > 0,
+        excludedHeld: Object.keys(mix).filter(c => _outCls.includes(c) && mix[c] > 0),
+        commodityOver: (mix.commodity || 0) > COMMODITY_THEMATIC_CAP ? +mix.commodity.toFixed(1) : null,
+        verified: [...all].filter(id => evById[id]),
+        unverified: [...all].filter(id => !evById[id]),
+        uncited: (rec.positions || []).filter(p => !p.research.cited.length).map(p => p.ticker || p.tkr),
+        unknownTickers: (rec.positions || []).filter(p => !AI_FUND_UNIVERSE.some(x => x.tkr === (p.ticker || p.tkr))).map(p => p.ticker || p.tkr),
+        deviations
+      };
+      // Only verified items are shown as the portfolio's sources.
+      rec.researchCitations = rec.researchCheck.verified.map(id => researchCiteLine(evById[id]));
+      rec.researchBasis = signals.scoredItems > 0 ? researchBasisFor(signals, _ta.classTilts) : null;
+    }
     lastAIGenResult = rec;
     renderAIGenResult(rec, {risk, horizon, country, netWorth, grossIncome, surplus, researchProviderCount});
-    status.innerHTML = '✓ <strong style="color:#1b6841">Portfolio built by Claude (AI)</strong>: review below, then click <strong>↓ Apply to Proposal Below</strong>';
+    status.innerHTML = '✓ <strong style="color:#1b6841">Second opinion from Claude (AI)</strong>: review below, then click <strong>↓ Apply to Proposal Below</strong>';
   } catch(e){
     try{ window._lastAIGenError = e.message; }catch(_){}   // expose the real reason to the simple builder UI
     $("aiGenResultBody").innerHTML = '<div style="padding:14px;background:rgba(227,24,55,.05);border-left:3px solid var(--red);border-radius:6px"><strong style="color:var(--red)">Error:</strong> ' + escapeForHTML(e.message) + '<div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.6"><strong>Common issues:</strong><br>• AI key missing or invalid: set/replace it in admin → API Keys tab<br>• Model unavailable: a 404 / not_found means the model id needs updating<br>• Network/CORS error: check connection<br>• Rate-limited: wait 60s and retry</div></div>';
@@ -22884,10 +22939,12 @@ Constraints:
 // Takes 4 simple inputs + auto-pulls everything else from main app state
 // Then calls the full deterministic engine and renders a SIMPLE result
 // ═══════════════════════════════════════════════════════════
-async function runSimpleAIBuilder(){
+// mode "claude" asks Claude for a second opinion; anything else runs the rules engine.
+async function runSimpleAIBuilder(mode){
+  const useClaude = mode === "claude" && aiActive();
   const status = $("aiSimpleStatus");
   const resultPanel = $("aiSimpleResult");
-  status.innerHTML = lucideIcon("loader") + " Building your portfolio from your plan…"; refreshIcons();
+  status.innerHTML = lucideIcon("loader") + (useClaude ? " Asking Claude for a second opinion…" : " Building your portfolio from your plan…"); refreshIcons();
 
   // Override risk/horizon/ESG with simple inputs (others come from main app)
   const simpleRisk = val("aiSimpleRisk");
@@ -22927,7 +22984,7 @@ async function runSimpleAIBuilder(){
     };
     // Trigger the full (async) pipeline
     Promise.resolve()
-      .then(() => runAIPortfolioGenerator())
+      .then(() => runAIPortfolioGenerator({useClaude}))
       .then(() => { if(!ok){ var _em = window._lastAIGenError ? escapeForHTML(String(window._lastAIGenError).slice(0,240)) : 'Generation failed. Check the AI key in admin → API Keys.'; status.innerHTML = '<span style="color:var(--red)">'+lucideIcon("circle-x")+' ' + _em + '</span>'; refreshIcons(); } finish(); })
       .catch(e => { status.innerHTML = '<span style="color:var(--red)">'+lucideIcon("circle-x")+' ' + escapeForHTML(e.message) + '</span>'; refreshIcons(); finish(); });
     // Safety net: never hang longer than 30s
@@ -22946,11 +23003,190 @@ async function runSimpleAIBuilder(){
 }
 
 // Who built a recommendation, in words for the screen, the confirmation and the notes.
-function builderEngineLabel(rec){ return (rec && rec.engine === "claude") ? "built by Claude (AI)" : "built by the rules engine"; }
+function builderEngineLabel(rec){ return (rec && rec.engine === "claude") ? "second opinion from Claude (AI)" : "built by the rules engine"; }
 function builderEngineNote(rec){
   return (rec && rec.engine === "claude")
-    ? "Built by Claude (AI) from your plan figures and the research on file. Check each fund before using it."
-    : "Built by the rules engine, no AI involved: the asset mix comes from your risk profile and horizon, tilted by up to 8 points toward what the research on file favours; within each asset class the funds are chosen by cost, domicile and the quality figures on file.";
+    ? "Second opinion from Claude (AI), given your plan figures, the same tier-weighted research and the rules-engine mix as its starting point. Its citations are checked against the research on file below. Check each fund before using it."
+    : "Built by the rules engine, no AI involved: the asset mix comes from your risk profile and horizon, tilted by up to 8 points by the research houses' views. Each house gets one vote, weighted by tier, with wirehouse house views (Merrill / Bank of America, Goldman Sachs, J.P. Morgan, Morgan Stanley, UBS) above all others; company-news headlines are not counted. Within each asset class funds are ranked by cost, domicile and the quality figures on file, plus the research points shown on each fund.";
+}
+
+// ── Research transparency (Portfolio Builder) ───────────────────────────
+const BUILDER_CLASS_LABEL = {equity:"Stocks",fixed_income:"Bonds",real_estate:"Real Estate",commodity:"Commodities",cash:"Cash",mixed:"Balanced",alternative:"Alternatives"};
+const BUILDER_BUCKET_LABEL = {regions:"region", sectors:"sector", themes:"theme", styles:"size / style"};
+function _rsPts(v){ return (v > 0 ? "+" : "") + (+v).toFixed(1) + " pts"; }
+function _rsStanceChip(v){
+  const w = typeof v === "string" ? v : researchStanceWord(v);
+  const c = w === "overweight" ? "var(--green)" : (w === "underweight" ? "var(--red)" : "var(--text3)");
+  const t = w === "overweight" ? "OW" : (w === "underweight" ? "UW" : "N");
+  return '<span title="' + w + '" style="display:inline-block;min-width:26px;text-align:center;font-size:10px;font-weight:700;color:' + c + '">' + t + '</span>';
+}
+function _rsBucketLabel(b, k){
+  const name = b === "regions" ? (ENG_PRETTY_REGION[k] || k) : b === "styles" ? (ENG_PRETTY_STYLE[k] || k) : (b === "themes" ? (ENG_PRETTY_THEME[k] || k.replace(/_/g," ")) : k.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase()));
+  return name + " (" + BUILDER_BUCKET_LABEL[b] + ")";
+}
+function _rsItemLine(ev){
+  if(!ev) return "";
+  return '<div style="margin:2px 0 0 0;color:var(--text3)"><span style="font-weight:700;color:#1e40af">' + escapeForHTML(ev.id || "") + '</span> '
+    + escapeForHTML(ev.feedName || ev.houseName || "") + ' <span style="opacity:.8">(' + escapeForHTML(ev.tierLabel || "") + ', ' + escapeForHTML(RESEARCH_KIND_LABEL[ev.kind] || "") + ', ' + escapeForHTML(ev.date || "") + ')</span>: '
+    + escapeForHTML(ev.title || "") + '</div>';
+}
+
+// Equity size and style card: the portfolio's split and the research view on each.
+function renderEquityStyleHTML(m){
+  if(!m || !(m.equityWeight > 0)) return '';
+  let h = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px">';
+  h += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px" class="aib-h">' + lucideIcon("layers") + 'Equity size and style</div>';
+  h += '<div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:10px">Share of the ' + m.equityWeight.toFixed(0) + '% equity sleeve in each group, read from each fund\'s name, next to the research houses\' view. Size groups add up to 100%; value and growth do not (the rest is blend), and international means outside your home market.</div>';
+  // How the equity sleeve was split, and what the research did to each part
+  if(m.sleeves && m.sleeves.length){
+    const gen = m.sleeves.some(x => x.generic);
+    h += '<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:4px 0 6px">How the equity sleeve is split</div>';
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px"><thead><tr style="color:var(--text3);text-align:left">'
+      + '<th style="padding:4px 6px">Part</th>' + (gen ? '<th style="padding:4px 6px;text-align:right">Start</th><th style="padding:4px 6px;text-align:right">Research</th>' : '')
+      + '<th style="padding:4px 6px;text-align:right">Of equity</th><th style="padding:4px 6px;text-align:right">Of portfolio</th><th style="padding:4px 6px">Fund</th></tr></thead><tbody>';
+    m.sleeves.forEach(x => {
+      const note = x.excluded ? '<span style="color:var(--red)">left out: houses net underweight' + (x.houses.length ? ' (' + escapeForHTML(x.houses.slice(0, 3).join(", ")) + ')' : '') + '</span>'
+        : x.tooSmall ? '<span style="color:var(--text3)">too small to hold (under ' + SUBSLEEVE_MIN_POSITION + '% of the portfolio)</span>'
+        : (x.fund ? escapeForHTML(x.fund) : '<span style="color:var(--amber)">no eligible fund</span>');
+      h += '<tr style="border-top:1px solid rgba(0,0,0,.05)"><td style="padding:4px 6px;font-weight:600">' + escapeForHTML(x.label) + '</td>'
+        + (gen ? '<td style="padding:4px 6px;text-align:right;color:var(--text3)">' + x.baseShare + '%</td><td style="padding:4px 6px;text-align:right;color:' + (x.pts > 0 ? 'var(--green)' : (x.pts < 0 ? 'var(--red)' : 'var(--text3)')) + '">' + (x.pts ? (x.pts > 0 ? '+' : '') + x.pts : '0') + '</td>' : '')
+        + '<td style="padding:4px 6px;text-align:right;font-weight:700">' + x.share.toFixed(0) + '%</td>'
+        + '<td style="padding:4px 6px;text-align:right">' + (x.weight ? x.weight.toFixed(1) + '%' : '-') + '</td>'
+        + '<td style="padding:4px 6px">' + note + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    if(gen) h += '<div style="font-size:10.5px;color:var(--text3);margin:-6px 0 12px">Start: the split for ' + (m.sleeves[0].label.startsWith("US") ? 'a US household' : 'a household outside the US') + '. Research: added when the houses are clearly overweight that size or region (up to ' + SUBSLEEVE_TILT + ' points of the equity sleeve, before rescaling); a part they are clearly underweight is left out. Each part holds its best broad fund on cost, quality and research fit, never two funds on the same index.</div>';
+    h += '<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:4px 0 6px">What the equity sleeve holds</div>';
+  }
+  m.rows.forEach((r, i) => {
+    if(i === 3) h += '<div style="height:6px"></div>';
+    const who = r.stance === "overweight" ? r.forHouses : (r.stance === "underweight" ? r.againstHouses : []);
+    h += '<div style="display:grid;grid-template-columns:110px 1fr 54px minmax(0,1.4fr);gap:10px;align-items:center;padding:5px 0;font-size:12px">';
+    h += '<strong>' + escapeForHTML(r.label) + '</strong>';
+    h += '<div style="height:10px;background:rgba(0,0,0,.05);border-radius:5px;overflow:hidden"><div style="height:100%;width:' + Math.min(100, r.pctOfEquity) + '%;background:#0057b8;border-radius:5px"></div></div>';
+    h += '<span style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">' + r.pctOfEquity.toFixed(0) + '%</span>';
+    h += '<span style="font-size:11px;color:var(--text3)">' + (r.stance ? _rsStanceChip(r.stance) + ' ' + (r.stance === "neutral" ? 'no clear view' : escapeForHTML(r.stance) + (who.length ? ': ' + escapeForHTML(who.join(", ")) : '')) : '<span>not discussed in the research</span>') + '</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+// Whole-portfolio panel: which houses were counted, how much each shifted the
+// mix, what was left out and why.
+function renderResearchBasisHTML(b){
+  if(!b) return '';
+  let h = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px">';
+  h += '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px" class="aib-h">' + lucideIcon("library") + 'The research behind this portfolio</div>';
+  const ex = b.excluded || {};
+  h += '<div style="font-size:11.5px;color:var(--text3);line-height:1.6;margin-bottom:12px"><strong style="color:var(--text2)">' + b.scoredItems + ' house views from ' + b.houseCount + ' research houses</strong> were counted. Each house gets one vote per topic, weighted by tier: '
+    + [1,2,3,4].map(t => escapeForHTML(RESEARCH_TIERS[t].short) + ' ' + RESEARCH_TIERS[t].weight).join(', ')
+    + '. A view halves in weight every ' + RESEARCH_HALF_LIFE_DAYS + ' days. Not counted: ' + (ex.headline || 0) + ' company-news headlines, ' + (ex.generic || 0) + ' generic themes shared by every source, ' + (ex.stale || 0) + ' items older than a year.</div>';
+  const tilts = (b.classTilts || []).filter(t => Math.abs(t.pts) >= 0.1);
+  if(tilts.length){
+    h += '<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px">How research moved your mix (before rescaling to 100%)</div>';
+    tilts.forEach(t => {
+      const lead = t.houses.filter(x => Math.abs(x.pts) >= 0.05).slice(0, 4);
+      h += '<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:5px 0;border-bottom:1px dashed rgba(0,0,0,.06);font-size:12px">';
+      h += '<strong style="min-width:96px">' + escapeForHTML(BUILDER_CLASS_LABEL[t.cls] || t.cls) + '</strong>';
+      h += '<span style="font-weight:800;color:' + (t.pts > 0 ? 'var(--green)' : 'var(--red)') + ';min-width:64px">' + _rsPts(t.pts) + '</span>';
+      h += '<span style="color:var(--text3);font-size:11px;flex:1;min-width:200px">' + lead.map(x => escapeForHTML(x.name) + ' (' + escapeForHTML(x.tierLabel) + ') ' + x.stance + ' ' + (x.pts > 0 ? '+' : '') + x.pts.toFixed(2)).join(' · ') + '</span>';
+      h += '</div>';
+    });
+  } else {
+    h += '<div style="font-size:12px;color:var(--text3)">The houses on file are split or neutral on every asset class, so the mix is the risk-profile baseline.</div>';
+  }
+  // Classes left out, and commodities as a thematic satellite
+  (b.excludedClasses || []).forEach(e => {
+    const to = (e.to || []).map(c => escapeForHTML(BUILDER_CLASS_LABEL[c] || c)).join(' and ');
+    h += '<div style="margin-top:8px;padding:8px 12px;background:rgba(227,24,55,.05);border-left:3px solid var(--red);border-radius:0 6px 6px 0;font-size:11.5px;line-height:1.55;color:var(--text2)"><strong>' + escapeForHTML(BUILDER_CLASS_LABEL[e.cls] || e.cls) + ' left out.</strong> '
+      + (e.reason === "not_positive" ? 'Commodities are held only as a thematic satellite when the research view is net positive; here it is ' + _rsPts(e.pts) + '.' : 'The research houses are net underweight (' + _rsPts(e.pts) + '), so it is not held at all.')
+      + ' Its ' + e.weight + '% went to ' + to + '.</div>';
+  });
+  if(b.thematic){
+    h += '<div style="margin-top:8px;padding:8px 12px;background:rgba(212,175,55,.08);border-left:3px solid #d4af37;border-radius:0 6px 6px 0;font-size:11.5px;line-height:1.55;color:var(--text2)"><strong>Commodities as a thematic satellite: ' + b.thematic.pct.toFixed(1) + '%.</strong> Held because the research view is net positive (' + _rsPts(b.thematic.pts || 0) + '), capped at ' + b.thematic.cap + '% because commodities are too volatile to be a core holding'
+      + (b.thematic.cappedFrom ? ' (the research pointed to ' + b.thematic.cappedFrom + '%)' : '') + '.</div>';
+  }
+  const houses = (b.houses || []).filter(x => x.counted > 0);
+  if(houses.length){
+    const cols = ["equity","fixed_income","real_estate","commodity","cash","alternative"];
+    h += '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#7c3aed">Each house\'s view (' + houses.length + ' houses)</summary>';
+    h += '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;font-size:11.5px"><thead><tr style="color:var(--text3);text-align:left">'
+      + '<th style="padding:4px 6px">House</th><th style="padding:4px 6px">Tier</th><th style="padding:4px 6px;text-align:right">Views</th>'
+      + cols.map(c => '<th style="padding:4px 6px;text-align:center">' + escapeForHTML(BUILDER_CLASS_LABEL[c]) + '</th>').join('') + '</tr></thead><tbody>';
+    houses.forEach(x => {
+      h += '<tr style="border-top:1px solid rgba(0,0,0,.05)"><td style="padding:4px 6px;font-weight:600">' + escapeForHTML(x.name) + '</td>'
+        + '<td style="padding:4px 6px;color:var(--text3)">' + escapeForHTML(x.tierLabel) + ' (' + x.weight + ')</td>'
+        + '<td style="padding:4px 6px;text-align:right">' + x.counted + '</td>'
+        + cols.map(c => '<td style="padding:4px 6px;text-align:center">' + (c in x.classes ? _rsStanceChip(x.classes[c]) : '<span style="color:var(--text3)">-</span>') + '</td>').join('') + '</tr>';
+    });
+    h += '</tbody></table></div><div style="font-size:10.5px;color:var(--text3);margin-top:6px">OW overweight, UW underweight, N mentioned without a side, - not mentioned.</div></details>';
+  }
+  if(b.evidence && b.evidence.length){
+    h += '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:#7c3aed">Strongest research items (' + Math.min(12, b.evidence.length) + ' of ' + b.evidence.length + ')</summary><div style="font-size:11px;line-height:1.55;margin-top:6px">'
+      + b.evidence.slice(0, 12).map(_rsItemLine).join('') + '</div></details>';
+  }
+  h += '</div>';
+  return h;
+}
+
+// Claude second opinion: did its citations, mix and tickers check out?
+function renderResearchCheckHTML(c){
+  if(!c) return '';
+  const issues = [];
+  if(c.unverified.length) issues.push('Cited ids not found in the research on file: <strong>' + c.unverified.map(escapeForHTML).join(', ') + '</strong>. Treat those claims as unsupported.');
+  if(c.hasResearch && c.uncited.length) issues.push('No research cited for: ' + c.uncited.map(escapeForHTML).join(', ') + '.');
+  if(c.deviations.length) issues.push('Moved more than 5 points from the rules-engine mix: ' + c.deviations.map(d => escapeForHTML(BUILDER_CLASS_LABEL[d.cls] || d.cls) + ' ' + d.rules + '% to ' + d.claude + '%').join(', ') + '.');
+  if(c.excludedHeld && c.excludedHeld.length) issues.push('Holds asset classes the research left out: ' + c.excludedHeld.map(x => escapeForHTML(BUILDER_CLASS_LABEL[x] || x)).join(', ') + '.');
+  if(c.commodityOver) issues.push('Commodities at ' + c.commodityOver + '%, above the ' + COMMODITY_THEMATIC_CAP + '% thematic cap.');
+  if(c.unknownTickers.length) issues.push('Not in the fund list: ' + c.unknownTickers.map(escapeForHTML).join(', ') + '.');
+  const ok = !issues.length;
+  return '<div style="background:' + (ok ? 'rgba(0,135,90,.05)' : 'rgba(227,24,55,.05)') + ';border-left:4px solid ' + (ok ? 'var(--green)' : 'var(--red)') + ';border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:18px;font-size:12px;line-height:1.6;color:var(--text2)">'
+    + '<strong style="color:' + (ok ? '#1b6841' : 'var(--red)') + '">' + lucideIcon(ok ? "circle-check" : "triangle-alert") + ' Citation check</strong><br>'
+    + c.verified.length + ' research item' + (c.verified.length === 1 ? '' : 's') + ' cited and found in the research on file.'
+    + (ok ? ' Every fund cites research, the mix stays within 5 points of the rules engine, and every fund is in the fund list.' : '<br>' + issues.join('<br>'))
+    + '</div>';
+}
+
+// One fund's research trail: what moved its asset class, what moved the fund
+// itself, and (for a Claude second opinion) whether its citations check out.
+function renderFundResearchHTML(p){
+  const r = p && p.research;
+  if(!r) return '';
+  const box = inner => '<div style="font-size:11px;color:var(--text2);line-height:1.55;padding:8px 12px;background:rgba(91,155,213,.05);border-left:3px solid var(--blue);border-radius:0 6px 6px 0">'
+    + '<strong style="color:#1e40af">' + lucideIcon("book-open") + ' Research behind this pick</strong>' + inner + '</div>';
+  let h = '';
+  if(r.engine === "claude"){
+    const ok = (r.cited || []).filter(c => c.ev), bad = (r.cited || []).filter(c => !c.ev);
+    if(!ok.length && !bad.length) h += '<div style="margin-top:4px;color:var(--amber)">Claude cited no research item for this fund.</div>';
+    if(ok.length) h += '<div style="margin-top:4px">Cited by Claude and found in the research on file:</div>' + ok.map(c => _rsItemLine(c.ev)).join('');
+    if(bad.length) h += '<div style="margin-top:4px;color:var(--red)">Cited by Claude but not in the research on file: ' + bad.map(c => escapeForHTML(c.id)).join(', ') + '</div>';
+    return box(h);
+  }
+  const ct = r.classTilt;
+  if(ct && Math.abs(ct.pts) >= 0.1){
+    h += '<div style="margin-top:4px"><strong>' + escapeForHTML(BUILDER_CLASS_LABEL[ct.cls] || ct.cls) + ' ' + _rsPts(ct.pts) + '</strong> in the asset mix: '
+      + ct.houses.slice(0, 4).map(x => escapeForHTML(x.name) + ' (' + escapeForHTML(x.tierLabel) + ') ' + x.stance + ' ' + (x.pts > 0 ? '+' : '') + x.pts.toFixed(2)).join(' · ') + '</div>';
+  } else if(ct){
+    h += '<div style="margin-top:4px">' + escapeForHTML(BUILDER_CLASS_LABEL[ct.cls] || ct.cls) + ': the houses are split or neutral, so this sleeve keeps its risk-profile weight.</div>';
+  }
+  if(r.tickerPts){
+    h += '<div style="margin-top:4px"><strong>Fund score ' + (r.tickerPts > 0 ? '+' : '') + r.tickerPts.toFixed(2) + '</strong>: ' + (r.tickerPts > 0 ? 'named' : 'flagged negatively') + ' by '
+      + r.tickerHouses.map(x => escapeForHTML(x.name) + ' (' + escapeForHTML(x.tierLabel) + ')').join(', ') + '</div>'
+      + r.tickerHouses.slice(0, 2).map(x => (x.items || []).slice(0, 1).map(_rsItemLine).join('')).join('');
+  }
+  if(r.alignPts){
+    h += '<div style="margin-top:4px"><strong>Fund score ' + (r.alignPts > 0 ? '+' : '') + r.alignPts.toFixed(2) + '</strong>: sits in '
+      + r.alignParts.map(x => escapeForHTML(_rsBucketLabel(x.bucket, x.key)) + ', ' + x.stance + (x.houses && x.houses.length ? ' per ' + escapeForHTML(x.houses.slice(0, 3).join(', ')) : '')).join('; ') + '</div>';
+  }
+  if(r.quality != null){
+    h += '<div style="margin-top:4px;color:var(--text3)">Ranked in its sleeve on quality ' + r.quality.toFixed(2) + ' (cost, Sharpe, returns, size, drawdown) plus research ' + (r.researchPts >= 0 ? '+' : '') + r.researchPts.toFixed(2) + '.</div>';
+  }
+  if(ct && ct.houses.length && !r.tickerPts){
+    const lead = ct.houses.find(x => x.items && x.items.length);
+    if(lead) h += _rsItemLine(lead.items[0]);
+  }
+  return h ? box(h) : '';
 }
 
 // Render the simplified, average-user-friendly result
@@ -23036,14 +23272,19 @@ function renderSimpleAIResult(rec, simpleBrief){
     const labels = {equity:"Stocks",fixed_income:"Bonds",real_estate:"Real Estate",commodity:"Commodities",cash:"Cash",mixed:"Balanced",alternative:"Alternatives"};
     const sorted = Object.entries(rec.allocationByClass).filter(([,v]) => v > 0).sort((a,b) => b[1] - a[1]);
     sorted.forEach(([cls, pct]) => {
-      h += '<div style="display:grid;grid-template-columns:130px 1fr 70px;gap:10px;align-items:center;padding:6px 0">';
-      h += '<div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:' + (colors[cls]||"#999") + '"></span>' + (labels[cls] || cls) + '</div>';
+      h += '<div style="display:grid;grid-template-columns:170px 1fr 70px;gap:10px;align-items:center;padding:6px 0">';
+      h += '<div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;flex-shrink:0;background:' + (colors[cls]||"#999") + '"></span>' + (labels[cls] || cls) + (cls === "commodity" ? ' <span style="font-size:10px;font-weight:700;color:#b8860b">THEMATIC</span>' : '') + '</div>';
       h += '<div style="height:14px;background:rgba(0,0,0,.05);border-radius:7px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + (colors[cls]||"#999") + ';border-radius:7px"></div></div>';
       h += '<div style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">' + pct.toFixed(0) + '%</div>';
       h += '</div>';
     });
     h += '</div>';
   }
+
+  // Equity size and style, then research transparency
+  if(rec.equityStyle) h += renderEquityStyleHTML(rec.equityStyle);
+  if(rec.researchBasis) h += renderResearchBasisHTML(rec.researchBasis);
+  if(rec.researchCheck) h += renderResearchCheckHTML(rec.researchCheck);
 
   // Funds with rich hover-to-expand rationale
   if(rec.positions?.length){
@@ -23087,8 +23328,10 @@ function renderSimpleAIResult(rec, simpleBrief){
       h += '<div style="font-size:12px;color:var(--text2);line-height:1.6;padding:10px 12px;background:rgba(0,135,90,.05);border-left:3px solid var(--green);border-radius:0 6px 6px 0;margin-bottom:8px">';
       h += '<strong style="color:#1b6841">'+lucideIcon("circle-check")+' Why it fits your profile</strong><br>' + expanded.fit;
       h += '</div>';
-      // Section 4 — research citations (if present)
-      if(expanded.citations && expanded.citations.length){
+      // Section 4 — the research trail (rules engine) or the citation check (Claude)
+      if(p.research){
+        h += renderFundResearchHTML(p);
+      } else if(expanded.citations && expanded.citations.length){
         h += '<div style="font-size:11px;color:var(--text3);line-height:1.55;padding:8px 12px;background:rgba(91,155,213,.05);border-left:3px solid var(--blue);border-radius:0 6px 6px 0">';
         h += '<strong style="color:#1e40af">'+lucideIcon("book-open")+' Backed by research from</strong><br>';
         h += expanded.citations.map(c => '• ' + escapeForHTML(c)).join('<br>');
@@ -23186,11 +23429,16 @@ function buildExpandedRationale(p, fund, simpleBrief, rec){
   else if(m.dom === "CH") tagline += " · Swiss fund";
   // A Swiss sleeve pick says which part of its asset class it is.
   if(p && p.sleeve) tagline = escapeForHTML(p.sleeve) + " · " + tagline;
+  if(p && p.thematic) tagline = "Thematic satellite · " + tagline;
 
   // ─── Plain-language "why" — a long-form explanation ───
   const whyBits = [];
-  // Asset-class consensus from the rationale string
-  if(p.rationale && /\d+ of \d+ (?:research sources|providers) (overweight|underweight)/.test(p.rationale)){
+  // Asset-class view of the research houses (rules engine)
+  const _rt = p.research && p.research.classTilt;
+  if(_rt && Math.abs(_rt.pts) >= 0.1){
+    const _lead = _rt.houses.filter(h => Math.sign(h.pts) === Math.sign(_rt.pts)).slice(0, 2).map(h => escapeForHTML(h.name));
+    whyBits.push(`The research houses on file lean <strong>${_rt.pts > 0 ? "overweight" : "underweight"} ${escapeForHTML((BUILDER_CLASS_LABEL[_rt.cls] || _rt.cls).toLowerCase())}</strong> (${_rsPts(_rt.pts)} to the mix${_lead.length ? ", led by " + _lead.join(" and ") : ""}, wirehouse views weighted highest); this fund is among the highest-scoring in that sleeve on cost, curated quality and research fit.`);
+  } else if(p.rationale && /\d+ of \d+ (?:research sources|providers) (overweight|underweight)/.test(p.rationale)){
     const match = p.rationale.match(/(\d+) of (\d+) (?:research sources|providers) (overweight|underweight) (\w[\w\s]*)/);
     if(match){
       const [_, n, total, direction, what] = match;
@@ -23359,6 +23607,25 @@ const ENG_SECTOR_KEYWORDS = {
   materials: ["materials","metals","mining","XLB"]
 };
 
+// Equity size and style. Bare "value" and "growth" are deliberately absent: they
+// fire on "fair value", "shareholder value" and "GDP growth", none of which is a
+// style call. A comparative ("favor small caps over large caps") is read in
+// engExtractItemSignals, because one clause would otherwise vote both sides up.
+const ENG_STYLE_KEYWORDS = {
+  large_cap:     ["large-cap","large cap","large caps","large-caps","mega-cap","mega cap","mega caps","Magnificent 7","blue chip","blue-chip"],
+  mid_cap:       ["mid-cap","mid cap","mid caps","mid-caps","midcap","midcaps","S&P 400"],
+  small_cap:     ["small-cap","small cap","small caps","small-caps","smallcap","smallcaps","Russell 2000","smaller companies"],
+  international: ["international equit","international stocks","international developed","non-US equit","non-US stocks","ex-US","EAFE","developed international","developed markets ex","overseas equit","overseas stocks"],
+  value:         ["value stocks","value equit","value factor","value names","value style","value tilt","value rotation","deep value","value sectors"],
+  growth:        ["growth stocks","growth equit","growth factor","growth names","growth style","growth tilt","quality growth","growth sectors"]
+};
+const ENG_PRETTY_STYLE = {large_cap:"Large Cap", mid_cap:"Mid Cap", small_cap:"Small Cap", international:"International", value:"Value", growth:"Growth"};
+// "favor/prefer/overweight X over/versus Y": X up, Y down.
+const ENG_STYLE_TOKEN = {"value":"value","growth":"growth","small cap":"small_cap","small caps":"small_cap","small-cap":"small_cap","small-caps":"small_cap",
+  "mid cap":"mid_cap","mid caps":"mid_cap","mid-cap":"mid_cap","mid-caps":"mid_cap","large cap":"large_cap","large caps":"large_cap","large-cap":"large_cap","large-caps":"large_cap",
+  "international":"international","non-us":"international","us":"us_home"};
+const ENG_STYLE_COMPARE = /\b(?:favou?r(?:ing)?|prefer(?:ring)?|overweight(?:ing)?|rotate into|rotation into)\s+(value|growth|small[- ]caps?|mid[- ]caps?|large[- ]caps?|international|non-US)(?:\s+(?:stocks|equities|names))?\s+(?:over|versus|vs\.?|relative to|rather than)\s+(value|growth|small[- ]caps?|mid[- ]caps?|large[- ]caps?|international|non-US|US)\b/gi;
+
 const DRIVER_PHRASING = {
   cycle:       {ow:"cycle supportive",        uw:"late-cycle / slowdown risk",  n:"cycle mixed"},
   rates:       {ow:"rates a tailwind",        uw:"rates a headwind",            n:"rates balanced"},
@@ -23449,6 +23716,41 @@ function fundBucketKeys(f){
   if(/bitcoin|crypto|\bibit\b|\bfbtc\b|\beth\b|ethereum/.test(hay)) themes.push("cryptocurrency");
   if(/water|infrastructure|\bpho\b|\bigf\b/.test(hay)) themes.push("water_infrastructure");
   return {regions, sectors, themes};
+}
+
+// Size and style of an equity fund, read from its name. Size: small, else mid,
+// else large (broad, sector and thematic funds are large-cap led). International:
+// exposure outside the client's home market, so a world or regional fund counts
+// and a home-market fund does not. Value / growth: named style funds only;
+// dividend-growth funds are income funds, not growth style.
+const STYLE_HOME_MARKET = {
+  US: /\bus\b|\busa\b|u\.s\.|united states|s&p 500|s&p 400|s&p 600|russell|nasdaq|total stock|total market|dow jones|wilshire/,
+  CH: /\bswiss\b|switzerland|\bspi\b|\bsmi\b|\bsli\b|\bsmim\b/,
+  GB: /\buk\b|united kingdom|ftse 100|ftse 250|ftse all-share/,
+  DE: /germany|\bdax\b|\bmdax\b/, FR: /france|\bcac\b/, JP: /japan|topix|nikkei/, CA: /canada|\btsx\b/,
+  AU: /australia|\basx\b/, IT: /italy|ftse mib/, ES: /spain|ibex/, NL: /netherlands|\baex\b/
+};
+function fundStyleKeys(f, country){
+  if(!f || f.cls !== "equity") return [];
+  const n = ((f.name || "") + " " + (f.tkr || "")).toLowerCase();
+  const out = [];
+  if(/small[- ]?cap|smallcap|russell 2000|s&p 600|\bsmall\b/.test(n)) out.push("small_cap");
+  else if(/mid[- ]?cap|midcap|s&p 400|\bmid\b|\bsmim\b/.test(n)) out.push("mid_cap");
+  else out.push("large_cap");
+  const cc = String(country || "US").toUpperCase();
+  const home = STYLE_HOME_MARKET[cc];
+  const broad = /global|world|international|acwi|eafe|ex[- ]?us|developed|emerging|\bem\b|europe|euro|asia|pacific|china|india|latin|frontier/.test(n);
+  // International when the name points outside the home market: a global or
+  // regional mandate, or another country's market (a Nasdaq fund for a German
+  // client). A fund naming the home market is domestic; one naming no market at
+  // all ("Vanguard Growth ETF") is domestic when it is domiciled at home.
+  const foreign = Object.entries(STYLE_HOME_MARKET).some(([c, re]) => c !== cc && re.test(n));
+  const domestic = home ? home.test(n) : false;
+  const homeDom = String(f.dom || "US").toUpperCase() === cc;
+  if(broad || foreign || (!domestic && !homeDom)) out.push("international");
+  if(/\bvalue\b/.test(n)) out.push("value");
+  else if((/\bgrowth\b/.test(n) && !/dividend growth|dividend appreciation|dividend grower/.test(n)) || /nasdaq[- ]?100|\bqqqm?\b/.test(n)) out.push("growth");
+  return out;
 }
 
 function engPrettyDriver(k){ return String(k).replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase()); }
@@ -23563,8 +23865,8 @@ function engExtractItemSignals(item, providerName){
   // Magnitude is kept for the allocation tilt it calibrates; the 3-point stance
   // (+1 overweight / 0 neutral / -1 underweight) is what the points system
   // aggregates, because it is comparable across sources and buckets.
-  const sig = {classes:{},sectors:{},regions:{},themes:{},drivers:{},
-               stances:{classes:{},sectors:{},regions:{},themes:{},drivers:{}},
+  const sig = {classes:{},sectors:{},regions:{},themes:{},drivers:{},styles:{},
+               stances:{classes:{},sectors:{},regions:{},themes:{},drivers:{},styles:{}},
                tickers:[],sentiment:itemSentiment,providerName,item};
   const toStance = v => (v > 0 ? 1 : (v < 0 ? -1 : 0));
   function voteFor(phrases, key){
@@ -23591,108 +23893,236 @@ function engExtractItemSignals(item, providerName){
   detect(ENG_REGION_KEYWORDS, sig.regions, "regions");
   detect(ENG_DRIVER_KEYWORDS, sig.drivers, "drivers");
   detect(ENG_THEME_KEYWORDS,  sig.themes,  "themes");
+  detect(ENG_STYLE_KEYWORDS,  sig.styles,  "styles");
+  // Comparatives override: the preferred style up, the other one down.
+  for(const m of rawText.matchAll(ENG_STYLE_COMPARE)){
+    const a = ENG_STYLE_TOKEN[m[1].toLowerCase()], b = ENG_STYLE_TOKEN[m[2].toLowerCase()];
+    if(a && a !== "us_home"){ sig.styles[a] = Math.abs(sig.styles[a] || 2); sig.stances.styles[a] = 1; }
+    if(b && b !== "us_home"){ sig.styles[b] = -Math.abs(sig.styles[b] || 2); sig.stances.styles[b] = -1; }
+    if(b === "us_home"){ sig.styles.international = Math.abs(sig.styles.international || 2); sig.stances.styles.international = 1; }
+  }
   // Ticker mention extract
   const matches = rawText.match(/\b[A-Z]{2,5}\b/g) || [];
   sig.tickers = matches.filter(t => ENG_KNOWN_TICKERS.has(t));
+  // Direction of each ticker mention, read from its own clause, so "trim XLE"
+  // no longer counts as a vote for XLE.
+  sig.tickerStances = {};
+  clauses.forEach(c => (c.text.match(/\b[A-Z]{2,5}\b/g) || []).forEach(t => {
+    if(!ENG_KNOWN_TICKERS.has(t)) return;
+    const st = toStance(c.sent);
+    if(!(t in sig.tickerStances) || Math.abs(st) > Math.abs(sig.tickerStances[t])) sig.tickerStances[t] = st;
+  }));
   return sig;
 }
+
+// ═══════════════════════════════════════════════════════════
+// RESEARCH SOURCE WEIGHTING (keep identical in admin.html)
+// Who said it matters more than how often it was said. Every research house
+// casts ONE vote per topic, weighted by its tier: wirehouse house views lead,
+// private banks and asset managers follow, news and open platforms barely
+// register. A headline ABOUT a firm (its share price, results, hires, a
+// lawsuit) is not a market view and is not counted at all.
+// ═══════════════════════════════════════════════════════════
+const RESEARCH_TIERS = {
+  1: {label: "Wirehouse house view", short: "Wirehouse", weight: 3},
+  2: {label: "Private bank or asset manager", short: "Private bank / AM", weight: 1.5},
+  3: {label: "Independent research", short: "Independent", weight: 0.75},
+  4: {label: "News or open platform", short: "News", weight: 0.25}
+};
+const RESEARCH_HOUSES = {
+  bofa:      {name: "Merrill / Bank of America", tier: 1},
+  gs:        {name: "Goldman Sachs", tier: 1},
+  jpm:       {name: "J.P. Morgan", tier: 1},
+  ms:        {name: "Morgan Stanley", tier: 1},
+  ubs:       {name: "UBS", tier: 1},
+  citi:      {name: "Citi Private Bank", tier: 2},
+  julius:    {name: "Julius Baer", tier: 2},
+  pictet:    {name: "Pictet", tier: 2},
+  vontobel:  {name: "Vontobel", tier: 2},
+  blackrock: {name: "BlackRock Investment Institute", tier: 2},
+  eaton:     {name: "Eaton Vance", tier: 2},
+  oppen:     {name: "Oppenheimer", tier: 2},
+  mstar:     {name: "Morningstar", tier: 3},
+  factset:   {name: "FactSet", tier: 3},
+  bloomberg: {name: "Bloomberg", tier: 4},
+  sa:        {name: "Seeking Alpha", tier: 4}
+};
+// Several feeds can belong to one house. Merrill CIO Viewpoint, the BofA RIC
+// report, the US 1 List and the BofA newsroom are all Bank of America: they pool
+// into one vote, or one firm with four feeds would outvote three firms with one.
+// A feed not listed here is its own house; an unknown house sits in tier 4.
+const RESEARCH_FEED_HOUSE = {bofa_ml: "bofa", ml_viewpoint: "bofa", bofa_ric: "bofa", bofa_us1: "bofa"};
+const RESEARCH_FEED_NAMES = {bofa_ml: "BofA newsroom", ml_viewpoint: "Merrill CIO Viewpoint", bofa_ric: "BofA RIC Report", bofa_us1: "BofA US 1 List"};
+function researchHouseOf(pid){
+  const id = RESEARCH_FEED_HOUSE[pid] || pid;
+  const h = RESEARCH_HOUSES[id];
+  const tier = h ? h.tier : 4;
+  return {id, name: h ? h.name : String(pid), tier, weight: RESEARCH_TIERS[tier].weight, tierLabel: RESEARCH_TIERS[tier].short};
+}
+function researchFeedName(pid){ return RESEARCH_FEED_NAMES[pid] || researchHouseOf(pid).name; }
+
+// An item counts in full when it is the house's own view (its catalogued house
+// view, or its own publication feed) and at half weight when a news outlet
+// reports the house's view ("Goldman strategists raise their S&P target").
+const RESEARCH_KIND_WEIGHT = {house: 1, reported: 0.5};
+const RESEARCH_KIND_LABEL = {house: "house view", reported: "view reported in the press", headline: "company news", generic: "generic theme"};
+// News about the firm itself. Checked before anything else: a firm's own feed
+// carries its results and hires too, and none of that is a market view.
+const RESEARCH_CORP_NEWS = /\b(?:shares? (?:fell|fall|falls|rose|rise|rises|jump(?:s|ed)?|slid(?:e|es)?|slump(?:s|ed)?|drop(?:s|ped)?|surge(?:s|d)?|tumble(?:s|d)?|climb(?:s|ed)?|sink(?:s)?|sank)|stock (?:falls|rises|jumps|slides|drops|surges|sinks)|(?:quarterly|annual|first[- ]quarter|second[- ]quarter|third[- ]quarter|fourth[- ]quarter|Q[1-4]) (?:profit|results|earnings|revenue|loss)|net (?:income|profit)|(?:beats|misses|tops) (?:estimates|expectations)|layoffs?|job cuts|cut(?:s|ting)? (?:\d+ )?jobs|hires?|hired|hiring|appoint(?:s|ed|ment)|steps? down|resign(?:s|ed|ation)?|poach(?:es|ed|ing)?|lawsuits?|sued|sues|settlement|fined|penalt(?:y|ies)|probe|investigation|whistleblower|data breach|outage|acquires?|acquired|acquisition of|takeover|buyback|share repurchase|bonus(?:es)? pool|pay package|headquarters|opens? (?:an? )?(?:new )?(?:office|branch)|sponsorship|wins? (?:an? )?award)\b/i;
+// Language that marks an investment view: a stance, a forecast, a positioning call.
+const RESEARCH_VIEW_LANG = /\b(?:overweight|underweight|outlook|house view|CIO|strategists?|economists?|forecasts?|expects?|sees|predicts?|price target|year-end target|targets?|recommends?|recommendation|prefers?|favou?rs?|bullish|bearish|positioning|allocation|tactical|strategic|upgrades?|downgrades?|top picks?|best ideas|we (?:like|prefer|remain|see|expect|think|believe|favou?r)|cautious on|constructive on|neutral on)\b/i;
+function researchItemKind(item){
+  if(!item) return "headline";
+  if(item.shared) return "generic";          // one pool every provider draws on: nobody's view
+  if(item.curated) return "house";           // the house's catalogued view
+  const text = (item.title || "") + " " + (item.summary || "");
+  if(RESEARCH_CORP_NEWS.test(text)) return "headline";
+  if(item.via === "house") return "house";   // the house's own publication feed
+  return RESEARCH_VIEW_LANG.test(text) ? "reported" : "headline";
+}
+// Recency: a view halves in weight every 90 days and stops counting after a year.
+const RESEARCH_HALF_LIFE_DAYS = 90, RESEARCH_MAX_AGE_DAYS = 365;
+function researchItemAgeDays(item, now){
+  const t = Date.parse((item && item.date) || "");
+  return isFinite(t) ? Math.max(0, ((now || Date.now()) - t) / 86400000) : null;
+}
+function researchRecencyWeight(ageDays){
+  if(ageDays == null) return 0.5;                // undated: half weight, never full
+  if(ageDays > RESEARCH_MAX_AGE_DAYS) return 0;  // stale: not counted
+  return Math.pow(0.5, ageDays / RESEARCH_HALF_LIFE_DAYS);
+}
+// The largest shift research can make to one asset class, in percentage points,
+// reached only when every house on the panel takes the same side with full evidence.
+const RESEARCH_MAX_TILT = 8;
+// Evidence (summed item weight) at which a house casts its full vote: one house
+// view up to about three months old. Older or press-reported views cast part of one.
+const RESEARCH_FULL_EVIDENCE = 0.5;
+function researchDateLabel(d){
+  const t = Date.parse(d || "");
+  return isFinite(t) ? new Date(t).toISOString().slice(0, 10) : "undated";
+}
+function researchStanceWord(v){ return v > 0.2 ? "overweight" : (v < -0.2 ? "underweight" : "neutral"); }
 
 function engAggregateSignals(){
   // Read research from admin's shared cache
   let cfg = {};
   try { cfg = JSON.parse(localStorage.getItem("wa_research_config")||"{}"); } catch(_){}
-  const agg = {classes:{},sectors:{},regions:{},themes:{},drivers:{},tickers:{},
-               // 3-point tally per bucket key — the layer the decision reads
-               points:{classes:{},sectors:{},regions:{},themes:{},drivers:{}},
-               totalItems:0, scoredItems:0, sharedDuplicatesSkipped:0,
-               providerCount:0, providers:[]};
-  // providers = every provider that MENTIONED the topic; providersFor/Against
-  // = direction-consistent, so "N providers overweight X" cannot be inflated by
-  // providers that were neutral on X or actively underweight it.
-  function bump(container, key, vote, providerName, item){
-    if(!container[key]) container[key] = {votes:0, providers:new Set(), providersFor:new Set(), providersAgainst:new Set(), items:[]};
-    container[key].votes += vote;
-    container[key].providers.add(providerName);
-    if(vote > 0) container[key].providersFor.add(providerName);
-    else if(vote < 0) container[key].providersAgainst.add(providerName);
-    if(container[key].items.length < 5) container[key].items.push({title:(item.title||"").slice(0,120), provider:providerName});
-  }
-  // One research view = one point, in exactly one of three columns.
-  function tally(bucket, key, stance, providerName){
-    const b = agg.points[bucket];
-    if(!b[key]) b[key] = {ow:0, neutral:0, uw:0, providers:new Set(), owProviders:new Set(), uwProviders:new Set()};
-    const e = b[key];
-    if(stance > 0){ e.ow++; e.owProviders.add(providerName); }
-    else if(stance < 0){ e.uw++; e.uwProviders.add(providerName); }
-    else e.neutral++;
-    e.providers.add(providerName);
-  }
-  const _sharedSeen = new Set();
-  Object.entries(cfg).forEach(([pid, c]) => {
-    if(c.enabled === false) return;
-    // Read EVERY cached item — this used to stop at the first 30 per provider,
-    // silently discarding most of the library.
-    const items = (c.items || []);
+  return engAggregateFromConfig(cfg, Date.now());
+}
+
+// cfg: {providerId: {enabled, items:[{title, summary, date, curated, shared, via}]}}.
+// Returns, per bucket key, the tier-weighted net view (-1..1) and the houses
+// behind it, so every point of tilt can be traced to a house and an item.
+function engAggregateFromConfig(cfg, now){
+  const BUCKETS = ["classes","sectors","regions","themes","drivers","styles"];
+  const agg = {classes:{},sectors:{},regions:{},themes:{},drivers:{},styles:{},tickers:{},
+               points:{classes:{},sectors:{},regions:{},themes:{},drivers:{},styles:{}},
+               totalItems:0, scoredItems:0, excluded:{generic:0, headline:0, stale:0},
+               providerCount:0, providers:[], houses:[], houseCount:0, panelWeight:0, evidence:[]};
+  const H = {};
+  Object.entries(cfg || {}).forEach(([pid, c]) => {
+    if(!c || c.enabled === false) return;
+    const items = c.items || [];
     if(items.length === 0) return;
     agg.providerCount++;
     agg.providers.push(pid);
     agg.totalItems += items.length;
+    const hi = researchHouseOf(pid);
+    const h = H[hi.id] || (H[hi.id] = {...hi, feeds:[], counted:0, excluded:{generic:0, headline:0, stale:0}, keys:{}, tickers:{}});
+    h.feeds.push(pid);
+    const seen = h.seen || (h.seen = new Set());   // the same item under two feeds of one house counts once
     items.forEach(item => {
-      // Shared baseline themes come from one pool every provider draws on, so
-      // the same text recurs across sources. Counting it once per provider
-      // would manufacture consensus out of duplication.
-      if(item.shared){
-        const key = String(item.title || "").trim().toLowerCase();
-        if(_sharedSeen.has(key)){ agg.sharedDuplicatesSkipped++; return; }
-        _sharedSeen.add(key);
-      }
+      const kind = researchItemKind(item);
+      if(kind === "generic" || kind === "headline"){ h.excluded[kind]++; agg.excluded[kind]++; return; }
+      const dkey = String(item.title || "").trim().toLowerCase().slice(0, 80);
+      if(dkey && seen.has(dkey + "|" + hi.id)) return;
+      seen.add(dkey + "|" + hi.id);
+      const age = researchItemAgeDays(item, now);
+      const rw = researchRecencyWeight(age);
+      if(rw <= 0){ h.excluded.stale++; agg.excluded.stale++; return; }
+      const w = RESEARCH_KIND_WEIGHT[kind] * rw;
+      h.counted++;
       agg.scoredItems++;
       const sig = engExtractItemSignals(item, pid);
-      Object.entries(sig.classes).forEach(([k,v]) => bump(agg.classes,k,v,pid,item));
-      Object.entries(sig.sectors).forEach(([k,v]) => bump(agg.sectors,k,v,pid,item));
-      Object.entries(sig.regions).forEach(([k,v]) => bump(agg.regions,k,v,pid,item));
-      Object.entries(sig.themes).forEach(([k,v]) => bump(agg.themes,k,v,pid,item));
-      Object.entries(sig.drivers).forEach(([k,v]) => bump(agg.drivers,k,v,pid,item));
-      Object.entries(sig.stances).forEach(([bucket, keys]) => {
-        Object.entries(keys).forEach(([k, st]) => tally(bucket, k, st, pid));
+      const ev = {id:"", house:hi.id, houseName:hi.name, tier:hi.tier, tierLabel:hi.tierLabel, feed:pid, feedName:researchFeedName(pid),
+                  kind, date:researchDateLabel(item.date), ageDays: age == null ? null : Math.round(age),
+                  weight:+w.toFixed(3), signal:0, title:String(item.title || "").slice(0, 160)};
+      let used = false;
+      BUCKETS.forEach(b => Object.entries(sig.stances[b]).forEach(([k, st]) => {
+        const e = h.keys[b + ":" + k] || (h.keys[b + ":" + k] = {sw:0, swd:0, sws:0, items:[]});
+        e.sw += w; e.sws += w * st;
+        if(st !== 0){ e.swd += w; e.items.push({ev, stance:st}); ev.signal++; used = true; }
+      }));
+      // A house naming a fund in its own view is read as a recommendation unless
+      // the clause says otherwise: neutral mention +0.5, positive +1, negative -1.
+      Object.entries(sig.tickerStances || {}).forEach(([t, st]) => {
+        const e = h.tickers[t] || (h.tickers[t] = {v:0, items:[]});
+        e.v += w * (st === 0 ? 0.5 : st);
+        e.items.push({ev, stance:st});
+        ev.signal++;
+        used = true;
       });
-      sig.tickers.forEach(t => {
-        if(!agg.tickers[t]) agg.tickers[t] = {count:0, providers:new Set()};
-        agg.tickers[t].count++;
-        agg.tickers[t].providers.add(pid);
-      });
+      if(used) agg.evidence.push(ev);
     });
   });
-  // Resolve each bucket entry into a stance. Requires enough views in that
-  // direction (>=3), a clear net margin, and a lopsided split — so a couple of
-  // stray mentions cannot move a bucket.
-  Object.keys(agg.points).forEach(bucket => {
-    Object.entries(agg.points[bucket]).forEach(([key, e]) => {
-      e.providers = Array.from(e.providers);
-      e.owProviders = Array.from(e.owProviders);
-      e.uwProviders = Array.from(e.uwProviders);
-      e.providerCount = e.providers.length;
-      e.total = e.ow + e.neutral + e.uw;
-      e.net = e.ow - e.uw;
-      const directional = e.ow + e.uw;
-      e.conviction = directional ? +(e.net / directional).toFixed(2) : 0;
-      e.stance = (e.ow >= 3 && e.net >= 3 && e.conviction >= 0.5) ? "overweight"
-               : (e.uw >= 3 && e.net <= -3 && e.conviction <= -0.5) ? "underweight"
-               : "neutral";
-    });
+  // Evidence ids (R1, R2...) are what citations point at: strongest first.
+  agg.evidence.sort((a, b) => b.weight - a.weight || a.tier - b.tier || b.signal - a.signal || a.title.localeCompare(b.title));
+  agg.evidence.forEach((ev, i) => { ev.id = "R" + (i + 1); });
+  const houses = Object.values(H).filter(h => h.counted > 0);
+  agg.houseCount = houses.length;
+  agg.panelWeight = houses.reduce((s, h) => s + h.weight, 0);
+  const W = agg.panelWeight || 1;
+  const strip = x => ({...x.ev, stance:x.stance});
+  const keyAgg = {};
+  houses.forEach(h => Object.entries(h.keys).forEach(([key, e]) => {
+    if(e.sw <= 0) return;
+    // The house's direction comes from its directional views only; a house that
+    // mentions the topic without taking a side is on the panel as neutral.
+    const lean = e.swd > 0 ? e.sws / e.swd : 0;
+    const vote = lean * Math.min(1, e.swd / RESEARCH_FULL_EVIDENCE);   // thin evidence casts a partial vote
+    const k = keyAgg[key] || (keyAgg[key] = {net:0, houses:[]});
+    k.net += h.weight * vote / W;
+    k.houses.push({house:h.id, name:h.name, tier:h.tier, tierLabel:h.tierLabel, weight:h.weight,
+      lean:+lean.toFixed(2), vote:+vote.toFixed(2), share:+(h.weight * vote / W).toFixed(4),
+      items:e.items.slice().sort((a, b) => b.ev.weight - a.ev.weight).slice(0, 3).map(strip)});
+  }));
+  Object.entries(keyAgg).forEach(([key, k]) => {
+    const b = key.slice(0, key.indexOf(":")), name = key.slice(key.indexOf(":") + 1);
+    k.houses.sort((x, y) => Math.abs(y.share) - Math.abs(x.share) || x.tier - y.tier);
+    const ow = k.houses.filter(x => x.vote > 0.2), uw = k.houses.filter(x => x.vote < -0.2);
+    const net = +k.net.toFixed(4);
+    const entry = {net, houses:k.houses, forHouses:ow.map(x => x.name), againstHouses:uw.map(x => x.name),
+      providerCount:k.houses.length, forCount:ow.length, againstCount:uw.length,
+      agreeCount: net > 0 ? ow.length : (net < 0 ? uw.length : 0)};
+    if(b === "classes") entry.tilt = +(RESEARCH_MAX_TILT * net).toFixed(2);
+    agg[b][name] = entry;
+    // A bucket stance needs a clear weighted net AND at least two houses on that side.
+    const stance = (net >= 0.12 && ow.length >= 2) ? "overweight" : ((net <= -0.12 && uw.length >= 2) ? "underweight" : "neutral");
+    agg.points[b][name] = {ow:ow.length, uw:uw.length, neutral:k.houses.length - ow.length - uw.length,
+      total:k.houses.length, providerCount:k.houses.length, providers:k.houses.map(x => x.name),
+      owProviders:ow.map(x => x.name), uwProviders:uw.map(x => x.name), net,
+      conviction:Math.max(-1, Math.min(1, net * 3)), stance};
   });
-  // Convert Sets → arrays + counts
-  function norm(c){ Object.values(c).forEach(o => {
-    o.providers = Array.from(o.providers);
-    o.providerCount = o.providers.length;
-    o.providersFor = Array.from(o.providersFor || []);
-    o.providersAgainst = Array.from(o.providersAgainst || []);
-    o.forCount = o.providersFor.length;
-    o.againstCount = o.providersAgainst.length;
-    o.agreeCount = o.votes > 0 ? o.forCount : (o.votes < 0 ? o.againstCount : 0);
-  }); }
-  norm(agg.classes); norm(agg.sectors); norm(agg.regions); norm(agg.themes); norm(agg.drivers);
-  Object.values(agg.tickers).forEach(o => { o.providers = Array.from(o.providers); o.providerCount = o.providers.length; });
+  houses.forEach(h => Object.entries(h.tickers).forEach(([t, e]) => {
+    const vote = Math.max(-1, Math.min(1, e.v / RESEARCH_FULL_EVIDENCE));
+    const x = agg.tickers[t] || (agg.tickers[t] = {score:0, houses:[], providers:[]});
+    x.score += h.weight * vote;
+    x.houses.push({house:h.id, name:h.name, tier:h.tier, tierLabel:h.tierLabel, vote:+vote.toFixed(2),
+      items:e.items.slice().sort((a, b) => b.ev.weight - a.ev.weight).slice(0, 2).map(strip)});
+    x.providers.push(h.name);
+  }));
+  Object.values(agg.tickers).forEach(x => {
+    x.houses.sort((a, b) => a.tier - b.tier || Math.abs(b.vote) - Math.abs(a.vote));
+    // One wirehouse naming a fund in a fresh house view: +1.5; capped at +/-3.
+    x.bonus = +Math.max(-3, Math.min(3, x.score * 0.5)).toFixed(2);
+    x.count = x.houses.length;
+    x.providerCount = x.houses.length;
+  });
+  agg.houses = Object.values(H).map(h => ({id:h.id, name:h.name, tier:h.tier, tierLabel:h.tierLabel, weight:h.weight,
+      feeds:h.feeds.map(researchFeedName), counted:h.counted, excluded:h.excluded,
+      classes:Object.fromEntries(Object.entries(h.keys).filter(([k, e]) => k.startsWith("classes:") && e.sw > 0)
+        .map(([k, e]) => [k.slice(8), e.swd > 0 ? +((e.sws / e.swd) * Math.min(1, e.swd / RESEARCH_FULL_EVIDENCE)).toFixed(2) : 0]))}))
+    .sort((a, b) => a.tier - b.tier || b.counted - a.counted);
   return agg;
 }
 
@@ -23804,43 +24234,257 @@ const BUILDER_SLEEVES_CHF = {
      test: f => /\bgold\b/i.test(f.name) && /\bCHF\b/.test(f.name)}
   ]
 };
+// ── Same-index check (every asset class) ─────────────────────────────────
+// Two funds tracking the same or a near-identical index are one exposure, not
+// two: QQQ and QQQM are both the Nasdaq-100, AGG and BND both the US aggregate
+// bond market, VOO and VTI both the US large-cap core. A variant index (growth,
+// value, equal weight, dividend, covered call, hedged...) is a different exposure.
+const INDEX_FAMILY_RULES = [
+  ["us_core",   /\bs&p 500\b|\btotal (?:us )?(?:stock )?market\b|\bbroad market\b|\brussell 1000\b|\brussell 3000\b|\blarge[- ]cap etf\b|\bcrsp us total\b|\bmega cap etf\b/],
+  ["ndx",       /nasdaq[- ]?100|\bqqqm?\b/],
+  ["us_mid",    /\bs&p (?:mid[- ]?cap )?400\b|\bmid[- ]cap etf\b|\brussell mid[- ]?cap\b|\bmidcap 400\b/],
+  ["us_small",  /\brussell 2000\b|\bs&p (?:small[- ]?cap )?600\b|\bsmall[- ]cap etf\b/],
+  ["us_agg",    /\baggregate bond\b|\btotal bond market\b|\bcore (?:us )?aggregate\b|\bcore total usd bond\b|\bus aggregate\b/],
+  ["dev_world", /\bmsci world\b|\bdeveloped world\b|\bftse developed\b/],
+  ["all_world", /\ball[- ]world\b|\bacwi\b|\btotal world\b/],
+  ["intl_dev",  /\beafe\b|\bdeveloped markets? ex[- ]?us\b|\binternational developed\b|\bdeveloped ex[- ]?us\b/],
+  ["em_core",   /\bmsci em\b|\bemerging markets?\b/]
+];
+const INDEX_VARIANT = /growth|value|equal|dividend|covered|income|premium|buffer|hedged|leverag|inverse|momentum|quality|min(?:imum)? vol|low vol|\besg\b|\bsri\b|screened|islamic|sector|high yield|inflation|short[- ]term|long[- ]term|intermediate/;
+function fundIndexFamily(f){
+  if(!f) return null;
+  const n = ((f.name || "") + " " + (f.tkr || "")).toLowerCase();
+  if(INDEX_VARIANT.test(n)) return null;
+  for(const [k, re] of INDEX_FAMILY_RULES){
+    if(!re.test(n)) continue;
+    let key = k;
+    if(!/^us_(?:mid|small)$/.test(k)){
+      if(/small[- ]?cap|\bsmall\b/.test(n)) key += "_small";
+      else if(/mid[- ]?cap|\bmid\b/.test(n)) key += "_mid";
+    }
+    return f.cls + ":" + key;
+  }
+  return null;
+}
+// One key per exposure: the declared share-class family first, else the index.
+function fundExposureKey(f){ return (f && f.family) || fundIndexFamily(f) || (f && f.tkr); }
+
+// ── Equity sub-sleeves (every household except Swiss-in-CHF) ─────────────
+// The equity weight is split into large cap (home market), mid cap, small cap
+// and international large cap, each filled by its best broad fund. The starting
+// split depends on whether the client is in the US (deep home market) or not;
+// each share then moves by the research houses' weighted view on that size or
+// region (SUBSLEEVE_TILT points of the equity sleeve at a full net view), and a
+// sub-sleeve the houses are net underweight on is left out, as an asset class is.
+const EQUITY_SUBSLEEVE_BASE = {
+  US:    {large_cap:55, mid_cap:10, small_cap:10, international:25},
+  other: {large_cap:25, mid_cap:7.5, small_cap:7.5, international:60}
+};
+const SUBSLEEVE_TILT = 20;
+const SUBSLEEVE_MIN_POSITION = 2;   // % of the portfolio; a smaller slice is not worth a line
+// Sector, thematic, single-country and income-overlay funds are not core size
+// or region exposure, however well they score. Nor is the Nasdaq-100: 100
+// stocks, about half of them technology, so it would make a third of a moderate
+// portfolio one sector bet the moment research favours tech.
+const SUBSLEEVE_NOT_BROAD = /nasdaq|\bqqqm?\b|sector|technology|\btech\b|semiconductor|software|health|biotech|pharma|financ|bank|insurance|energy|\boil\b|\bgas\b|consumer|industr|aerospace|defen[cs]e|utilit|material|mining|\bgold\b|real estate|\breit|communic|\bmedia\b|innovation|genomic|robot|\bai\b|artificial|cloud|cyber|clean|solar|\bwind\b|water|lithium|battery|uranium|infrastructure|blockchain|fintech|internet|covered call|premium|buffer|leverag|inverse|\bshort\b|bitcoin|crypto|islamic|china|india|japan|korea|taiwan|brazil|latin|frontier|space|electric vehicle|autonomous/i;
+function equitySubSleeves(brief, signals, equityWeight){
+  const cc = String((brief && brief.country) || "US").toUpperCase();
+  const base = EQUITY_SUBSLEEVE_BASE[cc === "US" ? "US" : "other"];
+  const sk = f => fundStyleKeys(f, cc);
+  const broad = f => !SUBSLEEVE_NOT_BROAD.test(f.name || "");
+  const defs = [
+    {key:"large_cap", label: cc === "US" ? "US large cap" : "Home-market large cap",
+      test: f => { const k = sk(f); return k.includes("large_cap") && !k.includes("international") && broad(f); }},
+    {key:"mid_cap", label:"Mid cap", test: f => sk(f).includes("mid_cap") && broad(f)},
+    {key:"small_cap", label:"Small cap", test: f => sk(f).includes("small_cap") && broad(f)},
+    // A broad mandate, not one foreign country: ex-US developed for a US client
+    // (a world or ACWI fund is about 60% US), a world or developed-markets fund
+    // for everyone else.
+    {key:"international", label:"International large cap",
+      test: f => { const k = sk(f), nm = (f.name || "").toLowerCase();
+        if(!(k.includes("international") && k.includes("large_cap") && broad(f)) || /emerging|\bem\b/.test(nm)) return false;
+        return cc === "US" ? /ex[- ]?us|eafe|international|developed markets|developed ex/.test(nm) && !/acwi|all[- ]world|total world/.test(nm)
+                           : /world|global|developed|acwi|international|eafe/.test(nm); }}
+  ];
+  const rows = defs.map(d => {
+    const e = signals && signals.points && signals.points.styles && signals.points.styles[d.key];
+    const net = e ? e.net : 0, stance = e ? e.stance : "neutral";
+    // Only a clear view moves a part: overweight adds, underweight leaves it out,
+    // a split or thin view keeps the starting share.
+    const out = stance === "underweight";
+    const pts = out ? -base[d.key] : (stance === "overweight" ? +(SUBSLEEVE_TILT * net).toFixed(1) : 0);
+    return {...d, baseShare:base[d.key], raw:Math.max(0, base[d.key] + pts), pts, stance, net, excluded:out,
+      houses: e ? (stance === "underweight" ? e.uwProviders : e.owProviders) : []};
+  });
+  // Too small to hold: pass its share on.
+  let tot = rows.reduce((s, r) => s + r.raw, 0) || 1;
+  rows.forEach(r => { if(r.raw > 0 && equityWeight * r.raw / tot < SUBSLEEVE_MIN_POSITION){ r.tooSmall = true; r.raw = 0; } });
+  tot = rows.reduce((s, r) => s + r.raw, 0) || 1;
+  rows.forEach(r => { r.share = r.raw / tot; });
+  return rows;
+}
+
 function builderSleevePlan(brief){
   const c = String((brief && brief.country) || "").toUpperCase();
   const ccy = String((typeof CURRENT_CCY !== "undefined" && CURRENT_CCY) || "USD").toUpperCase();
   return (c === "CH" && ccy === "CHF") ? BUILDER_SLEEVES_CHF : null;
 }
 
-function runDeterministicEngine(brief){
-  const RISK_TO_ALLOC = {
-    very_conservative:        {equity:20, fixed_income:60, real_estate:5, commodity:5, cash:10, alternative:0},
-    conservative:             {equity:30, fixed_income:55, real_estate:5, commodity:3, cash:5,  alternative:2},
-    moderately_conservative:  {equity:40, fixed_income:45, real_estate:5, commodity:3, cash:3,  alternative:4},
-    moderate:                 {equity:55, fixed_income:30, real_estate:7, commodity:3, cash:0,  alternative:5},
-    moderately_aggressive:    {equity:65, fixed_income:20, real_estate:7, commodity:3, cash:0,  alternative:5},
-    aggressive:               {equity:75, fixed_income:10, real_estate:8, commodity:2, cash:0,  alternative:5},
-    very_aggressive:          {equity:85, fixed_income:5,  real_estate:5, commodity:0, cash:0,  alternative:5}
-  };
-  const baseline = {...(RISK_TO_ALLOC[brief.risk] || RISK_TO_ALLOC.moderate)};
-
-  // ── Step 1: aggregate research signals from admin's cache ──
-  const signals = engAggregateSignals();
-  const hasResearch = signals.totalItems > 0;
-
-  // ── Step 2: tilt baseline allocation by net votes ──
+const RISK_TO_ALLOC = {
+  very_conservative:        {equity:20, fixed_income:60, real_estate:5, commodity:5, cash:10, alternative:0},
+  conservative:             {equity:30, fixed_income:55, real_estate:5, commodity:3, cash:5,  alternative:2},
+  moderately_conservative:  {equity:40, fixed_income:45, real_estate:5, commodity:3, cash:3,  alternative:4},
+  moderate:                 {equity:55, fixed_income:30, real_estate:7, commodity:3, cash:0,  alternative:5},
+  moderately_aggressive:    {equity:65, fixed_income:20, real_estate:7, commodity:3, cash:0,  alternative:5},
+  aggressive:               {equity:75, fixed_income:10, real_estate:8, commodity:2, cash:0,  alternative:5},
+  very_aggressive:          {equity:85, fixed_income:5,  real_estate:5, commodity:0, cash:0,  alternative:5}
+};
+// An asset class the research houses are net underweight on is left out of the
+// mix entirely, not merely trimmed (from this tilt down; above it is rounding noise).
+const RESEARCH_EXCLUDE_AT = -0.25;
+// Commodities are too volatile to be a core holding: held only as a thematic
+// satellite, only when the research view on them is net positive, and capped.
+const COMMODITY_THEMATIC_CAP = 5;
+// Where a left-out class's weight goes, keeping the risk profile: equity weight
+// goes to the defensive classes (the houses are bearish, so de-risk), real assets
+// to the other growth classes, bonds and cash to each other. "fallback" is used
+// in order when no primary receiver is held.
+const ALLOC_RECEIVERS = {
+  equity:       {primary:["fixed_income","cash"],               fallback:["fixed_income","cash","alternative"]},
+  real_estate:  {primary:["equity","alternative"],              fallback:["equity","fixed_income"]},
+  alternative:  {primary:["equity","real_estate"],              fallback:["equity","fixed_income"]},
+  commodity:    {primary:["equity","alternative","real_estate"], fallback:["equity","fixed_income"]},
+  fixed_income: {primary:["cash"],                              fallback:["cash","equity"]},
+  cash:         {primary:["fixed_income"],                      fallback:["fixed_income","equity"]}
+};
+// The risk-profile mix, shifted by the tier-weighted research view on each asset
+// class, with net-underweight classes left out and commodities held as a capped
+// thematic satellite. Shared by the rules engine and the Claude second opinion, so
+// both start from the same mix. classTilts records each house's share of every shift.
+function researchTiltedAllocation(risk, signals){
+  const baseline = {...(RISK_TO_ALLOC[risk] || RISK_TO_ALLOC.moderate)};
   const alloc = {...baseline};
-  if(hasResearch){
-    const maxTilt = 8;
+  const classTilts = {};
+  if(signals && signals.scoredItems > 0){
     for(const [cls, data] of Object.entries(signals.classes)){
       if(!(cls in alloc)) continue;
-      const tilt = Math.max(-maxTilt, Math.min(maxTilt, data.votes / 4));
+      const tilt = Math.max(-RESEARCH_MAX_TILT, Math.min(RESEARCH_MAX_TILT, data.tilt || 0));
       alloc[cls] += tilt;
+      classTilts[cls] = {pts:+tilt.toFixed(1), net:data.net,
+        houses:data.houses.map(x => ({name:x.name, tier:x.tier, tierLabel:x.tierLabel, stance:researchStanceWord(x.vote),
+          pts:+(RESEARCH_MAX_TILT * x.share).toFixed(2), items:x.items}))};
     }
     // Normalize to 100
     const tot = Object.values(alloc).reduce((s,v)=>s+v,0);
     if(tot > 0) Object.keys(alloc).forEach(k => { alloc[k] = Math.max(0, alloc[k] * 100 / tot); });
   }
+  const hasResearch = !!(signals && signals.scoredItems > 0);
+  const excluded = [];
+  if(hasResearch){
+    Object.entries(classTilts).forEach(([cls, t]) => {
+      if(t.pts <= RESEARCH_EXCLUDE_AT && alloc[cls] > 0) excluded.push({cls, pts:t.pts, reason:"underweight"});
+    });
+    // Commodities only on a positive view.
+    if(alloc.commodity > 0 && !excluded.some(e => e.cls === "commodity") && !(classTilts.commodity && classTilts.commodity.pts > 0))
+      excluded.push({cls:"commodity", pts:classTilts.commodity ? classTilts.commodity.pts : 0, reason:"not_positive"});
+  }
+  const isOut = c => excluded.some(e => e.cls === c);
+  excluded.forEach(e => { e.weight = +alloc[e.cls].toFixed(1); alloc[e.cls] = 0; });
+  const give = (amount, from) => {
+    const r = ALLOC_RECEIVERS[from] || {primary:[], fallback:["equity"]};
+    let to = r.primary.filter(c => !isOut(c) && alloc[c] > 0);
+    if(!to.length){ const f = r.fallback.find(c => !isOut(c)); to = f ? [f] : []; }
+    const tot = to.reduce((s, c) => s + alloc[c], 0);
+    to.forEach(c => { alloc[c] += tot > 0 ? amount * alloc[c] / tot : amount / to.length; });
+    return to;
+  };
+  excluded.forEach(e => { e.to = give(e.weight, e.cls); });
+  let thematic = null;
+  if(alloc.commodity > 0){
+    const before = alloc.commodity;
+    if(alloc.commodity > COMMODITY_THEMATIC_CAP) alloc.commodity = COMMODITY_THEMATIC_CAP;
+    thematic = {cls:"commodity", pct:alloc.commodity, cap:COMMODITY_THEMATIC_CAP,
+      pts: classTilts.commodity ? classTilts.commodity.pts : null, cappedFrom: before > COMMODITY_THEMATIC_CAP ? +before.toFixed(1) : null};
+    if(before > COMMODITY_THEMATIC_CAP) thematic.freedTo = give(before - COMMODITY_THEMATIC_CAP, "commodity");
+  }
   // Round
   Object.keys(alloc).forEach(k => { alloc[k] = Math.round(alloc[k] * 10) / 10; });
+  if(thematic) thematic.pct = alloc.commodity;
+  return {baseline, alloc, classTilts, excluded, thematic};
+}
+
+// The research trail for one picked fund, as shown on its card.
+function researchTraceFor(f, cls, ct, signals){
+  const r = f._research || {quality:null, tickerPts:0, alignPts:0, alignParts:[]};
+  const tk = signals.tickers[f.tkr];
+  return {
+    engine: "rules",
+    classTilt: ct ? {cls, pts:ct.pts, houses:ct.houses.filter(h => Math.abs(h.pts) >= 0.05).slice(0, 6)} : null,
+    tickerPts: r.tickerPts,
+    tickerHouses: tk ? tk.houses.slice(0, 4) : [],
+    alignPts: r.alignPts,
+    alignParts: r.alignParts.slice(0, 5),
+    quality: r.quality,
+    researchPts: +((r.tickerPts || 0) + (r.alignPts || 0)).toFixed(2)
+  };
+}
+function researchCiteLine(ev){
+  return `[${ev.id}] ${ev.feedName} (${ev.tierLabel}, ${RESEARCH_KIND_LABEL[ev.kind]}, ${ev.date}): ${ev.title}`;
+}
+// The items behind a fund: what named it first, then the lead item of each
+// house that moved its asset class.
+function researchCitationsFor(f, ct, signals){
+  const out = [], seen = new Set();
+  const add = ev => { if(ev && ev.id && !seen.has(ev.id)){ seen.add(ev.id); out.push(researchCiteLine(ev)); } };
+  const tk = signals.tickers[f.tkr];
+  if(tk) tk.houses.forEach(h => h.items.forEach(add));
+  if(ct) ct.houses.forEach(h => (h.items || []).slice(0, 1).forEach(add));
+  return out.slice(0, 4);
+}
+// Equity size and style: how much of the equity sleeve is large, mid and small
+// cap, international, value and growth, next to the research view on each.
+const EQUITY_STYLE_KEYS = ["large_cap","mid_cap","small_cap","international","value","growth"];
+function equityStyleMetrics(positions, signals, country){
+  const eq = (positions || []).filter(p => p.cls === "equity");
+  const W = eq.reduce((s, p) => s + (+p.weight || 0), 0);
+  const sums = Object.fromEntries(EQUITY_STYLE_KEYS.map(k => [k, 0]));
+  eq.forEach(p => {
+    const f = AI_FUND_UNIVERSE.find(x => x.tkr === (p.ticker || p.tkr));
+    fundStyleKeys(f, country).forEach(k => { if(k in sums) sums[k] += +p.weight || 0; });
+  });
+  return {
+    equityWeight: +W.toFixed(1),
+    rows: EQUITY_STYLE_KEYS.map(k => {
+      const e = signals && signals.points && signals.points.styles && signals.points.styles[k];
+      const d = signals && signals.styles && signals.styles[k];
+      return {key:k, label:ENG_PRETTY_STYLE[k],
+        pctOfEquity: W > 0 ? +(sums[k] / W * 100).toFixed(1) : 0, pctOfPortfolio: +sums[k].toFixed(1),
+        stance: e ? e.stance : null, net: e ? e.net : null,
+        forHouses: d ? d.forHouses.slice(0, 4) : [], againstHouses: d ? d.againstHouses.slice(0, 4) : []};
+    })
+  };
+}
+
+// What the result panel shows about the research behind the whole portfolio.
+function researchBasisFor(signals, classTilts, excluded, thematic){
+  return {
+    excludedClasses: excluded || [], thematic: thematic || null,
+    houses: signals.houses, houseCount: signals.houseCount, panelWeight: signals.panelWeight,
+    scoredItems: signals.scoredItems, totalItems: signals.totalItems, excluded: signals.excluded,
+    classTilts: Object.entries(classTilts || {}).map(([cls, t]) => ({cls, ...t})).sort((a, b) => Math.abs(b.pts) - Math.abs(a.pts)),
+    evidence: signals.evidence.slice(0, 40)
+  };
+}
+
+function runDeterministicEngine(brief){
+  // ── Step 1: aggregate research signals from admin's cache ──
+  const signals = engAggregateSignals();
+  // Only counted views make research: generic themes, company news and stale items do not.
+  const hasResearch = signals.scoredItems > 0;
+
+  // ── Step 2: tilt the risk-profile mix by the tier-weighted house views ──
+  const _ta = researchTiltedAllocation(brief.risk, signals);
+  const baseline = _ta.baseline, alloc = _ta.alloc, classTilts = _ta.classTilts, excludedClasses = _ta.excluded, thematic = _ta.thematic;
 
   // ── Step 3: pick funds for each class with research-aware scoring ──
   // Apply domicile/regulatory filter based on client country (HARD CONSTRAINT)
@@ -23862,6 +24506,7 @@ function runDeterministicEngine(brief){
   const used = {sponsors: new Set()};
   const sleevePlan = builderSleevePlan(brief);   // null unless a Swiss household in CHF
   const sleeveGaps = [];
+  let equitySleevePlan = null;   // the equity sleeve split, for the result card
   const positions = [];
   // Pre-flight: which sleeves can this client actually be sold? Non-US (UCITS)
   // jurisdictions have NO eligible cash or alternative funds, so those sleeves
@@ -23907,7 +24552,11 @@ function runDeterministicEngine(brief){
       const divScore      = Math.min(1, Math.log10(Math.max(1, _q(f,"holdings") || 1)) / 4);
       const drawdownPen   = Math.max(0, (Math.abs(_q(f,"maxDD") || 0) - 25) / 50);
       let score = erScore * 1.0 + sharpeScore * 1.8 + longReturn * 1.0 + aumScore * 0.6 + divScore * 0.4 - drawdownPen * 0.8;
-      if(signals.tickers[f.tkr]){ score += 2 + (signals.tickers[f.tkr].count * 0.3); }
+      const _quality = score;
+      // A house naming this fund: tier-weighted, so one wirehouse view outranks
+      // any number of news mentions.
+      const _tkPts = signals.tickers[f.tkr] ? signals.tickers[f.tkr].bonus : 0;
+      score += _tkPts;
       // "Prefer sustainable" is a soft tilt (strict is handled as a hard
       // universe filter above) — without this the stated preference had no
       // effect on which funds were picked.
@@ -23920,10 +24569,19 @@ function runDeterministicEngine(brief){
       // research-named fund still leads.
       const _bk = fundBucketKeys(f);
       let _align = 0;
-      _bk.regions.forEach(k => { _align += stanceScore(signals, "regions", k) * 0.8; });
-      _bk.sectors.forEach(k => { _align += stanceScore(signals, "sectors", k) * 0.6; });
-      _bk.themes.forEach(k  => { _align += stanceScore(signals, "themes",  k) * 0.5; });
-      score += Math.max(-2, Math.min(2, _align));
+      const _alignParts = [];
+      _bk.styles = fundStyleKeys(f, brief.country);
+      [["regions", 0.8], ["sectors", 0.6], ["styles", 0.6], ["themes", 0.5]].forEach(([b, mult]) => _bk[b].forEach(k => {
+        const v = stanceScore(signals, b, k) * mult;
+        if(v){
+          const _e = bucketPoints(signals, b, k) || {};
+          _align += v;
+          _alignParts.push({bucket:b, key:k, pts:+v.toFixed(2), stance:_e.stance, houses:(_e.stance === "underweight" ? _e.uwProviders : _e.owProviders) || []});
+        }
+      }));
+      const _alignPts = Math.max(-2, Math.min(2, _align));
+      score += _alignPts;
+      f._research = {quality:+_quality.toFixed(2), tickerPts:_tkPts, alignPts:+_alignPts.toFixed(2), alignParts:_alignParts};
       // ── Currency match on the CASH sleeve ────────────────────────────
       // Sharpe uses a single USD risk-free, so a EUR money-market fund yielding
       // 3% scores a NEGATIVE Sharpe against a USD fund yielding 5% and loses —
@@ -23975,14 +24633,15 @@ function runDeterministicEngine(brief){
     // Sharpe matches by construction — which makes them the likeliest pair to be
     // picked together. Holding both would show one position as two and read as
     // diversification that is not there.
+    // Nor two funds on the same index (fundExposureKey): QQQ beside QQQM, or AGG
+    // beside BND, is one exposure shown as two.
     const picks = [];
     const famSeen = new Set();
     for(const cand of candidates){
       if(picks.length >= n) break;
-      if(cand.family){
-        if(famSeen.has(cand.family)) continue;
-        famSeen.add(cand.family);
-      }
+      const _fk = fundExposureKey(cand);
+      if(famSeen.has(_fk)) continue;
+      famSeen.add(_fk);
       picks.push(cand);
     }
     const each = weight / n;
@@ -23990,13 +24649,16 @@ function runDeterministicEngine(brief){
     // weight over the funds it has, so the class keeps its weight. Every other
     // household keeps each = weight / n exactly as before.
     let picked = picks.map(f => ({f, w: sleevePlan ? weight / picks.length : each, sleeve: null}));
-    // Swiss sleeves (BUILDER_SLEEVES_CHF): same scores and order as above, one fund
-    // per sleeve. null for every other household, so picked stays the generic pick.
-    const _sleeves = sleevePlan && sleevePlan[cls];
+    // Sleeves, same scores and order as above, one fund per sleeve: the Swiss
+    // sleeves (BUILDER_SLEEVES_CHF) for a Swiss household in CHF, and for every
+    // other household the research-sized equity sub-sleeves (equitySubSleeves).
+    const _generic = !sleevePlan && cls === "equity";
+    const _sleeves = (sleevePlan && sleevePlan[cls]) || (_generic ? equitySubSleeves(brief, signals, weight) : null);
     if(_sleeves){
       const _ok = c => !_SLV_UNVERIFIED.has(c.tkr) && !_SLV_HEDGED_ELSEWHERE(c);
-      const _taken = new Set();   // one fund never fills two sleeves
-      const _filled = _sleeves.map(s => { const f = candidates.find(c => _ok(c) && !_taken.has(c.tkr) && s.test(c)); if(f) _taken.add(f.tkr); return {s, f}; });
+      const _taken = new Set();   // one fund, or one index, never fills two sleeves
+      const _live = _sleeves.filter(s => s.share > 0);
+      const _filled = _live.map(s => { const f = candidates.find(c => _ok(c) && !_taken.has(fundExposureKey(c)) && s.test(c)); if(f) _taken.add(fundExposureKey(f)); return {s, f}; });
       const _have = _filled.filter(x => x.f);
       if(_have.length){
         const _sh = _have.reduce((t, x) => t + x.s.share, 0);
@@ -24004,28 +24666,38 @@ function runDeterministicEngine(brief){
       }
       _filled.filter(x => !x.f).forEach(x => sleeveGaps.push({cls, label: x.s.label,
         weight: +(weight * x.s.share).toFixed(1), to: _have.length ? _have.map(y => y.s.label) : null}));
+      if(cls === "equity") equitySleevePlan = _sleeves.map(sv => {
+        const got = _have.find(x => x.s === sv);
+        return {key: sv.key || null, label: sv.label, baseShare: sv.baseShare != null ? sv.baseShare : +(sv.share * 100).toFixed(1),
+          share: +(sv.share * 100).toFixed(1), pts: sv.pts || 0, stance: sv.stance || null, houses: sv.houses || [],
+          excluded: !!sv.excluded, tooSmall: !!sv.tooSmall, generic: _generic,
+          fund: got ? got.f.tkr : null, weight: got ? +(weight * got.s.share / _have.reduce((t, x) => t + x.s.share, 0)).toFixed(1) : 0};
+      });
     }
     picked.forEach(({f, w, sleeve}) => {
       // Build rich rationale citing research
       const rationaleParts = [];
       const clsData = signals.classes[cls];
-      if(clsData){
-        // Only the sources leaning the net direction count as agreeing (agreeCount), as in the admin engine.
-        if(clsData.votes !== 0){
-          const dir = clsData.votes > 0 ? "overweight" : "underweight";
-          rationaleParts.push(`${clsData.agreeCount} of ${signals.providerCount} research sources ${dir} ${ENG_PRETTY_CLASS[cls]} (${clsData.votes>=0?'+':''}${clsData.votes} net votes)`);
+      const _ct = classTilts[cls];
+      if(clsData && _ct){
+        // Only the houses leaning the net direction count as agreeing.
+        if(Math.abs(_ct.pts) >= 0.1){
+          const dir = _ct.pts > 0 ? "overweight" : "underweight";
+          const _who = (_ct.pts > 0 ? clsData.forHouses : clsData.againstHouses).slice(0, 3);
+          rationaleParts.push(`Research tilt ${_ct.pts > 0 ? "+" : ""}${_ct.pts.toFixed(1)} pts to ${ENG_PRETTY_CLASS[cls]}: ${clsData.agreeCount} of ${signals.houseCount} research houses ${dir}${_who.length ? " (" + _who.join(", ") + ")" : ""}, weighted by source tier`);
         } else {
-          rationaleParts.push(`${clsData.providerCount} of ${signals.providerCount} research sources mention ${ENG_PRETTY_CLASS[cls]}, with no net direction`);
+          rationaleParts.push(`${clsData.providerCount} of ${signals.houseCount} research houses mention ${ENG_PRETTY_CLASS[cls]}, with no net direction`);
         }
       } else if(hasResearch){
         rationaleParts.push(`Baseline ${ENG_PRETTY_CLASS[cls]} weight (no explicit consensus in research)`);
       } else {
         rationaleParts.push(`${ENG_PRETTY_CLASS[cls]} baseline for your ${brief.risk.replace(/_/g," ")} risk profile`);
       }
-      if(sleeve) rationaleParts.push(`${sleeve.label} sleeve: ${Math.round(w / weight * 100)}% of the ${ENG_PRETTY_CLASS[cls].toLowerCase()} weight`);
+      if(sleeve) rationaleParts.push(`${sleeve.label} sleeve: ${Math.round(w / weight * 100)}% of the ${ENG_PRETTY_CLASS[cls].toLowerCase()} weight` + (sleeve.pts ? ` (${sleeve.pts > 0 ? "+" : ""}${sleeve.pts} pts from the research view on ${ENG_PRETTY_STYLE[sleeve.key].toLowerCase()})` : ""));
+      if(cls === "commodity") rationaleParts.push(`Thematic satellite: commodities are held only on a net positive research view and capped at ${COMMODITY_THEMATIC_CAP}% of the portfolio, because they are too volatile to be a core holding`);
       if(signals.tickers[f.tkr]){
         const tk = signals.tickers[f.tkr];
-        rationaleParts.push(`${f.tkr} cited by ${tk.providers.slice(0,3).join(", ").toUpperCase()}${tk.providers.length>3?" + "+(tk.providers.length-3)+" more":""}`);
+        rationaleParts.push(`${f.tkr} named by ${tk.providers.slice(0,3).join(", ")}${tk.providers.length>3?" and "+(tk.providers.length-3)+" more":""}`);
       }
       // Quantitative metrics
       const _pc = v => (v == null ? "n/a" : v.toFixed(1) + "%");
@@ -24061,6 +24733,7 @@ function runDeterministicEngine(brief){
         weight: +w.toFixed(1),
         // Swiss sleeve picks only: the sleeve's name, and its region for the proposal pie.
         ...(sleeve ? {sleeve: sleeve.label, sleeveRegion: sleeve.region} : {}),
+        ...(cls === "commodity" ? {thematic: true} : {}),
         // cls carries the pricing: computePortfolioMetrics() prices the line by its
         // asset class on the CMA (exp null, cash at 0%), exactly as the Investment
         // Proposal and Portfolio Comparison do. f.mu / f.sigma only ranked the fund.
@@ -24068,7 +24741,10 @@ function runDeterministicEngine(brief){
         sigma: null,
         cls:   f.cls,
         rationale: rationaleParts.join(" · "),
-        citations: (clsData?.items || []).slice(0,3).map(i => `[${i.provider}] ${i.title}`),
+        // Every point of research that moved this line: the class tilt (house by
+        // house), the fund's own mentions, and its region/sector/theme fit.
+        research: researchTraceFor(f, cls, _ct, signals),
+        citations: researchCitationsFor(f, _ct, signals),
         metrics: fundMetricsFor(f)   // curated figures only
       });
       used.sponsors.add(f.sponsor);
@@ -24121,10 +24797,22 @@ function runDeterministicEngine(brief){
   // suppress the "broad institutional alignment" reassurance for non-US clients
   let researchRiskCount = 0;
   if(hasResearch){
-    const negClasses = Object.entries(signals.classes).filter(([,d]) => d.votes < -5).sort((a,b) => a[1].votes - b[1].votes).slice(0,3);
-    negClasses.forEach(([cls,d]) => { risks.push(`${ENG_PRETTY_CLASS[cls]} under pressure: ${d.agreeCount} research source${d.agreeCount===1?"":"s"} underweight (${d.votes} net votes)`); researchRiskCount++; });
-    const negRegions = Object.entries(signals.regions).filter(([,d]) => d.votes < -5).slice(0,2);
-    negRegions.forEach(([r,d]) => { risks.push(`${ENG_PRETTY_REGION[r]} regional risk flagged by ${d.agreeCount} research source${d.agreeCount===1?"":"s"}`); researchRiskCount++; });
+    // Net-underweight classes are left out of the mix and disclosed below.
+    const negRegions = Object.entries(signals.points.regions).filter(([,e]) => e.stance === "underweight").slice(0,2);
+    negRegions.forEach(([r,e]) => { risks.push(`${ENG_PRETTY_REGION[r] || r} regional risk flagged by ${e.uw} research house${e.uw===1?"":"s"} (${e.uwProviders.slice(0,3).join(", ")})`); researchRiskCount++; });
+    (excludedClasses || []).forEach(e => {
+      const d = signals.classes[e.cls] || {};
+      const to = (e.to || []).map(c => (ENG_PRETTY_CLASS[c] || c).toLowerCase()).join(" and ");
+      risks.push(e.reason === "not_positive"
+        ? `${ENG_PRETTY_CLASS[e.cls]} left out: held only as a thematic satellite when the research view is net positive (it is ${e.pts > 0 ? "+" : ""}${e.pts} pts); its ${e.weight}% went to ${to}`
+        : `${ENG_PRETTY_CLASS[e.cls]} left out: research houses net underweight (${e.pts} pts${d.againstHouses && d.againstHouses.length ? ", " + d.againstHouses.slice(0,3).join(", ") : ""}); its ${e.weight}% went to ${to}`);
+      researchRiskCount++;
+    });
+    (equitySleevePlan || []).filter(r => r.excluded).forEach(r => {
+      risks.push(`${r.label} left out of the equity sleeve: research houses net underweight on ${ENG_PRETTY_STYLE[r.key].toLowerCase()}${r.houses.length ? " (" + r.houses.slice(0,3).join(", ") + ")" : ""}`);
+      researchRiskCount++;
+    });
+    if(thematic && thematic.cappedFrom) risks.push(`Commodities capped at ${thematic.cap}% as a thematic satellite (the research pointed to ${thematic.cappedFrom}%), because they are volatile`);
     if(brief.maxPosition < 20){ risks.push("Position size constraint may limit conviction expression in highest-rated classes"); researchRiskCount++; }
     // Concentration risk
     const eqW = alloc.equity || 0;
@@ -24165,26 +24853,27 @@ function runDeterministicEngine(brief){
   });
 
   // ── Step 6: top themes for narrative ──
-  const topThemes = Object.entries(signals.themes).sort((a,b) => b[1].votes - a[1].votes).slice(0,3);
+  const topThemes = Object.entries(signals.themes).filter(([,d]) => d.net > 0).sort((a,b) => b[1].net - a[1].net).slice(0,3);
 
   // ── Step 7: build citations + summary ──
-  const researchCitations = [];
-  Object.values(signals.classes).slice(0,4).forEach(d => {
-    if(d.items && d.items[0]) researchCitations.push(`${d.items[0].provider.toUpperCase()}: ${d.items[0].title}`);
-  });
+  // The strongest counted items: wirehouse house views first by construction.
+  const researchCitations = signals.evidence.slice(0, 6).map(researchCiteLine);
   if(researchCitations.length === 0) researchCitations.push("No live research cited: baseline allocation only");
 
   const topClass = Object.entries(alloc).sort((a,b) => b[1] - a[1])[0];
   const topClassName = topClass ? ENG_PRETTY_CLASS[topClass[0]] : "-";
   const topClassPct = topClass ? topClass[1].toFixed(0) : "0";
   const summary = hasResearch
-    ? `Rules-engine recommendation: the ${brief.risk.replace(/_/g," ")} model mix, tilted by ${signals.scoredItems} distinct research items cached from ${signals.providerCount} sources (a curated baseline unless live feeds are configured). Largest sleeve: ${topClassPct}% ${topClassName}. ${topThemes.length > 0 ? "Dominant themes: " + topThemes.map(([t,d]) => ENG_PRETTY_THEME[t] || t).join(", ") + "." : ""} Matched to your ${brief.risk.replace(/_/g," ")} risk profile.`
+    ? `Rules-engine recommendation: the ${brief.risk.replace(/_/g," ")} model mix, tilted by ${signals.scoredItems} house views from ${signals.houseCount} research houses, weighted by source tier with ${(signals.houses.filter(h => h.tier === 1 && h.counted > 0).length)} wirehouses leading (a curated baseline unless live feeds are configured). Largest sleeve: ${topClassPct}% ${topClassName}. ${topThemes.length > 0 ? "Dominant themes: " + topThemes.map(([t,d]) => ENG_PRETTY_THEME[t] || t).join(", ") + "." : ""} Matched to your ${brief.risk.replace(/_/g," ")} risk profile.`
     : `Baseline recommendation for your ${brief.risk.replace(/_/g," ")} risk profile (no cached research available). Open admin → Research Library and click Refresh to enable research-tilted output.`;
 
   const rec = {
     engine: "rules",   // the deterministic rules engine: no model involved
     summary: summary + (sleevePlan ? " Swiss household in CHF: equity, bonds and gold are filled sleeve by sleeve to match the CHF capital market assumptions; the notes below list any sleeve the fund list cannot fill." : ""),
     allocationByClass: alloc,
+    researchBasis: hasResearch ? researchBasisFor(signals, classTilts, excludedClasses, thematic) : null,
+    excludedClasses, thematic,
+    equityStyle: {...equityStyleMetrics(positions, signals, brief.country), sleeves: equitySleevePlan},
     positions,
     expectedReturn,
     expectedVolatility,
@@ -24213,7 +24902,7 @@ function runDeterministicEngine(brief){
   lastAIGenResult = rec;
   renderAIGenResult(rec, {...brief, researchProviderCount: signals.providerCount});
   if(hasResearch){
-    $("aiGenStatus").innerHTML = '✓ <strong style="color:#1b6841">Built by the rules engine, tilted by research</strong>: ' + signals.totalItems + ' items on file across ' + signals.providerCount + ' sources';
+    $("aiGenStatus").innerHTML = '✓ <strong style="color:#1b6841">Built by the rules engine, tilted by research</strong>: ' + signals.scoredItems + ' house views counted from ' + signals.houseCount + ' research houses';
   } else {
     $("aiGenStatus").innerHTML = '⚠ <strong style="color:#c98a3a">Built by the rules engine: risk-profile baseline only</strong>. Open <a href="admin.html" target="_blank" style="color:var(--gold)">admin → Research Library</a> and click Refresh to enable research-tilted output';
   }

@@ -1393,7 +1393,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261101-1857";
+const APP_VERSION = "20261101-1951";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -3883,16 +3883,24 @@ async function fetchFeedItems(url, report){
   } catch(e){ note("network", (e && e.name === "AbortError") ? "timed out" : "network error"); return []; }
 }
 
+// "house" = the firm's own publication feed; "news" = a news search or a
+// corporate newsroom, where an item is a view only if it reads like one.
+function researchFeedVia(url){
+  let host = "", path = "";
+  try { const u = new URL(url); host = u.hostname; path = u.pathname; } catch(_){}
+  return (/news\.google\.com$/.test(host) || /newsroom/.test(host + path) || /^feeds\.bloomberg\.com$/.test(host)) ? "news" : "house";
+}
+
 async function refreshProvider(id){
   const p = RESEARCH_PROVIDERS.find(x => x.id===id);
   if(!p) return;
   // Try all 3 feeds in parallel (primary firm RSS + secondary + Google News query)
   const reports = [{}, {}, {}];
-  const [primaryItems, secondaryItems, tertiaryItems] = await Promise.all([
+  const [primaryItems, secondaryItems, tertiaryItems] = (await Promise.all([
     fetchFeedItems(p.feed,  reports[0]),
     fetchFeedItems(p.feed2, reports[1]),
     fetchFeedItems(p.feed3, reports[2])
-  ]);
+  ])).map((items, i) => { const v = researchFeedVia([p.feed, p.feed2, p.feed3][i]); return items.map(it => ({...it, via: v})); });
   // Combine + dedupe by title (case-insensitive, first 80 chars)
   const seen = new Set();
   let combined = [...primaryItems, ...secondaryItems, ...tertiaryItems].filter(it => {
@@ -4900,7 +4908,8 @@ function renderResearch(){
   renderResearchCorpusSummary();
   const list = $("rpList");
   if(!list) return;
-  list.innerHTML = RESEARCH_PROVIDERS.map(p => {
+  // Wirehouse sources first: the order the builder weights them in.
+  list.innerHTML = RESEARCH_PROVIDERS.slice().sort((a, b) => researchHouseOf(a.id).tier - researchHouseOf(b.id).tier).map(p => {
     const cfg = getProviderCfg(p.id);
     const cnt = (cfg.items||[]).length;
     const en = cfg.enabled !== false;
@@ -4916,6 +4925,20 @@ function renderResearch(){
       : "";
     const iss = monthlyIssueStatus(p, cfg);
     const issColor = iss ? ({current:"var(--color-success)", pending:"var(--color-text-muted)", due:"var(--color-warning)", overdue:"var(--color-error)"})[iss.state] : "";
+    // How the Portfolio Builder reads this source: its house and tier, and how
+    // many items count as views versus headlines, generic themes or stale items.
+    const hs = researchHouseOf(p.id);
+    const kc = {house:0, reported:0, headline:0, generic:0, stale:0};
+    (cfg.items || []).forEach(it => {
+      const k = researchItemKind(it);
+      if((k === "house" || k === "reported") && researchRecencyWeight(researchItemAgeDays(it, Date.now())) <= 0) kc.stale++;
+      else kc[k]++;
+    });
+    const left = [kc.headline ? kc.headline + " headline" + (kc.headline === 1 ? "" : "s") : "", kc.generic ? kc.generic + " generic" : "", kc.stale ? kc.stale + " stale" : ""].filter(Boolean).join(", ");
+    const tierLine = `<div style="font-size:11px;margin-top:3px"><span style="font-weight:700;color:${hs.tier === 1 ? "var(--color-success)" : "var(--color-text-muted)"}">${escapeHtml(RESEARCH_TIERS[hs.tier].label)} · weight ${hs.weight}</span>`
+      + (RESEARCH_FEED_HOUSE[p.id] ? ` <span style="color:var(--color-text-muted)">(one vote with the other ${escapeHtml(hs.name)} feeds)</span>` : "")
+      + (cnt ? `<div style="color:var(--color-text-muted)">${kc.house + kc.reported} counted as views${kc.reported ? " (" + kc.reported + " press-reported, half weight)" : ""}${left ? "; left out: " + left : ""}</div>` : "")
+      + `</div>`;
     return `<div class="rp-card${en?'':' disabled'}">
       <div class="rp-head">
         <div class="rp-icon" style="background:${p.color}">${p.letter}</div>
@@ -4926,6 +4949,7 @@ function renderResearch(){
         <label style="cursor:pointer"><input type="checkbox" ${en?'checked':''} data-action="toggleProvider" data-prov="${p.id}"></label>
       </div>
       <div style="font-size:11px;color:var(--color-text-muted)">Last: ${lr}</div>
+      ${tierLine}
       ${feedWarn}
       ${iss ? `<div style="font-size:11px;font-weight:600;color:${issColor};margin-top:3px">${iss.state==="current"?icon("check"):icon("circle")} ${escapeHtml(iss.label)}</div>` : ""}
       <div class="rp-actions">
@@ -6629,6 +6653,94 @@ function extractItemSignals(item, providerName){
 }
 
 // Aggregate signals across ALL providers for selected research
+// ═══════════════════════════════════════════════════════════
+// RESEARCH SOURCE WEIGHTING (keep identical in admin.html)
+// Who said it matters more than how often it was said. Every research house
+// casts ONE vote per topic, weighted by its tier: wirehouse house views lead,
+// private banks and asset managers follow, news and open platforms barely
+// register. A headline ABOUT a firm (its share price, results, hires, a
+// lawsuit) is not a market view and is not counted at all.
+// ═══════════════════════════════════════════════════════════
+const RESEARCH_TIERS = {
+  1: {label: "Wirehouse house view", short: "Wirehouse", weight: 3},
+  2: {label: "Private bank or asset manager", short: "Private bank / AM", weight: 1.5},
+  3: {label: "Independent research", short: "Independent", weight: 0.75},
+  4: {label: "News or open platform", short: "News", weight: 0.25}
+};
+const RESEARCH_HOUSES = {
+  bofa:      {name: "Merrill / Bank of America", tier: 1},
+  gs:        {name: "Goldman Sachs", tier: 1},
+  jpm:       {name: "J.P. Morgan", tier: 1},
+  ms:        {name: "Morgan Stanley", tier: 1},
+  ubs:       {name: "UBS", tier: 1},
+  citi:      {name: "Citi Private Bank", tier: 2},
+  julius:    {name: "Julius Baer", tier: 2},
+  pictet:    {name: "Pictet", tier: 2},
+  vontobel:  {name: "Vontobel", tier: 2},
+  blackrock: {name: "BlackRock Investment Institute", tier: 2},
+  eaton:     {name: "Eaton Vance", tier: 2},
+  oppen:     {name: "Oppenheimer", tier: 2},
+  mstar:     {name: "Morningstar", tier: 3},
+  factset:   {name: "FactSet", tier: 3},
+  bloomberg: {name: "Bloomberg", tier: 4},
+  sa:        {name: "Seeking Alpha", tier: 4}
+};
+// Several feeds can belong to one house. Merrill CIO Viewpoint, the BofA RIC
+// report, the US 1 List and the BofA newsroom are all Bank of America: they pool
+// into one vote, or one firm with four feeds would outvote three firms with one.
+// A feed not listed here is its own house; an unknown house sits in tier 4.
+const RESEARCH_FEED_HOUSE = {bofa_ml: "bofa", ml_viewpoint: "bofa", bofa_ric: "bofa", bofa_us1: "bofa"};
+const RESEARCH_FEED_NAMES = {bofa_ml: "BofA newsroom", ml_viewpoint: "Merrill CIO Viewpoint", bofa_ric: "BofA RIC Report", bofa_us1: "BofA US 1 List"};
+function researchHouseOf(pid){
+  const id = RESEARCH_FEED_HOUSE[pid] || pid;
+  const h = RESEARCH_HOUSES[id];
+  const tier = h ? h.tier : 4;
+  return {id, name: h ? h.name : String(pid), tier, weight: RESEARCH_TIERS[tier].weight, tierLabel: RESEARCH_TIERS[tier].short};
+}
+function researchFeedName(pid){ return RESEARCH_FEED_NAMES[pid] || researchHouseOf(pid).name; }
+
+// An item counts in full when it is the house's own view (its catalogued house
+// view, or its own publication feed) and at half weight when a news outlet
+// reports the house's view ("Goldman strategists raise their S&P target").
+const RESEARCH_KIND_WEIGHT = {house: 1, reported: 0.5};
+const RESEARCH_KIND_LABEL = {house: "house view", reported: "view reported in the press", headline: "company news", generic: "generic theme"};
+// News about the firm itself. Checked before anything else: a firm's own feed
+// carries its results and hires too, and none of that is a market view.
+const RESEARCH_CORP_NEWS = /\b(?:shares? (?:fell|fall|falls|rose|rise|rises|jump(?:s|ed)?|slid(?:e|es)?|slump(?:s|ed)?|drop(?:s|ped)?|surge(?:s|d)?|tumble(?:s|d)?|climb(?:s|ed)?|sink(?:s)?|sank)|stock (?:falls|rises|jumps|slides|drops|surges|sinks)|(?:quarterly|annual|first[- ]quarter|second[- ]quarter|third[- ]quarter|fourth[- ]quarter|Q[1-4]) (?:profit|results|earnings|revenue|loss)|net (?:income|profit)|(?:beats|misses|tops) (?:estimates|expectations)|layoffs?|job cuts|cut(?:s|ting)? (?:\d+ )?jobs|hires?|hired|hiring|appoint(?:s|ed|ment)|steps? down|resign(?:s|ed|ation)?|poach(?:es|ed|ing)?|lawsuits?|sued|sues|settlement|fined|penalt(?:y|ies)|probe|investigation|whistleblower|data breach|outage|acquires?|acquired|acquisition of|takeover|buyback|share repurchase|bonus(?:es)? pool|pay package|headquarters|opens? (?:an? )?(?:new )?(?:office|branch)|sponsorship|wins? (?:an? )?award)\b/i;
+// Language that marks an investment view: a stance, a forecast, a positioning call.
+const RESEARCH_VIEW_LANG = /\b(?:overweight|underweight|outlook|house view|CIO|strategists?|economists?|forecasts?|expects?|sees|predicts?|price target|year-end target|targets?|recommends?|recommendation|prefers?|favou?rs?|bullish|bearish|positioning|allocation|tactical|strategic|upgrades?|downgrades?|top picks?|best ideas|we (?:like|prefer|remain|see|expect|think|believe|favou?r)|cautious on|constructive on|neutral on)\b/i;
+function researchItemKind(item){
+  if(!item) return "headline";
+  if(item.shared) return "generic";          // one pool every provider draws on: nobody's view
+  if(item.curated) return "house";           // the house's catalogued view
+  const text = (item.title || "") + " " + (item.summary || "");
+  if(RESEARCH_CORP_NEWS.test(text)) return "headline";
+  if(item.via === "house") return "house";   // the house's own publication feed
+  return RESEARCH_VIEW_LANG.test(text) ? "reported" : "headline";
+}
+// Recency: a view halves in weight every 90 days and stops counting after a year.
+const RESEARCH_HALF_LIFE_DAYS = 90, RESEARCH_MAX_AGE_DAYS = 365;
+function researchItemAgeDays(item, now){
+  const t = Date.parse((item && item.date) || "");
+  return isFinite(t) ? Math.max(0, ((now || Date.now()) - t) / 86400000) : null;
+}
+function researchRecencyWeight(ageDays){
+  if(ageDays == null) return 0.5;                // undated: half weight, never full
+  if(ageDays > RESEARCH_MAX_AGE_DAYS) return 0;  // stale: not counted
+  return Math.pow(0.5, ageDays / RESEARCH_HALF_LIFE_DAYS);
+}
+// The largest shift research can make to one asset class, in percentage points,
+// reached only when every house on the panel takes the same side with full evidence.
+const RESEARCH_MAX_TILT = 8;
+// Evidence (summed item weight) at which a house casts its full vote: one house
+// view up to about three months old. Older or press-reported views cast part of one.
+const RESEARCH_FULL_EVIDENCE = 0.5;
+function researchDateLabel(d){
+  const t = Date.parse(d || "");
+  return isFinite(t) ? new Date(t).toISOString().slice(0, 10) : "undated";
+}
+function researchStanceWord(v){ return v > 0.2 ? "overweight" : (v < -0.2 ? "underweight" : "neutral"); }
+
 function aggregateAllSignals(selectedProviderIds){
   const aggregate = {
     classes: {},     // {equity: {votes:+24, providers:["bofa","jpm",...]}}
@@ -6647,6 +6759,7 @@ function aggregateAllSignals(selectedProviderIds){
     totalItems: 0,
     scoredItems: 0,              // items that actually contributed points
     sharedDuplicatesSkipped: 0,  // shared baseline themes already counted
+    excluded: {generic:0, headline:0, stale:0},   // not counted: see researchItemKind
     providerCount: 0
   };
   const _sharedSeen = new Set();
@@ -6689,18 +6802,22 @@ function aggregateAllSignals(selectedProviderIds){
       // the identical text recurs across sources. Counting it once per provider
       // would manufacture consensus out of duplication — score each distinct
       // shared item only the first time it is seen.
-      if(item.shared){
-        const key = String(item.title || "").trim().toLowerCase();
-        if(_sharedSeen.has(key)){ aggregate.sharedDuplicatesSkipped++; return; }
-        _sharedSeen.add(key);
-      }
+      // Same rules as the client app's Portfolio Builder: generic shared themes
+      // and company-news headlines are not views, items older than a year are
+      // stale, and every vote is scaled by the house's tier (wirehouse views
+      // lead), whether the house said it or the press reported it, and its age.
+      const kind = researchItemKind(item);
+      if(kind === "generic" || kind === "headline"){ aggregate.excluded[kind]++; return; }
+      const rw = researchRecencyWeight(researchItemAgeDays(item, Date.now()));
+      if(rw <= 0){ aggregate.excluded.stale++; return; }
+      const iw = researchHouseOf(pid).weight * RESEARCH_KIND_WEIGHT[kind] * rw;
       aggregate.scoredItems++;
       const sig = extractItemSignals(item, p.name);
-      Object.entries(sig.classes).forEach(([k,v]) => bump(aggregate.classes, k, v, p.name, item));
-      Object.entries(sig.sectors).forEach(([k,v]) => bump(aggregate.sectors, k, v, p.name, item));
-      Object.entries(sig.regions).forEach(([k,v]) => bump(aggregate.regions, k, v, p.name, item));
-      Object.entries(sig.themes).forEach(([k,v]) => bump(aggregate.themes, k, v, p.name, item));
-      Object.entries(sig.drivers).forEach(([k,v]) => bump(aggregate.drivers, k, v, p.name, item));
+      Object.entries(sig.classes).forEach(([k,v]) => bump(aggregate.classes, k, v * iw, p.name, item));
+      Object.entries(sig.sectors).forEach(([k,v]) => bump(aggregate.sectors, k, v * iw, p.name, item));
+      Object.entries(sig.regions).forEach(([k,v]) => bump(aggregate.regions, k, v * iw, p.name, item));
+      Object.entries(sig.themes).forEach(([k,v]) => bump(aggregate.themes, k, v * iw, p.name, item));
+      Object.entries(sig.drivers).forEach(([k,v]) => bump(aggregate.drivers, k, v * iw, p.name, item));
       // 3-point tally across all five buckets
       Object.entries(sig.stances).forEach(([bucket, keys]) => {
         Object.entries(keys).forEach(([k, st]) => tally(bucket, k, st, p.name));
@@ -6740,6 +6857,7 @@ function aggregateAllSignals(selectedProviderIds){
   // Convert provider Sets to arrays for serialization
   function normalize(container){
     Object.values(container).forEach(c => {
+      c.votes = +c.votes.toFixed(1);   // tier-weighted, so fractional
       c.providers = Array.from(c.providers);
       c.providerCount = c.providers.length;
       c.providersFor = Array.from(c.providersFor || []);
