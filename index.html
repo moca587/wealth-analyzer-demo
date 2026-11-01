@@ -5188,7 +5188,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261025-0837";
+const APP_VERSION = "20261101-1857";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -6687,50 +6687,50 @@ const COUNTRY_LOANS={
 const REL_LABELS={spouse:"Spouse",domestic_partner:"Domestic partner",significant_other:"Significant other",partner:"Partner",fiance:"Fiancé / Fiancée",co_applicant:"Co-applicant",dependent:"Dependent",parent:"Parent",sibling:"Sibling",business_partner:"Business partner",other:"Other"};
 
 // ── Currency system ──────────────────────────────────
-// fxToUSD = value of 1 local unit in USD (1 CHF = 1.213 USD gives fxToUSD:1.213). This is the
+// fxToUSD = value of 1 local unit in USD (1 CHF = 1.215 USD gives fxToUSD:1.215). This is the
 // built-in FALLBACK only: live rates replace it (see "Exchange rates" below). ECB reference
-// rates of 23 Oct 2026; TWD, SAR, AED and NGN, which the ECB does not publish, from Exchange
+// rates of 30 Oct 2026; TWD, SAR, AED and NGN, which the ECB does not publish, from Exchange
 // Rate API the same day.
 // The household currency (CURRENT_CCY, from Client 1's country of residence unless overridden
 // in Settings) is the one every total, chart, simulation and the report is in. Accounts, loans,
 // holdings, policies and equity grants each carry their own currency and are converted into it.
-const STATIC_FX_AS_OF="2026-10-23";
+const STATIC_FX_AS_OF="2026-10-30";
 const CURRENCIES={
   USD:{sym:"$",code:"USD",name:"US Dollar",fxToUSD:1.00},
-  EUR:{sym:"€",code:"EUR",name:"Euro",fxToUSD:1.119},
-  GBP:{sym:"£",code:"GBP",name:"British Pound",fxToUSD:1.337},
-  CHF:{sym:"CHF ",code:"CHF",name:"Swiss Franc",fxToUSD:1.213},
-  CAD:{sym:"C$",code:"CAD",name:"Canadian Dollar",fxToUSD:0.7145},
-  AUD:{sym:"A$",code:"AUD",name:"Australian Dollar",fxToUSD:0.7022},
-  JPY:{sym:"¥",code:"JPY",name:"Japanese Yen",fxToUSD:0.006378},
+  EUR:{sym:"€",code:"EUR",name:"Euro",fxToUSD:1.117},
+  GBP:{sym:"£",code:"GBP",name:"British Pound",fxToUSD:1.34},
+  CHF:{sym:"CHF ",code:"CHF",name:"Swiss Franc",fxToUSD:1.215},
+  CAD:{sym:"C$",code:"CAD",name:"Canadian Dollar",fxToUSD:0.7159},
+  AUD:{sym:"A$",code:"AUD",name:"Australian Dollar",fxToUSD:0.7024},
+  JPY:{sym:"¥",code:"JPY",name:"Japanese Yen",fxToUSD:0.006359},
   SGD:{sym:"S$",code:"SGD",name:"Singapore Dollar",fxToUSD:0.7822},
   HKD:{sym:"HK$",code:"HKD",name:"Hong Kong Dollar",fxToUSD:0.1275},
-  CNY:{sym:"¥",code:"CNY",name:"Chinese Yuan",fxToUSD:0.1499},
-  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.03069},
-  KRW:{sym:"₩",code:"KRW",name:"Korean Won",fxToUSD:0.000755},
+  CNY:{sym:"¥",code:"CNY",name:"Chinese Yuan",fxToUSD:0.1503},
+  TWD:{sym:"NT$",code:"TWD",name:"Taiwan Dollar",fxToUSD:0.03067},
+  KRW:{sym:"₩",code:"KRW",name:"Korean Won",fxToUSD:0.0007489},
   INR:{sym:"₹",code:"INR",name:"Indian Rupee",fxToUSD:0.01053},
-  IDR:{sym:"Rp",code:"IDR",name:"Indonesian Rupiah",fxToUSD:0.00005522},
-  MXN:{sym:"MX$",code:"MXN",name:"Mexican Peso",fxToUSD:0.05324},
-  BRL:{sym:"R$",code:"BRL",name:"Brazilian Real",fxToUSD:0.1982},
+  IDR:{sym:"Rp",code:"IDR",name:"Indonesian Rupiah",fxToUSD:0.0000551},
+  MXN:{sym:"MX$",code:"MXN",name:"Mexican Peso",fxToUSD:0.05289},
+  BRL:{sym:"R$",code:"BRL",name:"Brazilian Real",fxToUSD:0.1841},
   SAR:{sym:"SAR ",code:"SAR",name:"Saudi Riyal",fxToUSD:0.2667},
-  ZAR:{sym:"R",code:"ZAR",name:"South African Rand",fxToUSD:0.06025},
-  SEK:{sym:"kr ",code:"SEK",name:"Swedish Krona",fxToUSD:0.1006},
-  NOK:{sym:"kr ",code:"NOK",name:"Norwegian Krone",fxToUSD:0.1069},
-  DKK:{sym:"kr ",code:"DKK",name:"Danish Krone",fxToUSD:0.1497},
-  PLN:{sym:"zł ",code:"PLN",name:"Polish Zloty",fxToUSD:0.2547},
-  NZD:{sym:"NZ$",code:"NZD",name:"New Zealand Dollar",fxToUSD:0.5687},
-  THB:{sym:"฿",code:"THB",name:"Thai Baht",fxToUSD:0.02963},
-  MYR:{sym:"RM ",code:"MYR",name:"Malaysian Ringgit",fxToUSD:0.2448},
+  ZAR:{sym:"R",code:"ZAR",name:"South African Rand",fxToUSD:0.05992},
+  SEK:{sym:"kr ",code:"SEK",name:"Swedish Krona",fxToUSD:0.1018},
+  NOK:{sym:"kr ",code:"NOK",name:"Norwegian Krone",fxToUSD:0.1083},
+  DKK:{sym:"kr ",code:"DKK",name:"Danish Krone",fxToUSD:0.1495},
+  PLN:{sym:"zł ",code:"PLN",name:"Polish Zloty",fxToUSD:0.2537},
+  NZD:{sym:"NZ$",code:"NZD",name:"New Zealand Dollar",fxToUSD:0.5636},
+  THB:{sym:"฿",code:"THB",name:"Thai Baht",fxToUSD:0.02965},
+  MYR:{sym:"RM ",code:"MYR",name:"Malaysian Ringgit",fxToUSD:0.2465},
   AED:{sym:"AED ",code:"AED",name:"UAE Dirham",fxToUSD:0.2723},
-  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.0007543},
-  ILS:{sym:"₪",code:"ILS",name:"Israeli Shekel",fxToUSD:0.3204},
-  TRY:{sym:"₺",code:"TRY",name:"Turkish Lira",fxToUSD:0.02011},
+  NGN:{sym:"₦",code:"NGN",name:"Nigerian Naira",fxToUSD:0.0007432},
+  ILS:{sym:"₪",code:"ILS",name:"Israeli Shekel",fxToUSD:0.3197},
+  TRY:{sym:"₺",code:"TRY",name:"Turkish Lira",fxToUSD:0.02002},
   // Statement currencies with no residence country in the app: an account can be held in them.
-  CZK:{sym:"CZK ",code:"CZK",name:"Czech Koruna",fxToUSD:0.04601},
-  HUF:{sym:"HUF ",code:"HUF",name:"Hungarian Forint",fxToUSD:0.003052},
-  RON:{sym:"RON ",code:"RON",name:"Romanian Leu",fxToUSD:0.2092},
-  ISK:{sym:"ISK ",code:"ISK",name:"Icelandic Krona",fxToUSD:0.008218},
-  PHP:{sym:"PHP ",code:"PHP",name:"Philippine Peso",fxToUSD:0.01571}
+  CZK:{sym:"CZK ",code:"CZK",name:"Czech Koruna",fxToUSD:0.04588},
+  HUF:{sym:"HUF ",code:"HUF",name:"Hungarian Forint",fxToUSD:0.00305},
+  RON:{sym:"RON ",code:"RON",name:"Romanian Leu",fxToUSD:0.209},
+  ISK:{sym:"ISK ",code:"ISK",name:"Icelandic Krona",fxToUSD:0.008215},
+  PHP:{sym:"PHP ",code:"PHP",name:"Philippine Peso",fxToUSD:0.0157}
 };
 // All 20 eurozone members map to EUR; the rest keep their native currency.
 const COUNTRY_CURRENCIES={
@@ -24495,15 +24495,28 @@ function applyAIRecommendationToProposal(){
   //         use the AI portfolio's μ/σ instead of the household risk profile. ───
   setSimUsesProposal(true);
   // ─── 4. Cascade re-runs across every dependent view ───
+  // What is reported here is what the run actually did. This used to list
+  // "Simulation", the wealth chart and the cash flow unconditionally, even when
+  // runSim had thrown and the tab was still showing the PREVIOUS portfolio: a
+  // green tick over figures from the portfolio before this one. Now the run is
+  // checked against the portfolio just applied (simRunIsCurrent), and anything
+  // short of that is said plainly.
   const refreshed = [];
-  try { if(typeof runSim === "function") { runSim(); refreshed.push("Simulation"); refreshed.push('"What could your wealth look like"'); refreshed.push("Cash Flow analysis"); } } catch(e){ console.warn("runSim:", e); }
+  let simOk = false, simErr = null;
+  try { if(typeof runSim === "function"){ runSim(); simOk = (typeof simRunIsCurrent !== "function") || simRunIsCurrent(); } }
+  catch(e){ simErr = e; console.warn("runSim:", e); }
+  if(simOk){ refreshed.push("Simulation"); refreshed.push('"What could your wealth look like"'); refreshed.push("Cash Flow analysis"); }
   try { if(typeof runComparison === "function") { runComparison(); refreshed.push("Portfolio Comparison"); } } catch(e){ console.warn("runComparison:", e); }
   try { if(typeof refreshTopMetrics === "function" && Array.isArray(lastSimPaths) && lastSimPaths.length) refreshTopMetrics(lastSimPaths, lastSimYrs); } catch(_){}
   // ─── 5. Render the proposal-source banner in the Simulation tab ───
   if(typeof renderProposalSourceBanner === "function") renderProposalSourceBanner();
   // ─── 6. Inform the user of the cascade ───
   const n = lastAIGenResult.positions.length;
-  toastTopbar(`✓ Recommended portfolio applied: ${n} positions → ${refreshed.join(" · ")}`);
+  if(simOk){
+    toastTopbar(`✓ Recommended portfolio applied: ${n} positions → ${refreshed.join(" · ")}`);
+  } else {
+    toastTopbar(`⚠ ${n} positions are in the Investment Proposal, but the simulation did not re-run: open the Simulation tab and press Re-run on this portfolio`);
+  }
   // Scroll the result panel into view so the user sees the confirmation
   const tgt = document.getElementById("aiGenResult") || document.getElementById("aiSimpleResult");
   if(tgt) tgt.scrollIntoView({behavior:"smooth", block:"start"});
@@ -24518,23 +24531,48 @@ function renderProposalSourceBanner(){
   const info = getSimSourceLabel();
   if(info.source === "proposal"){
     host.style.display = "block";
+    // Does what is ON SCREEN come from the portfolio named here? A second portfolio
+    // applied from the Portfolio Builder moves the figures this banner quotes at
+    // once; the charts, cards and cash flow only move when a run completes. Saying
+    // nothing when the two disagree is what made the app look as though it had
+    // ignored the new portfolio and kept the first one.
+    const ran = (typeof lastSimPaths!=="undefined" && lastSimPaths && lastSimPaths.length);
+    const stale = (typeof simRunIsCurrent==="function") ? !simRunIsCurrent() : false;
+    const head = stale
+      ? (ran ? 'The figures below were run on an earlier portfolio'
+             : 'This portfolio has not been simulated yet')
+      : 'Simulation driven by the Investment Proposal';
+    const body = stale
+      ? (ran
+          ? 'The Investment Proposal now holds ' + proposals.length + ' positions (' + info.detail + '), but the charts, cards and cash flow on this tab are still the run made on the portfolio before it. Re-run to project this one.'
+          : 'The Investment Proposal holds ' + proposals.length + ' positions (' + info.detail + '). Run the simulation to project this portfolio.')
+      : 'Market simulation, "What could your wealth look like", Cash Flow (Investments column), and Portfolio Comparison '
+        + 'all use the Investment Proposal\'s return parameters (' + info.detail + '). '
+        + '<strong>The Retirement pool is intentionally kept on its own fixed rate</strong> (3.5%/yr, or the interest a Swiss pension fund credits) and never moves with this setting. '
+        + 'Switch back to your household risk profile to compare.';
+    const accent  = stale ? '#b42318' : '#f59e0b';
+    const bg      = stale ? 'linear-gradient(135deg,#fff5f3,#ffe9e5)' : 'linear-gradient(135deg,#fff7ed,#fef3c7)';
+    const headCol = stale ? '#8a1c11' : '#92400e';
+    const btn = stale
+      ? '<button onclick="simRerunForProposal()" '
+        + 'style="background:' + accent + ';border:1px solid ' + accent + ';color:#fff;padding:6px 12px;'
+        + 'border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer;flex-shrink:0">'
+        + 'Re-run on this portfolio</button>'
+      : '<button onclick="switchSimSourceToHousehold()" '
+        + 'style="background:#fff;border:1px solid #f59e0b;color:#92400e;padding:6px 12px;'
+        + 'border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;flex-shrink:0">'
+        + 'Use household risk profile</button>';
     host.innerHTML =
       '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;'
-    + 'background:linear-gradient(135deg,#fff7ed,#fef3c7);border-left:4px solid #f59e0b;'
+    + 'background:' + bg + ';border-left:4px solid ' + accent + ';'
     + 'border-radius:8px;margin-bottom:14px">'
     + '<div style="flex:1">'
-    + '<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:3px">'
-    + 'Simulation driven by the Investment Proposal</div>'
+    + '<div style="font-size:12px;font-weight:700;color:' + headCol + ';margin-bottom:3px">'
+    + head + '</div>'
     + '<div style="font-size:11.5px;color:var(--text2);line-height:1.5">'
-    + 'Market simulation, "What could your wealth look like", Cash Flow (Investments column), and Portfolio Comparison '
-    + 'all use the Investment Proposal\'s return parameters (' + info.detail + '). '
-    + '<strong>The Retirement pool is intentionally kept on its own fixed rate</strong> (3.5%/yr, or the interest a Swiss pension fund credits) and never moves with this setting. '
-    + 'Switch back to your household risk profile to compare.'
+    + body
     + '</div></div>'
-    + '<button onclick="switchSimSourceToHousehold()" '
-    + 'style="background:#fff;border:1px solid #f59e0b;color:#92400e;padding:6px 12px;'
-    + 'border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;flex-shrink:0">'
-    + 'Use household risk profile</button>'
+    + btn
     + '</div>';
   } else {
     // Not proposal-driven — no banner (the "apply proposals?" prompt was removed).
@@ -24601,7 +24639,7 @@ function addAltProposal(){
   proposals.push({id:"pr"+(++propSeq),name,tkr:"",isin:"",cusip:"",valor:"",vehicle,cls,subcat,alloc,
     exp:isNaN(exp)?null:exp,er:isNaN(er)?null:er,yld:isNaN(yld)?null:yld,note,metrics:null});
   ["prAltName","prAltAlloc","prAltExp","prAltEr","prAltYld","prAltNote"].forEach(id=>{const el=$(id); if(el) el.value="";});
-  renderProposals(); renderProposalMetrics(); renderProposalBars(); drawProposalPie();
+  proposalChanged();
 }
 function addProposal(){
   const name=val("prName").trim(); const tkr=val("prTkr").trim();
@@ -24616,11 +24654,11 @@ function addProposal(){
   ["prName","prTkr","prIsin","prValor","prAlloc","prExp","prErIn","prYldIn","prNote"].forEach(id=>$(id).value="");
   setT("prTkrHint","");
   try{ renderFundPerf('pr',null); }catch(_){}  _lastFundPerf=null;   // clear fetched-performance panel after add
-  renderProposals(); renderProposalMetrics(); renderProposalBars(); drawProposalPie();
+  proposalChanged();
 }
 function removeProposal(id){
   proposals=proposals.filter(p=>p.id!==id);
-  renderProposals(); renderProposalMetrics(); renderProposalBars(); drawProposalPie();
+  proposalChanged();
   // If the proposal is now empty, the simulation can no longer be proposal-driven —
   // silently fall back to household risk profile so the user isn't confused.
   if(proposals.length === 0 && getSimUsesProposal()){
@@ -26789,6 +26827,52 @@ function getSimSourceLabel(){
     detail: `μ ${(e.mu*100).toFixed(2)}% · σ ${(e.sig*100).toFixed(2)}%`
   };
 }
+
+// ─── Which portfolio a simulation run was made on ──────────────────────
+// A second portfolio built in the Portfolio Builder and applied to the
+// Investment Proposal replaces `proposals` at once, and every params function
+// above reads it live - but the figures ON SCREEN are whatever the last
+// COMPLETED run left there. When that run did not happen (a panel in the runSim
+// cascade threw, so the rest of the cascade never ran) or was never made
+// (positions edited by hand), the Simulation tab kept showing the FIRST
+// portfolio's projection while this banner quoted the NEW portfolio's figures:
+// the app named one portfolio and showed another. So every run now carries the
+// portfolio that drove it, and a run that no longer matches is reported as out
+// of date instead of being presented as current.
+function simRunSig(){
+  try{
+    const uses = getSimUsesProposal() && proposals && proposals.length > 0;
+    const p = getSimEngineParams();
+    const lines = uses
+      ? proposals.map(x => [x.tkr||x.name||"", x.cls||"", +x.alloc||0, (x.exp==null?"":x.exp)].join("|")).join(";")
+      : "";
+    return JSON.stringify([uses, lines, +(p.mu||0).toFixed(6), +(p.sig||0).toFixed(6),
+                           p.cashShare, p.tpl ? JSON.stringify(p.tpl) : null,
+                           num("simYrs",20), val("simN")||"500"]);
+  }catch(_){ return "unknown:"+Date.now(); }   // cannot tell: treat as out of date
+}
+// True only when the figures on the Simulation tab were produced by the portfolio
+// and the run settings in force right now.
+function simRunIsCurrent(){
+  if(typeof lastSimPaths==="undefined" || !lastSimPaths || !lastSimPaths.length) return false;
+  return lastSimPaths._srcSig === simRunSig();
+}
+// Re-run from the banner, and from anywhere the portfolio changed.
+function simRerunForProposal(){
+  try{ runSim(); }catch(e){ console.warn("simRerunForProposal:", e); }
+  try{ if(typeof runComparison==="function") runComparison(); }catch(e){ console.warn("runComparison:", e); }
+  try{ renderProposalSourceBanner(); }catch(_){}
+}
+// Every proposal mutation funnels through here: re-render the tab, then repaint
+// the banner so a change the simulation has not been run on is visible. Adding
+// lines one at a time must not re-run the engine per line, so the banner offers
+// the re-run rather than taking it.
+function proposalChanged(){
+  try{ renderProposals(); renderProposalMetrics(); renderProposalBars(); drawProposalPie(); }catch(e){ console.warn("proposalChanged render:", e); }
+  try{ renderProposalSourceBanner(); }catch(_){}
+  try{ if(typeof wiMarkFitStale==="function") wiMarkFitStale(); }catch(_){}
+}
+window.simRerunForProposal = simRerunForProposal;
 // ═══════════════════════════════════════════════════════════
 // GLIDEPATH — optional linear de-risking over the final N working years.
 // Blends current params toward a conservative floor (never increases risk).
@@ -27871,6 +27955,10 @@ function runSim(){
   const paths=runMC(yrs,sims);
 
   lastSimPaths=paths; lastSimYrs=yrs; lastSimInf=num("inf",3.8)/100;
+  // Stamp the run with the portfolio and settings that produced it, so anything
+  // reading these figures later can tell whether they are still the current
+  // portfolio's (see simRunSig / simRunIsCurrent).
+  try{ paths._srcSig=simRunSig(); }catch(_){}
   // Projected Wealth (median) — set here so the overview metric always updates,
   // even if the bar-chart canvas (#mcChart) isn't present and redrawChart bails.
   try {
@@ -27879,16 +27967,19 @@ function runSim(){
     setT("m-med", fmtMoney(percentileAt(paths,yrs,_mid)/Math.pow(1+_inf,yrs)));
     setT("m-med-pct", _mid===50?"(median)":"("+wiOrd(_mid)+" percentile)");
   } catch(_){}
-  redrawChart(paths);
-  drawFanChart(paths);
+  // Each panel is guarded on its own. Unguarded, the FIRST one to throw ended the
+  // whole cascade, so after a new portfolio was applied the charts and cards below
+  // kept the previous portfolio's figures with nothing on screen saying so.
+  try{ redrawChart(paths); }catch(e){ console.warn("redrawChart:", e); }
+  try{ drawFanChart(paths); }catch(e){ console.warn("drawFanChart:", e); }
   // (renderDownsideAnalysis / renderUpsideAnalysis calls removed — their target
   //  panels were removed from the Simulation tab, so the output went nowhere.)
-  renderGoalAnalysis(paths,yrs);
+  try{ renderGoalAnalysis(paths,yrs); }catch(e){ console.warn("renderGoalAnalysis:", e); }
   try{ if(typeof gbRenderWealth==="function") gbRenderWealth(); }catch(_){}  // Wealth Allocation Framework panel (Simulation tab)
-  refreshTopMetrics(paths,yrs);
-  renderRetirementNumber();
-  renderTaxEfficiency();
-  renderEfficientFrontier();
+  try{ refreshTopMetrics(paths,yrs); }catch(e){ console.warn("refreshTopMetrics:", e); }
+  try{ renderRetirementNumber(); }catch(e){ console.warn("renderRetirementNumber:", e); }
+  try{ renderTaxEfficiency(); }catch(e){ console.warn("renderTaxEfficiency:", e); }
+  try{ renderEfficientFrontier(); }catch(e){ console.warn("renderEfficientFrontier:", e); }
   // Combined simulated-success + PV funding ratio panel (reuse GB engine)
   try { renderCombinedGoalFunding(paths,yrs); } catch(e){ console.warn("renderCombinedGoalFunding:", e); }
   try { renderSimPotentialWealth(); } catch(e){ console.warn("renderSimPotentialWealth:", e); }
@@ -27898,6 +27989,9 @@ function runSim(){
   try { if(typeof runGoalsBased==="function") runGoalsBased(); } catch(e){ console.warn("runGoalsBased:", e); }
   // Results-at-a-glance strip (reads the values the cascade just set)
   try { renderSimSummary(); } catch(e){ console.warn("renderSimSummary:", e); }
+  // Repaint the source banner AFTER the run, so the "run on an earlier portfolio"
+  // notice clears the moment these figures are the current portfolio's.
+  try { renderProposalSourceBanner(); } catch(_){}
   // What-If scenarios re-tested against this run's inputs, so "Does it fit?" never shows a verdict
   // from older ones (each scenario re-runs the engine, so runAllWhatIf does it in its own task).
   try { wiAfterRun(paths); } catch(e){ console.warn("wiAfterRun:", e); }
