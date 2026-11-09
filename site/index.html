@@ -122,6 +122,9 @@ header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
 .hero-trust{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:2.2rem}
 .hero-trust span{display:inline-flex;align-items:center;gap:.5em;font-size:.88rem;font-weight:500;color:var(--ink-soft)}
 .hero-trust svg{width:17px;height:17px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.chflag{width:1.15em;height:1.15em;vertical-align:-0.2em;flex:none;border-radius:2px}
+.chflag rect{stroke:none}
+.hero-trust .chflag{width:18px;height:18px}
 .hero-media{position:relative;margin-top:clamp(36px,5vw,58px);animation:rise .8s .12s cubic-bezier(.2,.7,.2,1) both}
 .hero-media::before{content:"";position:absolute;left:50%;top:46%;width:78%;height:72%;transform:translate(-50%,-50%);
   background:radial-gradient(closest-side,var(--glow),transparent 72%);filter:blur(44px);z-index:0}
@@ -296,7 +299,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
           <a class="btn btn-ghost" href="#showcase">See the platform</a>
         </div>
         <div class="hero-trust">
-          <span><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V7z"/></svg>Swiss-built</span>
+          <span><svg class="chflag" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="3" fill="#D52B1E"/><rect x="13" y="6.5" width="6" height="19" fill="#fff"/><rect x="6.5" y="13" width="19" height="6" fill="#fff"/></svg>Swiss-built</span>
           <span><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg>Hosted in your jurisdiction</span>
           <span><svg viewBox="0 0 24 24"><path d="M6 20V11M12 20V5M18 20v-6"/></svg>Bank-neutral</span>
           <span><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Nothing executed from the tool</span>
@@ -316,7 +319,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
     <div class="wrap stats-row">
       <div class="stat"><div class="snum">48</div><div class="slab">countries with tax and state-pension models</div></div>
       <div class="stat"><div class="snum">1,000</div><div class="slab">Monte Carlo market paths behind every plan</div></div>
-      <div class="stat"><div class="snum">1</div><div class="slab">platform, from the first document to the final report</div></div>
+      <div class="stat"><div class="snum">30+</div><div class="slab">years of combined FinTech and banking experience</div></div>
       <div class="stat"><div class="snum">0</div><div class="slab">trades executed from the tool - the adviser approves everything</div></div>
     </div>
   </section>
@@ -442,7 +445,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
         <p class="lead">A planning layer that strengthens your advice and your audit trail, and never puts your data or your mandate at risk.</p>
       </div>
       <div class="trust-grid">
-        <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Swiss-built</b><span>Engineered in Switzerland, with Swiss tax and pension depth at its core.</span></div>
+        <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Swiss-built <svg class="chflag" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="3" fill="#D52B1E"/><rect x="13" y="6.5" width="6" height="19" fill="#fff"/><rect x="6.5" y="13" width="19" height="6" fill="#fff"/></svg></b><span>Engineered in Switzerland, with Swiss tax and pension depth at its core.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div><b>Hosted where you need it</b><span>In your own jurisdiction, or installed on-premise, to your data-residency rules.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M6 20V11M12 20V5M18 20v-6"/></svg></div><b>Bank-neutral</b><span>Open architecture, no product push and no conflict. The plan serves the client.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><b>Nothing executed</b><span>The adviser approves every plan and proposal; your core system books.</span></div>
@@ -456,12 +459,12 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
     <div class="wrap about-grid">
       <div>
         <p class="eyebrow">About</p>
-        <h2 style="font-size:clamp(1.9rem,3.6vw,2.8rem);line-height:1.1;margin-top:.8rem">A global team building institutional wealth technology.</h2>
+        <h2 style="font-size:clamp(1.9rem,3.6vw,2.8rem);line-height:1.1;margin-top:.8rem">Built by people who have done this before.</h2>
       </div>
       <div class="about-note">
-        <p class="lead" style="margin-bottom:1rem">Wealth Analyzer is a financial planning platform for banks, wealth managers and family offices, built by a global team.</p>
-        <p>We work directly with our first institutional clients, shaping the product around how advice actually gets done - from reading a client's documents to the report that lands on the table.</p>
-        <p>The result is one platform that makes advisers faster, advice more consistent, and relationships deeper, without adding risk to the institution.</p>
+        <p class="lead" style="margin-bottom:1rem">Wealth Analyzer is built by a global team of engineers with more than 30 years of combined experience in financial technology and banking.</p>
+        <p>We have built and run the kind of systems private banks and wealth managers depend on, so we know what institutional-grade really means - in the rigour of the models, the discipline of the security, and the care in every client report.</p>
+        <p>It is engineered to be trusted in front of a client, and to hold up to the scrutiny of a supervised institution.</p>
       </div>
     </div>
   </section>
@@ -474,10 +477,10 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       <div class="contact-card">
         <div>
           <div class="k">Email us</div>
-          <div class="mail" id="mail">mivetic@privatewealthintelligence.ch</div>
+          <div class="mail" id="mail">info@privatewealthintelligence.ch</div>
         </div>
         <div class="contact-actions">
-          <a class="btn btn-light" href="mailto:mivetic@privatewealthintelligence.ch?subject=Wealth%20Analyzer%20demo">Email us</a>
+          <a class="btn btn-light" href="mailto:info@privatewealthintelligence.ch?subject=Wealth%20Analyzer%20demo">Email us</a>
           <button class="btn btn-ghost" id="copybtn" type="button" style="color:#fff;border-color:rgba(255,255,255,.3)">Copy email</button>
           <span id="copyok" hidden>Copied</span>
         </div>
@@ -492,7 +495,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       <div class="foot-brand">
         <span class="wa-logo">Wealth<span>Analyzer</span></span>
       </div>
-      <div class="foot-meta" style="margin-top:12px">Zurich, Switzerland</div>
+      <div class="foot-meta" style="margin-top:12px">Zurich, Switzerland <svg class="chflag" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="3" fill="#D52B1E"/><rect x="13" y="6.5" width="6" height="19" fill="#fff"/><rect x="6.5" y="13" width="19" height="6" fill="#fff"/></svg></div>
     </div>
     <div class="foot-meta">
       <a href="#platform">Platform</a><br>
@@ -502,7 +505,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
     </div>
     <div class="foot-meta">
       <div style="text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;color:var(--on-navy-soft);font-weight:700;margin-bottom:4px">Contact</div>
-      mivetic@privatewealthintelligence.ch
+      info@privatewealthintelligence.ch
     </div>
   </div>
   <div class="wrap copyline">Wealth Analyzer is owned by Private Wealth Intelligence, Zurich, Switzerland. &copy; 2026. All rights reserved.</div>
@@ -511,7 +514,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 <script>
 (function(){
   function copyEmail(){
-    var email='mivetic@privatewealthintelligence.ch',ok=document.getElementById('copyok');
+    var email='info@privatewealthintelligence.ch',ok=document.getElementById('copyok');
     function done(){if(ok){ok.hidden=false;setTimeout(function(){ok.hidden=true;},2200);}}
     function fallback(){try{var n=document.getElementById('mail'),r=document.createRange();r.selectNodeContents(n);var s=window.getSelection();s.removeAllRanges();s.addRange(r);done();}catch(e){}}
     try{
