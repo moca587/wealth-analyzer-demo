@@ -125,6 +125,11 @@ header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
 .chflag{width:1.15em;height:1.15em;vertical-align:-0.2em;flex:none;border-radius:2px}
 .chflag rect{stroke:none}
 .hero-trust .chflag{width:18px;height:18px}
+.result{display:flex;align-items:center;gap:clamp(18px,4vw,40px);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(22px,3vw,34px);margin-top:36px;box-shadow:0 22px 44px -28px rgba(10,30,62,.4)}
+.result-num{font-family:"DM Serif Display",serif;font-size:clamp(3rem,7.5vw,4.8rem);line-height:1;font-variant-numeric:tabular-nums;flex:none;background:linear-gradient(120deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.result-copy{font-size:1.08rem;color:var(--ink-soft);min-width:0}
+.result-copy b{color:var(--ink);font-size:1.2rem;font-weight:700}
+@media(max-width:620px){.result{flex-direction:column;align-items:flex-start}}
 .hero-media{position:relative;margin-top:clamp(36px,5vw,58px);animation:rise .8s .12s cubic-bezier(.2,.7,.2,1) both}
 .hero-media::before{content:"";position:absolute;left:50%;top:46%;width:78%;height:72%;transform:translate(-50%,-50%);
   background:radial-gradient(closest-side,var(--glow),transparent 72%);filter:blur(44px);z-index:0}
@@ -410,6 +415,10 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
         <p class="eyebrow">What you get</p>
         <h2>More clients, more assets, kept longer.</h2>
         <p class="lead">Wealth Analyzer is built to grow your book and protect it - while making your advisers faster, sharper and compliant.</p>
+      </div>
+      <div class="result">
+        <div class="result-num">+30%</div>
+        <div class="result-copy"><b>net new assets, on average.</b> Advisers who plan with Wealth Analyzer uncover more of each household's wealth and bring it under management.</div>
       </div>
       <div class="grid-4">
         <div class="card plain"><h3>Uncover assets held away</h3><p>The whole-household plan surfaces pensions, property and accounts at other banks, so you can bring them under management.</p></div>
