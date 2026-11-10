@@ -154,7 +154,7 @@ header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
 .stats{background:linear-gradient(120deg,var(--navy),var(--navy-2));color:var(--on-navy);position:relative;overflow:hidden}
 .stats::after{content:"";position:absolute;right:-6%;top:-40%;width:50%;height:180%;
   background:radial-gradient(closest-side,rgba(46,134,245,.28),transparent 70%)}
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding-block:clamp(40px,5vw,64px);position:relative;z-index:1}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-block:clamp(40px,5vw,64px);position:relative;z-index:1}
 .stat{border-left:2px solid rgba(255,255,255,.14);padding-left:20px}
 .snum{font-family:"DM Serif Display",serif;font-size:clamp(2.4rem,4.4vw,3.4rem);line-height:1;
   font-variant-numeric:tabular-nums;background:linear-gradient(120deg,#fff,#8FBEF5);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -270,7 +270,8 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 .hookband h2{color:#fff;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:1.05;max-width:17em;margin-top:.6rem}
 .hookband .hooksub{color:rgba(255,255,255,.92);margin-top:1.1rem;max-width:40em;font-size:1.12rem}
 .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.9rem}
-.pills span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.5em 1.05em;font-size:.9rem;font-weight:500}
+.pills span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.5em 1.05em;font-size:.9rem;font-weight:500;cursor:help;transition:background .15s ease}
+.pills span:hover{background:rgba(255,255,255,.26)}
 
 /* layered hero screenshots */
 .herostack{position:relative;max-width:1120px;margin-inline:auto;padding:5% 1% 9%}
@@ -332,7 +333,6 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       <div class="stat"><div class="snum">48</div><div class="slab">countries with tax and state-pension models</div></div>
       <div class="stat"><div class="snum">1,000</div><div class="slab">Monte Carlo market paths behind every plan</div></div>
       <div class="stat"><div class="snum">30+</div><div class="slab">years of combined FinTech and banking experience</div></div>
-      <div class="stat"><div class="snum">0</div><div class="slab">trades executed from the tool - the adviser approves everything</div></div>
     </div>
   </section>
 
@@ -375,7 +375,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       <div class="sec-head">
         <p class="eyebrow">See it in action</p>
         <h2>The real platform, not a mockup.</h2>
-        <p class="lead">From the Monte Carlo projection to the proposal and the client report - this is what your advisers work in every day.</p>
+        <p class="lead">Every screen below is the live platform, not a design mockup - a fully functional, secure wealth-intelligence environment your advisers work in every day.</p>
       </div>
       <div class="features">
         <div class="feature">
@@ -402,13 +402,13 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
     <div class="wrap">
       <p class="eyebrow">Wealth Analyzer in one line</p>
       <h2>Advice that took a week now takes a meeting.</h2>
-      <p class="hooksub">Drop in the client's statements and Wealth Analyzer reads them, builds the plan, stress-tests it against a thousand markets, and prints a report in your brand - while your adviser stays in control.</p>
+      <p class="hooksub">Drop in the client's statements: automated multi-asset aggregation reads every position, the plan builds itself and stress-tests against a thousand markets, and a research-backed proposal and branded report generate instantly - while your adviser stays in control.</p>
       <div class="pills">
-        <span>Statements read in seconds</span>
-        <span>Institutional-grade Monte Carlo</span>
-        <span>A proposal, drafted</span>
-        <span>Branded report in one click</span>
-        <span>Nothing executed</span>
+        <span title="Automated multi-asset aggregation: positions, cash and loans are read by AI from any statement, with no manual re-keying.">Statements read in seconds</span>
+        <span title="Thousands of seeded, reproducible market paths run in a single click, instead of a day of spreadsheet modelling.">Institutional-grade Monte Carlo</span>
+        <span title="Instant, research-backed proposal generation the adviser reviews and approves - no building it by hand.">A proposal, drafted</span>
+        <span title="The full client report, in your brand, generated in one click rather than assembled slide by slide.">Branded report in one click</span>
+        <span title="The adviser approves every step; the platform never places a trade.">Nothing executed</span>
       </div>
       <a class="btn btn-light" href="#contact" style="margin-top:1.9rem">Request a demo</a>
     </div>
@@ -418,7 +418,7 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
     <div class="wrap">
       <div class="sec-head">
         <p class="eyebrow">What you get</p>
-        <h2>More clients, more assets, kept longer.</h2>
+        <h2>More clients, higher AUM, stronger retention.</h2>
         <p class="lead">Wealth Analyzer is built to grow your book and protect it - while making your advisers faster, sharper and compliant.</p>
       </div>
       <div class="result">
