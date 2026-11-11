@@ -1,5 +1,5 @@
 <title>Wealth Analyzer</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <style>:root{color-scheme:light !important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -274,6 +274,87 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 @media(max-width:820px){.herostack{padding:0}.herostack .s0,.herostack .s2{display:none}.herostack .s1{width:100%}}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── Mobile & tablet improvements ── */
+html{overflow-x:hidden}
+body{overflow-x:hidden}
+
+/* hamburger button */
+.nav-toggle{display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;
+  background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;flex:none}
+.nav-toggle span{display:block;height:2px;background:var(--ink);border-radius:2px;
+  transition:transform .22s ease,opacity .18s ease,width .18s ease}
+.nav-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0;width:0}
+.nav-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* mobile drawer */
+.nav-drawer{display:none;position:fixed;inset:0;z-index:49;background:var(--bg);
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:0;
+  padding:clamp(72px,12vw,96px) max(24px,env(safe-area-inset-left,0px)) 48px}
+.nav-drawer.open{display:flex}
+.nav-drawer a{font-size:clamp(1.5rem,6vw,2rem);font-weight:600;color:var(--ink);text-decoration:none;
+  padding:.6rem 0;border-bottom:1px solid var(--line);width:100%;transition:color .15s}
+.nav-drawer a:last-of-type{border-bottom:none}
+.nav-drawer a:hover{color:var(--accent-ink)}
+.nav-drawer .btn{margin-top:2rem;align-self:flex-start}
+
+@media(max-width:880px){
+  .nav-toggle{display:flex}
+}
+
+/* hero — tighten on phones */
+@media(max-width:600px){
+  .hero h1{font-size:clamp(2rem,8.5vw,2.6rem)}
+  .hero .lead{font-size:1rem}
+  .hero-cta{flex-direction:column;align-items:flex-start}
+  .hero-cta .btn{width:100%;justify-content:center}
+  .hero-trust{gap:10px 18px}
+  .result{padding:20px 18px}
+  .result-num{font-size:clamp(2rem,10vw,2.6rem)}
+}
+
+/* stats band — single col on small phones */
+@media(max-width:460px){
+  .stats-row{grid-template-columns:1fr}
+  .stat{border-left:none;padding-left:0;border-top:1px solid rgba(255,255,255,.12);padding-top:20px}
+  .stat:first-child{border-top:none;padding-top:0}
+}
+
+/* nav CTA: smaller on narrow phones */
+@media(max-width:420px){
+  .nav-row .btn{font-size:.82rem;padding:.7em 1.1em}
+}
+
+/* feature rows: a bit less gap on tablet */
+@media(max-width:860px){
+  .features{gap:clamp(28px,5vw,56px);margin-top:36px}
+  .feature-text h3{font-size:clamp(1.4rem,4vw,1.8rem)}
+}
+
+/* hookband pills: smaller on mobile */
+@media(max-width:520px){
+  .pills span{font-size:.82rem;padding:.45em .85em}
+  .hookband h2{font-size:clamp(1.7rem,7vw,2.4rem)}
+}
+
+/* contact card: stack vertically on small screens */
+@media(max-width:560px){
+  .contact-card{flex-direction:column;align-items:flex-start}
+  .contact-card .mail{font-size:clamp(1rem,5vw,1.4rem);word-break:break-all}
+  .contact-actions{width:100%}
+  .contact-actions .btn{flex:1;justify-content:center}
+}
+
+/* footer: single col on phones */
+@media(max-width:560px){
+  .foot-row{flex-direction:column;gap:28px;padding-block:36px}
+  .copyline{font-size:.75rem}
+}
+
+/* ensure tap targets >= 44px */
+.btn{min-height:44px}
+.nav-links a{min-height:44px;display:inline-flex;align-items:center}
 </style>
 
 <header class="nav">
@@ -289,8 +370,20 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       <a href="#trust">Security</a>
     </nav>
     <a class="btn btn-primary" href="#contact">Request a demo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </header>
+
+<div class="nav-drawer" id="navDrawer" aria-hidden="true">
+  <a href="#platform" class="nav-drawer-link">Platform</a>
+  <a href="#showcase" class="nav-drawer-link">Product</a>
+  <a href="#outcomes" class="nav-drawer-link">Benefits</a>
+  <a href="#audience" class="nav-drawer-link">Who it's for</a>
+  <a href="#trust" class="nav-drawer-link">Security</a>
+  <a class="btn btn-primary nav-drawer-link" href="#contact">Request a demo</a>
+</div>
 
 <main id="top">
   <section class="hero">
@@ -536,7 +629,18 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
       else{fallback();}
     }catch(e){fallback();}
   }
-  function init(){var b=document.getElementById('copybtn');if(b)b.addEventListener('click',copyEmail);}
+  function init(){
+    var b=document.getElementById('copybtn');if(b)b.addEventListener('click',copyEmail);
+    // hamburger
+    var toggle=document.getElementById('navToggle'),drawer=document.getElementById('navDrawer');
+    if(toggle&&drawer){
+      function openMenu(){toggle.classList.add('open');drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');toggle.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+      function closeMenu(){toggle.classList.remove('open');drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');toggle.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+      toggle.addEventListener('click',function(){toggle.classList.contains('open')?closeMenu():openMenu();});
+      drawer.querySelectorAll('.nav-drawer-link').forEach(function(a){a.addEventListener('click',closeMenu);});
+      document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+    }
+  }
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
 </script>
