@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Private banking | Wealth Analyzer</title>
+<meta name="description" content="How Wealth Analyzer helps private banks: Swiss pension and municipal tax detail, custody and CRM feeds reviewed before they reach the plan, mortgages in the projection, and one standard on every desk.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<style>:root{color-scheme:light !important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@800&display=swap">
+<style>
+/* Layout: premium fintech landing page. Light, airy, navy + electric-blue, with a glowing
+   hero, a dark stats band, alternating product showcases, and restrained motion. */
+:root{
+  --bg:#F3F6FB;
+  --bg-2:#E7F0FB;
+  --surface:#FFFFFF;
+  --surface-2:#F1F5FC;
+  --ink:#0A1E3A;
+  --ink-soft:#54637C;
+  --accent:#0A5BD6;
+  --accent-2:#2E86F5;
+  --accent-ink:#0A5BD6;
+  --line:#DDE7F4;
+  --navy:#0A1E3A;
+  --navy-2:#102B4E;
+  --on-navy:#EAF1FB;
+  --on-navy-soft:#9DB2D4;
+  --glow:rgba(46,134,245,.30);
+  --shadow:28px 60px -34px rgba(10,30,62,.45);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root[data-theme="dark"]{
+  --bg:#060D1B;
+  --bg-2:#0A1527;
+  --surface:#0D1C32;
+  --surface-2:#112440;
+  --ink:#EAF1FB;
+  --ink-soft:#9DB1CF;
+  --accent:#4E92EC;
+  --accent-2:#79AEF3;
+  --accent-ink:#8FBEF5;
+  --line:#1B2F4D;
+  --navy:#070F1F;
+  --navy-2:#0C1D37;
+  --on-navy:#EAF1FB;
+  --on-navy-soft:#9DB1CF;
+  --glow:rgba(46,134,245,.26);
+  --shadow:28px 60px -34px rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#060D1B;--bg-2:#0A1527;--surface:#0D1C32;--surface-2:#112440;--ink:#EAF1FB;--ink-soft:#9DB1CF;
+  --accent:#4E92EC;--accent-2:#79AEF3;--accent-ink:#8FBEF5;--line:#1B2F4D;--navy:#070F1F;--navy-2:#0C1D37;
+  --on-navy:#EAF1FB;--on-navy-soft:#9DB1CF;--glow:rgba(46,134,245,.26);--shadow:28px 60px -34px rgba(0,0,0,.6);color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);margin:0;line-height:1.55;-webkit-font-smoothing:antialiased;
+  font-family:"DM Sans",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+h1,h2,h3{font-family:"DM Serif Display",Georgia,"Times New Roman",serif;font-weight:400;text-wrap:balance;letter-spacing:-.012em;margin:0}
+p{margin:0}
+img{max-width:100%;height:auto}
+a{color:inherit}
+
+.wrap{width:100%;max-width:1160px;margin-inline:auto;
+  padding-left:max(22px,env(safe-area-inset-left,0px));
+  padding-right:max(22px,env(safe-area-inset-right,0px))}
+
+.eyebrow{display:inline-flex;align-items:center;gap:.55em;font-size:.76rem;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent-ink)}
+.eyebrow::before{content:"";width:22px;height:1.5px;background:linear-gradient(90deg,var(--accent),transparent)}
+.grad{background:linear-gradient(115deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--ink-soft);font-size:1.14rem;line-height:1.6}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:.5em;font-weight:600;font-size:.98rem;padding:.86em 1.6em;
+  border-radius:999px;text-decoration:none;border:1px solid transparent;cursor:pointer;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;
+  box-shadow:0 10px 26px -10px rgba(10,91,214,.65)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 32px -10px rgba(10,91,214,.75)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-ink);transform:translateY(-1px)}
+.btn-light{background:#fff;color:var(--navy)}
+.btn-light:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px rgba(0,0,0,.5)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* header */
+header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line)}
+/* links to a section land just below the sticky header, at the top of that section */
+html{scroll-padding-top:var(--hdr-h,82px)}
+@media(max-width:420px){html{scroll-padding-top:var(--hdr-h,73px)}}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.nav-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-block:14px}
+.brand{display:flex;align-items:center;gap:.65rem;text-decoration:none;color:var(--ink);font-weight:700;letter-spacing:-.01em}
+.brand .mark{width:34px;height:34px;flex:none}
+.brand small{display:block;font-weight:500;font-size:.68rem;letter-spacing:.14em;color:var(--ink-soft);text-transform:uppercase}
+.wa-logo{font-family:'Plus Jakarta Sans','DM Sans',system-ui,sans-serif;font-weight:800;font-size:1.36rem;letter-spacing:-.03em;line-height:1;color:var(--ink);white-space:nowrap}
+.wa-logo span{color:var(--accent-ink)}
+.foot-brand .wa-logo{color:#fff;font-size:1.42rem}
+.foot-brand .wa-logo span{color:#5aa9ff}
+.nav-links{display:flex;align-items:center;gap:1.7rem}
+.nav-links a{text-decoration:none;color:var(--ink-soft);font-weight:500;font-size:.95rem;transition:color .15s}
+.nav-links a:hover{color:var(--ink)}
+@media(max-width:880px){.nav-links{display:none}}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding-top:clamp(44px,6vw,82px);padding-bottom:clamp(40px,6vw,76px);
+  background:radial-gradient(1200px 620px at 82% -8%,rgba(46,134,245,.17),transparent 60%),
+             radial-gradient(760px 460px at 2% 6%,rgba(94,160,236,.12),transparent 55%),
+             linear-gradient(180deg,var(--bg-2),var(--bg) 72%)}
+.hero::before{content:"";position:absolute;inset:0;z-index:0;
+  background-image:radial-gradient(var(--line) 1.1px,transparent 1.1px);background-size:30px 30px;opacity:.5;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 72%);mask-image:linear-gradient(180deg,#000,transparent 72%)}
+.hero .wrap{position:relative;z-index:1}
+.hero-copy{max-width:50rem;animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.hero h1{font-size:clamp(2.6rem,5.6vw,4.2rem);line-height:1.03;margin-top:1rem}
+.hero .lead{margin-top:1.25rem;max-width:38em}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
+.hero-trust{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:2.2rem}
+.hero-trust span{display:inline-flex;align-items:center;gap:.5em;font-size:.88rem;font-weight:500;color:var(--ink-soft)}
+.hero-trust svg{width:17px;height:17px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.chflag{width:1.15em;height:1.15em;vertical-align:-0.2em;flex:none;border-radius:2px}
+.chflag rect{stroke:none}
+.hero-trust .chflag{width:18px;height:18px}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,3vw,36px);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:clamp(24px,3vw,38px);margin-top:36px;box-shadow:0 22px 44px -28px rgba(10,30,62,.4)}
+.result-item{display:flex;align-items:center;gap:clamp(14px,2vw,22px);min-width:0}
+.result-num{font-family:"DM Serif Display",serif;font-size:clamp(2.6rem,5.5vw,4rem);line-height:1;font-variant-numeric:tabular-nums;flex:none;background:linear-gradient(120deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.result-copy{font-size:1rem;color:var(--ink-soft);min-width:0}
+.result-copy b{color:var(--ink);font-size:1.1rem;font-weight:700}
+@media(min-width:761px){.result-item+.result-item{border-left:1px solid var(--line);padding-left:clamp(22px,3vw,40px)}}
+@media(max-width:760px){.result{grid-template-columns:1fr}}
+.hero-media{position:relative;margin-top:clamp(36px,5vw,58px);animation:rise .8s .12s cubic-bezier(.2,.7,.2,1) both}
+.hero-media::before{content:"";position:absolute;left:50%;top:46%;width:78%;height:72%;transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side,var(--glow),transparent 72%);filter:blur(44px);z-index:0}
+
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* browser-frame shots */
+.shot{position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:0;
+  box-shadow:var(--shadow),0 2px 10px -4px rgba(10,30,62,.2)}
+.shot-bar{display:flex;align-items:center;gap:.5rem;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.shot-ttl{margin-left:.5rem;font-size:.8rem;font-weight:600;color:var(--ink-soft)}
+.shot img{display:block;width:100%;height:auto}
+.shot-hero{width:100%;max-width:1040px;margin-inline:auto}
+
+/* stats band */
+.stats{background:linear-gradient(120deg,var(--navy),var(--navy-2));color:var(--on-navy);position:relative;overflow:hidden}
+.stats::after{content:"";position:absolute;right:-6%;top:-40%;width:50%;height:180%;
+  background:radial-gradient(closest-side,rgba(46,134,245,.28),transparent 70%)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-block:clamp(40px,5vw,64px);position:relative;z-index:1}
+.stat{border-left:2px solid rgba(255,255,255,.14);padding-left:20px}
+.snum{font-family:"DM Serif Display",serif;font-size:clamp(2.4rem,4.4vw,3.4rem);line-height:1;
+  font-variant-numeric:tabular-nums;background:linear-gradient(120deg,#fff,#8FBEF5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.slab{color:var(--on-navy-soft);font-size:.92rem;margin-top:12px;line-height:1.4}
+@media(max-width:720px){.stats-row{grid-template-columns:1fr 1fr;gap:22px}}
+
+/* sections */
+section{padding-block:clamp(64px,9vw,120px)}
+.sec-head{max-width:42rem}
+.sec-head h2{font-size:clamp(2rem,3.8vw,3rem);line-height:1.08;margin-top:.8rem}
+.sec-head .lead{margin-top:1rem}
+.tint{background:var(--surface-2)}
+
+/* feature cards grid (why-now, capabilities) */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:50px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:50px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 24px;position:relative;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));
+  box-shadow:0 22px 44px -26px rgba(10,30,62,.5)}
+.chip{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,color-mix(in srgb,var(--accent) 16%,transparent),color-mix(in srgb,var(--accent-2) 10%,transparent));
+  border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
+.chip svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.card h3{font-family:"DM Sans",sans-serif;font-weight:700;font-size:1.06rem;margin-top:18px;letter-spacing:-.01em}
+.card p{color:var(--ink-soft);font-size:.92rem;margin-top:8px}
+.card.plain .chip{display:none}
+@media(max-width:980px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:1fr}}
+@media(max-width:560px){.grid-4{grid-template-columns:1fr}}
+
+/* showcase - alternating feature rows */
+.features{display:flex;flex-direction:column;gap:clamp(44px,7vw,92px);margin-top:56px}
+.feature{display:grid;grid-template-columns:1.12fr .88fr;gap:clamp(28px,5vw,64px);align-items:center}
+.feature.rev .feature-media{order:2}
+.feature-media{position:relative}
+.feature-media::before{content:"";position:absolute;left:50%;top:50%;width:76%;height:70%;transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side,var(--glow),transparent 72%);filter:blur(38px);z-index:0}
+.feature-text h3{font-size:clamp(1.6rem,2.8vw,2.1rem);line-height:1.12}
+.feature-text .eyebrow{margin-bottom:.9rem}
+.feature-text p{color:var(--ink-soft);font-size:1.02rem;margin-top:1rem;max-width:34em}
+@media(max-width:860px){.feature{grid-template-columns:1fr;gap:22px}.feature.rev .feature-media{order:0}}
+
+/* approach steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:50px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 26px;position:relative;overflow:hidden}
+.step::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.step .num{font-family:"DM Serif Display",serif;font-size:1.4rem;color:#fff;width:48px;height:48px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 10px 22px -10px rgba(10,91,214,.6)}
+.step h3{font-family:"DM Sans",sans-serif;font-weight:700;font-size:1.14rem;margin-top:20px}
+.step p{color:var(--ink-soft);font-size:.95rem;margin-top:8px}
+@media(max-width:820px){.steps{grid-template-columns:1fr}}
+
+/* audience */
+.aud-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:50px}
+.aud{display:flex;gap:18px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px;
+  transition:transform .18s ease,box-shadow .18s ease}
+.aud:hover{transform:translateY(-3px);box-shadow:0 22px 44px -26px rgba(10,30,62,.5)}
+.aud h3{font-family:"DM Sans",sans-serif;font-weight:700;font-size:1.1rem}
+.aud p{color:var(--ink-soft);font-size:.93rem;margin-top:6px}
+@media(max-width:720px){.aud-grid{grid-template-columns:1fr}}
+
+/* security */
+.trust-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:48px}
+.trust-item{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+.trust-item .chip{width:40px;height:40px;border-radius:11px;margin-bottom:14px}
+.trust-item .chip svg{width:20px;height:20px}
+.trust-item b{font-weight:700;font-size:1rem}
+.trust-item span{color:var(--ink-soft);font-size:.9rem;display:block;margin-top:5px}
+@media(max-width:860px){.trust-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.trust-grid{grid-template-columns:1fr}}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:start}
+.about-grid .lead{font-size:1.2rem;color:var(--ink)}
+.about-note{color:var(--ink-soft);font-size:1rem}
+.about-note p+p{margin-top:1rem}
+@media(max-width:820px){.about-grid{grid-template-columns:1fr;gap:22px}}
+
+/* contact */
+.cta{background:linear-gradient(130deg,var(--navy),var(--navy-2));color:var(--on-navy);position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;left:-8%;bottom:-60%;width:46%;height:180%;
+  background:radial-gradient(closest-side,rgba(46,134,245,.3),transparent 70%)}
+.cta .wrap{position:relative;z-index:1}
+.cta .eyebrow{color:#8FBEF5}
+.cta .eyebrow::before{background:linear-gradient(90deg,#8FBEF5,transparent)}
+.cta h2{color:#fff;font-size:clamp(2.1rem,4.2vw,3.3rem);line-height:1.05;max-width:15em;margin-top:.8rem}
+.cta p{color:var(--on-navy-soft);margin-top:1.1rem;max-width:34em}
+.contact-card{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;margin-top:40px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:26px 28px;backdrop-filter:blur(6px)}
+.contact-card .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--on-navy-soft);font-weight:700}
+.contact-card .mail{font-family:"DM Serif Display",serif;font-size:clamp(1.3rem,3vw,2rem);color:#fff;margin-top:6px;word-break:break-word}
+.contact-card .mail a{color:inherit;text-decoration:none}
+.contact-card .mail a:hover{text-decoration:underline}
+.contact-actions{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center}
+#copyok{font-size:.85rem;color:#8FBEF5;font-weight:600}
+
+/* footer */
+footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgba(255,255,255,.08)}
+.foot-row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;padding-block:44px}
+.foot-brand{color:#fff;font-weight:700;display:flex;align-items:center;gap:.6rem}
+.foot-row a{color:var(--on-navy-soft);text-decoration:none}
+.foot-row a:hover{color:#fff}
+.foot-meta{font-size:.88rem;line-height:1.9}
+.copyline{border-top:1px solid rgba(255,255,255,.08);padding-block:20px;font-size:.8rem;color:var(--on-navy-soft)}
+
+/* hook band */
+.hookband{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;position:relative;overflow:hidden}
+.hookband::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(900px 440px at 82% -25%,rgba(255,255,255,.2),transparent 60%)}
+.hookband .wrap{position:relative;z-index:1}
+.hookband .eyebrow{color:rgba(255,255,255,.85)}
+.hookband .eyebrow::before{background:linear-gradient(90deg,rgba(255,255,255,.85),transparent)}
+.hookband h2{color:#fff;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:1.05;max-width:17em;margin-top:.6rem}
+.hookband .hooksub{color:rgba(255,255,255,.92);margin-top:1.1rem;max-width:40em;font-size:1.12rem}
+.pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.9rem}
+.pills span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.5em 1.05em;font-size:.9rem;font-weight:500;cursor:help;transition:background .15s ease}
+.pills span:hover{background:rgba(255,255,255,.26)}
+
+/* layered hero screenshots */
+.herostack{position:relative;max-width:1120px;margin-inline:auto;padding:5% 1% 9%}
+.herostack .shot{box-shadow:0 34px 66px -32px rgba(10,30,62,.55),0 5px 16px -6px rgba(10,30,62,.32)}
+.herostack .s1{position:relative;z-index:2;width:76%;margin:0 auto}
+.herostack .s0{position:absolute;z-index:1;width:45%;left:0;top:0;transform:rotate(4deg)}
+.herostack .s2{position:absolute;z-index:3;width:44%;right:0;bottom:0;transform:rotate(-3deg)}
+@media(max-width:820px){.herostack{padding:0}.herostack .s0,.herostack .s2{display:none}.herostack .s1{width:100%}}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── Mobile & tablet improvements ── */
+/* clip, not hidden: overflow-x:hidden on body makes it a scroll container and breaks the sticky header */
+html,body{overflow-x:clip}
+
+/* hamburger button */
+.nav-toggle{display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;
+  background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;flex:none}
+.nav-toggle span{display:block;height:2px;background:var(--ink);border-radius:2px;
+  transition:transform .22s ease,opacity .18s ease,width .18s ease}
+.nav-toggle.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nav-toggle.open span:nth-child(2){opacity:0;width:0}
+.nav-toggle.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* mobile drawer */
+.nav-drawer{display:none;position:fixed;inset:0;z-index:49;background:var(--bg);
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:0;
+  padding:clamp(72px,12vw,96px) max(24px,env(safe-area-inset-left,0px)) 48px}
+.nav-drawer.open{display:flex}
+.nav-drawer a{font-size:clamp(1.5rem,6vw,2rem);font-weight:600;color:var(--ink);text-decoration:none;
+  padding:.6rem 0;border-bottom:1px solid var(--line);width:100%;transition:color .15s}
+.nav-drawer a:last-of-type{border-bottom:none}
+.nav-drawer a:hover{color:var(--accent-ink)}
+.nav-drawer .btn{margin-top:2rem;align-self:flex-start}
+
+@media(max-width:880px){
+  .nav-toggle{display:flex}
+}
+
+/* hero — tighten on phones */
+@media(max-width:600px){
+  .hero h1{font-size:clamp(2rem,8.5vw,2.6rem)}
+  .hero .lead{font-size:1rem}
+  .hero-cta{flex-direction:column;align-items:flex-start}
+  .hero-cta .btn{width:100%;justify-content:center}
+  .hero-trust{gap:10px 18px}
+  .result{padding:20px 18px}
+  .result-num{font-size:clamp(2rem,10vw,2.6rem)}
+}
+
+/* stats band — single col on small phones */
+@media(max-width:460px){
+  .stats-row{grid-template-columns:1fr}
+  .stat{border-left:none;padding-left:0;border-top:1px solid rgba(255,255,255,.12);padding-top:20px}
+  .stat:first-child{border-top:none;padding-top:0}
+}
+
+/* nav CTA: smaller on narrow phones */
+@media(max-width:420px){
+  .nav-row .btn{font-size:.82rem;padding:.7em 1.1em}
+}
+
+/* feature rows: a bit less gap on tablet */
+@media(max-width:860px){
+  .features{gap:clamp(28px,5vw,56px);margin-top:36px}
+  .feature-text h3{font-size:clamp(1.4rem,4vw,1.8rem)}
+}
+
+/* hookband pills: smaller on mobile */
+@media(max-width:520px){
+  .pills span{font-size:.82rem;padding:.45em .85em}
+  .hookband h2{font-size:clamp(1.7rem,7vw,2.4rem)}
+}
+
+/* contact card: stack vertically on small screens */
+@media(max-width:560px){
+  .contact-card{flex-direction:column;align-items:flex-start}
+  .contact-card .mail{font-size:clamp(1rem,5vw,1.4rem);word-break:break-all}
+  .contact-actions{width:100%}
+  .contact-actions .btn{flex:1;justify-content:center}
+}
+
+/* footer: single col on phones */
+@media(max-width:560px){
+  .foot-row{flex-direction:column;gap:28px;padding-block:36px}
+  .copyline{font-size:.75rem}
+}
+
+/* ensure tap targets >= 44px */
+.btn{min-height:44px}
+.nav-links a{min-height:44px;display:inline-flex;align-items:center}
+
+/* industries dropdown */
+.nav-dd{position:relative}
+.nav-dd-btn{background:none;border:0;padding:0;font:inherit;font-weight:500;font-size:.95rem;color:var(--ink-soft);
+  cursor:pointer;display:inline-flex;align-items:center;gap:.35em;min-height:44px;transition:color .15s}
+.nav-dd-btn:hover,.nav-dd.open .nav-dd-btn,.nav-dd-btn.current{color:var(--ink)}
+.nav-dd-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .18s ease}
+.nav-dd.open .nav-dd-btn svg{transform:rotate(180deg)}
+.nav-dd-menu{position:absolute;top:calc(100% + 12px);left:50%;width:560px;max-width:calc(100vw - 40px);
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 34px 64px -30px rgba(10,30,62,.5),0 6px 16px -8px rgba(10,30,62,.2);
+  opacity:0;visibility:hidden;transform:translate(-50%,8px);
+  transition:opacity .16s ease,transform .16s ease,visibility .16s}
+.nav-dd-menu::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+.nav-dd.open .nav-dd-menu{opacity:1;visibility:visible;transform:translate(-50%,0)}
+@media(hover:hover){.nav-dd:hover .nav-dd-menu{opacity:1;visibility:visible;transform:translate(-50%,0)}
+  .nav-dd:hover .nav-dd-btn{color:var(--ink)}.nav-dd:hover .nav-dd-btn svg{transform:rotate(180deg)}}
+.nav-links .dd-item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:12px;
+  color:var(--ink);font-size:inherit;text-decoration:none;min-height:0;transition:background .15s}
+.nav-links .dd-item:hover,.nav-links .dd-item:focus-visible,.nav-links .dd-item[aria-current="page"]{background:var(--surface-2);color:var(--ink)}
+.dd-item .chip{width:38px;height:38px;border-radius:11px;flex:none}
+.dd-item .chip svg{width:19px;height:19px}
+.dd-item b{display:block;font-weight:700;font-size:.95rem;line-height:1.3}
+.dd-item small{display:block;color:var(--ink-soft);font-size:.82rem;line-height:1.4;margin-top:3px}
+/* "Our company" menu: two items, single column, anchored to the right so it never runs off the screen */
+.nav-dd-co .nav-dd-menu{width:330px;grid-template-columns:1fr;left:auto;right:-18px;transform:translate(0,8px)}
+.nav-dd-co.open .nav-dd-menu{transform:none}
+@media(hover:hover){.nav-dd-co:hover .nav-dd-menu{transform:none}}
+/* six nav items: tighten, then switch to the drawer before they collide with the button */
+@media(max-width:1120px){.nav-links{gap:1.15rem}}
+@media(max-width:980px){.nav-links{display:none}.nav-toggle{display:flex}}
+.about-links{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:1.4rem!important}
+.about-links a{display:inline-flex;align-items:center;gap:.4em;font-weight:600;color:var(--accent-ink);text-decoration:none}
+.about-links svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .16s ease}
+.about-links a:hover svg{transform:translateX(3px)}
+
+/* mobile drawer: industries group */
+.nav-drawer{justify-content:flex-start;overflow-y:auto;padding-top:calc(env(safe-area-inset-top,0px) + 96px)}
+.nav-drawer a.btn{color:#fff;font-size:1.05rem;width:auto;padding:.86em 1.8em;border-bottom:none}
+.nav-row .btn{white-space:nowrap}
+.nav-drawer .drawer-label{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent-ink);padding:1.1rem 0 .2rem}
+.nav-drawer a.sub{font-size:clamp(1.1rem,4.6vw,1.35rem);font-weight:500;padding:.5rem 0 .5rem 1rem}
+.nav-drawer a[aria-current="page"]{color:var(--accent-ink)}
+
+/* industry cards (home + cross-links) */
+a.aud{text-decoration:none;color:inherit}
+.aud > .chip{flex:none}
+a.aud:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+a.aud > div:last-child{display:flex;flex-direction:column}
+.aud .more{display:inline-flex;align-items:center;gap:.4em;margin-top:auto;padding-top:14px;font-weight:600;font-size:.9rem;color:var(--accent-ink)}
+.aud .more svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .16s ease}
+a.aud:hover .more svg{transform:translateX(3px)}
+.aud-grid.three{grid-template-columns:repeat(3,1fr)}
+.aud-grid.one{grid-template-columns:minmax(0,620px)}
+@media(max-width:980px){.aud-grid.three{grid-template-columns:1fr}}
+
+/* industry page hero */
+.ind-hero .wrap{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(30px,5vw,64px);align-items:center}
+.ind-hero h1{font-size:clamp(2.3rem,4.6vw,3.6rem)}
+.ind-hero .hero-copy{max-width:none}
+.crumb{display:flex;flex-wrap:wrap;align-items:center;gap:.5em;font-size:.85rem;font-weight:500;color:var(--ink-soft);margin-bottom:1.2rem}
+.crumb a{color:var(--ink-soft);text-decoration:none}
+.crumb a:hover{color:var(--accent-ink)}
+.ind-hero .hero-media{margin-top:0}
+@media(max-width:900px){.ind-hero .wrap{grid-template-columns:1fr}.ind-hero .hero-media{margin-top:8px}}
+@media(max-width:600px){.ind-hero h1{font-size:clamp(2rem,8.5vw,2.5rem)}}
+@media(max-width:980px){.grid-3.cards6{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid-3.cards6{grid-template-columns:1fr}}
+.pills.plain span{cursor:default}
+</style>
+<style>
+/* Private banking: classic light and structured. Split hero with a floating card, overlapping fact strip,
+   outlined numerals, a feed review mock, seat tabs, a navy Swiss band with a break-even chart. */
+.pb-hero{position:relative;overflow:hidden;padding:clamp(36px,5.5vw,76px) 0 clamp(110px,12vw,150px);
+  background:radial-gradient(1000px 520px at 88% -10%,rgba(46,134,245,.16),transparent 60%),
+             radial-gradient(700px 420px at 0% 10%,rgba(94,160,236,.10),transparent 55%),
+             linear-gradient(180deg,var(--bg-2),var(--bg) 85%)}
+.pb-hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:56px 56px;opacity:.45;-webkit-mask-image:radial-gradient(70% 60% at 30% 20%,#000,transparent);mask-image:radial-gradient(70% 60% at 30% 20%,#000,transparent)}
+.pb-hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1.06fr;gap:clamp(30px,5vw,64px);align-items:center}
+.pb-hero h1{font-size:clamp(2.4rem,4.7vw,3.75rem);line-height:1.04;margin-top:1rem}
+.pb-hero .lead{margin-top:1.2rem;max-width:34em}
+.pb-hero .hero-copy{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+.pb-media{position:relative;animation:rise .8s .12s cubic-bezier(.2,.7,.2,1) both}
+.pb-media::before{content:"";position:absolute;left:50%;top:50%;width:84%;height:76%;transform:translate(-50%,-50%);
+  background:radial-gradient(closest-side,var(--glow),transparent 72%);filter:blur(40px)}
+.pb-media .pb-cap{text-align:right}
+.pb-card{position:absolute;left:-26px;bottom:-34px;z-index:3;width:min(320px,64%);background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;padding:15px 17px 8px;box-shadow:0 30px 60px -28px rgba(10,30,62,.55),0 4px 12px -6px rgba(10,30,62,.25)}
+.pb-card .k{display:flex;justify-content:space-between;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink-soft)}
+.pb-card ul{list-style:none;margin:8px 0 0;padding:0}
+.pb-card li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.86rem;font-weight:600}
+.pb-card li:first-child{border-top:0}
+.pv{font-size:.72rem;font-weight:700;padding:.28em .75em;border-radius:999px;white-space:nowrap}
+.pv.lo{background:#E3F4EA;color:#17703F}.pv.hi{background:#FFF1DC;color:#8F5400}
+.pb-tag{position:absolute;right:-12px;top:-18px;z-index:3;display:inline-flex;align-items:center;gap:.5em;background:var(--navy);color:#fff;
+  border-radius:999px;padding:.6em 1.05em;font-size:.8rem;font-weight:600;box-shadow:0 14px 30px -14px rgba(10,30,62,.7)}
+.pb-tag svg{width:16px;height:16px;stroke:#8FBEF5;fill:none;stroke-width:1.8}
+
+.pb-factsec{padding:0;position:relative;z-index:2;margin-top:calc(-1 * clamp(70px,8vw,96px))}
+.pb-facts{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:20px;
+  box-shadow:0 34px 64px -40px rgba(10,30,62,.5)}
+.pb-fact{padding:26px 26px 24px}
+.pb-fact+.pb-fact{border-left:1px solid var(--line)}
+.pb-fact b{display:block;font-family:"DM Serif Display",serif;font-weight:400;font-size:clamp(2.1rem,3.3vw,2.7rem);line-height:1;font-variant-numeric:tabular-nums}
+.pb-fact b span{color:var(--accent)}
+.pb-fact p{color:var(--ink-soft);font-size:.9rem;margin-top:10px;line-height:1.45}
+@media(max-width:900px){.pb-facts{grid-template-columns:1fr 1fr}.pb-fact:nth-child(3){border-left:0}.pb-fact:nth-child(n+3){border-top:1px solid var(--line)}}
+
+.pb-ch{display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(28px,5vw,64px);margin-top:40px}
+.pb-ch article{display:grid;grid-template-columns:auto 1fr;gap:22px;padding:30px 0;border-top:1px solid var(--line)}
+.pb-ch .n{font-family:"DM Serif Display",serif;font-size:3rem;line-height:.85;color:transparent;-webkit-text-stroke:1.3px var(--accent);min-width:1.4em}
+.pb-ch h3{font-family:"DM Sans",sans-serif;font-weight:700;font-size:1.16rem;letter-spacing:-.01em}
+.pb-ch p{color:var(--ink-soft);margin-top:8px}
+
+.pb-feed{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,64px);align-items:start;margin-top:52px}
+.pb-tl{position:relative}
+.pb-tl::before{content:"";position:absolute;left:23px;top:10px;bottom:10px;width:2px;background:linear-gradient(var(--accent),var(--accent-2) 75%,transparent)}
+.pb-stage{position:relative;display:grid;grid-template-columns:48px 1fr;gap:clamp(18px,2.6vw,30px);align-items:start;padding-bottom:clamp(30px,4vw,44px)}
+.pb-stage:last-child{padding-bottom:0}
+.pb-stage .dn{width:48px;height:48px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;
+  font-family:"DM Serif Display",serif;font-size:1.3rem;color:var(--accent-ink);position:relative;z-index:1;box-shadow:0 0 0 7px var(--surface-2)}
+.pb-when{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent-ink)}
+.pb-stage h3{font-size:clamp(1.35rem,2.2vw,1.7rem);line-height:1.15;margin-top:.45rem}
+.pb-stage .txt p:not(.pb-when){color:var(--ink-soft);margin-top:.7rem}
+.pb-list{list-style:none;padding:0;margin:1rem 0 0;display:grid;gap:10px}
+.pb-list li{display:flex;gap:11px;align-items:flex-start;font-size:.95rem;line-height:1.45}
+.pb-list svg{width:18px;height:18px;flex:none;margin-top:2px;stroke:var(--accent);fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.pb-cap{font-size:.8rem;color:var(--ink-soft);margin-top:10px}
+
+.pb-mock{position:sticky;top:96px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 20px 16px;
+  box-shadow:0 40px 80px -46px rgba(10,30,62,.6),0 4px 14px -8px rgba(10,30,62,.2)}
+.pb-mock-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.pb-mock-h b{font-size:1rem}
+.pb-mock-h span{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink-soft)}
+.pb-mock-g{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent-ink);margin:16px 0 4px}
+.pb-row{display:grid;grid-template-columns:20px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.pb-mock-g+.pb-row{border-top:0}
+.pb-row .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center}
+.pb-row .cb.on{background:var(--accent);border-color:var(--accent)}
+.pb-row .cb.on::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.pb-row .nm{font-size:.9rem;font-weight:600;line-height:1.3}
+.pb-row .nm small{display:block;font-weight:500;font-size:.76rem;color:var(--ink-soft);margin-top:2px}
+.pb-row .vl{font-size:.84rem;text-align:right;font-variant-numeric:tabular-nums;line-height:1.35}
+.pb-row .vl s{display:block;color:var(--ink-soft);font-size:.76rem}
+.pb-row.muted .nm,.pb-row.muted .vl{color:var(--ink-soft)}
+.pb-mock-f{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:.84rem;color:var(--ink-soft)}
+.pb-mock-f .go{background:linear-gradient(135deg,#0A5BD6,#2E86F5);color:#fff;font-weight:700;border-radius:999px;padding:.55em 1.1em;font-size:.82rem;white-space:nowrap}
+
+.pb-seats{margin-top:44px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 30px 60px -44px rgba(10,30,62,.5)}
+.pb-tabs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:var(--surface-2)}
+.pb-tabs button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;font:inherit;font-weight:600;font-size:.95rem;
+  color:var(--ink-soft);padding:16px 12px;min-height:58px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.55em;transition:color .15s,background .15s}
+.pb-tabs button:hover{color:var(--ink)}
+.pb-tabs button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pb-tabs button[aria-selected="true"]{color:var(--ink);background:var(--surface);border-bottom-color:var(--accent)}
+.pb-tabs button[aria-selected="true"] svg{stroke:var(--accent)}
+.pb-panel{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,60px);padding:clamp(26px,4vw,50px);align-items:start}
+.pb-panel+.pb-panel{border-top:1px solid var(--line)}
+.pb-panel[hidden]{display:none}
+.pb-panel h3{font-size:clamp(1.5rem,2.5vw,2rem);line-height:1.12;margin-top:.7rem}
+.pb-panel .txt p{color:var(--ink-soft);margin-top:.9rem}
+.pb-panel .pb-list{margin-top:.4rem;background:var(--surface-2);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+
+.pb-swiss{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:var(--on-navy);position:relative;overflow:hidden}
+.pb-swiss::after{content:"";position:absolute;right:-10%;top:-30%;width:60%;height:160%;background:radial-gradient(closest-side,rgba(46,134,245,.26),transparent 70%)}
+.pb-swiss .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,64px);align-items:center}
+.pb-swiss .eyebrow{color:#8FBEF5}.pb-swiss .eyebrow::before{background:linear-gradient(90deg,#8FBEF5,transparent)}
+.pb-swiss h2{color:#fff;font-size:clamp(2rem,3.8vw,3rem);line-height:1.08;margin-top:.8rem}
+.pb-swiss .txt>p{color:var(--on-navy-soft);margin-top:1rem}
+.pb-swiss .pb-list{margin-top:1.6rem}
+.pb-swiss .pb-list li{color:var(--on-navy)}
+.pb-swiss .pb-list svg{stroke:#8FBEF5}
+.pb-be{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:20px 20px 16px;box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}
+.pb-be .hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pb-be .hd b{color:#fff;font-size:1rem}
+.pb-be .hd span{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--on-navy-soft)}
+.pb-be svg{display:block;width:100%;height:auto;margin-top:12px}
+.pb-be .ax{stroke:rgba(255,255,255,.18);stroke-width:1}
+.pb-be .tx{fill:#9DB2D4;font:600 11px "DM Sans",sans-serif}
+.pb-be .ls{fill:none;stroke:#8FBEF5;stroke-width:2.6;stroke-linecap:round}
+.pb-be .an{fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round}
+.pb-be .be{stroke:#FFD08A;stroke-width:1.4;stroke-dasharray:4 4}
+.pb-be .bd{fill:#FFD08A}
+.pb-be .key{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:.8rem;color:var(--on-navy-soft)}
+.pb-be .key i{display:inline-block;width:16px;height:3px;border-radius:2px;margin-right:7px;vertical-align:3px}
+
+.pb-biz{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:48px;counter-reset:biz}
+.pb-biz .card{padding-top:30px}
+.pb-biz .card::after{counter-increment:biz;content:"0" counter(biz);position:absolute;right:22px;top:22px;font-family:"DM Serif Display",serif;font-size:1.1rem;color:var(--ink-soft);opacity:.55}
+.xlinks{background:var(--surface-2)}
+
+@media(max-width:980px){.pb-biz{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .pb-hero .wrap,.pb-swiss .wrap,.pb-feed{grid-template-columns:1fr}
+  .pb-media{margin:10px 8px 34px}
+  .pb-mock{position:relative;top:auto}
+  .pb-panel{grid-template-columns:1fr}
+  .pb-tabs{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){.pb-ch{grid-template-columns:1fr}}
+@media(max-width:600px){
+  .pb-hero h1{font-size:clamp(2rem,8.5vw,2.5rem)}
+  .pb-hero .lead{font-size:1rem}
+  .pb-hero .hero-cta{flex-direction:column;align-items:stretch}.pb-hero .hero-cta .btn{justify-content:center}
+  .pb-card{position:relative;left:auto;bottom:auto;width:auto;margin:-26px 12px 0}
+  .pb-media .pb-cap{text-align:left;margin-top:12px}
+  .pb-tag{right:8px}
+  .pb-tl::before{left:17px}
+  .pb-stage{grid-template-columns:36px 1fr;gap:16px}.pb-stage .dn{width:36px;height:36px;font-size:1.05rem}
+  .pb-tabs button{font-size:.86rem;padding:12px 8px}
+  .pb-ch .n{font-size:2.3rem}
+  .pb-row{grid-template-columns:20px 1fr;}.pb-row .vl{grid-column:2;text-align:left}
+}
+@media(max-width:480px){.pb-fact{padding:20px 16px}.pb-fact b{font-size:1.9rem}}
+@media(max-width:340px){.pb-facts{grid-template-columns:1fr}.pb-fact+.pb-fact{border-left:0;border-top:1px solid var(--line)}}
+</style>
+
+</head>
+<body class="pg-pb">
+<header class="nav">
+  <div class="wrap nav-row">
+    <a class="brand" href="index.html" aria-label="Wealth Analyzer home">
+      <span class="wa-logo">Wealth<span>Analyzer</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html#platform">Platform</a>
+      <a href="index.html#showcase">Product</a>
+      <div class="nav-dd" id="navDd">
+        <button class="nav-dd-btn current" id="navDdBtn" type="button" aria-expanded="false" aria-controls="navDdMenu">Industries<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="nav-dd-menu" id="navDdMenu">
+          <a class="dd-item" href="private-banking.html" aria-current="page"><span class="chip"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V7z"/></svg></span><span><b>Private banking</b><small>Every adviser planning like your best one</small></span></a>
+          <a class="dd-item" href="asset-management.html"><span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12V4M12 12l7 3"/></svg></span><span><b>Asset management</b><small>Your strategies, inside the client's plan</small></span></a>
+          <a class="dd-item" href="wealth-management.html"><span class="chip"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5"/><path d="M14.5 20c0-2.2 1.3-3.6 3.2-3.6S21 17.8 21 20"/></svg></span><span><b>Wealth management</b><small>Bank-grade planning for independent firms</small></span></a>
+          <a class="dd-item" href="family-offices.html"><span class="chip"><svg viewBox="0 0 24 24"><path d="M4 20V8l5-3 5 3v12"/><path d="M14 20v-7l6-3v10"/></svg></span><span><b>Family office</b><small>The whole family's wealth, in one picture</small></span></a>
+        </div>
+      </div>
+      <a href="index.html#outcomes">Benefits</a>
+      <a href="index.html#trust">Security</a>
+      <div class="nav-dd nav-dd-co">
+        <button class="nav-dd-btn" id="navCoBtn" type="button" aria-expanded="false" aria-controls="navCoMenu">Our company<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="nav-dd-menu" id="navCoMenu">
+          <a class="dd-item" href="our-values.html"><span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></span><span><b>Our values</b><small>The rules we hold ourselves to</small></span></a>
+          <a class="dd-item" href="our-company.html"><span class="chip"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M9 7.5h.01M12 7.5h.01M15 7.5h.01M9 11h.01M12 11h.01M15 11h.01M10 20.5v-4h4v4"/></svg></span><span><b>Our company</b><small>Who we are, how we got here and how we are paid</small></span></a>
+        </div>
+      </div>
+    </nav>
+    <a class="btn btn-primary" href="#contact">Request a demo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="nav-drawer" id="navDrawer" aria-hidden="true">
+  <a href="index.html#platform" class="nav-drawer-link">Platform</a>
+  <a href="index.html#showcase" class="nav-drawer-link">Product</a>
+  <span class="drawer-label">Industries</span>
+  <a href="private-banking.html" class="nav-drawer-link sub" aria-current="page">Private banking</a>
+  <a href="asset-management.html" class="nav-drawer-link sub">Asset management</a>
+  <a href="wealth-management.html" class="nav-drawer-link sub">Wealth management</a>
+  <a href="family-offices.html" class="nav-drawer-link sub">Family office</a>
+  <a href="index.html#outcomes" class="nav-drawer-link">Benefits</a>
+  <a href="index.html#trust" class="nav-drawer-link">Security</a>
+  <span class="drawer-label">Our company</span>
+  <a href="our-values.html" class="nav-drawer-link sub">Our values</a>
+  <a href="our-company.html" class="nav-drawer-link sub">Our company</a>
+  <a class="btn btn-primary nav-drawer-link" href="#contact">Request a demo</a>
+</div>
+
+<main id="top">
+  <section class="pb-hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <nav class="crumb" aria-label="Breadcrumb"><a href="index.html">Home</a><span aria-hidden="true">/</span><span>Industries</span><span aria-hidden="true">/</span><span aria-current="page">Private banking</span></nav>
+        <p class="eyebrow">Private banking</p>
+        <h1>Advise on the whole balance sheet, <span class="grad">not just the book</span>.</h1>
+        <p class="lead">For many Swiss clients, the pension fund, the 3a accounts and the mortgage carry more weight than the securities account. Give your bankers a plan that treats them that way, fed from your own systems and run to one standard on every desk.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#contact">Request a demo</a>
+          <a class="btn btn-ghost" href="#swiss">Explore the Swiss detail</a>
+        </div>
+      </div>
+      <div class="pb-media">
+        <span class="pb-tag"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M12 8v8M8 12h8"/></svg>Official ESTV tax data</span>
+        <figure class="shot"><div class="shot-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="shot-ttl">Pillar 2 and 3a</span></div><img src="img/ind-pensions.png" width="1400" height="603" alt="Pension tables: Pillar 2 contributions, projected capital at withdrawal, capital-withdrawal tax for Zurich and the effect of staggering withdrawals" loading="eager"></figure>
+        <div class="pb-card" aria-label="Illustrative example: Pillar 3a withdrawals taken at once or spread over several years">
+          <div class="k"><span>Pillar 3a withdrawals</span><span>Illustrative</span></div>
+          <ul>
+            <li>All accounts in one year <span class="pv hi">Higher tax</span></li>
+            <li>Spread over four years <span class="pv lo">Lower tax</span></li>
+          </ul>
+        </div>
+        <p class="pb-cap">Fictional sample household in Zurich.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pb-factsec" aria-label="Swiss facts">
+    <div class="wrap">
+      <div class="pb-facts">
+        <div class="pb-fact"><b>2,110</b><p>Swiss municipalities with 2026 income, church and wealth tax</p></div>
+        <div class="pb-fact"><b>0.15<span>%</span></b><p>median gap to the official tax, across 230 random test households</p></div>
+        <div class="pb-fact"><b>0.7<span>%</span></b><p>of income, the widest gap found in that same test</p></div>
+        <div class="pb-fact"><b>600<span>+</span></b><p>local account types, from BVG and Pillar 3a to ISA, SIPP and CPF</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="challenge">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">The challenge</p>
+        <h2>The biggest decisions your clients face rarely sit in the portfolio.</h2>
+      </div>
+      <div class="pb-ch">
+        <article><span class="n" aria-hidden="true">01</span><div><h3>The pension fund outweighs the portfolio</h3><p>When to draw it, as capital or as an annuity, and in how many steps: for many households this is the largest financial decision of their lives, and it is often made without the bank.</p></div></article>
+        <article><span class="n" aria-hidden="true">02</span><div><h3>Lending lives in another system</h3><p>The mortgage is priced by one team and the portfolio advised by another. Repayments, interest and the value of the home rarely meet in one projection.</p></div></article>
+        <article><span class="n" aria-hidden="true">03</span><div><h3>Advice that depends on who you get</h3><p>Plan quality varies from one banker to the next. A client meeting should never be a lottery for your brand.</p></div></article>
+        <article><span class="n" aria-hidden="true">04</span><div><h3>Data your bank already holds, typed in twice</h3><p>Custody positions and client records already exist in your systems, yet they reach planning tools by hand, and the typing errors travel with them.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="feeds" class="tint">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">From your systems to the plan</p>
+        <h2>Custody and CRM data in the plan, with a banker at every step.</h2>
+        <p class="lead">A direct connection pulls positions and client records from your custodian and your CRM. Nothing is written until a banker has looked at it.</p>
+      </div>
+      <div class="pb-feed">
+        <div class="pb-tl">
+          <div class="pb-stage">
+            <span class="dn" aria-hidden="true">1</span>
+            <div class="txt">
+              <p class="pb-when">Connect</p>
+              <h3>A connection your security team can sign off.</h3>
+              <p>Point a connection at the custodian's statement feed or at your CRM's client records.</p>
+              <ul class="pb-list">
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Requests to private or internal network addresses are refused</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Connections can be pinned to a list of named hosts</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pb-stage">
+            <span class="dn" aria-hidden="true">2</span>
+            <div class="txt">
+              <p class="pb-when">Preview</p>
+              <h3>A test fetch that writes nothing.</h3>
+              <p>See exactly what the source sends, already translated into the plan's terms, before anything is applied.</p>
+            </div>
+          </div>
+          <div class="pb-stage">
+            <span class="dn" aria-hidden="true">3</span>
+            <div class="txt">
+              <p class="pb-when">Review</p>
+              <h3>Each record matched to the right row.</h3>
+              <p>Every record is sorted into new, changed or unchanged and grouped by section, with the old and the new value side by side.</p>
+              <ul class="pb-list">
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Matched on what a record is, not only its name: a cash account named after a pension fund can never overwrite the pension</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>A spouse's salary arriving in the same file as the spouse lands with the right person</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>A row repeated within one file is recognised, not added again</li>
+              </ul>
+            </div>
+          </div>
+          <div class="pb-stage">
+            <span class="dn" aria-hidden="true">4</span>
+            <div class="txt">
+              <p class="pb-when">Apply</p>
+              <h3>Only what the source actually sent.</h3>
+              <p>If a feed sends a loan balance without its rate, the rate already in the plan is left alone. Running the same statement a second time changes nothing at all, so a weekly refresh never grows the plan.</p>
+            </div>
+          </div>
+        </div>
+        <div class="pb-mock" aria-label="Illustrative review screen for a custodian feed">
+          <div class="pb-mock-h"><b>Review and apply</b><span>Illustrative</span></div>
+          <p class="pb-mock-g">Accounts</p>
+          <div class="pb-row"><span class="cb on"></span><span class="nm">Custody account, Geneva<small>Changed</small></span><span class="vl"><s>CHF 1,184,300</s>CHF 1,207,950</span></div>
+          <div class="pb-row"><span class="cb on"></span><span class="nm">Pillar 3a, second account<small>New</small></span><span class="vl">CHF 41,800</span></div>
+          <p class="pb-mock-g">Loans</p>
+          <div class="pb-row"><span class="cb on"></span><span class="nm">Fixed-rate mortgage<small>Changed: balance sent, rate kept</small></span><span class="vl"><s>CHF 905,000</s>CHF 895,000</span></div>
+          <p class="pb-mock-g">Income</p>
+          <div class="pb-row muted"><span class="cb"></span><span class="nm">Salary, second client<small>Unchanged</small></span><span class="vl">CHF 168,000</span></div>
+          <div class="pb-mock-f"><span>Three changes selected</span><span class="go">Apply to plan</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="seats">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Across your bank</p>
+        <h2>One platform, four seats at the table.</h2>
+        <p class="lead">Your bankers use it in front of clients. Your desk heads, CIO and compliance team each get what they need from the same plan.</p>
+      </div>
+      <div class="pb-seats">
+        <div class="pb-tabs" role="tablist" aria-label="Roles">
+          <button type="button" role="tab" id="pbt-1" aria-controls="pbp-1" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H10l-4 4v-4H5z"/></svg>Private banker</button>
+          <button type="button" role="tab" id="pbt-2" aria-controls="pbp-2" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5"/><path d="M14.5 20c0-2.2 1.3-3.6 3.2-3.6S21 17.8 21 20"/></svg>Head of the desk</button>
+          <button type="button" role="tab" id="pbt-3" aria-controls="pbp-3" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>CIO</button>
+          <button type="button" role="tab" id="pbt-4" aria-controls="pbp-4" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>Compliance and risk</button>
+        </div>
+        <div class="pb-panel" role="tabpanel" id="pbp-1" aria-labelledby="pbt-1">
+          <div class="txt"><p class="eyebrow">For the private banker</p><h3>Lending and advice in one projection.</h3><p>Mortgages sit in the plan as they stand on your books. Each one amortises year by year, with interest and principal paid out of the household's cash flow, so a repayment shows up as what it really costs.</p></div>
+          <ul class="pb-list">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Debt service on its own line in the cash-flow table</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Spending entered without loan repayments, so nothing is counted twice</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>The home's value grows with its own uncertainty, around 3% a year</li>
+          </ul>
+        </div>
+        <div class="pb-panel" role="tabpanel" id="pbp-2" aria-labelledby="pbt-2">
+          <div class="txt"><p class="eyebrow">For the head of the desk</p><h3>The same plan, whoever the client sees.</h3><p>One method and one report across the desk. A newer banker hands over a plan that reads like a senior colleague's, so the client's experience no longer depends on the name on the door.</p></div>
+          <ul class="pb-list">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>One planning method on every desk</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Roles that decide who can see and change each plan</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Per-banker access to client plans</li>
+          </ul>
+        </div>
+        <div class="pb-panel" role="tabpanel" id="pbp-3" aria-labelledby="pbt-3">
+          <div class="txt"><p class="eyebrow">For the CIO</p><h3>One set of risk settings, applied to every plan.</h3><p>Each client's risk profile and time horizon decide the return and volatility their plan runs on, so your house settings reach every banker in exactly the same way.</p></div>
+          <ul class="pb-list">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Seven risk profiles, from very conservative to very aggressive</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>A couple's two profiles blended into one</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Time horizon weighed alongside appetite for risk</li>
+          </ul>
+        </div>
+        <div class="pb-panel" role="tabpanel" id="pbp-4" aria-labelledby="pbt-4">
+          <div class="txt"><p class="eyebrow">For compliance and risk</p><h3>Your supervisor's questions, answered in advance.</h3><p>The documents a vendor review asks for are ready before you ask, and every change to a plan shows who made it, and when.</p></div>
+          <ul class="pb-list">
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Sign-in and an audit trail of changes to each plan</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Security review and data processing agreement on request</li>
+            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Outsourcing terms written for supervised banks</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pb-swiss" id="swiss">
+    <div class="wrap">
+      <div class="txt">
+        <p class="eyebrow">Swiss depth</p>
+        <h2>Swiss detail, down to the municipality.</h2>
+        <p>Your Swiss clients rarely ask about markets alone. They ask when to draw the pension fund, how to spread the 3a accounts, and what their commune will take. Wealth Analyzer models each answer with official tax data.</p>
+        <ul class="pb-list">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>The 13th AHV pension, alongside Pillar 2 and 3a</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Capital-withdrawal tax on Pillar 2 and 3a, by canton and commune</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Staggered withdrawals compared with a single one</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>Annuity or lump sum, with the age at which the annuity pays more</li>
+        </ul>
+      </div>
+      <div class="pb-be" role="img" aria-label="Illustrative chart: the annuity paid so far rises with age and overtakes the lump sum after withdrawal tax at the break-even age">
+        <div class="hd"><b>Annuity or lump sum?</b><span>Illustrative</span></div>
+        <svg viewBox="0 0 520 250" aria-hidden="true">
+          <line class="ax" x1="40" y1="210" x2="505" y2="210"/><line class="ax" x1="40" y1="20" x2="40" y2="210"/>
+          <text class="tx" x="40" y="232" text-anchor="middle">65</text><text class="tx" x="195" y="232" text-anchor="middle">75</text>
+          <text class="tx" x="350" y="232" text-anchor="middle">85</text><text class="tx" x="505" y="232" text-anchor="end">95</text>
+          <path class="ls" d="M40,96 C150,92 300,96 505,104"/>
+          <path class="an" d="M40,210 L505,36"/>
+          <line class="be" x1="331" y1="20" x2="331" y2="210"/>
+          <circle class="bd" cx="331" cy="101" r="5"/>
+          <text class="tx" x="339" y="34">Break-even age</text>
+        </svg>
+        <div class="key"><span><i style="background:#fff"></i>Annuity, paid so far</span><span><i style="background:#8FBEF5"></i>Lump sum, after withdrawal tax</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="business-case" class="tint">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Where it pays off</p>
+        <h2>Three moments a plan turns into business.</h2>
+      </div>
+      <div class="pb-biz">
+        <div class="card"><div class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M7 20h10"/><path d="M5 8h14"/><path d="M5 8l-2.5 6a3 3 0 0 0 5 0z"/><path d="M19 8l-2.5 6a3 3 0 0 0 5 0z"/></svg></div><h3>Pension decisions become mandates</h3><p>When a client takes the capital, it needs a new home. The bank that modelled the choice with them is the natural one.</p></div>
+        <div class="card"><div class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg></div><h3>Mortgage renewals become reviews</h3><p>A renewal brings the client to the table anyway. With the loan already in the plan, it turns into a conversation about everything else too.</p></div>
+        <div class="card"><div class="chip"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5"/><path d="M14.5 20c0-2.2 1.3-3.6 3.2-3.6S21 17.8 21 20"/></svg></div><h3>A desk that grows into complexity</h3><p>Shared method and settings let newer bankers take on more demanding households, sooner, without the senior team rewriting their work.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="more-industries" class="xlinks">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Industries</p>
+        <h2>Explore other industries.</h2>
+      </div>
+      <div class="aud-grid three">
+        <a class="aud" href="asset-management.html"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 12V4M12 12l7 3"/></svg></div><div><h3>Asset management</h3><p>Your strategies tested inside household plans, the engine stated plainly, and approved proposals staged with checks.</p><span class="more">Explore asset management<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
+        <a class="aud" href="wealth-management.html"><div class="chip"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="17" cy="10" r="2.4"/><path d="M3 20c0-3 2.5-5 5-5s5 2 5 5"/><path d="M14.5 20c0-2.2 1.3-3.6 3.2-3.6S21 17.8 21 20"/></svg></div><div><h3>Wealth management</h3><p>A first meeting that wins the mandate, files from every custodian, live verdicts and a report in your colours.</p><span class="more">Explore wealth management<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
+        <a class="aud" href="family-offices.html"><div class="chip"><svg viewBox="0 0 24 24"><path d="M4 20V8l5-3 5 3v12"/><path d="M14 20v-7l6-3v10"/></svg></div><div><h3>Family office</h3><p>One forward plan in the family's own currency, the questions families ask, and goals across generations.</p><span class="more">Explore family office<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></a>
+      </div>
+    </div>
+  </section>
+<section id="contact" class="cta">
+    <div class="wrap">
+      <p class="eyebrow">Request a demo</p>
+      <h2>See Wealth Analyzer on your own numbers.</h2>
+      <p>Tell us how your desks are organised, and we will show you a Swiss household planned down to its commune, pension fund included.</p>
+      <div class="contact-card">
+        <div>
+          <div class="k">Email us</div>
+          <div class="mail"><a id="mail" href="mailto:contact@privatewealthintelligence.ch?subject=Wealth%20Analyzer%20demo">contact@privatewealthintelligence.ch</a></div>
+        </div>
+        <div class="contact-actions">
+          <a class="btn btn-light" href="mailto:contact@privatewealthintelligence.ch?subject=Wealth%20Analyzer%20demo">Email us</a>
+          <button class="btn btn-ghost" id="copybtn" type="button" style="color:#fff;border-color:rgba(255,255,255,.3)">Copy email</button>
+          <span id="copyok" hidden>Copied</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <div>
+      <div class="foot-brand">
+        <span class="wa-logo">Wealth<span>Analyzer</span></span>
+      </div>
+      <div class="foot-meta" style="margin-top:12px">Zurich, Switzerland <svg class="chflag" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="3" fill="#D52B1E"/><rect x="13" y="6.5" width="6" height="19" fill="#fff"/><rect x="6.5" y="13" width="19" height="6" fill="#fff"/></svg></div>
+    </div>
+    <div class="foot-meta">
+      <a href="index.html#platform">Platform</a><br>
+      <a href="index.html#showcase">Product</a><br>
+      <a href="index.html#outcomes">Benefits</a><br>
+      <a href="index.html#trust">Security</a>
+    </div>
+    <div class="foot-meta">
+      <div style="text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;color:var(--on-navy-soft);font-weight:700;margin-bottom:4px">Industries</div>
+      <a href="private-banking.html">Private banking</a><br>
+      <a href="asset-management.html">Asset management</a><br>
+      <a href="wealth-management.html">Wealth management</a><br>
+      <a href="family-offices.html">Family office</a>
+    </div>
+    <div class="foot-meta">
+      <div style="text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;color:var(--on-navy-soft);font-weight:700;margin-bottom:4px">Our company</div>
+      <a href="our-values.html">Our values</a><br>
+      <a href="our-company.html">Our company</a>
+    </div>
+    <div class="foot-meta">
+      <div style="text-transform:uppercase;letter-spacing:.12em;font-size:.7rem;color:var(--on-navy-soft);font-weight:700;margin-bottom:4px">Contact</div>
+      <a href="mailto:contact@privatewealthintelligence.ch">contact@privatewealthintelligence.ch</a>
+    </div>
+  </div>
+  <div class="wrap copyline">Wealth Analyzer is owned by Private Wealth Intelligence, Zurich, Switzerland. &copy; 2026. All rights reserved.</div>
+</footer>
+
+<script>
+(function(){
+  function copyEmail(){
+    var email='contact@privatewealthintelligence.ch',ok=document.getElementById('copyok');
+    function done(){if(ok){ok.hidden=false;setTimeout(function(){ok.hidden=true;},2200);}}
+    function fallback(){try{var n=document.getElementById('mail'),r=document.createRange();r.selectNodeContents(n);var s=window.getSelection();s.removeAllRanges();s.addRange(r);done();}catch(e){}}
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(email).then(done,fallback);}
+      else{fallback();}
+    }catch(e){fallback();}
+  }
+  function init(){
+    var b=document.getElementById('copybtn');if(b)b.addEventListener('click',copyEmail);
+    // hamburger
+    var toggle=document.getElementById('navToggle'),drawer=document.getElementById('navDrawer');
+    if(toggle&&drawer){
+      function openMenu(){toggle.classList.add('open');drawer.classList.add('open');drawer.setAttribute('aria-hidden','false');toggle.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
+      function closeMenu(){toggle.classList.remove('open');drawer.classList.remove('open');drawer.setAttribute('aria-hidden','true');toggle.setAttribute('aria-expanded','false');document.body.style.overflow='';}
+      toggle.addEventListener('click',function(){toggle.classList.contains('open')?closeMenu():openMenu();});
+      drawer.querySelectorAll('.nav-drawer-link').forEach(function(a){a.addEventListener('click',closeMenu);});
+      document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+    }
+    var dds=[].slice.call(document.querySelectorAll('.nav-dd'));
+    function setDd(dd,open){dd.classList.toggle('open',open);var b=dd.querySelector('.nav-dd-btn');if(b)b.setAttribute('aria-expanded',open?'true':'false');}
+    // links land at the top of the chosen section or page
+    var root=document.documentElement,hdr=document.querySelector('header.nav');
+    function setHdr(){if(!hdr)return;var top=parseFloat(getComputedStyle(hdr).top)||0;root.style.setProperty('--hdr-h',Math.ceil(hdr.offsetHeight+top)+'px');}
+    setHdr();window.addEventListener('resize',setHdr);
+    function jump(el){if(!el)return;var prev=root.style.scrollBehavior;root.style.scrollBehavior='auto';el.scrollIntoView(true);root.style.scrollBehavior=prev;}
+    // arriving on a page opens it at the chosen section, or at the very top of the page.
+    // Inside a frame (a preview or embed) the outer page can keep its old scroll position
+    // when the page changes, so the top of this page is brought into view there as well.
+    var navEntry=(window.performance&&performance.getEntriesByType)?performance.getEntriesByType('navigation')[0]:null;
+    var navType=navEntry?navEntry.type:'navigate';
+    var framed=true;try{framed=window.self!==window.top;}catch(e){}
+    var target=null;
+    if(location.hash.length>1){try{target=document.getElementById(decodeURIComponent(location.hash.slice(1)));}catch(e){}}
+    var arrive=null;
+    if(target&&navType!=='back_forward')arrive=function(){jump(target);};
+    else if(!location.hash&&navType==='navigate')arrive=function(){window.scrollTo(0,0);if(framed)jump(root);};
+    if(arrive){
+      var moved=false;function mark(){moved=true;}
+      ['wheel','touchstart','keydown'].forEach(function(ev){window.addEventListener(ev,mark,{passive:true});});
+      arrive();
+      window.addEventListener('load',function(){if(moved)return;arrive();setTimeout(function(){if(!moved)arrive();},250);});
+    }
+    // a link to the page you are already on scrolls to its top instead of reloading it
+    document.addEventListener('click',function(e){
+      if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+      var a=e.target.closest?e.target.closest('a[href]'):null;if(!a||a.target)return;
+      var h=a.getAttribute('href');if(!h||h.charAt(0)==='#'||/^[a-z]+:/i.test(h))return;
+      var u;try{u=new URL(a.href,location.href);}catch(err){return;}
+      if(u.origin!==location.origin||u.pathname!==location.pathname||u.hash)return;
+      e.preventDefault();
+      dds.forEach(function(dd){setDd(dd,false);});
+      window.scrollTo(0,0);
+      if(framed)root.scrollIntoView(true);
+    });
+    // nav dropdowns (Industries, Our company): hover on desktop, click and keyboard everywhere
+    dds.forEach(function(dd){
+      var btn=dd.querySelector('.nav-dd-btn');if(!btn)return;
+      btn.addEventListener('click',function(e){e.stopPropagation();var o=!dd.classList.contains('open');dds.forEach(function(x){setDd(x,false);});setDd(dd,o);});
+      dd.addEventListener('focusout',function(e){if(!dd.contains(e.relatedTarget))setDd(dd,false);});
+    });
+    document.addEventListener('click',function(e){dds.forEach(function(dd){if(!dd.contains(e.target))setDd(dd,false);});});
+    document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;dds.forEach(function(dd){if(dd.classList.contains('open')){setDd(dd,false);dd.querySelector('.nav-dd-btn').focus();}});});
+  }
+  if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('.pb-tabs [role="tab"]'));
+  if(!tabs.length)return;
+  function show(t,focus){
+    tabs.forEach(function(b){var on=b===t;b.setAttribute('aria-selected',on?'true':'false');b.tabIndex=on?0:-1;
+      var p=document.getElementById(b.getAttribute('aria-controls'));if(p)p.hidden=!on;});
+    if(focus)t.focus();
+  }
+  tabs.forEach(function(b,i){
+    b.addEventListener('click',function(){show(b);});
+    b.addEventListener('keydown',function(e){
+      var k=e.key,j=-1;
+      if(k==='ArrowRight')j=(i+1)%tabs.length;else if(k==='ArrowLeft')j=(i-1+tabs.length)%tabs.length;
+      else if(k==='Home')j=0;else if(k==='End')j=tabs.length-1;
+      if(j>-1){e.preventDefault();show(tabs[j],true);}
+    });
+  });
+  show(tabs[0]);
+})();
+</script>
+</body>
+</html>
