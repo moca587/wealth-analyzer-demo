@@ -230,11 +230,6 @@ section{padding-block:clamp(64px,9vw,120px)}
 @media(max-width:560px){.trust-grid{grid-template-columns:1fr}}
 
 /* about */
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:start}
-.about-grid .lead{font-size:1.2rem;color:var(--ink)}
-.about-note{color:var(--ink-soft);font-size:1rem}
-.about-note p+p{margin-top:1rem}
-@media(max-width:820px){.about-grid{grid-template-columns:1fr;gap:22px}}
 
 /* contact */
 .cta{background:linear-gradient(130deg,var(--navy),var(--navy-2));color:var(--on-navy);position:relative;overflow:hidden}
@@ -482,10 +477,6 @@ html,body{overflow-x:clip}
 /* six nav items: tighten, then switch to the drawer before they collide with the button */
 @media(max-width:1120px){.nav-links{gap:1.15rem}}
 @media(max-width:980px){.nav-links{display:none}.nav-toggle{display:flex}}
-.about-links{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:1.4rem!important}
-.about-links a{display:inline-flex;align-items:center;gap:.4em;font-weight:600;color:var(--accent-ink);text-decoration:none}
-.about-links svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;transition:transform .16s ease}
-.about-links a:hover svg{transform:translateX(3px)}
 
 /* mobile drawer: industries group */
 .nav-drawer{justify-content:flex-start;overflow-y:auto;padding-top:calc(env(safe-area-inset-top,0px) + 96px)}
@@ -542,6 +533,12 @@ a.aud:hover .more svg{transform:translateX(3px)}
 .co-profile dl>div:first-child{border-top:0}
 .co-profile dt{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);padding-top:2px}
 .co-profile dd{margin:0;font-size:.95rem;line-height:1.45;font-weight:500}
+
+.co-team-head{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,64px);align-items:start}
+.co-team h2{font-size:clamp(2rem,3.8vw,3rem);line-height:1.08;margin-top:.8rem}
+.co-team-txt .lead{color:var(--ink);font-size:1.2rem}
+.co-team-txt p{color:var(--ink-soft)}
+.co-team-txt p+p{margin-top:1rem}
 
 .co-isnot{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:48px}
 .co-isnot article{border-radius:22px;padding:clamp(24px,3vw,36px)}
@@ -608,7 +605,8 @@ a.aud:hover .more svg{transform:translateX(3px)}
 
 @media(max-width:1020px){.co-talk{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){
-  .co-hero .wrap,.co-paid .wrap,.co-zh .wrap{grid-template-columns:1fr}
+  .co-hero .wrap,.co-paid .wrap,.co-zh .wrap,.co-team-head{grid-template-columns:1fr}
+  .co-team-head{gap:18px}
   .co-isnot{grid-template-columns:1fr}
   .co-tl{grid-template-columns:1fr;gap:0}
   .co-tl::before{left:9px;right:auto;top:0;bottom:0;width:2px;height:auto;background:linear-gradient(180deg,var(--accent),var(--accent-2) 70%,transparent)}
@@ -694,7 +692,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
         <h1>One company. One product. <span class="grad">One job</span>.</h1>
         <p class="lead">Private Wealth Intelligence is a software company with a single purpose: to give the people who advise on wealth a planning tool worthy of their clients. That tool is Wealth Analyzer, and it has our full attention.</p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="#story">How we got here</a>
+          <a class="btn btn-primary" href="#team">Meet the team</a>
           <a class="btn btn-ghost" href="#paid">How we are paid</a>
         </div>
       </div>
@@ -710,6 +708,21 @@ a.aud:hover .more svg{transform:translateX(3px)}
         </dl>
       </aside>
     </div>
+  </section>
+
+  <section class="co-team tint" id="team">
+    <div class="wrap">
+      <div class="co-team-head">
+        <div>
+          <p class="eyebrow">Our team</p>
+          <h2>Built by people who have done this before.</h2>
+        </div>
+        <div class="co-team-txt">
+          <p class="lead">Behind Wealth Analyzer stands a global team of private bankers and engineers with more than 45 years of combined experience in banking and financial technology.</p>
+          <p>We have built and run the kind of systems private banks and wealth managers depend on, so we know what institutional-grade really means - in the rigour of the models, the discipline of the security, and the care in every client report.</p>
+          <p>It is engineered to be trusted in front of a client, and to hold up to the scrutiny of a supervised institution.</p>
+        </div>
+      </div>    </div>
   </section>
 
   <section id="what-we-are">
