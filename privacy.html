@@ -543,7 +543,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
 <script>
 (function(){
   try{if(localStorage.getItem('wa-analytics')==='off')return;}catch(e){}
-  if(navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl===true)return;
+  if(navigator.globalPrivacyControl===true)return;
   (function(ss,ex){ window.ldfdr=window.ldfdr||function(){(ldfdr._q=ldfdr._q||[]).push([].slice.call(arguments));}; (function(d,s){ var fs=d.getElementsByTagName(s)[0]; function ce(src){ var cs=d.createElement(s); cs.src=src; cs.async=1; fs.parentNode.insertBefore(cs,fs); } ce('https://sc.lfeeder.com/lftracker_v1_'+ss+(ex?'_'+ex:'')+'.js'); })(document,'script'); })('JMvZ8gv5qm5a2pOd');
 })();
 </script>
@@ -621,7 +621,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
       <p>We use this to understand interest from firms, not to profile you as a person.</p>
 
       <h2>Switching analytics off</h2>
-      <p>Analytics does not run at all if your browser sends a Global Privacy Control or Do Not Track signal. You can also switch it off for this browser here; it stays off on every page you open next.</p>
+      <p>Analytics does not run at all if your browser sends a Global Privacy Control signal. You can also switch it off for this browser here; it stays off on every page you open next.</p>
       <div class="pv-switch">
         <p id="pvState" role="status">Analytics is on in this browser.</p>
         <button type="button" id="pvToggle" aria-pressed="false">Turn analytics off</button>
@@ -799,7 +799,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
 (function(){
   var b=document.getElementById('pvToggle'),s=document.getElementById('pvState');if(!b||!s)return;
   function isOff(){try{return localStorage.getItem('wa-analytics')==='off';}catch(e){return false;}}
-  function signal(){return navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl===true;}
+  function signal(){return navigator.globalPrivacyControl===true;}
   function show(){
     if(signal()){s.textContent='Analytics is off: your browser asks websites not to track you.';b.hidden=true;return;}
     var off=isOff();
