@@ -271,8 +271,91 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 .hookband h2{color:#fff;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:1.05;max-width:17em;margin-top:.6rem}
 .hookband .hooksub{color:rgba(255,255,255,.92);margin-top:1.1rem;max-width:40em;font-size:1.12rem}
 .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.9rem}
-.pills span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.5em 1.05em;font-size:.9rem;font-weight:500;cursor:help;transition:background .15s ease}
-.pills span:hover{background:rgba(255,255,255,.26)}
+/* hookband pills open a card on hover, focus or tap */
+.pills .hp{position:relative;display:inline-flex}
+.pills .hpill{font:inherit;font-size:.9rem;font-weight:500;color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+  border-radius:999px;padding:.5em 1.05em;cursor:pointer;display:inline-flex;align-items:center;gap:.55em;
+  transition:background .15s ease,color .15s ease,transform .18s ease,box-shadow .18s ease}
+.pills .hpill::after{content:"";width:7px;height:7px;border-radius:50%;background:#fff;flex:none;animation:hpPing 2.6s ease-out infinite}
+.pills .hp:nth-child(2) .hpill::after{animation-delay:.5s}
+.pills .hp:nth-child(3) .hpill::after{animation-delay:1s}
+.pills .hp:nth-child(4) .hpill::after{animation-delay:1.5s}
+.pills .hp:nth-child(5) .hpill::after{animation-delay:2s}
+@keyframes hpPing{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%,100%{box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+.pills .hp:is(:hover,:focus-within,.open) .hpill{background:#fff;color:var(--accent-ink);border-color:#fff;transform:translateY(-2px);box-shadow:0 12px 26px -12px rgba(0,0,0,.5)}
+.pills .hp:is(:hover,:focus-within,.open) .hpill::after{background:var(--accent);animation:none}
+.pills .hpill:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.hcard{position:absolute;left:50%;bottom:calc(100% + 14px);z-index:6;width:min(310px,calc(100vw - 24px));
+  background:var(--surface);color:var(--ink);border-radius:18px;text-align:left;
+  box-shadow:0 34px 70px -26px rgba(4,16,40,.65),0 0 0 1px rgba(10,30,62,.07);
+  opacity:0;visibility:hidden;pointer-events:none;transform-origin:calc(50% - var(--dx,0px)) 100%;
+  transform:translate(calc(-50% + var(--dx,0px)),10px) scale(.96);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s linear .24s}
+.hcard::before{content:"";position:absolute;top:100%;left:calc(50% - var(--dx,0px));margin-left:-9px;border:9px solid transparent;border-top-color:var(--surface)}
+.hcard::after{content:"";position:absolute;left:0;right:0;top:100%;height:18px}
+.hp:is(:hover,:focus-within,.open) .hcard{opacity:1;visibility:visible;pointer-events:auto;transform:translate(calc(-50% + var(--dx,0px)),0) scale(1);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.hviz{height:112px;border-radius:18px 18px 0 0;background:linear-gradient(135deg,#E6F0FE,#F5F9FF);overflow:hidden}
+.hviz svg{display:block;width:100%;height:100%}
+.hviz text{font-family:"DM Sans",sans-serif;font-size:10px;font-weight:600;fill:#30425E}
+.hbody{padding:14px 18px 16px}
+.hbody b{display:block;font-size:1.02rem;font-weight:700;color:var(--ink);line-height:1.3}
+.hbody p{font-size:.86rem;line-height:1.5;color:var(--ink-soft);margin:5px 0 0}
+.hbody em{display:inline-flex;align-items:center;gap:.4em;margin-top:11px;font-style:normal;font-size:.78rem;font-weight:700;
+  color:var(--accent-ink);background:#EAF2FE;border-radius:999px;padding:.32em .8em}
+.hbody em svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hp-hint{margin-top:1.1rem;font-size:.85rem;color:rgba(255,255,255,.78)}
+@media(hover:none){.hp-hint{font-size:0}.hp-hint::before{content:"Tap a feature to see it in action.";font-size:.85rem}}
+/* card animations replay every time a card opens (reduced motion: the global rule switches them off) */
+.hv-in,.hv-band,.hv-pop,.hv-grow,.hv-bar,.hv-press,.hv-page,.hv-cursor{transform-box:fill-box}
+.hp:is(:hover,:focus-within,.open) .hv-in{animation:hvIn .45s cubic-bezier(.2,.8,.2,1) both}
+.hp:is(:hover,:focus-within,.open) .hv-in.s1{animation-delay:.15s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s2{animation-delay:.35s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s3{animation-delay:.55s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s4{animation-delay:.75s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s5{animation-delay:1.15s}
+@keyframes hvIn{from{opacity:0;transform:translateX(-10px)}}
+.hp:is(:hover,:focus-within,.open) .hv-scan{animation:hvScan 1.6s ease-in-out infinite}
+@keyframes hvScan{0%{transform:translateY(0);opacity:0}12%,88%{opacity:.9}100%{transform:translateY(70px);opacity:0}}
+.hp:is(:hover,:focus-within,.open) .hv-dot{animation:hvBlink 1s ease-in-out infinite}
+.hp:is(:hover,:focus-within,.open) .hv-dot.d2{animation-delay:.15s}
+.hp:is(:hover,:focus-within,.open) .hv-dot.d3{animation-delay:.3s}
+@keyframes hvBlink{0%,100%{opacity:.25}50%{opacity:1}}
+.hp:is(:hover,:focus-within,.open) .hv-band{animation:hvGrowX .7s cubic-bezier(.2,.8,.2,1) both;transform-origin:0 50%}
+@keyframes hvGrowX{from{transform:scaleX(0)}}
+.hv-draw{stroke-dasharray:1 1}
+.hp:is(:hover,:focus-within,.open) .hv-draw{animation:hvDraw 1.1s ease-out both}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p2{animation-delay:.08s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p3{animation-delay:.16s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p4{animation-delay:.24s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p5{animation-delay:.32s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.med{animation-duration:1.3s;animation-delay:.2s}
+@keyframes hvDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.hp:is(:hover,:focus-within,.open) .hv-pop{animation:hvPop .4s cubic-bezier(.3,1.6,.5,1) 1.3s both;transform-origin:50% 50%}
+.hp-safe:is(:hover,:focus-within,.open) .hv-pop{animation-delay:.95s}
+@keyframes hvPop{from{opacity:0;transform:scale(0)}}
+.hp:is(:hover,:focus-within,.open) .hv-seg{animation:hvSeg .55s ease-out both}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g2{animation-delay:.2s}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g3{animation-delay:.4s}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g4{animation-delay:.6s}
+@keyframes hvSeg{from{stroke-dasharray:0 100}}
+.hp:is(:hover,:focus-within,.open) .hv-grow{animation:hvGrowX .55s cubic-bezier(.2,.8,.2,1) both}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g2{animation-delay:.2s}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g3{animation-delay:.4s}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g4{animation-delay:.6s}
+.hv-cursor{transform:translate(78px,58px)}
+.hp:is(:hover,:focus-within,.open) .hv-cursor{animation:hvCursor .9s cubic-bezier(.4,0,.2,1) both}
+@keyframes hvCursor{from{transform:translate(124px,96px)}60%{transform:translate(78px,58px)}75%{transform:translate(78px,58px) scale(.85)}to{transform:translate(78px,58px)}}
+.hp:is(:hover,:focus-within,.open) .hv-press{animation:hvPress .9s ease both;transform-origin:50% 50%}
+@keyframes hvPress{0%,62%{transform:scale(1)}72%{transform:scale(.94)}84%,100%{transform:scale(1)}}
+.hp:is(:hover,:focus-within,.open) .hv-page{animation:hvPage .5s cubic-bezier(.2,.8,.2,1) .75s both}
+@keyframes hvPage{from{opacity:0;transform:translateY(18px)}}
+.hp:is(:hover,:focus-within,.open) .hv-bar{animation:hvBar .45s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 100%}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b1{animation-delay:1.1s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b2{animation-delay:1.2s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b3{animation-delay:1.3s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b4{animation-delay:1.4s}
+@keyframes hvBar{from{transform:scaleY(0)}}
 
 /* layered hero screenshots */
 .herostack{position:relative;max-width:1120px;margin-inline:auto;padding:5% 1% 9%}
@@ -343,7 +426,7 @@ html,body{overflow-x:clip}
 
 /* hookband pills: smaller on mobile */
 @media(max-width:520px){
-  .pills span{font-size:.82rem;padding:.45em .85em}
+  .pills .hpill{font-size:.82rem;padding:.45em .85em}
   .hookband h2{font-size:clamp(1.7rem,7vw,2.4rem)}
 }
 
@@ -593,13 +676,14 @@ a.aud:hover .more svg{transform:translateX(3px)}
       <h2>Advice that took a week now takes a meeting.</h2>
       <p class="hooksub">Drop in the client's statements: automated multi-asset aggregation reads every position, the plan builds itself and stress-tests against a thousand markets, and a research-backed proposal and branded report generate instantly - while your adviser stays in control.</p>
       <div class="pills">
-        <span title="Automated multi-asset aggregation: positions, cash and loans are read by AI from any statement, with no manual re-keying.">Statements read in seconds</span>
-        <span title="Thousands of seeded, reproducible market paths run in a single click, instead of a day of spreadsheet modelling.">Institutional-grade Monte Carlo</span>
-        <span title="Instant, research-backed proposal generation the adviser reviews and approves - no building it by hand.">A proposal, drafted</span>
-        <span title="The full client report, in your brand, generated in one click rather than assembled slide by slide.">Branded report in one click</span>
-        <span title="The adviser approves every step; the platform never places a trade.">Nothing executed</span>
+        <div class="hp hp-stmt"><button class="hpill" type="button" aria-describedby="hc-stmt">Statements read in seconds</button><div class="hcard" role="tooltip" id="hc-stmt"><div class="hviz"><svg viewBox="0 0 300 112" aria-hidden="true"><rect x="28" y="12" width="74" height="88" rx="7" fill="#fff" stroke="#C9D8EE"/><rect x="38" y="24" width="38" height="5" rx="2.5" fill="#0A5BD6" opacity=".8"/><rect x="38" y="38" width="54" height="4" rx="2" fill="#D3DEEE"/><rect x="38" y="48" width="44" height="4" rx="2" fill="#D3DEEE"/><rect x="38" y="58" width="54" height="4" rx="2" fill="#D3DEEE"/><rect x="38" y="68" width="38" height="4" rx="2" fill="#D3DEEE"/><rect x="38" y="78" width="50" height="4" rx="2" fill="#D3DEEE"/><rect x="38" y="88" width="30" height="4" rx="2" fill="#D3DEEE"/><rect class="hv-scan" x="32" y="20" width="66" height="2.5" rx="1.25" fill="#2E86F5"/><g fill="#2E86F5"><circle class="hv-dot d1" cx="115" cy="56" r="3"/><circle class="hv-dot d2" cx="126" cy="56" r="3"/><circle class="hv-dot d3" cx="137" cy="56" r="3"/></g><g class="hv-in s1"><rect x="150" y="18" width="128" height="22" rx="11" fill="#fff" stroke="#DDE7F4"/><g transform="translate(164 29)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><text x="176" y="32.5">Equities</text><rect x="240" y="26" width="28" height="6" rx="3" fill="#BFD3F2"/></g><g class="hv-in s2"><rect x="150" y="45" width="128" height="22" rx="11" fill="#fff" stroke="#DDE7F4"/><g transform="translate(164 56)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><text x="176" y="59.5">Cash</text><rect x="240" y="53" width="28" height="6" rx="3" fill="#BFD3F2"/></g><g class="hv-in s3"><rect x="150" y="72" width="128" height="22" rx="11" fill="#fff" stroke="#DDE7F4"/><g transform="translate(164 83)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><text x="176" y="86.5">Mortgage</text><rect x="240" y="80" width="28" height="6" rx="3" fill="#BFD3F2"/></g></svg></div><div class="hbody"><b>Drop in a statement, get a plan</b><p>Upload the PDF or file your client brings. Positions, cash and loans are read for you and land in the plan, ready to check.</p><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No re-keying</em></div></div></div>
+        <div class="hp hp-mc"><button class="hpill" type="button" aria-describedby="hc-mc">Institutional-grade Monte Carlo</button><div class="hcard" role="tooltip" id="hc-mc"><div class="hviz"><svg viewBox="0 0 300 112" aria-hidden="true"><line x1="24" x2="280" y1="28" y2="28" stroke="#DDE7F4" stroke-width="1"/><line x1="24" x2="280" y1="56" y2="56" stroke="#DDE7F4" stroke-width="1"/><line x1="24" x2="280" y1="84" y2="84" stroke="#DDE7F4" stroke-width="1"/><path class="hv-band" d="M24 84 C110 70,200 34,280 10 L280 102 C200 100,110 92,24 84Z" fill="#2E86F5" opacity=".14"/><path class="hv-band" d="M24 84 C110 76,200 52,280 34 L280 76 C200 80,110 84,24 84Z" fill="#2E86F5" opacity=".22"/><path class="hv-draw p1" d="M24 84 L56 78 L88 80 L120 70 L152 66 L184 58 L216 50 L248 40 L280 30" pathLength="1" fill="none" stroke="#7FB0F5" stroke-width="1.2"/><path class="hv-draw p2" d="M24 84 L56 86 L88 82 L120 84 L152 80 L184 82 L216 76 L248 78 L280 72" pathLength="1" fill="none" stroke="#7FB0F5" stroke-width="1.2"/><path class="hv-draw p3" d="M24 84 L56 80 L88 72 L120 74 L152 62 L184 64 L216 58 L248 54 L280 46" pathLength="1" fill="none" stroke="#7FB0F5" stroke-width="1.2"/><path class="hv-draw p4" d="M24 84 L56 88 L88 90 L120 86 L152 90 L184 88 L216 92 L248 88 L280 96" pathLength="1" fill="none" stroke="#7FB0F5" stroke-width="1.2"/><path class="hv-draw p5" d="M24 84 L56 76 L88 70 L120 60 L152 54 L184 44 L216 38 L248 26 L280 16" pathLength="1" fill="none" stroke="#7FB0F5" stroke-width="1.2"/><path class="hv-draw med" d="M24 84 C100 76,190 62,280 52" pathLength="1" fill="none" stroke="#0A5BD6" stroke-width="2.6" stroke-linecap="round"/><circle class="hv-pop" cx="280" cy="52" r="4.5" fill="#0A5BD6" stroke="#fff" stroke-width="2"/><g class="hv-in s1"><rect x="20" y="6" width="74" height="18" rx="9" fill="#fff" stroke="#DDE7F4"/><text x="57" y="18.5" text-anchor="middle">1,000 paths</text></g></svg></div><div class="hbody"><b>A thousand markets, one clear answer</b><p>Every goal is tested across 1,000 possible market paths, so your client sees the good, the typical and the bad side by side.</p><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Same result on every rerun</em></div></div></div>
+        <div class="hp hp-prop"><button class="hpill" type="button" aria-describedby="hc-prop">A proposal, drafted</button><div class="hcard" role="tooltip" id="hc-prop"><div class="hviz"><svg viewBox="0 0 300 112" aria-hidden="true"><g transform="rotate(-90 64 56)"><circle cx="64" cy="56" r="32" fill="none" stroke="#E4ECF8" stroke-width="14"/><circle class="hv-seg g1" cx="64" cy="56" r="32" fill="none" stroke="#0A5BD6" stroke-width="14" pathLength="100" stroke-dasharray="45 100" stroke-dashoffset="0"/><circle class="hv-seg g2" cx="64" cy="56" r="32" fill="none" stroke="#2E86F5" stroke-width="14" pathLength="100" stroke-dasharray="30 100" stroke-dashoffset="-45"/><circle class="hv-seg g3" cx="64" cy="56" r="32" fill="none" stroke="#7FB0F5" stroke-width="14" pathLength="100" stroke-dasharray="15 100" stroke-dashoffset="-75"/><circle class="hv-seg g4" cx="64" cy="56" r="32" fill="none" stroke="#C5DAF8" stroke-width="14" pathLength="100" stroke-dasharray="10 100" stroke-dashoffset="-90"/></g><g class="hv-in s1"><circle cx="122" cy="16" r="4" fill="#0A5BD6"/><text x="132" y="19.5">Equities</text><rect class="hv-grow g1" x="196" y="13" width="58" height="6" rx="3" fill="#0A5BD6"/></g><g class="hv-in s2"><circle cx="122" cy="34" r="4" fill="#2E86F5"/><text x="132" y="37.5">Bonds</text><rect class="hv-grow g2" x="196" y="31" width="40" height="6" rx="3" fill="#2E86F5"/></g><g class="hv-in s3"><circle cx="122" cy="52" r="4" fill="#7FB0F5"/><text x="132" y="55.5">Real estate</text><rect class="hv-grow g3" x="196" y="49" width="22" height="6" rx="3" fill="#7FB0F5"/></g><g class="hv-in s4"><circle cx="122" cy="70" r="4" fill="#C5DAF8"/><text x="132" y="73.5">Cash</text><rect class="hv-grow g4" x="196" y="67" width="14" height="6" rx="3" fill="#C5DAF8"/></g><g class="hv-in s5"><rect x="190" y="84" width="88" height="20" rx="10" fill="#1F9D63"/><g transform="translate(203 94)"><circle r="6" fill="#fff" opacity=".25"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><text x="214" y="97.5" fill="#fff" style="fill:#fff">You approve</text></g></svg></div><div class="hbody"><b>A portfolio built around the client</b><p>The AI Builder drafts an allocation for this client's goals and risk. You adjust it, test it in the plan and sign it off.</p><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>You stay in charge</em></div></div></div>
+        <div class="hp hp-rep"><button class="hpill" type="button" aria-describedby="hc-rep">Branded report in one click</button><div class="hcard" role="tooltip" id="hc-rep"><div class="hviz"><svg viewBox="0 0 300 112" aria-hidden="true"><g class="hv-press"><rect x="22" y="44" width="96" height="24" rx="12" fill="#0A5BD6"/><text x="70" y="59.5" text-anchor="middle" style="fill:#fff">Create report</text></g><path class="hv-cursor" d="M0 0l0 15 4-3.6 3 6.4 2.6-1.2-3-6.3 5.4-.4z" fill="#0A1E3A" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><g class="hv-page"><rect x="182" y="16" width="84" height="90" rx="6" fill="#fff" stroke="#DDE7F4" transform="rotate(7 224 61)"/><rect x="158" y="10" width="84" height="94" rx="6" fill="#fff" stroke="#C9D8EE"/><path d="M158 16a6 6 0 0 1 6-6h72a6 6 0 0 1 6 6v12h-84z" fill="#0A5BD6"/><circle cx="170" cy="19" r="5" fill="#fff"/><rect x="180" y="16" width="40" height="5" rx="2.5" fill="#fff" opacity=".75"/><rect x="166" y="36" width="62" height="4" rx="2" fill="#D3DEEE"/><rect x="166" y="45" width="48" height="4" rx="2" fill="#D3DEEE"/><rect class="hv-bar b1" x="168" y="78" width="10" height="16" rx="2" fill="#BFD3F2"/><rect class="hv-bar b2" x="182" y="68" width="10" height="26" rx="2" fill="#7FB0F5"/><rect class="hv-bar b3" x="196" y="73" width="10" height="21" rx="2" fill="#2E86F5"/><rect class="hv-bar b4" x="210" y="60" width="10" height="34" rx="2" fill="#0A5BD6"/></g></svg></div><div class="hbody"><b>A report that looks like your firm</b><p>Your logo and colours on a client-ready report, from the summary to the projections, with no slides to assemble.</p><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Ready to send</em></div></div></div>
+        <div class="hp hp-safe"><button class="hpill" type="button" aria-describedby="hc-safe">Nothing executed</button><div class="hcard" role="tooltip" id="hc-safe"><div class="hviz"><svg viewBox="0 0 300 112" aria-hidden="true"><g class="hv-in s1"><rect x="24" y="6" width="252" height="21" rx="10.5" fill="#fff" stroke="#DDE7F4"/><text x="40" y="20">Plan</text><g transform="translate(262 16.5)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g><g class="hv-in s2"><rect x="24" y="31" width="252" height="21" rx="10.5" fill="#fff" stroke="#DDE7F4"/><text x="40" y="45">Propose</text><g transform="translate(262 41.5)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g><g class="hv-in s3"><rect x="24" y="56" width="252" height="21" rx="10.5" fill="#fff" stroke="#DDE7F4"/><text x="40" y="70">Adviser approves</text><g transform="translate(262 66.5)"><circle r="6" fill="#1F9D63"/><path d="M-2.6 0l1.8 1.8 3.4-3.6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g><g class="hv-in s4"><rect x="24" y="83" width="252" height="21" rx="10.5" fill="#FDF3F2" stroke="#F1C7C2" stroke-dasharray="4 3"/><text x="40" y="97" style="fill:#B42318">Place a trade</text><text x="250" y="97" text-anchor="end" style="fill:#B42318">Never</text><g class="hv-pop"><g transform="translate(262 93.5)"><rect x="-5" y="-2" width="10" height="8" rx="1.6" fill="#B42318"/><path d="M-3 -2v-2.2a3 3 0 0 1 6 0V-2" fill="none" stroke="#B42318" stroke-width="1.6"/></g></g></g></svg></div><div class="hbody"><b>Advice, never trades</b><p>Wealth Analyzer plans and proposes. It never places an order: your adviser decides, and your own systems book.</p><em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Safe beside your core system</em></div></div></div>
       </div>
-      <a class="btn btn-light" href="#contact" style="margin-top:1.9rem">Request a demo</a>
+      <p class="hp-hint">Hover over a feature to see it in action.</p>
+      <a class="btn btn-light" href="#contact" style="margin-top:1.5rem">Request a demo</a>
     </div>
   </section>
 
@@ -645,7 +729,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M4 10l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg></div><b>Hosted where you need it</b><span>In your own jurisdiction, or installed on-premise, to your data-residency rules.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M6 20V11M12 20V5M18 20v-6"/></svg></div><b>Bank-neutral</b><span>Open architecture, no product push and no conflict. The plan serves the client.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><b>Nothing executed</b><span>The adviser approves every plan and proposal; your core system books.</span></div>
-        <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M12 4l7 3v5c0 4-3 6.5-7 8-4-1.5-7-4-7-8V7z"/></svg></div><b>FINMA and DORA ready</b><span>Documented, reproducible advice and a posture built for supervised institutions.</span></div>
+        <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M12 4l7 3v5c0 4-3 6.5-7 8-4-1.5-7-4-7-8V7z"/></svg></div><b>Ready for your regulator</b><span>Documented, reproducible advice and a full audit trail, built for supervised firms in every market you serve.</span></div>
         <div class="trust-item"><div class="chip"><svg viewBox="0 0 24 24"><path d="M4 12h6l2-4 2 8 2-4h4"/></svg></div><b>Complement, never replace</b><span>Sits beside your core system and the feeds you already have. Nothing to rip out.</span></div>
       </div>
     </div>
@@ -786,6 +870,41 @@ a.aud:hover .more svg{transform:translateX(3px)}
     });
     document.addEventListener('click',function(e){dds.forEach(function(dd){if(!dd.contains(e.target))setDd(dd,false);});});
     document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;dds.forEach(function(dd){if(dd.classList.contains('open')){setDd(dd,false);dd.querySelector('.nav-dd-btn').focus();}});});
+    // hookband pills: a card on hover or keyboard focus; on touch screens a tap opens and closes it
+    var hps=[].slice.call(document.querySelectorAll('.pills .hp'));
+    var canHover=!!(window.matchMedia&&matchMedia('(hover: hover)').matches);
+    function placeCard(hp){
+      var c=hp.querySelector('.hcard'),b=hp.querySelector('.hpill');if(!c||!b)return;
+      var vw=document.documentElement.clientWidth,r=b.getBoundingClientRect(),w=c.offsetWidth,m=12;
+      var left=r.left+r.width/2-w/2,dx=0;
+      if(left<m)dx=m-left;else if(left+w>vw-m)dx=vw-m-(left+w);
+      var lim=w/2-26;dx=Math.max(-lim,Math.min(lim,dx));
+      c.style.setProperty('--dx',Math.round(dx)+'px');
+    }
+    var lastPointer='';
+    document.addEventListener('pointerdown',function(e){lastPointer=e.pointerType||'';},true);
+    hps.forEach(function(hp){
+      var b=hp.querySelector('.hpill');
+      hp.addEventListener('mouseenter',function(){placeCard(hp);});
+      hp.addEventListener('focusin',function(){placeCard(hp);});
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var touch=lastPointer==='touch'||lastPointer==='pen'||!canHover;
+        if(!touch){if(e.detail>0)b.blur();return;}
+        var open=!hp.classList.contains('open');
+        hps.forEach(function(o){o.classList.remove('open');});
+        if(open){placeCard(hp);hp.classList.add('open');}else b.blur();
+      });
+    });
+    if(hps.length){
+      document.addEventListener('click',function(e){
+        if(e.target.closest&&e.target.closest('.pills .hp'))return;
+        hps.forEach(function(o){o.classList.remove('open');});
+        var a=document.activeElement;if(a&&a.closest&&a.closest('.pills .hp'))a.blur();
+      });
+      document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;hps.forEach(function(o){o.classList.remove('open');});var a=document.activeElement;if(a&&a.closest&&a.closest('.pills .hp'))a.blur();});
+      window.addEventListener('resize',function(){hps.forEach(function(o){if(o.classList.contains('open'))placeCard(o);});});
+    }
   }
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();

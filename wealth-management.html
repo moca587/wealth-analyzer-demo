@@ -272,8 +272,91 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 .hookband h2{color:#fff;font-size:clamp(2.1rem,4.6vw,3.4rem);line-height:1.05;max-width:17em;margin-top:.6rem}
 .hookband .hooksub{color:rgba(255,255,255,.92);margin-top:1.1rem;max-width:40em;font-size:1.12rem}
 .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:1.9rem}
-.pills span{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:.5em 1.05em;font-size:.9rem;font-weight:500;cursor:help;transition:background .15s ease}
-.pills span:hover{background:rgba(255,255,255,.26)}
+/* hookband pills open a card on hover, focus or tap */
+.pills .hp{position:relative;display:inline-flex}
+.pills .hpill{font:inherit;font-size:.9rem;font-weight:500;color:#fff;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+  border-radius:999px;padding:.5em 1.05em;cursor:pointer;display:inline-flex;align-items:center;gap:.55em;
+  transition:background .15s ease,color .15s ease,transform .18s ease,box-shadow .18s ease}
+.pills .hpill::after{content:"";width:7px;height:7px;border-radius:50%;background:#fff;flex:none;animation:hpPing 2.6s ease-out infinite}
+.pills .hp:nth-child(2) .hpill::after{animation-delay:.5s}
+.pills .hp:nth-child(3) .hpill::after{animation-delay:1s}
+.pills .hp:nth-child(4) .hpill::after{animation-delay:1.5s}
+.pills .hp:nth-child(5) .hpill::after{animation-delay:2s}
+@keyframes hpPing{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}70%,100%{box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+.pills .hp:is(:hover,:focus-within,.open) .hpill{background:#fff;color:var(--accent-ink);border-color:#fff;transform:translateY(-2px);box-shadow:0 12px 26px -12px rgba(0,0,0,.5)}
+.pills .hp:is(:hover,:focus-within,.open) .hpill::after{background:var(--accent);animation:none}
+.pills .hpill:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.hcard{position:absolute;left:50%;bottom:calc(100% + 14px);z-index:6;width:min(310px,calc(100vw - 24px));
+  background:var(--surface);color:var(--ink);border-radius:18px;text-align:left;
+  box-shadow:0 34px 70px -26px rgba(4,16,40,.65),0 0 0 1px rgba(10,30,62,.07);
+  opacity:0;visibility:hidden;pointer-events:none;transform-origin:calc(50% - var(--dx,0px)) 100%;
+  transform:translate(calc(-50% + var(--dx,0px)),10px) scale(.96);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s linear .24s}
+.hcard::before{content:"";position:absolute;top:100%;left:calc(50% - var(--dx,0px));margin-left:-9px;border:9px solid transparent;border-top-color:var(--surface)}
+.hcard::after{content:"";position:absolute;left:0;right:0;top:100%;height:18px}
+.hp:is(:hover,:focus-within,.open) .hcard{opacity:1;visibility:visible;pointer-events:auto;transform:translate(calc(-50% + var(--dx,0px)),0) scale(1);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.hviz{height:112px;border-radius:18px 18px 0 0;background:linear-gradient(135deg,#E6F0FE,#F5F9FF);overflow:hidden}
+.hviz svg{display:block;width:100%;height:100%}
+.hviz text{font-family:"DM Sans",sans-serif;font-size:10px;font-weight:600;fill:#30425E}
+.hbody{padding:14px 18px 16px}
+.hbody b{display:block;font-size:1.02rem;font-weight:700;color:var(--ink);line-height:1.3}
+.hbody p{font-size:.86rem;line-height:1.5;color:var(--ink-soft);margin:5px 0 0}
+.hbody em{display:inline-flex;align-items:center;gap:.4em;margin-top:11px;font-style:normal;font-size:.78rem;font-weight:700;
+  color:var(--accent-ink);background:#EAF2FE;border-radius:999px;padding:.32em .8em}
+.hbody em svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hp-hint{margin-top:1.1rem;font-size:.85rem;color:rgba(255,255,255,.78)}
+@media(hover:none){.hp-hint{font-size:0}.hp-hint::before{content:"Tap a feature to see it in action.";font-size:.85rem}}
+/* card animations replay every time a card opens (reduced motion: the global rule switches them off) */
+.hv-in,.hv-band,.hv-pop,.hv-grow,.hv-bar,.hv-press,.hv-page,.hv-cursor{transform-box:fill-box}
+.hp:is(:hover,:focus-within,.open) .hv-in{animation:hvIn .45s cubic-bezier(.2,.8,.2,1) both}
+.hp:is(:hover,:focus-within,.open) .hv-in.s1{animation-delay:.15s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s2{animation-delay:.35s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s3{animation-delay:.55s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s4{animation-delay:.75s}
+.hp:is(:hover,:focus-within,.open) .hv-in.s5{animation-delay:1.15s}
+@keyframes hvIn{from{opacity:0;transform:translateX(-10px)}}
+.hp:is(:hover,:focus-within,.open) .hv-scan{animation:hvScan 1.6s ease-in-out infinite}
+@keyframes hvScan{0%{transform:translateY(0);opacity:0}12%,88%{opacity:.9}100%{transform:translateY(70px);opacity:0}}
+.hp:is(:hover,:focus-within,.open) .hv-dot{animation:hvBlink 1s ease-in-out infinite}
+.hp:is(:hover,:focus-within,.open) .hv-dot.d2{animation-delay:.15s}
+.hp:is(:hover,:focus-within,.open) .hv-dot.d3{animation-delay:.3s}
+@keyframes hvBlink{0%,100%{opacity:.25}50%{opacity:1}}
+.hp:is(:hover,:focus-within,.open) .hv-band{animation:hvGrowX .7s cubic-bezier(.2,.8,.2,1) both;transform-origin:0 50%}
+@keyframes hvGrowX{from{transform:scaleX(0)}}
+.hv-draw{stroke-dasharray:1 1}
+.hp:is(:hover,:focus-within,.open) .hv-draw{animation:hvDraw 1.1s ease-out both}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p2{animation-delay:.08s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p3{animation-delay:.16s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p4{animation-delay:.24s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.p5{animation-delay:.32s}
+.hp:is(:hover,:focus-within,.open) .hv-draw.med{animation-duration:1.3s;animation-delay:.2s}
+@keyframes hvDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.hp:is(:hover,:focus-within,.open) .hv-pop{animation:hvPop .4s cubic-bezier(.3,1.6,.5,1) 1.3s both;transform-origin:50% 50%}
+.hp-safe:is(:hover,:focus-within,.open) .hv-pop{animation-delay:.95s}
+@keyframes hvPop{from{opacity:0;transform:scale(0)}}
+.hp:is(:hover,:focus-within,.open) .hv-seg{animation:hvSeg .55s ease-out both}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g2{animation-delay:.2s}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g3{animation-delay:.4s}
+.hp:is(:hover,:focus-within,.open) .hv-seg.g4{animation-delay:.6s}
+@keyframes hvSeg{from{stroke-dasharray:0 100}}
+.hp:is(:hover,:focus-within,.open) .hv-grow{animation:hvGrowX .55s cubic-bezier(.2,.8,.2,1) both}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g2{animation-delay:.2s}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g3{animation-delay:.4s}
+.hp:is(:hover,:focus-within,.open) .hv-grow.g4{animation-delay:.6s}
+.hv-cursor{transform:translate(78px,58px)}
+.hp:is(:hover,:focus-within,.open) .hv-cursor{animation:hvCursor .9s cubic-bezier(.4,0,.2,1) both}
+@keyframes hvCursor{from{transform:translate(124px,96px)}60%{transform:translate(78px,58px)}75%{transform:translate(78px,58px) scale(.85)}to{transform:translate(78px,58px)}}
+.hp:is(:hover,:focus-within,.open) .hv-press{animation:hvPress .9s ease both;transform-origin:50% 50%}
+@keyframes hvPress{0%,62%{transform:scale(1)}72%{transform:scale(.94)}84%,100%{transform:scale(1)}}
+.hp:is(:hover,:focus-within,.open) .hv-page{animation:hvPage .5s cubic-bezier(.2,.8,.2,1) .75s both}
+@keyframes hvPage{from{opacity:0;transform:translateY(18px)}}
+.hp:is(:hover,:focus-within,.open) .hv-bar{animation:hvBar .45s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 100%}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b1{animation-delay:1.1s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b2{animation-delay:1.2s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b3{animation-delay:1.3s}
+.hp:is(:hover,:focus-within,.open) .hv-bar.b4{animation-delay:1.4s}
+@keyframes hvBar{from{transform:scaleY(0)}}
 
 /* layered hero screenshots */
 .herostack{position:relative;max-width:1120px;margin-inline:auto;padding:5% 1% 9%}
@@ -344,7 +427,7 @@ html,body{overflow-x:clip}
 
 /* hookband pills: smaller on mobile */
 @media(max-width:520px){
-  .pills span{font-size:.82rem;padding:.45em .85em}
+  .pills .hpill{font-size:.82rem;padding:.45em .85em}
   .hookband h2{font-size:clamp(1.7rem,7vw,2.4rem)}
 }
 
@@ -913,6 +996,41 @@ a.aud:hover .more svg{transform:translateX(3px)}
     });
     document.addEventListener('click',function(e){dds.forEach(function(dd){if(!dd.contains(e.target))setDd(dd,false);});});
     document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;dds.forEach(function(dd){if(dd.classList.contains('open')){setDd(dd,false);dd.querySelector('.nav-dd-btn').focus();}});});
+    // hookband pills: a card on hover or keyboard focus; on touch screens a tap opens and closes it
+    var hps=[].slice.call(document.querySelectorAll('.pills .hp'));
+    var canHover=!!(window.matchMedia&&matchMedia('(hover: hover)').matches);
+    function placeCard(hp){
+      var c=hp.querySelector('.hcard'),b=hp.querySelector('.hpill');if(!c||!b)return;
+      var vw=document.documentElement.clientWidth,r=b.getBoundingClientRect(),w=c.offsetWidth,m=12;
+      var left=r.left+r.width/2-w/2,dx=0;
+      if(left<m)dx=m-left;else if(left+w>vw-m)dx=vw-m-(left+w);
+      var lim=w/2-26;dx=Math.max(-lim,Math.min(lim,dx));
+      c.style.setProperty('--dx',Math.round(dx)+'px');
+    }
+    var lastPointer='';
+    document.addEventListener('pointerdown',function(e){lastPointer=e.pointerType||'';},true);
+    hps.forEach(function(hp){
+      var b=hp.querySelector('.hpill');
+      hp.addEventListener('mouseenter',function(){placeCard(hp);});
+      hp.addEventListener('focusin',function(){placeCard(hp);});
+      b.addEventListener('click',function(e){
+        e.stopPropagation();
+        var touch=lastPointer==='touch'||lastPointer==='pen'||!canHover;
+        if(!touch){if(e.detail>0)b.blur();return;}
+        var open=!hp.classList.contains('open');
+        hps.forEach(function(o){o.classList.remove('open');});
+        if(open){placeCard(hp);hp.classList.add('open');}else b.blur();
+      });
+    });
+    if(hps.length){
+      document.addEventListener('click',function(e){
+        if(e.target.closest&&e.target.closest('.pills .hp'))return;
+        hps.forEach(function(o){o.classList.remove('open');});
+        var a=document.activeElement;if(a&&a.closest&&a.closest('.pills .hp'))a.blur();
+      });
+      document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;hps.forEach(function(o){o.classList.remove('open');});var a=document.activeElement;if(a&&a.closest&&a.closest('.pills .hp'))a.blur();});
+      window.addEventListener('resize',function(){hps.forEach(function(o){if(o.classList.contains('open'))placeCard(o);});});
+    }
   }
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
