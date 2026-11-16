@@ -261,6 +261,8 @@ footer{background:var(--navy);color:var(--on-navy-soft);border-top:1px solid rgb
 .foot-row a:hover{color:#fff}
 .foot-meta{font-size:.88rem;line-height:1.9}
 .copyline{border-top:1px solid rgba(255,255,255,.08);padding-block:20px;font-size:.8rem;color:var(--on-navy-soft)}
+.copyline a{color:inherit;text-decoration:underline;text-underline-offset:3px;margin-left:.6em}
+.copyline a:hover{color:var(--on-navy)}
 
 /* hook band */
 .hookband{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;position:relative;overflow:hidden}
@@ -520,6 +522,13 @@ a.aud:hover .more svg{transform:translateX(3px)}
 .pills.plain span{cursor:default}
 </style>
 
+<script>
+(function(){
+  try{if(localStorage.getItem('wa-analytics')==='off')return;}catch(e){}
+  if(navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl===true)return;
+  (function(ss,ex){ window.ldfdr=window.ldfdr||function(){(ldfdr._q=ldfdr._q||[]).push([].slice.call(arguments));}; (function(d,s){ var fs=d.getElementsByTagName(s)[0]; function ce(src){ var cs=d.createElement(s); cs.src=src; cs.async=1; fs.parentNode.insertBefore(cs,fs); } ce('https://sc.lfeeder.com/lftracker_v1_'+ss+(ex?'_'+ex:'')+'.js'); })(document,'script'); })('JMvZ8gv5qm5a2pOd');
+})();
+</script>
 </head>
 <body>
 <header class="nav">
@@ -801,7 +810,7 @@ a.aud:hover .more svg{transform:translateX(3px)}
       <a href="mailto:contact@privatewealthintelligence.ch">contact@privatewealthintelligence.ch</a>
     </div>
   </div>
-  <div class="wrap copyline">Wealth Analyzer is owned by Private Wealth Intelligence, Zurich, Switzerland. &copy; 2026. All rights reserved.</div>
+  <div class="wrap copyline">Wealth Analyzer is owned by Private Wealth Intelligence, Zurich, Switzerland. &copy; 2026. All rights reserved. <a href="privacy.html">Privacy</a></div>
 </footer>
 
 <script>
