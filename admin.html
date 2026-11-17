@@ -582,6 +582,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
             <option value="GB">🇬🇧 United Kingdom</option><option value="AU">🇦🇺 Australia</option>
             <option value="CH">🇨🇭 Switzerland</option><option value="EU">🇪🇺 Euro zone</option>
             <option value="JP">🇯🇵 Japan</option><option value="SG">🇸🇬 Singapore</option>
+            <option value="TW">🇹🇼 Taiwan</option><option value="HK">🇭🇰 Hong Kong</option>
           </select>
         </div>
         <div class="row"><label class="lbl">Currency</label>
@@ -589,6 +590,7 @@ textarea{font-family:var(--font-mono);font-size:12px;width:100%;min-height:70px;
             <option value="USD" selected>USD</option><option value="EUR">EUR</option>
             <option value="GBP">GBP</option><option value="CHF">CHF</option>
             <option value="CAD">CAD</option><option value="JPY">JPY</option>
+            <option value="SGD">SGD</option><option value="TWD">TWD</option><option value="HKD">HKD</option>
           </select>
         </div>
       </div>
@@ -1393,7 +1395,7 @@ function toggleQuestionnairePreview(){
 // ═══════════════════════════════════════════════════════════
 // VERSION + UTILS
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261101-1951";
+const APP_VERSION = "20261117-1446";
 const $ = (id) => document.getElementById(id);
 const $$ = (sel, ctx) => Array.from((ctx||document).querySelectorAll(sel));
 
@@ -1566,8 +1568,9 @@ const DEFAULT_RISK = {
 const DEFAULT_REGIONS = {
   us:{name:"United States",rate:3.8},ca:{name:"Canada",rate:3.7},uk:{name:"United Kingdom",rate:4.8},
   ch:{name:"Switzerland",rate:2.1},eu:{name:"Euro zone",rate:3.1},jp:{name:"Japan",rate:2.0},
-  sg:{name:"Singapore",rate:2.8},au:{name:"Australia",rate:4.4},in:{name:"India",rate:7.4},
-  br:{name:"Brazil",rate:58.5},mx:{name:"Mexico",rate:15.2}
+  sg:{name:"Singapore",rate:2.1},tw:{name:"Taiwan",rate:2.6},hk:{name:"Hong Kong",rate:4.4}/* C&SD Table 510-60001, 1976-2025 geometric average, pulled 2026-10-25 */,au:{name:"Australia",rate:4.4},in:{name:"India",rate:7.4},
+  br:{name:"Brazil",rate:58.5},mx:{name:"Mexico",rate:15.2},
+  no:{name:"Norway",rate:4.2},se:{name:"Sweden",rate:4.1},dk:{name:"Denmark",rate:3.7},pl:{name:"Poland",rate:3.3},tr:{name:"Turkey",rate:37.1},il:{name:"Israel",rate:1.8},ae:{name:"United Arab Emirates",rate:3.6},th:{name:"Thailand",rate:3.8},my:{name:"Malaysia",rate:2.9},nz:{name:"New Zealand",rate:5.3},ng:{name:"Nigeria",rate:18.5}
 };
 const DEFAULT_LOANS = {
   mortgage_primary:{label:"Primary mortgage",rate:6.5,yrs:25},
@@ -3329,10 +3332,12 @@ const LOCAL_TAX = {
   DE: { federal:{brackets:[{t:0,r:0},{t:11604,r:14},{t:17005,r:24},{t:66760,r:42},{t:277826,r:45}]}, states:{ALL:{name:"All Länder",brackets:[]}}},
   CH: { federal:{brackets:[{t:0,r:0.77},{t:31600,r:0.88},{t:55200,r:2.97},{t:103600,r:8.8},{t:176000,r:13.2}]}, states:{ZH:{name:"Zürich",brackets:[{t:0,r:3},{t:50000,r:6},{t:100000,r:9}]},GE:{name:"Geneva",brackets:[{t:0,r:8},{t:50000,r:13},{t:100000,r:17.5}]},ZG:{name:"Zug",brackets:[{t:0,r:1},{t:50000,r:3},{t:100000,r:5}]}}},
   JP: { federal:{brackets:[{t:0,r:5},{t:1950000,r:10},{t:3300000,r:20},{t:6950000,r:23},{t:9000000,r:33},{t:18000000,r:40},{t:40000000,r:45}]}, states:{ALL:{name:"10% uniform local",brackets:[{t:0,r:10}]}}},
-  SG: { federal:{brackets:[{t:0,r:0},{t:20000,r:2},{t:30000,r:3.5},{t:40000,r:7},{t:80000,r:11.5},{t:120000,r:15},{t:160000,r:18},{t:200000,r:19},{t:240000,r:19.5},{t:280000,r:20},{t:320000,r:22},{t:500000,r:23},{t:1000000,r:24}]}, states:{ALL:{name:"Singapore",brackets:[]}}}
+  HK: { federal:{brackets:[{t:0,r:2},{t:50000,r:6},{t:100000,r:10},{t:150000,r:14},{t:200000,r:17}]}, states:{ALL:{name:"Hong Kong",brackets:[]}}},   // 2026/27 (IRD PAM 61(e) Aug 2026), on net chargeable income; capped at 15% of net income (16% above HK$5 million)
+  SG: { federal:{brackets:[{t:0,r:0},{t:20000,r:2},{t:30000,r:3.5},{t:40000,r:7},{t:80000,r:11.5},{t:120000,r:15},{t:160000,r:18},{t:200000,r:19},{t:240000,r:19.5},{t:280000,r:20},{t:320000,r:22},{t:500000,r:23},{t:1000000,r:24}]}, states:{ALL:{name:"Singapore",brackets:[]}}},
+  TW: { federal:{brackets:[{t:0,r:5},{t:610000,r:12},{t:1380000,r:20},{t:2770000,r:30},{t:5190000,r:40}]}, states:{ALL:{name:"Taiwan",brackets:[]}}}
 };
 
-const COUNTRY_NAMES = {US:"🇺🇸 United States",CA:"🇨🇦 Canada",GB:"🇬🇧 United Kingdom",AU:"🇦🇺 Australia",DE:"🇩🇪 Germany",CH:"🇨🇭 Switzerland",JP:"🇯🇵 Japan",SG:"🇸🇬 Singapore"};
+const COUNTRY_NAMES = {US:"🇺🇸 United States",CA:"🇨🇦 Canada",GB:"🇬🇧 United Kingdom",AU:"🇦🇺 Australia",DE:"🇩🇪 Germany",CH:"🇨🇭 Switzerland",JP:"🇯🇵 Japan",SG:"🇸🇬 Singapore",TW:"🇹🇼 Taiwan",HK:"🇭🇰 Hong Kong"};
 
 function calcBracketTax(brackets, income){
   if(!brackets || brackets.length===0 || income<=0) return 0;
@@ -6890,7 +6895,8 @@ function aggregateAllSignals(selectedProviderIds){
 const COUNTRY_CCY = {US:"USD", CA:"CAD", GB:"GBP", AU:"AUD", CH:"CHF", JP:"JPY",
                      SG:"SGD", HK:"HKD", DE:"EUR", FR:"EUR", IT:"EUR", ES:"EUR",
                      NL:"EUR", BE:"EUR", AT:"EUR", IE:"EUR", PT:"EUR", FI:"EUR",
-                     LU:"EUR", GR:"EUR", SE:"SEK", NO:"NOK", DK:"DKK", PL:"PLN"};
+                     LU:"EUR", GR:"EUR", SE:"SEK", NO:"NOK", DK:"DKK", PL:"PLN",
+                     TW:"TWD"};
 function briefCurrency(brief){
   const c = brief && brief.currency;
   if(c) return String(c).toUpperCase();
