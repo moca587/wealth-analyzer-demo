@@ -5271,7 +5271,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 4px rgba(0,105,217,.10)
 // ═══════════════════════════════════════════════════════════
 // VERSION — updated by build-standalone.pl on each build
 // ═══════════════════════════════════════════════════════════
-const APP_VERSION = "20261117-1446";
+const APP_VERSION = "20261117-1550";
 
 // ═══════════════════════════════════════════════════════════
 // DATA
@@ -19643,6 +19643,30 @@ function _daNum(x){ if(x==null) return null; if(typeof x==="number") return isFi
   else if(commas){ s = (commas>1 || /,\d{3}$/.test(s)) ? s.replace(/,/g,"") : s.replace(",","."); }
   else if(dots>1){ s=s.replace(/\./g,""); }
   const n=parseFloat(s); if(!isFinite(n)) return null; return (neg?-1:1)*n*mult; }
+// A loan's remaining term in years as the model or the reviewer writes it: 19.67, "19.67",
+// "19,67", "20 years". The decimals are kept (19.67 years is 236 months; stripping the point
+// read it as 1,967 years). More than 100 is not a remaining term (a calendar year, say): empty.
+function _daYears(x){ if(x==null||x==="") return null;
+  const n=typeof x==="number" ? x : parseFloat(String(x).replace(/^\D*(\d+),(\d+)/,"$1.$2").replace(/[^\d.]/g,""));
+  return isFinite(n) && n>0 && n<=100 ? Math.round(n*100)/100 : null; }
+// "Into": which existing record a reviewed statement row updates, or "new". Pre-set only to
+// an unambiguous match (the same name, else the only record of the same account type, loan
+// type or ticker) that no earlier row has taken; the reviewer sees it and can change it.
+// Adding a statement for a client already in the app used to duplicate every account.
+function _daNormLabel(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/\p{M}/gu,"").replace(/[^a-z0-9]+/g," ").trim(); }
+function _daRecMoney(v, ccy){ return (ccy && ccy!==CURRENT_CCY) ? ccy+" "+Math.round(+v||0).toLocaleString("en-US") : _daMoneyFmt(v); }
+function _daIntoCell(dom, i, list, pick, describe, claimed){
+  let cur="new"; const p=pick(); if(p && !claimed.has(String(p.id))){ cur=String(p.id); claimed.add(cur); }
+  const opts=[{v:"new",l:"Add as new"}].concat(list.map(x=>({v:String(x.id), l:"Update "+describe(x)})));
+  return {lbl:"Into",html:_daSelect(dom,i,"into",cur,opts),w:"flex:1.2"}; }
+function _daUniq(a){ return a.length===1 ? a[0] : null; }
+// Updates the chosen record in place (its id kept, so nothing pointing at it breaks), else adds
+// the row as new. Fields named in keep are not blanked by a row that does not give them.
+function _daUpsert(list, into, rec, keep){
+  const cur=(into && into!=="new") ? list.find(x=>String(x.id)===String(into)) : null;
+  if(!cur){ list.push(rec); return false; }
+  (keep||[]).forEach(k=>{ if(rec[k]==null || rec[k]==="") delete rec[k]; });
+  const id=cur.id; Object.assign(cur, rec, {id:id}); return true; }
 function _daRate(x){ if(x==null||x==="") return null; if(typeof x==="number") return isFinite(x)?x:null;
   const s=String(x).replace(/[%\s]/g,"").replace(/^(-?\d+),(\d+)$/,"$1.$2");   // "1,9" (decimal comma) → 1.9
   const n=parseFloat(s); return isFinite(n)?n:null; }
@@ -19807,7 +19831,7 @@ function normalizeExtraction(raw){
       pfContrib:_daNum(a.pfContrib), pfConv:_daRate(a.pfConv), pfRate:_daRate(a.pfRate), pfBuyPot:_daNum(a.pfBuyPot), pfBvg:_daNum(a.pfBvg),
       _pfOk:(a._fieldConfidence && typeof a._fieldConfidence==="object") ? { pfContrib:_daConf(a._fieldConfidence.pfContrib), pfConv:_daConf(a._fieldConfidence.pfConv), pfRate:_daConf(a._fieldConfidence.pfRate), pfBuyPot:_daConf(a._fieldConfidence.pfBuyPot), pfBvg:_daConf(a._fieldConfidence.pfBvg) } : null }); });
   (raw.liabilities||[]).forEach(l=>{ out.liabilities.push({ _ok:ok(l.confidence), _src:l.sourceQuote||"", _doc:l._doc||"",
-    type:_daKey(l.type,_DA_LOAN_ALIAS,LOAN_LABELS,"other"), label:l.label||"", balance:_daNum(l.balance), ccy:fxCode(l.ccy), ratePct:_daRate(l.ratePct), years:(l.years!=null?(parseInt(String(l.years).replace(/[^\d]/g,""),10)||null):null) }); });   // term length, NOT a calendar year
+    type:_daKey(l.type,_DA_LOAN_ALIAS,LOAN_LABELS,"other"), label:l.label||"", balance:_daNum(l.balance), ccy:fxCode(l.ccy), ratePct:_daRate(l.ratePct), years:_daYears(l.years) }); });   // term length, NOT a calendar year
   (raw.goals||[]).forEach(g=>{ out.goals.push({ _ok:ok(g.confidence), _src:g.sourceQuote||"", _doc:g._doc||"",
     name:g.name||"", amount:_daNum(g.amount), homePrice:_daNum(g.homePrice), startYear:_daYear(g.startYear), endYear:_daYear(g.endYear),
     category:_daEnum(g.category,["retirement","home","education","travel","emergency","business","wedding","car","health","legacy","other"],"other"),
@@ -19958,8 +19982,12 @@ function renderReviewModal(){
   // Account type is a real choice from the row's country (the same list as the
   // Assets tab), pre-selected from Claude's code or matched from the document's
   // wording — so the reviewer sees "BVG/LPP – 2nd pillar" and can correct it.
+  const claimed={assets:new Set(), liabilities:new Set(), holdings:new Set()};
   const assetRows=x.assets.map((a,i)=>{ const cc=a.country||val("c1co")||"US";
-    return _daRow("assets",i,a._ok,a._src,[
+    const acct=(a._kind||"account")==="account", code=acct ? _daAcctPick(cc,a) : "";
+    const into=_daIntoCell("assets",i,acct?assets:[],()=>_daUniq(assets.filter(z=>_daNormLabel(z.label)===_daNormLabel(a.label))) || _daUniq(assets.filter(z=>z.type===code && (!z.country || z.country===cc))),
+      z=>(z.label||z.type)+" ("+_daRecMoney(z.value,z.ccy)+")", claimed.assets);
+    return _daRow("assets",i,a._ok,a._src,[into,
     {lbl:"Label",html:_daInput("assets",i,"label",a.label),w:"flex:1.3"},
     {lbl:"Add as",html:_daSelect("assets",i,"_kind",a._kind||"account",KIND).replace("<select ",'<select onchange="_daKindChange(this)" '),w:"flex:0 0 150px"},
     {lbl:"Account type",html:_daAcctTypeSelect(i,cc,_daAcctPick(cc,a),(a._kind||"account")!=="account"),w:"flex:1.3"},
@@ -19978,6 +20006,8 @@ function renderReviewModal(){
   html+=section("Assets / accounts", assetRows);
 
   html+=section("Liabilities / loans", x.liabilities.map((l,i)=>_daRow("liabilities",i,l._ok,l._src,[
+    _daIntoCell("liabilities",i,loans,()=>_daUniq(loans.filter(z=>_daNormLabel(z.label)===_daNormLabel(l.label))) || _daUniq(loans.filter(z=>z.type===l.type)),
+      z=>(z.label||LOAN_LABELS[z.type]||z.type)+" ("+_daRecMoney(z.bal,z.ccy)+")", claimed.liabilities),
     {lbl:"Type",html:_daSelect("liabilities",i,"type",l.type,LOANS),w:"flex:0 0 150px"},
     {lbl:"Label",html:_daInput("liabilities",i,"label",l.label),w:"flex:1"},
     {lbl:"Balance"+(fxCode(l.ccy) && fxCode(l.ccy)!==CURRENT_CCY ? " ("+fxCode(l.ccy)+")" : ""),html:_daInput("liabilities",i,"balance",l.balance,"number"),w:"flex:1"},
@@ -19995,6 +20025,8 @@ function renderReviewModal(){
   ],g.amount>0&&req(g))));
 
   html+=section("Investment holdings", x.holdings.map((h,i)=>_daRow("holdings",i,h._ok,h._src,[
+    _daIntoCell("holdings",i,investments,()=>(h.tkr ? _daUniq(investments.filter(z=>z.tkr && String(z.tkr).toUpperCase()===String(h.tkr).toUpperCase())) : null) || _daUniq(investments.filter(z=>_daNormLabel(z.name)===_daNormLabel(h.name))),
+      z=>(z.name||z.tkr)+(z.tkr?" ["+z.tkr+"]":"")+" ("+_daRecMoney(z.val,z.ccy)+")", claimed.holdings),
     {lbl:"Name",html:_daInput("holdings",i,"name",h.name),w:"flex:1.4"},
     {lbl:"Ticker",html:_daInput("holdings",i,"tkr",h.tkr),w:"flex:0 0 90px"},
     {lbl:"Value"+(fxCode(h.ccy) && fxCode(h.ccy)!==CURRENT_CCY ? " ("+fxCode(h.ccy)+")" : ""),html:_daInput("holdings",i,"val",h.val,"number"),w:"flex:1"},
@@ -20031,7 +20063,7 @@ function renderReviewModal(){
         <button class="btn-x" onclick="daRequestClose()" aria-label="Close">✕</button></div>
       <div class="da-modal-tools"><button class="btn-secondary" onclick="daCheckAll(true)">Select all</button>
         <button class="btn-secondary" onclick="daCheckAll(false)">Clear all</button>
-        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing changes in the app until you click <strong>Add</strong>. Untick anything wrong; edit any value inline. Ticked accounts, loans, goals and holdings are added alongside your existing ones; ticked profile fields (names, address, income, expenses, retirement) replace the current values.</span></div>
+        <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing changes in the app until you click <strong>Add</strong>. Untick anything wrong; edit any value inline. Ticked accounts, loans and holdings go where “Into” says: they update that existing record, or are added as new. Ticked goals are added alongside your existing ones; ticked profile fields (names, address, income, expenses, retirement) replace the current values.</span></div>
       <div class="da-modal-body">${_daNotesHtml()}${html||'<div class="pf-empty">Nothing to review.</div>'}</div>
       <div class="da-modal-foot"><span id="daApplyStatus" style="font-size:12px;color:var(--text3);flex:1;min-width:0"></span>
         <span id="daTickCount" style="font-size:12px;color:var(--text2);white-space:nowrap"></span>
@@ -20076,7 +20108,11 @@ function _daSet(id,v){ const el=$(id); if(el!=null && v!=null && v!=="") el.valu
 function _daSetSel(id,v){ const el=$(id); if(!el || v==null || v==="") return false;
   const s=String(v).trim(), lo=s.toLowerCase(), opts=[...el.options];
   const hit=opts.find(o=>o.value===s) || opts.find(o=>o.value.toLowerCase()===lo) || opts.find(o=>o.text.trim().toLowerCase()===lo);
-  if(!hit) return false; el.value=hit.value; try{ el.dispatchEvent(new Event("change")); }catch(_){} return true; }
+  if(!hit) return false;
+  // Only a real change is announced: a statement that confirms the country already set must
+  // not re-run the country's presets (it reset a Mexican client's 3% inflation to the 15.2%
+  // 50-year average, and the projection to minus MX$3 billion).
+  const changed=el.value!==hit.value; el.value=hit.value; if(changed){ try{ el.dispatchEvent(new Event("change")); }catch(_){} } return true; }
 // Review rows show only the key fields, but Apply must use EVERYTHING extracted:
 // start from the normalized record, then let the reviewer's edits override it.
 // (Reading only the visible inputs silently dropped street / city / postcode /
@@ -20412,7 +20448,7 @@ function applyDataAgent(){
       if(sp && sp.conflict){ notes.push(sp.name+" of "+fmtMoneyFull(sp.annual)+"/yr was not applied: "+sp.who+" already has one from this document (enter it on the Income tab if it is a different benefit)"); return; }
       if(sp && sp.panel){ _penPanelIn.push(statePensionMsg(sp)); return; }   // v5: into the country's panel (said below)
       if(sp){ notes.push(statePensionMsg(sp).replace(/\.$/,"")); bump("pensions"); return; } }
-    assets.push({id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,ccy:aCcy,nat:{value:v},liquid:mk.liquid,country:ctry,
+    const upd=_daUpsert(assets, r.into, {id:"a"+(++assetSeq),type:mk.type,group:mk.group,label:r.label||mk.type,baseLabel:r.label||mk.type,value:v,ccy:aCcy,nat:{value:v},liquid:mk.liquid,country:ctry,
       withdrawAge:(def&&def.withdrawAge!=null)?def.withdrawAge:null, owner:own, _ccyAuto:aCcy===CURRENT_CCY,
       note:(r.accountTypeHint?(_daImportSource()+": "+r.accountTypeHint):("Imported by "+_daImportSource()))});
     // A Swiss pension certificate also gives the fund's own figures: they replace the
@@ -20433,7 +20469,7 @@ function applyDataAgent(){
       if(ticked("pfBvg") && put("anBvg"+n2, Math.round(_daNum(r.pfBvg)||0))) done.push("BVG mandatory assets "+fmtMoneyFull(_daNum(r.pfBvg))+" (for the annuity comparison split)");
       if(done.length){ notes.push("From the pension certificate, in the Swiss pillars panel: "+done.join(", ")); try{ renderCHLumpSum(); }catch(_){} }
     }
-    bump("accounts"); });
+    bump(upd?"updated accounts":"accounts"); });
   // Replace or add, as chosen in the review window when a value already existed
   // (overwriting silently used to wipe a property entered earlier).
   const propMode=(($("daPropMode")||{}).value)||"add";
@@ -20444,8 +20480,10 @@ function applyDataAgent(){
   each("liabilities",x.liabilities,r=>{ const b=_daNum(r.balance); if(!(b>0)){ skipped.push("“"+(r.label||"a loan")+"” (no balance)"); return; }
     const t=(r.type in LOAN_LABELS)?r.type:"other";
     const lc=fxCode(r.ccy)||CURRENT_CCY;
-    loans.push({id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,ccy:lc,nat:{bal:b},rate:_daRate(r.ratePct)||0,yrs:parseInt(r.years,10)||0}); fxEnsureRate(lc);
-    bump("loans"); });
+    const upd=_daUpsert(loans, r.into, {id:"l"+(++loanSeq),type:t,label:r.label||LOAN_LABELS[t]||t,bal:b,ccy:lc,nat:{bal:b},rate:_daRate(r.ratePct),yrs:_daYears(r.years)}, ["rate","yrs"]);
+    { const L=loans.find(z=>String(z.id)===String(r.into)) || loans[loans.length-1]; if(L.rate==null) L.rate=0; if(L.yrs==null) L.yrs=0; }   // a new loan without them: 0, as before
+    fxEnsureRate(lc);
+    bump(upd?"updated loans":"loans"); });
 
   // Goals
   each("goals",x.goals,r=>{ const amt=hb(_daNum(r.amount),r); if(!(amt>0)||!r.name){ skipped.push("“"+(r.name||"a goal")+"” (no "+(!r.name?"name":"amount")+")"); return; }
@@ -20457,10 +20495,10 @@ function applyDataAgent(){
   // Holdings
   each("holdings",x.holdings,r=>{ const v=_daNum(r.val); if(!(v>0)||!r.name){ skipped.push("“"+(r.name||"a holding")+"” (no "+(!r.name?"name":"value")+")"); return; }
     const er=_daRate(r.er), yld=_daRate(r.yld);
-    investments.push({id:"inv"+(++invSeq),name:r.name,tkr:r.tkr||"",
+    const upd=_daUpsert(investments, r.into, {id:"inv"+(++invSeq),name:r.name,tkr:r.tkr||"",
       type:(r.type in INV_TYPE_LABELS)?r.type:"other", cls:(r.cls in INV_CLASS_LABELS)?r.cls:"other", region:(r.region in INV_REGION_LABELS)?r.region:"other",
-      val:v, ccy:fxCode(r.ccy)||fxPfCcyDefault(), nat:{val:v}, er:er, yld:yld, note:"Imported by "+_daImportSource()});
-    bump("holdings"); });
+      val:v, ccy:fxCode(r.ccy)||fxPfCcyDefault(), nat:{val:v}, er:er, yld:yld, note:"Imported by "+_daImportSource()}, ["er","yld","tkr"]);
+    bump(upd?"updated holdings":"holdings"); });
 
   // Retirement plan → spending, retirement ages, and each client's pension.
   each("retirement",x.retirement,r=>{ let touched=false;
@@ -20529,7 +20567,7 @@ function applyDataAgent(){
     _daApplyRecord(false, "nothing added: "+why, errors, skipped);
     return;
   }
-  const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"retirement plan":["retirement plan","retirement plans"],"tax settings":["tax setting","tax settings"],pensions:["state pension","state pensions"]};
+  const NOUN={people:["person","people"],incomes:["income","incomes"],expenses:["expense set","expense sets"],accounts:["account","accounts"],property:["property","properties"],"other assets":["other asset","other assets"],loans:["loan","loans"],goals:["goal","goals"],holdings:["holding","holdings"],"updated accounts":["account updated","accounts updated"],"updated loans":["loan updated","loans updated"],"updated holdings":["holding updated","holdings updated"],"retirement plan":["retirement plan","retirement plans"],"tax settings":["tax setting","tax settings"],pensions:["state pension","state pensions"]};
   const summary=Object.keys(added).map(k=>{ const w=NOUN[k]||[k,k]; return added[k]+" "+(added[k]===1?w[0]:w[1]); }).join(", ");
   const tail=(errors.length?" · "+errors.length+" row"+(errors.length!==1?"s":"")+" couldn't be added":"")+(skipped.length?" · skipped "+skipped.length+" empty row"+(skipped.length!==1?"s":""):"");
   if(stt){ stt.textContent="✓ Added to the app: "+summary+tail+"."+(notes.length?" Note: "+notes.join("; ")+".":""); stt.style.color="var(--green)"; }
@@ -20542,8 +20580,8 @@ function applyDataAgent(){
   // Household for people / income / expenses / retirement (net worth is in its
   // overview), else the tab holding what was added.
   const dest = (added.people||added.incomes||added.expenses||added["retirement plan"]) ? "household"
-    : (added.accounts||added.property||added["other assets"]) ? "assets" : added.loans ? "liabilities"
-    : added.goals ? "goals" : added.holdings ? "portfolio" : added["tax settings"] ? "expenses" : "";
+    : (added.accounts||added["updated accounts"]||added.property||added["other assets"]) ? "assets" : (added.loans||added["updated loans"]) ? "liabilities"
+    : added.goals ? "goals" : (added.holdings||added["updated holdings"]) ? "portfolio" : added["tax settings"] ? "expenses" : "";
   setTimeout(()=>{ try{ closeReviewModal(); }catch(_){}
     try{ const cur=(document.querySelector(".tab.active")||{}).id;
       if(dest && cur!=="tab-"+dest && typeof showTab==="function"){ showTab(dest,document.querySelector('.nav-item[data-tab="'+dest+'"]')); window.scrollTo(0,0); } }catch(_){} }, notes.length?4000:1400);   // time to read a note
